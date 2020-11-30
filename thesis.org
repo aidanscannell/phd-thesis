@@ -1,0 +1,1502 @@
+# #+TITLE: Probabilistic Inference for Control in Multimodal Dynamical Systems
+# #+latex_class: memoir
+#+latex_class: mimosis
+# #+latex_class_options: [a4paper,11pt,leqno,openbib,oldfontcommands]
+# #+latex_class_options: [a4paper,11pt,leqno,openbib,oldfontcommands,draft]
+#+begin_src emacs-lisp :exports none  :results none
+(unless (boundp 'org-latex-classes)
+  (setq org-latex-classes nil))
+(add-to-list 'org-latex-classes
+             '("memoir"
+               "\\documentclass{memoir}
+    [NO-DEFAULT-PACKAGES]
+    [PACKAGES]
+    [EXTRA]
+    \\newcommand{\\mboxparagraph}[1]{\\paragraph{#1}\\mbox{}\\\\}
+    \\newcommand{\\mboxsubparagraph}[1]{\\subparagraph{#1}\\mbox{}\\\\}"
+               ("\\chapter{%s}" . "\\chapter*{%s}")
+               ("\\section{%s}" . "\\section*{%s}")
+               ("\\subsection{%s}" . "\\subsection*{%s}")
+               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+               ("\\mboxparagraph{%s}" . "\\mboxparagraph*{%s}")
+               ("\\mboxsubparagraph{%s}" . "\\mboxsubparagraph*{%s}")))
+(add-to-list 'org-latex-classes
+             '("mimosis"
+               "\\documentclass{mimosis}
+  [NO-DEFAULT-PACKAGES]
+  [PACKAGES]
+  [EXTRA]"
+               ("\\chapter{%s}" . "\\addchap{%s}")
+               ("\\section{%s}" . "\\section*{%s}")
+               ("\\subsection{%s}" . "\\subsection*{%s}")
+               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+               ("\\paragraph{%s}" . "\\paragraph*{%s}")
+               ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+#+end_src
+
+* Config :ignore:
+** Org Mode Export Options :noexport:
+#+EXCLUDE_TAGS: journal noexport
+#+OPTIONS: title:nil toc:nil date:nil author:nil H:6
+
+** Macros :ignore:
+# #+MACRO: acronym #+latex_header: \newacronym[description={$1}]{$2}{$2}{$3}
+#+MACRO: glossaryentry #+latex_header: \newglossaryentry{$1}{name={$2},description={$3},sort={$4}}
+#+MACRO: acronym #+latex_header: \newacronym{$1}{$2}{$3}
+# #+MACRO: newline @@latex:\hspace{0pt}\\@@ @@html:<br>@@
+# #+MACRO: fourstar @@latex:\bigskip{\centering\color{BrickRed}\FourStar\par}\bigskip@@
+# #+MACRO: clearpage @@latex:\clearpage@@@@odt:<text:p text:style-name="PageBreak"/>@@
+
+** LaTeX Export Headers and Options :noexport:
+*** Packages :ignore:
+#+LATEX_HEADER: \usepackage{bm}
+#+LATEX_HEADER: \usepackage{amsmath,amssymb,amsfonts}
+#+LATEX_HEADER: \usepackage{graphicx}
+#+LATEX_HEADER: \usepackage{todonotes}
+
+*** Acronym and Glossary :ignore:
+#+latex_header: \usepackage[acronym]{glossaries}
+#+latex_header: \makeglossaries
+
+*** Equation Definitions
+
+#+LATEX_HEADER: \usepackage{mathtools}
+#+LATEX_HEADER: \newcommand{\defeq}{\vcentcolon=}
+
+*** Create a Definition theorem
+#+LATEX_HEADER: \newtheorem{definition}{Definition}[section]
+*** Floating images configuration
+
+By default,  if a figure consumes 60% of the page it will get its own float-page. To change that we have to adjust the value of the floatpagefraction derivative.
+#+latex_header: \renewcommand{\floatpagefraction}{.8}%
+
+See more information [[https://tex.stackexchange.com/questions/68516/avoid-that-figure-gets-its-own-page][here]].
+
+*** Hyperref
+Self-explanatory.
+#+latex_header: \usepackage[colorlinks=true, citecolor=BrickRed, linkcolor=BrickRed, urlcolor=BrickRed]{hyperref}
+
+*** Bookmarks
+
+The bookmark package implements a new bookmark (outline) organisation for package hyperref. This lets us change the "tree-navigation" associated with the generated pdf and constrain the menu only to H:2.
+#+latex_header: \usepackage{bookmark}
+#+latex_header: \bookmarksetup{depth=2}
+
+*** BBding
+
+Symbols such as diamond suit, which can be used for aesthetically separating paragraphs, could be added with the package =fdsymbol=. I'll use bbding which offers the more visually appealing =\FourStar=. I took this idea from seeing the thesis of the mimosis package author.
+#+latex_header: \usepackage{bbding}
+
+*** CS Quotes
+The [[https://ctan.org/pkg/csquotes][csquotes]] package offers context sensitive quotation facilities, improving the typesetting of inline quotes.
+
+Already imported by mimosis class.
+# #+latex_header: \usepackage{csquotes}
+
+To enclose quote environments with quotes from csquotes, see [[https://tex.stackexchange.com/questions/365231/enclose-a-custom-quote-environment-in-quotes-from-csquotes][the following TeX SE thread]].
+
+#+latex_header: \def\signed #1{{\leavevmode\unskip\nobreak\hfil\penalty50\hskip1em
+#+latex_header:   \hbox{}\nobreak\hfill #1%
+#+latex_header:   \parfillskip=0pt \finalhyphendemerits=0 \endgraf}}
+
+#+latex_header: \newsavebox\mybox
+#+latex_header: \newenvironment{aquote}[1]
+#+latex_header: {\savebox\mybox{#1}\begin{quote}\openautoquote\hspace*{-.7ex}}
+#+latex_header:    {\unskip\closeautoquote\vspace*{1mm}\signed{\usebox\mybox}\end{quote}}
+
+And then use quotes as:
+#+begin_example
+# The options derivative adds text after the environment. We use it to add the author.
+#+ATTR_LATEX: :options {\cite{Frahm1994}}
+#+begin_aquote
+/Current (fMRI) applications often rely on "effects" or "statistically significant differences", rather than on a proper analysis of the relationship between neuronal activity, haemodynamic consequences, and MRI physics./
+#+end_aquote
+#+end_example
+
+Note that org-ref links won't work here because the attr latex will be pasted as-is in the .tex file.
+
+*** Date Time
+
+The date time package allows us to specify a "formatted" date object, which will print different formats according to the current locale & language. I use this in my title page.
+#+latex_header: \usepackage[level]{datetime}
+
+*** Setup bibliography
+General configuration.
+# #+latex_header: \usepackage[autocite=plain, backend=biber, doi=true, url=true, hyperref=true,uniquename=false, maxbibnames=99, maxcitenames=2, sortcites=true, style=authoryear-comp]{biblatex}
+# #+LATEX_HEADER: \usepackage[citestyle=authoryear-comp, maxcitenames=2, maxbibnames=99, doi=false, isbn=false, eprint=false, backend=bibtex, hyperref=true, url=false, natbib=true, style=authoryear-comp]{biblatex}
+#+LATEX_HEADER: \usepackage[citestyle=authoryear-comp, maxcitenames=2, maxbibnames=99, doi=false, isbn=false, eprint=false, backend=bibtex, hyperref=true, url=false, natbib=true, style=authoryear-comp]{biblatex}
+# #+LATEX_HEADER: \addbibresource{~/Dropbox/org/ref/mendeley/library.bib}
+#+LATEX_HEADER: \addbibresource{~/Dropbox/org/ref/zotero-library.bib}
+
+Improvements provided with the Mimosis class.
+# #+latex_header: \input{bibliography-mimosis}
+
+# And fix the andothers to show et al in English as well:
+# #+latex_header: \DefineBibliographyStrings{english}{andothers={\textit{et\, al\adddot}}} 
+# #+latex_header:\DefineBibliographyStrings{english}{and={\textit{and}}}} 
+
+
+Remove ISSN, DOI and URL to shorten the bibliography.
+#+latex_header: \AtEveryBibitem{%
+#+latex_header:   \clearfield{urlyear}
+#+latex_header:   \clearfield{urlmonth}
+#+latex_header:   \clearfield{note}
+#+latex_header:  \clearfield{issn} % Remove issn
+#+latex_header:  \clearfield{doi} % Remove doi
+#+latex_header: \ifentrytype{online}{}{% Remove url except for @online
+#+latex_header:   \clearfield{url}
+#+latex_header: }
+#+latex_header: }
+
+And increase the spacing between the entries, as per default they are too small.
+#+latex_header: \setlength\bibitemsep{1.1\itemsep}
+
+Also reduce the font-size
+#+latex_header: \renewcommand*{\bibfont}{\footnotesize}
+
+*** Improve chapter font colors and font size
+The following commands make chapter numbers BrickRed, which look like the Donders color.
+#+latex_header: \makeatletter
+#+latex_header: \renewcommand*{\chapterformat}{  \mbox{\chapappifchapterprefix{\nobreakspace}{\color{BrickRed}\fontsize{40}{45}\selectfont\thechapter}\autodot\enskip}}
+#+latex_header: \renewcommand\@seccntformat[1]{\color{BrickRed} {\csname the#1\endcsname}\hspace{0.3em}}
+#+latex_header: \makeatother
+
+*** Setspace for controlling line spacing
+
+Already imported when using mimosis.
+# #+latex_header: \usepackage{setspace}
+#+latex_header: \setstretch{1.25} 
+
+*** Parskip
+
+Fine tuning of spacing between paragraphs. See [[https://tex.stackexchange.com/questions/161254/smaller-parskip-than-half-for-koma-script][thread here]].
+
+#+latex_header: \setparsizes{0em}{0.1\baselineskip plus .1\baselineskip}{1em plus 1fil}
+
+*** Table of Contents improvements
+
+TOC only the chapters, not their content.
+#+latex_header: \setcounter{tocdepth}{1}
+
+*** Possible Equation improvements
+
+Make the equation numbers follow the chapter, not the whole thesis.
+#+latex_header: \numberwithin{equation}{chapter}
+
+*** TikZ and bayesnet for graphical models
+#+LATEX_HEADER: \usepackage{tikz}
+#+LATEX_HEADER: \usetikzlibrary{bayesnet}
+
+*** Used in papers but not thesis
+# #+LATEX_HEADER: \usepackage[format=plain,labelfont={bf},textfont=it]{caption} % make captions italic
+# #+LATEX_HEADER: \usepackage[margin=0pt,font=small,labelfont=bf,labelsep=endash]{caption}
+# #+LATEX_HEADER: \usepackage{xcolor}
+# #+LATEX_HEADER: \usepackage{textcomp}
+# #+LATEX_HEADER: \usepackage{algorithmic}
+
+** Text Variables :noexport:
+  #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Control in Multimodal Dynamical Systems}}
+  #+latex_header: \newcommand{\ThesisSubTitle}{}
+  #+latex_header: \newcommand{\FormattedThesisDefenseDate}{\mbox{\formatdate{1}{1}{2100}}}
+  #+latex_header: \newcommand{\FormattedAuthorDateOfBirth}{\mbox{\formatdate{1}{1}{2000}}}
+  #+latex_header: \newcommand{\FormattedThesisDefenseTime}{\mbox{10:00}}
+  #+latex_header: \newcommand{\AuthorShortName}{\mbox{Aidan Scannell}}
+  #+latex_header: \newcommand{\AuthorFullName}{\mbox{Aidan J. Scannell}}
+  #+latex_header: \newcommand{\ThesisISBN}{\mbox{}}
+
+** Math Variables :noexport:
+#+LATEX_HEADER: \DeclareMathOperator{\R}{\mathbb{R}}
+#+LATEX_HEADER: \DeclareMathOperator{\E}{\mathbb{E}}
+#+LATEX_HEADER: \DeclareMathOperator{\V}{\mathbb{V}}
+*** Data set
+#+LATEX_HEADER: \newcommand{\dataset}{\ensuremath{\mathcal{D}}}
+# #+LATEX_HEADER: \DeclareMathOperator{\inputs}{\mathbf{X}}
+# #+LATEX_HEADER: \DeclareMathOperator{\outputs}{\mathbf{Y}}
+#+LATEX_HEADER: \newcommand{\x}{\ensuremath{\mathbf{x}}}
+#+LATEX_HEADER: \newcommand{\y}{\ensuremath{\mathbf{y}}}
+
+*** Mixture Vars
+#+LATEX_HEADER: \newcommand{\dataSub}{\ensuremath{t}}
+#+LATEX_HEADER: \newcommand{\dimSub}{\ensuremath{d}}
+#+LATEX_HEADER: \newcommand{\modeSup}{\ensuremath{k}}
+
+# Macros for single/all data notation
+#+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{n}}}
+#+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{\MakeUppercase{#1}}}
+# #+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\dataSub}}}
+# #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1_{1:T}}}
+
+#+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{#1_{\dataSub, \dimSub}}}
+#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{#1_{\dimSub}}}
+
+# Macros for mode k notation
+#+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{(\modeSup)}}}
+
+# Expert gating function notation
+#+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
+#+LATEX_HEADER: \newcommand{\f}{\ensuremath{f}}
+#+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mode{\latentFunc}}}
+#+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\singleDim{\fk}}}
+#+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\singleData{\mode{\mathbf{\latentFunc}}}}}
+#+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDataDim{\fk}}}
+
+# #+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\allData{\mathbf{\latentFunc}}}}}
+#+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\mathbf{\latentFunc}}}}
+#+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}
+#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\mathbf{\latentFunc}}}
+
+# Expert gating function notation
+#+LATEX_HEADER: \newcommand{\gatingFunc}{\ensuremath{h}}
+#+LATEX_HEADER: \newcommand{\hk}{\ensuremath{\mode{\gatingFunc}}}
+#+LATEX_HEADER: \newcommand{\hkn}{\ensuremath{\singleData{\hk}}}
+
+#+LATEX_HEADER: \newcommand{\singleInput}{\ensuremath{\singleData{\x}}}
+#+LATEX_HEADER: \newcommand{\singleOutput}{\ensuremath{\singleData{\y}}}
+#+LATEX_HEADER: \newcommand{\allInput}{\ensuremath{\allData{\x}}}
+#+LATEX_HEADER: \newcommand{\allOutput}{\ensuremath{\allData{\y}}}
+
+#+LATEX_HEADER: \newcommand{\pF}{\ensuremath{p\left(\F \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pFk}{\ensuremath{p\left(\Fk \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pfk}{\ensuremath{p\left(\fk \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pFkd}{\ensuremath{p\left(\Fkd \mid \allInput\right)}}
+
+# #+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{\allInput\allInput}}
+#+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{d, \allInput\allInput}}
+
+*** Continuous 
+#+LATEX_HEADER: \newcommand{\state}{\ensuremath{\mathbf{x}}}
+#+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{u}}}
+#+LATEX_HEADER: \newcommand{\derivative}[1]{\ensuremath{\dot{#1}}}
+#+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\derivative{\state}}}
+# #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\dot{\mathbf{x}}}}
+
+** Acronyms :noexport:
+{{{glossaryentry(LaTeX,\LaTeX,A document preparation system,LaTeX)}}}
+{{{acronym(mogpe,MoGPE,Mixtures of Gaussian Process Experts)}}}
+{{{acronym(gp,GP,Gaussian process)}}}
+{{{acronym(mdp,MDP,Markov decision process)}}}
+{{{glossaryentry(Real Numbers,$\real$,The set of Real numbers,Real Numbers)}}}
+* Frontmatter :ignore:noexport:
+#+BEGIN_EXPORT latex
+\frontmatter
+#+END_EXPORT
+** Title Page :ignore:
+
+  #+BEGIN_EXPORT latex
+  \begin{titlepage}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % First page: Thesis Title and Author Name
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    % Uncomment when adding the background figure to the cover.
+    \BgThispage
+
+    \cleardoublepage
+    \pagestyle{empty}
+
+    \begin{center}
+      \null\vfill
+      {\huge{\bfseries \ThesisTitle}\par}
+      \vspace{\stretch{0.5}}
+      {\large \ThesisSubTitle \par}
+      \vspace{\stretch{2}}
+      \vspace{\baselineskip}
+      {\large By \AuthorFullName\par}
+      \vspace{\stretch{2}}
+      \vspace{\baselineskip}
+      \vspace{\baselineskip}
+      \vspace{\baselineskip}
+      \includegraphics[scale=0.8]{./logos/bristolcrest_colour}\\
+      \vspace{6mm}
+      {\large Faculty of Engineering\\
+      \textsc{University of Bristol}}\\
+      \vspace{11mm}
+      \vspace{\baselineskip}
+      \vspace{\baselineskip}
+      \begin{minipage}{10cm}
+        A dissertation submitted to the University of Bristol in accordance with the requirements of the degree of \textsc{Doctor of Philosophy} in the Faculty of Engineering.
+      \end{minipage}\\
+      # \vspace{\baselineskip}
+      # \vspace{\stretch{1}}
+      \vspace{\baselineskip}
+      \vspace{\stretch{1}}
+      \noindent
+      \begin{tabular}{@{}l@{\hspace{22pt}}ll}
+        \textbf{Supervisors}:          & Prof.\ Arthur Richards\\
+                                       & Dr.\ Carl Henrik Ek\\
+      \end{tabular}
+      \vspace{\stretch{1}}
+      \vspace{\baselineskip}
+      \vspace{\baselineskip}
+      \vfill
+    \end{center}
+
+    \cleardoublepage
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % End Titlepage
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  \end{titlepage}
+  #+END_EXPORT
+
+** Abstract
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+#+BEGIN_EXPORT latex
+\begin{SingleSpace}
+\initial{H}ere goes the abstract
+\end{SingleSpace}
+#+END_EXPORT
+
+** Declaration 
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+#+BEGIN_EXPORT latex
+\begin{SingleSpace}
+\begin{quote}
+\initial{I} declare that the work in this dissertation was carried out in accordance with the requirements of  the University's Regulations and Code of Practice for Research Degree Programmes and that it  has not been submitted for any other academic award. Except where indicated by specific  reference in the text, the work is the candidate's own work. Work done in collaboration with, or with the assistance of, others, is indicated as such. Any views expressed in the dissertation are those of the author.
+
+\vspace{1.5cm}
+\noindent
+\hspace{-0.75cm}\textsc{SIGNED: .................................................... DATE: ..........................................}
+\end{quote}
+\end{SingleSpace}
+#+END_EXPORT
+
+** Acknowledgements
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+#+BEGIN_EXPORT latex
+\begin{SingleSpace}
+\initial{H}ere goes the dedication.
+\end{SingleSpace}
+#+END_EXPORT
+* TOC and Mainmatter :ignore:
+#+BEGIN_EXPORT latex
+\tableofcontents
+\mainmatter
+#+END_EXPORT
+
+* Testing Maths Variables
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\singleOutput &= \latentFunc(\singleInput) \\
+\allOutput &= \latentFunc(\allInput)  \\
+\allOutput &= \fk(\allInput) \\
+\fkn &= \fk(\singleInput) = \{ \fkd(\singleInput) \}_{d=1}^{D} \\
+\Fk &= \fk(\allInput) \\
+\Fkd &= \fkd(\allInput) \\
+\F &= \f(\allInput)
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\hkn &= \hk(\singleInput)
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-prior-single-dim}
+p(\Fkd \mid \allInput) &= \mathcal{N}\left( \Fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
+\Kkxx
+\end{align}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-prior}
+\pFk &= \prod_{d=1}^{D} \pFkd
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-prior}
+\pF &= \prod_{k=1}^{K} \pFk = \prod_{k=1}^{K} \pFk
+\end{align}
+#+END_EXPORT
+
+* Introduction
+Many physical systems operate under switching dynamics modes due to
+changing environmental or internal conditions.
+Examples include: robotic grasping where objects with different
+properties have to be manipulated, robotic locomotion in environments with varying surface types
+and the control of aircraft in environments subject to different levels of turbulence.
+When controlling these systems, it may be preferred to find trajectories that remain
+in a single dynamics mode.
+This paper is interested in controlling a DJI Tello quadcopter in an environment
+with spatially varying turbulence induced by a fan at the side of the room, shown
+in Fig. ref:fig-problem-statement.
+It is hard to know the exact transition dynamics due to complex and uncertain
+interactions between the quadcopter and the fan.
+The system's transition dynamics resemble a mixture of two modes: a turbulent mode in front of
+the fan and a non-turbulent mode everywhere else.
+When planning a trajectory from start state $\mathbf{x}_0$ to desired state $\mathbf{x}_f$
+it is preferred to avoid entering the turbulent mode, as it
+results in poor performance and sometimes even system failure.
+
+#+BEGIN_EXPORT latex
+\begin{figure}[!t]
+\centering
+  \includegraphics[width=0.9\columnwidth]{images/quadcopter_bimodal_domain.pdf}
+  \caption{
+This work seeks to velocity control a DJI Tello quadcopter in an indoor environment
+subject to two modes of operation characterised by process noise (turbulence).
+A high turbulence mode is induced by placing a desktop fan at the right side of the room.
+Data from four trajectories following a single 2D $\mathbf{x}=(x,y)$ target trajectory captures the variability
+(process noise) in the dynamics.
+Our goal is to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
+remaining in the non-turbulent mode or prioritise avoiding regions of the learned dynamics
+with high epistemic uncertainty due to lack of training observations.}
+\label{fig-problem-statement}
+\end{figure}
+#+END_EXPORT
+
+Trajectory optimisation comprises a powerful set of techniques for finding open-loop controls of dynamical
+systems such that an objective function is minimised whilst satisfying a set of
+constraints.
+It is commonly used for controlling aircraft, robotic manipulators, and walking
+robots cite:VonStryk1992,Betts1998,Garg2010.
+One caveat to trajectory optimisation is that it requires a relatively accurate mathematical model of
+the system.
+Traditionally, these mathematical models are built using first principles based on physics.
+However, accurately modelling the underlying transition dynamics can be challenging and
+lead to the introduction of model errors.
+For example, both observation and process noise
+are inherent in many real-world systems and can be hard to model
+due to both spatial and temporal variations.
+Incorrectly accounting for this uncertainty can have a detrimental impact on controller performance
+and is an active area of research in the robust
+and stochastic optimal control communities cite:FreemanRandyA.2009,Stengel1988.
+
+The difficulties associated with constructing mathematical models can be overcome by learning from
+observations cite:Ljung1997.
+However, learning dynamics models for control introduces other difficulties.
+For example, it is important to know
+where the model cannot predict confidently due to a lack of training observations.
+This concept is known as epistemic uncertainty and is reduced in the limit of infinite data.
+Probabilistic models have been used to account for epistemic uncertainty and also
+provide a principled approach to modelling stochasticity i.e. aleatoric uncertainty
+cite:Schneider1996,Deisenroth2011.
+For example, cite:Cutler,Deisenroth2011,Pan2014 use Gaussian processes (GPs) to learn
+transition dynamics.
+GPs lend themselves to data-efficient learning through the selection of informative priors, and
+when used in a Bayesian setting offer well calibrated uncertainty estimates.
+Methods for learning probabilistic multimodal transition dynamics have also been proposed:
+cite:Mckinnon used a mixture of GP experts method,
+cite:Moerland studied the used of deep generative models and
+cite:Kaiser2020a proposed a Bayesian model that learns independent
+dynamics modes whilst maintaining a
+probabilistic belief over which mode is responsible for predicting at a given input location.
+
+There has also been work developing control algorithms exploiting learned multimodal transition dynamics
+cite:Herzallah2020.
+However, our work differs as it seeks to find trajectories that
+remain in a single dynamics mode
+whilst avoiding regions of the transition dynamics that cannot be predicted confidently.
+To the best of our knowledge, there is no previous work addressing such trajectory optimisation
+in transition dynamics models.
+
+** Contributions
+** Associated Publications
+* Background and Related Work
+** Dynamical Systems
+Dynamical systems describe the behaviour of a system over time $t$ and
+are a key component of both control theory and reinforcement learning.
+At any given time a dynamical system has a state, which is
+represented as a vector of real numbers $\mathbf{x}(t) \in \R^D$.
+For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
+and an orientation would be represented as $\mathbf{x}(t) = [x(t), y(t), \theta(t)]^{T}$.
+The system can be controlled by applying control actions $\mathbf{u}(t) \in \R^F$ at any given time $t$.
+This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-unimodal-dynamics}
+\stateDerivative(t) &= f(\state(t), \control(t)) + \epsilon(t) \quad \forall t
+\end{align}
+#+END_EXPORT
+where $f : \R^D \times \R^{F} \rightarrow \R^{D}$ represents the transition dynamics function and $\epsilon(t)$
+is an i.i.d process noise term with $\E[\epsilon(t)] = 0$.
+The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
+For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
+for in the process noise term.
+Throughout this thesis it is assumed that the state $\mathbf{x}$ is observed directly and is not subject to
+observation noise.
+This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+in the reinforcement learning literature.
+\todo[inline]{Slightly weird referring to MDP literature on continuous time setting}
+
+\todo[inline]{Should I make a bigger point out of the observation noise assumption}
+
+The system is controlled via a policy $\mathbf{u}(t) = \pi(\mathbf{x}(t), t)$, which given the state $\mathbf{x}(t)$
+and time step $t$ decides which control action $\mathbf{u}(t)$ to apply to the system.
+The policy can be time-dependent and can also depend on all past information up to time step $t$.
+In the time-independent case the policy is denoted $\pi(\mathbf{x}(t))$
+The resulting closed-loop system is denoted $f_{\pi}(\mathbf{x}) = f(\mathbf{x},\pi(\mathbf{x}))$.
+
+
+*** Multimodal Modelling
+products of experts
+
+**** Mixtures of Gaussian Process Experts
+Tresp
+
+infinite mixtures
+
+DAGP
+
+pros and cons of different gating networks
+
+**** Our Motivations
+Motivated by obtaining well-calibrated variance's throughout the model
+placing priors on the gating network
+** Optimal Control
+Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
+over a time period $t \in [t_0, t_f]$ that optimises an objective function $\mathbf{J}_{\pi}(\x)$.
+The objective function might be formulated to solve a particular task or to make the dynamical
+system behave in a certain way.
+
+Typically this objective function is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-objective}
+\mathbf{J} \defeq \phi(\x(t_{f}), t_{f}) + \int^{t_{f}}_{t_{0}} L(\mathbf{x}(t), \mathbf{u}(t), t) \text{d}t,
+\end{align}
+#+END_EXPORT
+which consists of two terms:
+1. a terminal cost term $\phi : \R^{D} \times \R \rightarrow \R$,
+2. an integral cost term (or Lagrangian) $L : \R^{D} \times \R^{F} \times \R \rightarrow \R$.
+
+
+*** Trajectory Optimisation
+Trajectory optimisation seeks to find the state and control trajectories
+for times $t \in [t_0, t_f]$ that
+minimise some cost function $g$ whilst satisfying constraints $c$
+and boundary conditions.
+The trajectory optimisation problem is given by,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-objective}
+\min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \\
+\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics}} \\
+&c(\mathbf{x}(t)) \leq 0 \quad \forall t \\
+&\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f \numberthis
+\end{align*}
+#+END_EXPORT
+*** Model Predictive Control
+** Reinforcement Learning
+** Bayesian Inference
+*** Modelling Epistemic Uncertainty
+*** Epistemic Uncertainty
+
+If we have used observations of a system to train a predictive model then we can only be confident in predictions near our observations.
+As we extrapolate away from the observations we can no longer be certain and this is known as
+epistemic uncertainty.
+It can be reduced by collecting more data and retraining a model.
+This is shown in Figure [[ref:epistemic]].
+#+NAME: epistemic
+#+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
+#+caption: Plot demonstrating the concept of epistemic uncertainty. We can be confident in the learnt function close to our observations but as we exptrapolate away from them we become uncertain what the function should look like. If we have a notion of epistemic uncertainty in a MBRL algorithm we can use it to encourage the agent to visit these areas and collect data, which in turn will reduce the epistemic uncertainty.
+[[file:images/limited_data.pdf]]
+
+*** Aleatoric Uncertainty
+
+As mentioned previously, aleatoric uncertainty consists of process noise and observation noise; uncertainties that are inherent in a system and cannot be reduced.
+#+NAME: bimodal-dataset
+#+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
+#+caption: An artificial 1D dataset with two levels of process noise.
+[[file:images/dataset.pdf]]
+Figure [[ref:bimodal-dataset]] shows an artificial 1D dataset that demonstrates the concept of aleatoric uncertainty.
+In our work we generally assume that there is no observation noise and therefore the aleatoric uncertainty only consists of process noise.
+
+*** Gaussian Processes
+This section first introduces GPs and the sparse GP approximation that is exploited throughout this work.
+**** Sparse Gaussian Processes
+A GP cite:edwardrasmussenGaussian2010 is a distribution over functions $f : \R^{D_f} \rightarrow \R$
+fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$.
+For a given set of inputs  from the
+functions domain $\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}$ the associated function values
+$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$
+are jointly Gaussian,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \bm\mu_{\mathbf{X}}, \mathbf{K}_{\mathbf{X}, \mathbf{X}})
+\end{equation}
+#+END_EXPORT
+where $\bm\mu_{\mathbf{X}}= \mu(\mathbf{X})$ is the mean vector, and
+$\mathbf{K}_{\mathbf{X},\mathbf{X}} = k(\mathbf{X}, \mathbf{X})$ is the covariance function evaluated
+between the inputs $\mathbf{X}$.
+In this work, the squared exponential covariance function with Automatic Relevance Determination
+is used for all GPs.
+The distribution over the function value $f_*$ at a new input $\mathbf{x}_*$ (i.e. to make a prediction)
+is given by the conditional,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-gp-prediction}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2) \numberthis \\
+\mu &= \mu_{\mathbf{x}_*} + \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} (\mathbf{f} - \bm\mu_{\mathbf{X}}) \\
+\sigma^2 &= k_{\mathbf{x}_*, \mathbf{x}_*} - \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} \mathbf{k}_{\mathbf{X}, \mathbf{x}_*}.
+\end{align*}
+#+END_EXPORT
+The conditional in Eq. ref:eq-gp-prediction is computationally expensive due to conditioning
+on all of the training data $\mathbf{X}, \mathbf{f}$.
+Introducing a set of $M$ inducing points from the same GP prior can reduce the computational cost
+if $M < N$.
+The inducing inputs are denoted $\bm\xi$ and outputs as
+$\hat{\mathbf{f}} = f(\bm\xi)$.
+The inducing outputs
+$\hat{\mathbf{f}}$ are jointly Gaussian with the latent function values $\mathbf{f}$.
+The GP predictive distribution can be approximated by conditioning on this
+smaller set of inducing points,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-prediction}
+p({f}_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &\approx
+p({f}_* \mid \mathbf{x}_*, \hat{\mathbf{f}}, \bm\xi) \\
+p(\hat{\mathbf{f}}) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mathbf{m}, \mathbf{S}).
+\end{align}
+#+END_EXPORT
+The approximation becomes exact when the
+inducing points $\hat{\mathbf{f}}$ are a sufficient statistic
+for the latent function values $\mathbf{f}$ cite:Titsias2009.
+# The predicted latent function values are then mutually independent given the inducing points.
+# A central assumption is that given enough well
+# placed inducing points $\hat{\mathbf{f}}$ they are a
+# sufficient statistic for the latent function values $\mathbf{f}$.
+
+*** Variational Inference
+
+* Probabilistic Inference for Multimodal Dynamical Systems
+\todo[inline]{This section could be broad (more than just GP-based gating networks) and the next section focus on gating networks specifically.}
+This chapter introduces the class of continuous-time multimodal dynamical systems
+that this work considers and then details an approach to performing Bayesian inference in such models.
+Throughout this chapter it is assumed that pairs of input $\x$ and output $\y$ observations
+have previously been sampled from the system at a constant frequency,
+(i.e. with a fixed time-step) to give a data set $\dataset$.
+Based on this assumption, this chapter constructs a discrete-time representation of the systems transition dynamics
+and then formulates this discrete-time representation as a probabilistic model based on GPs.
+This thesis is interested in multimodal systems where the dynamics modes vary over the
+input (state, control) domain, such that the mode switching can by modelled
+by input-dependent functions.
+The set of functions governing the mode switching is commonly referred to as a gating network.
+This work is motivated by data-efficient learning and specifically focuses on gating networks
+where prior knowledge of the system can be encoded into the model via informative priors.
+As a result, the probabilistic model constructed in this chapter resembles a \acrfull{mogpe}
+with a \acrshort{gp}-based gating network.
+This work derives a novel variational lower bound based on sparse GPs that
+enables the model to be trained with stochastic gradient methods.
+
+
+** Multimodal Dynamical Systems
+This work considers continuous-time, continuous-state, nonlinear stochastic dynamics, given by,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-dynamics-cont}
+\dot{\mathbf{x}}(t) &= f(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon(t) \numberthis \\
+&= f^{(k)}(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon^{(k)}(t)
+\quad \text{if} \quad \alpha(t)=k
+%\quad \text{if} \quad \alpha(\mathbf{x}(t), \mathbf{u}(t))=k
+\end{align*}
+#+END_EXPORT
+with states $\mathbf{x} \in \R^D$ and controls $\mathbf{u} \in \R^F$.
+One of $K$ dynamics modes $\{f^{(k)}\}_{k=1}^K$ and associated noise models
+$\epsilon^{(k)}(t) \sim \mathcal{N}(0, (\sigma^{(k)})^2)$
+are selected by a switching (or gating) variable
+$\alpha(t) \in \{1,\ldots,K\}$.
+
+The gating variable $\alpha$ is of particular interest in this work.
+which governs the 
+
+** Model Definition
+
+This work in this section assumes access to historical data comprising state transitions
+from $E$ trajectories of length $N$ sampled with a fixed time step $\Delta_t=t_*$.
+The resulting data set has $T = E N$ elements, and the independent trajectories
+are appended along time to get the data set
+$\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$.
+
+This work learns a discrete-time representation of Eq. ref:eq-dynamics-cont,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-dynamics-k}
+\Delta\mathbf{x}_{t}
+= f^{(k)}(\mathbf{x}_{t-1}, &\mathbf{u}_{t-1} ; \Delta t = t_*) + \epsilon_{t-1}^{(k)}
+\quad \text{if} \quad \alpha_t=k,
+\end{align}
+#+END_EXPORT
+where $\mathbf{x}_t \in \R^D$ and $\mathbf{u}_t \in \R^F$ are the states and controls
+at time $t$ respectively, and $\alpha_t \in \{1, \dotsc, K\}$ is a mode indicator variable that
+indicates one of $K$ dynamics modes at time $t$.
+
+A time series of observations from time $a$ to time $b$ (inclusive)
+is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+A single input is denoted as
+$\hat{\mathbf{x}}_{t-1} = (\mathbf{x}_{t-1}, \mathbf{u}_{t-1})$, all inputs are denoted as
+$\hat{\mathbf{x}}_{1:T}$, and the set of all outputs as $\Delta\mathbf{x}_{1:T}$.
+The $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode's latent transition dynamics
+function $f^{(k)}$, evaluated at $\hat{\mathbf{x}}_{t-1}$,
+is denoted $f_{t,d}^{(k)} = f^{(k)}(\hat{\mathbf{x}}_{t-1})$,
+for all dimensions as $\mathbf{f}^{(k)}_{t}$
+and at all data points as $\mathbf{f}^{(k)}_{1:T}$.
+
+** Bayesian Model
+
+The model is built upon sparse GP priors on each of the transition dynamics functions $f^{(k)}$
+with independent GPs placed on each state dimension $d$,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-dynamics-prior}
+p\left(\mathbf{f}^{(k)}_{1:T} \mid \hat{\mathbf{x}}_{1:T}, \hat{\mathbf{f}}^{(k)} \right) =
+&\prod_{t=1}^T
+p\left(\mathbf{f}^{(k)}_{t} \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)} \right) \numberthis \\
+&\prod_{t=1}^T \prod_{d=1}^D
+p\left(f^{(k)}_{t,d} \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}_{d} \right)
+\end{align*}
+#+END_EXPORT
+where $p\left(f^{(k)}_{t,d} \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}_{d} \right)$
+is a sparse GP conditional (Eq. ref:eq-sparse-gp-prediction).
+For notational conciseness, the dependency on the inducing inputs $\bm\xi^{(k)}_f$ is dropped
+throughout.
+The $M$ inducing inputs and outputs associated with the $d^{\text{th}}$ dimension
+of the $k^{\text{th}}$ mode's latent function $f^{(k)}$ are denoted as
+$\bm\xi_{f,d}^{(k)}$ and
+$\hat{\mathbf{f}}^{(k)}_d$ respectively.
+They are collected as
+$\bm\xi^{(k)}_f$ and $\hat{\mathbf{f}}^{(k)}$ for all output dimensions
+and as $\bm\xi_f$ and $\hat{\mathbf{f}}$ for all modes.
+The process noise in each mode is modelled as,
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-likelihood}
+p\left(\Delta\mathbf{x}_{t} \mid \mathbf{f}^{(k)}_{t}\right)
+= \mathcal{N}\left(\Delta\mathbf{x}_{t} \mid \mathbf{f}_t^{(k)}, \text{diag}\left(\left(\sigma^{(k)}_{1}\right)^2, \ldots, \left(\sigma^{(k)}_D\right)^2\right) \right),
+\end{align*}
+\normalsize
+#+END_EXPORT
+where $\left(\sigma^{(k)}_{d}\right)^2$ represents the noise variance associated
+with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode.
+# #+BEGIN_EXPORT latex
+# \small
+# \begin{gathered} \label{eq-likelihood}
+# p\left(\Delta\mathbf{x}_{t} \mid \mathbf{f}^{(k)}_{t}\right)
+# = \mathcal{N}\left(\Delta\mathbf{x}_{t} \mid \mathbf{f}_t^{(k)}, \text{diag}\left(\left(\sigma^{(k)}_{1}\right)^2, \ldots, \left(\sigma^{(k)}_D\right)^2\right) \right),
+# \end{gathered}
+# \normalsize
+# #+END_EXPORT
+
+# The dynamics modes given the inducing points,
+# #+BEGIN_EXPORT latex
+# \small
+# \begin{align*} \label{eq-dynamics-mode}
+# p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T}, \hat{\mathbf{f}}^{(k)}) =
+# \prod_{t=1}^T \int
+# &p\left(\Delta\mathbf{x}_t \mid \mathbf{f}^{(k)}_t\right)
+# p\left(\mathbf{f}^{(k)}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)} \right)
+# \text{d} \mathbf{f}^{(k)}_t
+# \end{align*}
+# \normalsize
+# #+END_EXPORT
+
+# The dynamics modes are combined by the gating network to obtain,
+# #+BEGIN_EXPORT latex
+# \small
+# \begin{align*} \label{eq-marginal-likelihood}
+# p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T}, \hat{\mathbf{f}}) =
+# \prod_{t=1}^T \sum_{k=1}^K
+# &\Pr(\alpha_t = k \mid \hat{\mathbf{x}}_{t-1})
+# p(\Delta\mathbf{x}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)})
+# %&\int p\left(\Delta\mathbf{x}_t \mid \hat{\mathbf{f}}^{(k)}\right)
+# %p\left(\hat{\mathbf{f}}^{(k)} \mid \hat{\mathbf{x}}_{t-1}\right) \text{d} \hat{\mathbf{f}}^{(k)}
+# %&p(\Delta\mathbf{x}_t \mid \alpha_t=k, \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}). \numberthis \\
+# \end{align*}
+# \normalsize
+# #+END_EXPORT
+
+** Gating Network
+The gating network governs how the dynamics switch between modes.
+This work is interested in spatially varying modes so
+formulates an input dependent Categorical distribution over $\alpha_t$,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-prob-mass}
+P\left(\alpha_t \mid \mathbf{h}_t\right) = \prod_{k=1}^K \left(\Pr(\alpha_t=k \mid \mathbf{h}_t)\right)^{[\alpha_t = k]}
+= \text{softmax}(\mathbf{h}_t),
+\end{align}
+\normalsize
+#+END_EXPORT
+where $[\alpha_t=k]$ denotes the Iverson bracket.
+The probabilities of this Categorical distribution $\Pr(\alpha_t=k \mid \mathbf{h}_t)$
+are obtained by evaluating $K$ latent
+gating functions $\{h^{(k)}\}_{k=1}^K$ and normalising their output.
+Each gating function evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
+as $h^{(k)}_t = h^{(k)}(\hat{\mathbf{x}}_{t-1})$
+and at all observations ${h}^{(k)}_{1:T}$.
+The set of all gating functions evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
+as $\mathbf{h}_t$ and at all observations as $\mathbf{h}_{1:T}$.
+Each gating function $h^{(k)}$ describes how its corresponding mode's mixing
+probability varies over the input space.
+
+This work is interested in finding trajectories that can avoid areas of the transition dynamics model
+that cannot be predicted confidently.
+Placing independent sparse GP priors on each gating function
+provides a principled approach to
+modelling the epistemic uncertainty associated with each gating function.
+The gating function's posterior covariance is a quantitative value that can be exploited by the
+trajectory optimisation.
+# GPs also provide data-efficient and interpretable learning through the selection of informative mean
+# and covariance functions.
+# For example, if the transition dynamics modes are subject to oscillatory mixing then a periodic
+# covariance function could be selected.
+
+Each gating function's inducing inputs are denoted
+$\bm\xi_h^{(k)}$ and outputs as $\hat{\mathbf{h}}^{(k)}$.
+For all gating functions, they are collected as $\bm\xi_h$ and $\hat{\mathbf{h}}$ respectively.
+The probability that the $t^{\text{th}}$ observation is generated by mode $k$
+given the inducing inputs is obtained by marginalising $\mathbf{h}_t$,
+#+BEGIN_EXPORT latex
+% \small
+\begin{align*} \label{eq-indicator-mult}
+\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}} )
+&= \int \text{softmax}_k(\mathbf{h}_t) p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) \text{d} \mathbf{h}_t,
+\end{align*}
+#+END_EXPORT
+where $p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) = \prod_{k=1}^K p\left({h}^{(k)}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}^{(k)}\right)$
+is the $K$ independent sparse GP priors on the gating functions.
+
+** Generative Model
+This model makes single-step probabilistic predictions,
+where the predictive distribution over the state difference $\Delta \mathbf{x}_{t}$ is
+given by a mixture of Gaussians.
+This provides the model flexibility to model multimodal transition dynamics $f$ as mixtures of $K$ modes.
+With this formulation, the marginal likelihood can be rewritten as,
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-marginal-likelihood}
+p(\Delta\mathbf{x}_{1:T} | \hat{\mathbf{x}}_{1:T}) =
+&\prod_{t=1}^T  \sum_{k=1}^K \Bigg(
+\underbrace{\left\langle \Pr\left(\alpha_t = k | \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}\right) \right\rangle_{p\left(\hat{\mathbf{h}} \mid \bm\xi_h\right)}}_{\text{Mixing Probability}}  \\
+&\underbrace{\left\langle p\left(\Delta\mathbf{x}_t | \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}\right) \right\rangle_{p\left(\hat{\mathbf{f}}^{(k)} \mid \bm\xi^{(k)}_f\right)}}_{\text{Dynamics mode } k} \Bigg), \numberthis
+\end{align*}
+\normalsize
+#+END_EXPORT
+where $\left\langle \cdot \right\rangle_{p(x)}$ denotes an expectation under $p(x)$.
+Fig. [[ref:fig:graphical_model]]
+shows the graphical model where the $K$ latent gating functions $h^{(k)}$
+are evaluated and normalised to obtain the mixing probabilities
+$\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1})$.
+The mode indicator variable $\alpha_t$ is then sampled from a Categorical distribution
+goverend by these probabilities.
+The indicated mode's latent function $f^{(k)}$ and process noise $\sigma^{(k)}$ are
+then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+  \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[const] (x) {$\hat{\mathbf{x}}_{t-1}$};
+      \node[latent, left=of x, yshift=-1.4cm] (f) {$\mathbf{f}^{(k)}_t$};
+      %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
+      \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {${h}^{(k)}_t$};
+
+      \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\hat{\mathbf{f}}^{(k)}$};
+      \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\hat{\mathbf{h}}^{(k)}$};
+      \node[const, left=of uk, xshift=0.4cm] (zk) {$\bm\xi^{(k)}_f$};
+      \node[const, right=of uh, xshift=-0.4cm] (zh) {$\bm\xi^{(k)}_h$};
+
+      \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\bm\theta^{(k)}$};
+      \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\bm\phi^{(k)}$};
+
+      \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\sigma^{(k)}$};
+
+      \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\Delta\mathbf{x}_t$};
+      %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
+      \node[latent, right=of y, xshift=-0.4cm] (a) {${\alpha}_t$};
+
+      %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
+
+      \factor[above=of a] {h-a} {left:Cat} {h} {a};
+
+      \draw[post] (a)--(y);
+      \draw[post] (x)-|(f);
+      %\draw[post] (f)--(yk);
+      \draw[post] (f)--(y);
+      %\draw[post] (yk)--(y);
+      %\draw[post] (h)--(a);
+      \draw[post] (x)-|(h);
+      \draw[post] (uk)--(f);
+      \draw[post] (uh)--(h);
+      \draw[post] (zk)--(uk);
+      \draw[post] (zh)--(uh);
+      \draw[post] (thetak)--(f);
+      \draw[post] (phik)--(h);
+      \draw[post] (sigmak)|-(y);
+
+      \plate {} {(x) (y) (a) (f) (h)} {$T$};
+      %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
+      \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$K$};
+      \plate {} {(zh) (uh) (h) (phik)} {$K$};
+    \end{tikzpicture}
+    }
+  \caption{Graphical model of the transition dynamics
+where the state difference $\Delta\mathbf{x}_{t}$
+is generated by pushing the state and control $\hat{\mathbf{x}}_{t-1}$
+through the latent process.}
+\label{fig:graphical_model}
+\end{figure}
+#+END_EXPORT
+
+** Inference [[label:sec-inference]]
+# #+BEGIN_EXPORT latex
+# \begin{figure*}[!t]
+# \centering
+# \subfloat[]{\includegraphics[width=4.6in]{images/svgp_2d_traj.pdf}
+# \label{fig-svgp_2d_traj}}
+# \hfil
+# \subfloat[]{
+# \includegraphics[width=2.in]{images/mixing_prob_vs_time.pdf}
+# \label{fig-opt-traj-metric}}
+# \caption{
+# Contour plots showing the GP posterior mean (left) and variance (right)
+# over the gating function associated with dynamics mode 1
+# after training on a subset of the quadcopter data set.
+# The initial and optimised trajectories are overlayed to show the impact of the
+# GPs mean and variance on the trajectory optimisation with different $\lambda$ settings.}
+# %\label{fig-traj-results}
+# \end{figure*}
+# #+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=1.6\columnwidth]{images/svgp_2d_traj.pdf}
+\caption{
+Contour plots showing the GP posterior mean (left) and variance (right)
+over the gating function associated with dynamics mode 1
+after training on a subset of the quadcopter data set.
+The initial and optimised trajectories are overlayed to show the influence of the
+GP's mean and variance on the trajectory optimisation with different $\lambda$ settings.}
+\label{fig-svgp_2d_traj}
+\end{figure*}
+#+END_EXPORT
+Computing the posterior based on Eq. ref:eq-marginal-likelihood
+is intractable due to the marginalisation of $\mathbf{h}$ in the gating network.
+This work derives a variational approximation based on sparse GPs that provides scalability
+by utilising stochastic gradient-based optimisation.
+Following the approach by cite:Titsias2009, the probability space has been augmented
+with a set of $M$ inducing points for each GP.
+Instead of collapsing these inducing points, they are explicitly
+represented as a variational distribution, as seen in cite:Hensman2013.
+A mean-field variational approximation is followed for the inducing output distribution of
+each GP, resulting in the variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-variational-dist}
+q\left(\hat{\mathbf{f}}, \hat{\mathbf{h}}\right)
+= \prod_{k=1}^K \bigg(& \mathcal{N}\left(\hat{\mathbf{h}}^{(k)} \mid \mathbf{m}^{(k)}_{h}, \mathbf{S}^{(k)}_{h}\right) \numberthis \\
+&\prod_{d=1}^D \mathcal{N}\left(\hat{\mathbf{f}}^{(k)}_d \mid \mathbf{m}^{(k)}_{f,d}, \mathbf{S}^{(k)}_{f,d}\right) \bigg).
+\end{align*}
+#+END_EXPORT
+This variational distribution and Jensen's inequality are used to lower bound the
+log marginal likelihood
+$\text{log} p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T})$,
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-lower-bound-fact}
+%\text{log} p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T}) \geq
+\mathcal{L} =
+&\sum_{t=1}^T \Bigg\langle \text{log} \sum_{k=1}^K
+\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}})
+p(\Delta\mathbf{x}_{t} \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)})
+\Bigg\rangle_{q(\hat{\mathbf{f}},\hat{\mathbf{h}})} \\
+&- \sum_{k=1}^K \text{KL}\left( q\left(\hat{\mathbf{f}}^{(k)}\right) \mid\mid p\left(\hat{\mathbf{f}}^{(k)} \mid \bm\xi_f^{(k)}\right) \right) \\
+&- \sum_{k=1}^K \text{KL} \left( q\left(\hat{\mathbf{h}}^{(k)}\right) \mid\mid p\left(\hat{\mathbf{h}}^{(k)} \mid \bm\xi_h^{(k)}\right) \right). \numberthis
+\end{align*}
+\normalsize
+#+END_EXPORT
+Importantly, taking samples for single data points is straightforward and can be implemented efficiently.
+Evaluating the variational expectation is not
+analytically tractable due to the variational distributions, so
+it is approximated by drawing single samples from
+$q(\hat{\mathbf{f}})$ and $q(\hat{\mathbf{h}})$.
+The model captures the dependencies in the joint distribution of the data through the
+inducing points, but as $M \ll N$ these have a much lower computational burden.
+The inducing inputs ($\bm\xi_f$ and $\bm\xi_h$) are treated as variational hyperparameters and are
+optimised along with
+the kernel hyperparameters and noise variances.
+
+** Results
+The model was trained on data collected from the velocity-controlled quadcopter experiment.
+The controls were kept constant during data collection to reduce the dynamics model to
+$\Delta\mathbf{x}_t = f(\mathbf{x}_{t-1})$.
+The trajectory optimisation then exploits differential flatness cite:Ross2004 to
+recover the velocity controls.
+The model was trained with $K=2$ dynamics modes,
+and a subset of the observations were withheld during training to test the model's ability to model
+epistemic uncertainty.
+Fig. ref:fig-problem-statement shows mode 1's mixing probability over the domain
+which has clearly learned two dynamics modes characterised by process noise.
+Fig. ref:fig-svgp_2d_traj shows the predictive mean (left) and variance (right) of the gating
+function associated with dynamics mode 1 ($h^{(1)}$).
+The mean is high where the model believes mode 1 is responsible for predicting, low where
+it believes another mode is responsible, and zero where it is uncertain.
+The variance (right) has also clearly captured information regrading the
+epistemic uncertainty, i.e. where there are no observations.
+
+# The model was trained on a subset of the quadcopter data set
+# with some of the observations removed and with $K=2$ dynamics modes.
+# The controls were kept constant during data collection to reduce the dynamics model to
+# $\Delta\mathbf{x}_t = f(\mathbf{x}_{t-1})$.
+# Fig. ref:fig-problem-statement shows the predictive mode mixing probability over the domain
+# which has clearly learned two dynamics modes characterised by process noise.
+# Fig. ref:fig-svgp_2d_traj shows the predictive mean (left) and variance (right) of the gating
+# function associated with dynamics mode 1 ($h^{(1)}$).
+# The mean is high where the model believes mode 1 is responsible for predicting, low where
+# it believes another mode is responsible and zero where it is uncertain.
+# The variance (right) has also clearly captured information regrading the
+# epistemic uncertainty, i.e. where there are no observations.
+
+* Trajectory Optimisation in Desired Modes
+This section presents a two-stage method to
+perform trajectory optimisation in multimodal dynamical systems with unknown nonlinear stochastic
+transition dynamics.
+The method finds trajectories that remain in a preferred dynamics mode
+where possible and in regions of the transition dynamics model that
+have been observed and can be predicted confidently.
+The first stage leverages a mixture of Gaussian process experts method to learn a predictive
+dynamics model from historical data.
+Importantly, this model learns a gating function that indicates the probability of being in a particular
+dynamics mode at a given state location.
+In the second stage,
+this gating function acts as a coordinate map for a latent Riemannian manifold on which
+geodesics are solutions to our trajectory optimisation problem.
+Geodesics on this manifold satisfy a continuous-time second-order ODE.
+A set of collocation constraints are derived that ensure trajectories are solutions to this ODE,
+implicitly solving the trajectory optimisation problem.
+
+Motivated by trajectory optimisation, this work adopts (and extends) the well-known
+mixture of GP experts (MoGPE) method with a GP-based gating network to learn a time-invariant
+transition dynamics model cite:Tresp.
+The trajectory optimisation exploits the geometric structure
+learned by the GP-based gating network along with its well calibrated uncertainty estimates.
+The trajectory optimisation is projected onto a continuous-time
+ODE whose solutions are geodesics on a probabilistic manifold, induced
+by one of the latent gating function GPs.
+Solutions to this ODE are trajectories that remain in a single dynamics mode
+(where possible) and avoid regions of the dynamics that cannot be predicted confidently.
+This latent geodesic ODE is solved using a Hermite-Simpson collocation method cite:Kelly2017.
+
+The remainder of this paper details our two-stage approach to learning the transition dynamics
+and performing trajectory optimisation.
+Section ref:sec-problem-statement formally states our problem and
+Section ref:sec-dynamics details the formulation of the transition dynamics as a probabilistic
+model.
+Section ref:sec-inference then derives a novel variational lower bound for performing scalable Bayesian
+inference in the model. Section ref:sec-traj-opt recaps concepts from Riemannian
+geometry before detailing how they are extended to probabilistic geometries and
+used to project the trajectory optimisation onto the latent geodesic ODE.
+It then details how this latent geodesic ODE is solved using direct collocation.
+Section ref:sec-results gives results of the method tested on a real-world
+velocity-controlled quadcopter example.
+
+
+** Problem Statement label:sec-problem-statement
+This work is interested in finding trajectories that,
+1. remain in a preferred dynamics mode $k^*$ where possible,
+2. avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations).
+The cost over a trajectory takes the form,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-cost-trajectory}
+J&= \int_{t_0}^{t_f}  g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t)) + g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \numberthis \\
+&= \int_{t_0}^{t_f} - \Pr(\alpha(t)=k^*) + \lambda \V_{\text{epistemic}}\left[f(\mathbf{x}(t), \mathbf{u}(t))\right]  \text{d}t
+\end{align*}
+#+END_EXPORT
+where $\V_{\text{epistemic}}$ is the variance due to epistemic uncertainty arising due to
+learning $f$ from observations and $\lambda$ is a user-tuneable parameter.
+The cost has a term which favours remaining in dynamics mode $k^*$
+and a term which favours trajectories avoiding regions of the
+dynamics with high epistemic uncertainty.
+This work does not explicitly define the cost function in Eq. ref:eq-cost-trajectory but instead
+projects the trajectory optimisation onto a latent ODE whose solutions implicitly minimise it.
+
+** Trajectory Optimisation label:sec-traj-opt
+This work seeks to solve the trajectory optimisation in Eq. ref:eq-objective, i.e.
+find trajectories from $\mathbf{x}_0$ to $\mathbf{x}_f$ that
+minimise the cost in Eq. ref:eq-cost-trajectory.
+This section details our approach that
+projects the trajectory optimisation onto one of the gating function's GPs,
+implicitly minimising the cost function in Eq. ref:eq-cost-trajectory.
+
+The length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
+manifold given by the mean (Fig. ref:fig-svgp_2d_traj left)
+increases when it passes over the contours - analogous to climbing a hill.
+Given appropriate scaling of the mean,
+shortest trajectories (geodesics) between two locations will be those that attempt to follow contours
+i.e. remain in a single mode.
+Geodesics are solutions to a continuous-time second-order ODE onto which the trajectory
+optimisation is projected.
+This section now recaps concepts of Riemannian geometry before extending them to probabilistic geometries
+and detailing how this latent ODE is solved using direct collocation.
+
+*** A Geometric Cost Function
+The cost function in Eq. ref:eq-cost-trajectory is difficult to pose, but
+the $g_{\text{mode}}$ term can be expressed as finding shortest
+paths on the desired mode's gating function.
+This formulation is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-geodesic-objective}
+\min \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t
+\end{align}
+#+END_EXPORT
+where $\mathbf{G}(\mathbf{x}(t))$ is the metric tensor at $\mathbf{x}(t)$ for a Riemannian manifold
+encoding the desired cost, i.e. the desired mode's gating function.
+Intuitively Riemannian manifolds are smoothly curved spaces with
+an inner product.
+Formally, they are smooth manifolds equipped with a Riemannian metric cite:Carmo1992.
+#+BEGIN_EXPORT latex
+\begin{definition}[Riemannian Metric]
+A Riemannian metric $\mathbf{G}$ on a
+manifold $\mathcal{M}$ is a symmetric and positive definite matrix which defines
+a smoothly varying inner product
+$\langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b$
+in the tangent space $T_{\mathbf{x}}\mathcal{M}$, for each point $\mathbf{x} \in \mathcal{M}$ and
+$\dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \in T_{\mathbf{x}}\mathcal{M}$.
+\end{definition}
+#+END_EXPORT
+
+
+# The gating function defining the coordinate map of the Riemannian manifold is modelled as a
+# sparse variational Gaussian process and is therefore probabilistic.
+# This work extends the probabilistic metric tensor by cite:Tosi2014 to sparse
+# variational GPs.
+The Riemannian manifold in this work is actually probabilistic because its coordinate
+map is modelled as a sparse variational GP.
+This work follows cite:Tosi2014 and uses a metric tensor that captures the variance in the manifold
+by means of a probability distribution.
+In particular, the expected value of this metric tensor contains a covariance term which
+leads to lengths on the manifold increasing in areas of high covariance.
+This is a desirable behaviour because it encourages trajectories to
+avoid regions of the learned dynamics with high epistemic uncertainty -
+implementing the $g_{\text{epistemic}}$ cost term in Eq. ref:eq-cost-trajectory.
+
+Motivated by obtaining a probability distribution over the metric tensor, they
+introduce the following Riemannian metric,
+#+BEGIN_EXPORT latex
+\begin{align}
+  \langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{J}^T \mathbf{J} \dot{\mathbf{x}}_b =
+  \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b
+\end{align}
+#+END_EXPORT
+where $\mathbf{J}=\frac{\partial h}{\partial \mathbf{x}}$ denotes the Jacobian of $h$.
+As the differential operator is linear, the derivative of a GP is also a GP.
+For a sparse GP
+the Jacobian $\mathbf{J}_*$ of the function evaluated at a new input $\mathbf{x}_*$
+is jointly Gaussian with the function's associated inducing outputs.
+For the $k^{\text{th}}$ gating function it is given by,
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-joint-jacobian-dist}
+p(\mathbf{J}^{(k)}_*, \hat{\mathbf{h}}^{(k)} &\mid \mathbf{x}_*, \bm\xi_h^{(k)}) = \\
+& \mathcal{N}\left(
+\left[\begin{array}{c}
+        \mathbf{J}^{(k)}_* \\
+        \hat{\mathbf{h}}^{(k)}
+      \end{array}\right] \mid
+\left[\begin{array}{c}
+        \bm{0} \\
+        \bm{\mu}_h^{(k)}
+      \end{array}\right], \left[\begin{array}{cc}
+                              \partial^2\mathbf{K}_{**}^{(k)} & \partial\mathbf{K}_{*h}^{(k)} \\
+                            \partial\mathbf{K}_{h*}^{(k)} & \mathbf{K}_{hh}^{(k)}
+                          \end{array}\right]\right),
+\end{align*}
+\normalsize
+#+END_EXPORT
+where $\K_{hh}^{(k)} = k^{(k)}\left(\bm\xi_h^{(k)}, \bm\xi_h^{(k)}\right) \in \R^{M \times M}$ is the
+$k^{\text{th}}$ gating function's covariance function evaluated between its inducing inputs,
+$\partial\K_{*h}^{(k)} = \frac{\partial k^{(k)}\left(\mathbf{x}_*, \bm\xi_h^{(k)}\right)}{\partial \mathbf{x}_*} \in \R^{D \times M}$ is
+its partial derivative w.r.t its first input (the new input $\mathbf{x}_*$), and
+$\partial^2\K_{**}^{(k)} = \frac{\partial^2 k^{(k)}\left(\mathbf{x}_*, \mathbf{x}_*\right)}{\partial \mathbf{x}_* \partial \mathbf{x}_*} \in \R^{D \times D}$
+is its derivative w.r.t both inputs (which are both the new input $\mathbf{x}_*$).
+Remembering that the inducing outputs are actually probabilistic and modelled as a Gaussian
+$q\left(\hat{\mathbf{h}}^{(k)}\right) = \mathcal{N}\left(\hat{\mathbf{h}}^{(k)} \mid \mathbf{m}_h^{(k)}, \mathbf{S}_h^{(k)}\right)$,
+the predictive distribution of the Jacobian given a new input $\mathbf{x}_*$
+is obtained by marginalising the inducing outputs,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-predictive-jacobian-dist}
+p\left(\mathbf{J}^{(k)}_* | \mathbf{x}_*, \bm\xi_h^{(k)}\right)
+&=\int q\left(\hat{\mathbf{h}}^{(k)}\right) p\left(\mathbf{J}^{(k)}_* \mid \mathbf{x}_*, \hat{\mathbf{h}}^{(k)}, \bm\xi_h^{(k)}\right) \text{d} \hat{\mathbf{h}}^{(k)} \\
+&= \mathcal{N}\left(\mathbf{J}^{(k)}_* \mid \bm\mu_J^{(k)}, \mathbf{\Sigma}_{J}^{(k)}\right). \numberthis
+\end{align*}
+#+END_EXPORT
+This induces a non-central Wishart distribution over the metric tensor $\mathbf{G}$,
+#+BEGIN_EXPORT latex
+\begin{align}
+  \mathbf{G}=\mathcal{W}_{D+F}\left(p, \boldsymbol{\Sigma}_{J}, \mathbb{E}\left[\mathbf{J}^{\top}\right] \mathbb{E}[\mathbf{J}]\right),
+\end{align}
+#+END_EXPORT
+where $p$ is the number of degrees of freedom (always one in our case).
+The expected metric tensor is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expected-metric}
+  \E[\mathbf{G}] = \E[\mathbf{J}^T] \E[\mathbf{J}] + \mathbf{\Sigma}_J.
+\end{align}
+#+END_EXPORT
+This expected metric tensor includes a covariance term $\mathbf{\Sigma}_J$ which implies that the
+metric is larger when the covariance in the mapping is higher.
+As a result, trajectories minimising Eq. ref:eq-geodesic-objective endowed with this
+metric will attempt to avoid regions of the transition dynamics with high epistemic uncertainty.
+
+# where,
+# #+BEGIN_EXPORT latex
+# \small
+# \begin{align*} \label{eq-predictive-jacobian-mean-var}
+# \bm\mu_J^{(k)} &= \partial\mathbf{K}_{*h}^{(k)} \left( \mathbf{K}_{hh}^{(k)}\right)^{-1} \mathbf{m}_h^{(k)}, \\
+# \mathbf{\Sigma}_J^{(k)} &= \partial^2{\K_{**}^{(k)}} -
+# \partial{\K_{*h}^{(k)}} \left(\mathbf{K}_{hh}^{(k)}\right)^{-1} \partial{\K_{h*}^{(k)}} \\
+# &+ \partial{\K_{*h}^{(k)}} \left(\mathbf{K}_{hh}^{(k)}\right)^{-1} \mathbf{S}_h^{(k)} \left(\mathbf{K}_{hh}^{(k)}\right)^{-1} \partial{\K_{h*}^{(k)}}.
+# \end{align*}
+# \normalsize
+# #+END_EXPORT
+
+*** Latent Geodesic ODE Collocation
+#+BEGIN_EXPORT latex
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.8\columnwidth]{images/mixing_prob_vs_time.pdf}
+\caption{Comparision of the intial and optimised trajectories' performance at staying in the desired mode. The plot shows mode 1's mixing probability over the trajectories for two settings of $\lambda$.}
+\label{fig-mixing_prob_vs_time}
+\end{figure}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.8\columnwidth]{images/epistemic_var_traj.pdf}
+\caption{Comparision of the trajectories' performance at avoiding
+regions of the learned transition dynamics with high epistemic uncertainty for two settings of $\lambda$.
+The plot shows the GP's posterior variance associated with mode 1's gating function over the
+trajectories.}
+\label{fig-epistemic_var_vs_time}
+\end{figure}
+#+END_EXPORT
+Trajectories minimising Eq. ref:eq-geodesic-objective are geodesics on $\mathcal{M}$
+and must satisfy the continuous-time second-order ODE cite:Carmo1992,
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-2ode}
+ \ddot{\mathbf{x}}(t)
+&= f_G(t, \dot{\mathbf{x}}, \mathbf{x}) \\
+&=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{x}(t))]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right), \numberthis
+\end{align*}
+\normalsize
+#+END_EXPORT
+where $\operatorname{vec}[\mathbf{G}(\mathbf{x}(t)])$ stacks the columns of $\mathbf{G}(\mathbf{x}(t))$
+and $\otimes$ denotes the Kronecker product.
+Performing  trajectory optimisation in Eq. ref:eq-objective with the cost function in Eq. ref:eq-cost-trajectory
+is equivalent to solving the ODE in Eq. ref:eq-2ode subject to the same boundary conditions.
+However, since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, it cannot
+be solved with simple forward or backward integration.
+Instead, the problem is transcribed using the approach of differential
+flatness cite:Milam2000,Ross2004.
+A set of outputs $\mathbf{z}(t)$ are defined such that the
+states $\mathbf{x}(t)$ and controls $\mathbf{u}(t)$ can be
+expressed in terms of the flat output $\mathbf{z}(t)$ and a finite number of its derivatives,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\mathbf{x}(t) &= A(\mathbf{z}(t), \dot{\mathbf{z}}(t), \ldots) \\
+\mathbf{u}(t) &= B(\mathbf{z}(t), \dot{\mathbf{z}}(t), \ldots).
+\end{align}
+#+END_EXPORT
+In the velocity-controlled quadcopter example, the flat output is the
+state $\mathbf{z}(t) = \mathbf{x}(t)$
+and the control is simply the state derivative
+$\mathbf{u}(t) &= \dot{\mathbf{z}}(t)$.
+
+The original trajectory optimisation problem can then be converted to finding $\mathbf{z}(t)$
+for $t \in [t_0, t_f]$ subject to the boundary conditions and the dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-diff-flat-ode}
+\ddot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t)) &= f_G(t, \dot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t)), \mathbf{x}(\mathbf{z}(t), \dot{\mathbf{z}}(t))).
+\end{align}
+#+END_EXPORT
+Collocation methods are used to transcribe continuous-time trajectory optimisation problems into
+nonlinear programs, i.e. constrained parameter optimisation cite:Kelly2017,Fahroo2000.
+The expected metric in Eq. ref:eq-expected-metric is substituted into
+Eq. ref:eq-diff-flat-ode and solved via direct collocation.
+This work implements a simple Hermite-Simpson collocation method
+that enforces the state derivative predicted by the polynomials to
+equal the geodesic ODE $f_G$ at a set of $I$ collocation points $\{\mathbf{z}_{i,c}\}_{i=1}^I$.
+This is achieved through the collocation defects,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-defect}
+\Delta_i &= \ddot{\mathbf{z}}_{i,c} - f_G(t_{i,c}, \dot{\mathbf{z}}_{i,c},\mathbf{z}_{i,c}) \numberthis
+\end{align*}
+#+END_EXPORT
+where $\ddot{\mathbf{z}}_{i,c}$ is the $2^{\text{nd}}$
+derivative w.r.t time at the $i^{\text{th}}$ collocation point predicted by the polynomials.
+Eq. ref:eq-defect defines a set of contraints ensuring trajectories are
+solutions to the geodesic ODE $f_G$.
+The nonlinear program that this work solves uses a dummy cost and is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\min_{\mathbf{z}(t), \dot{\mathbf{z}}(t)}& \int_{t_0}^{t_f} 1 \text{d}t \\
+&\text{s.t. }\text{Eqs. \ref{eq-diff-flat-ode} and \ref{eq-defect}}  \\
+\mathbf{x}&\left(\mathbf{z}(t_0), \dot{\mathbf{z}}(t_0) \right) = \mathbf{x}_0 \\
+\mathbf{x}&(\mathbf{z}(t_f),\dot{\mathbf{z}}(t_f)) = \mathbf{x}_f
+%c&(\mathbf{x}(\mathbf{z}(t), \dot{\mathbf{z}}(t)), \mathbf{u}(\mathbf{z}(t), \dot{\mathbf{z}}(t)) \leq 0 \quad \forall t
+\end{align}
+#+END_EXPORT
+This is solved using Sequential Least Squares Programming (SLSQP) in SciPy.
+# Solutions to this nonlinear program are trajectories that
+# attempt to remain in a single dynamics mode and, importantly, also
+# avoid areas of the learned transition dynamics with high epistemic uncertainty.
+
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-}
+# \min_{\mathbf{x}(t), \dot{\mathbf{x}}(t)}& \int_{t_0}^{t_f} 1 \text{d}t \\
+# \text{s.t. }&\text{Eqs. \ref{eq-diff-flat-ode} and \ref{eq-defect}}  \\
+# \mathbf{x}&\left(\mathbf{z}(t_0), \dot{\mathbf{z}}(t_0), \ddot{\mathbf{z}}(t_0) \right) = \mathbf{x}_0 \\
+# \mathbf{x}&(\mathbf{z}(t_f),\dot{\mathbf{z}}(t_f), \ddot{\mathbf{z}}(t_f)) = \mathbf{x}_f \\
+# c&(\mathbf{x}(t), \dot{\mathbf{x}}(t)) \leq 0 \quad \forall t
+# \end{align}
+# #+END_EXPORT
+
+
+# ** Direct Collocation
+
+
+# This work implements a simple Hermite-Simpson collocation method
+# that enforces the state derivative predicted by the polynomials to
+# equal the geodesic ODE $f_G$ at a set of collocation points.
+# This is achieved via the collocation defects,
+# #+BEGIN_EXPORT latex
+# \begin{align*} \label{eq-defect}
+# \Delta_i &= \dot{\mathbf{z}}_{i,c} - y(\mathbf{z}_{i,c}) \numberthis
+# \end{align*}
+# #+END_EXPORT
+# which define a set of contraints ensuring trajectories are solutions to the geodesic ODE $f_G$.
+
+# The nonlinear program that this work solves is given by Eq. ref:eq-objective
+# with $g(\mathbf{x}(t), \mathbf{u}(t)) = 1$ and the collocation constraints in Eq. ref:eq-defect.
+
+
+*** Concepts of Riemannian Geometry :noexport:
+Let us now introduce the necessary concepts for finding shortest paths (geodesics) on Riemannian
+manifolds.
+This section considers continuous-time inputs denoted as $\mathbf{z}(t) = \mathbf{x}(t)$.
+Intuitively Riemannian manifolds are smoothly curved spaces with
+an inner product.
+Formally they are smooth manifolds equipped with a Riemannian metric cite:Carmo1992.
+#+BEGIN_EXPORT latex
+\begin{definition}[Riemannian Metric]
+A Riemannian metric $\mathbf{G}$ on a
+manifold $\mathcal{M}$ is a symmetric and positive definite matrix which defines
+a smoothly varying inner product
+$\langle \dot{\mathbf{z}}_a, \dot{\mathbf{z}}_b \rangle_{\mathbf{z}} = \dot{\mathbf{z}}_a^T \mathbf{G}(\mathbf{z}) \dot{\mathbf{z}}_b$
+in the tangent space $T_{\mathbf{z}}\mathcal{M}$, for each point $\mathbf{z} \in \mathcal{M}$ and
+$\dot{\mathbf{z}}_a, \dot{\mathbf{z}}_b \in T_{\mathbf{z}}\mathcal{M}$.
+\end{definition}
+#+END_EXPORT
+Riemannian manifolds are often represented as charts; a parameter space for the
+curved surface. An example of a chart is the spherical coordinate system that is
+used to describe a sphere.
+The chart is often a flat space and the curvature of the manifold arises
+through smooth changes in the metric.
+Measurements on the surface can thus be computed in the chart locally and
+integrated to give global measures.
+On a Riemannian manifold $\mathcal{M}$ the length of a trajectory (curve) $\bar{\mathbf{z}}$
+is given by the norm of the tangent vector along the trajectory,
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-length}
+\text{Length}(\bar{\mathbf{z}}) &=\int_{t_0}^{t_f}\left\|\dot{\mathbf{z}}(t)\right\|_{\mathbf{G}(\mathbf{z}(t))} \mathrm{d}t
+=\int_{t_0}^{t_f}\sqrt{\dot{\mathbf{z}}(t)^T \mathbf{G}(\mathbf{z}(t)) \dot{\mathbf{z}}(t) } \mathrm{d} t,
+\end{align*}
+\normalsize
+% \begin{align} \label{eq-length}
+% \text { Length }(\bar{\mathbf{x}}) &=\int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d} t \\
+% &=\int_{t_0}^{t_f}\sqrt{\dot{\mathbf{x}}(t)^T \mathbf{G}(\mathbf{x}(t)) \dot{\mathbf{x}}(t) } \mathrm{d} t,
+% \end{align}
+#+END_EXPORT
+where $\mathbf{G}(\mathbf{z}(t))$ is the metric tensor at $\mathbf{z}(t)$.
+With this method for calculating lengths on manifolds the concept of a geodesic can be formally defined.
+#+BEGIN_EXPORT latex
+\begin{definition}[Geodesic]
+Given two points $\mathbf{z}_0, \mathbf{z}_f \in
+\mathcal{M}$, a Geodesic is a length minimising trajectory (curve)
+$\bar{\mathbf{z}}_g$ connecting the points such that,
+\begin{align}
+  \bar{\mathbf{z}}_{g}=\arg \min_{\bar{\mathbf{z}}} \operatorname{Length}(\bar{\mathbf{z}}), \quad \bar{\mathbf{z}}(t_0)=\mathbf{z}_{0}, \bar{\mathbf{z}}(t_f)=\mathbf{z}_{f}.
+\end{align}
+\end{definition}
+#+END_EXPORT
+Geodesics satisfy a continuous-time $2^{\text{nd}}$ order ODE cite:Carmo1992,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-2ode}
+ \ddot{\mathbf{z}}(t)
+&= y(t, \mathbf{z}, \dot{\mathbf{z}}) \\
+&=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{z}(t))]}{\partial \mathbf{z}(t)}\right]^{T}\left(\dot{\mathbf{z}}(t) \otimes \dot{\mathbf{z}}(t)\right),
+\end{align}
+\normalsize
+#+END_EXPORT
+where $\operatorname{vec}[\mathbf{G}(\mathbf{z}(t)])$ stacks the columns of $\mathbf{G}(\mathbf{z}(t))$
+and $\otimes$ denotes the Kronecker product.
+# Computing geodesics involves finding a solution to Eq. ref:eq-2ode
+# with $\mathbf{x}(t_0) = \mathbf{x}_1$ and $\mathbf{x}(t_f) = \mathbf{x}_2$.
+# This is a boundary value problem with a smooth solution so it can be solved
+# using any direct trajectory optimisation framework and can therefore
+# incorporate state and action constraints.
+# #+BEGIN_EXPORT latex
+# \todo[inline]{Hmm, not sure this is true, read up - It only involves discretizing the geodesic curve and not
+# the feature space and as this is always 1-dimensional the approach scales
+# to higher dimensional feature spaces.}
+# #+END_EXPORT
+
+
+# We can formulate this as an initial value problem and use techniques such as the
+# shooting method to determine the correct inintial velocity and from this the
+# geodesic path.
+# This is advantageous as it only involves discretizing the geodesic curve and not
+# the the feature space. This is always 1-dimensional and thus the approach scales
+# to highgher dimensional feature spaces.
+
+** Conclusion
+
+This section presented a novel two-stage method for performing trajectory optimisation in
+unknown multimodal dynamical systems.
+It first trains a probabilistic transition dynamics model,
+resembling a mixture of GP experts method,
+using a novel variational lower bound that
+principally handles uncertainty and provides scalability
+via stochastic gradient-based optimisation.
+The trajectory optimisation is then projected onto a probabilistic Riemannian
+manifold parameterised by the gating network.
+The method is evaluated on a real-world quadcopter example
+that shows the transition dynamics model can successfully learn a factorised representation
+of the underlying dynamics modes.
+Given a start and end state, the trajectory optimisation can be tuned to find trajectories that either
+prioritise
+remaining in a desired dynamics mode or
+prioritise avoiding regions of the learned transition
+dynamics model with high epistemic uncertainty.
+
+* Back Matter :ignore:
+** Bibliography :ignore:
+
+#+BEGIN_EXPORT latex
+% This ensures that the subsequent sections are being included as root
+% items in the bookmark structure of your PDF reader.
+\bookmarksetup{startatroot}
+\backmatter
+ \begingroup
+     \let\clearpage\relax
+     \glsaddall
+     \printglossary[type=\acronymtype]
+     \newpage
+     \printglossary
+ \endgroup
+ \printindex
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+% \begingroup
+% \sloppy
+% \setstretch{1}
+% \setlength\bibitemsep{3pt}
+\printbibliography
+% \endgroup
+#+END_EXPORT
