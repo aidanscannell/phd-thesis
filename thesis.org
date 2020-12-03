@@ -22,7 +22,7 @@
                ("\\mboxsubparagraph{%s}" . "\\mboxsubparagraph*{%s}")))
 (add-to-list 'org-latex-classes
              '("mimosis"
-               "\\documentclass{mimosis}
+               "\\documentclass{mimosis-class/mimosis}
   [NO-DEFAULT-PACKAGES]
   [PACKAGES]
   [EXTRA]"
@@ -376,6 +376,17 @@ Make the equation numbers follow the chapter, not the whole thesis.
 * TOC and Mainmatter :ignore:
 #+BEGIN_EXPORT latex
 \tableofcontents
+% This ensures that the subsequent sections are being included as root
+% items in the bookmark structure of your PDF reader.
+\begingroup
+    \let\clearpage\relax
+    \glsaddall
+    \printglossary[type=\acronymtype]
+    \newpage
+    \printglossary
+\endgroup
+\printindex
+
 \mainmatter
 #+END_EXPORT
 
@@ -1476,21 +1487,6 @@ dynamics model with high epistemic uncertainty.
 
 * Back Matter :ignore:
 ** Bibliography :ignore:
-
-#+BEGIN_EXPORT latex
-% This ensures that the subsequent sections are being included as root
-% items in the bookmark structure of your PDF reader.
-\bookmarksetup{startatroot}
-\backmatter
- \begingroup
-     \let\clearpage\relax
-     \glsaddall
-     \printglossary[type=\acronymtype]
-     \newpage
-     \printglossary
- \endgroup
- \printindex
-#+END_EXPORT
 
 #+BEGIN_EXPORT latex
 % \begingroup
