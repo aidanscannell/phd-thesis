@@ -53,6 +53,8 @@
 #+LATEX_HEADER: \usepackage{amsmath,amssymb,amsfonts}
 #+LATEX_HEADER: \usepackage{graphicx}
 #+LATEX_HEADER: \usepackage{todonotes}
+*** Tensor indexing (pre subscripts)
+#+LATEX_HEADER: \usepackage{tensor}
 
 *** Acronym and Glossary :ignore:
 #+latex_header: \usepackage[acronym]{glossaries}
@@ -208,64 +210,113 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \DeclareMathOperator{\R}{\mathbb{R}}
 #+LATEX_HEADER: \DeclareMathOperator{\E}{\mathbb{E}}
 #+LATEX_HEADER: \DeclareMathOperator{\V}{\mathbb{V}}
-*** Data set
-#+LATEX_HEADER: \newcommand{\dataset}{\ensuremath{\mathcal{D}}}
-# #+LATEX_HEADER: \DeclareMathOperator{\inputs}{\mathbf{X}}
-# #+LATEX_HEADER: \DeclareMathOperator{\outputs}{\mathbf{Y}}
-#+LATEX_HEADER: \newcommand{\x}{\ensuremath{\mathbf{x}}}
-#+LATEX_HEADER: \newcommand{\y}{\ensuremath{\mathbf{y}}}
 
-*** Mixture Vars
-#+LATEX_HEADER: \newcommand{\dataSub}{\ensuremath{t}}
-#+LATEX_HEADER: \newcommand{\dimSub}{\ensuremath{d}}
-#+LATEX_HEADER: \newcommand{\modeSup}{\ensuremath{k}}
+*** Num Data / Mode / State Dimension / Control Dimension (k, d, t/n)
+#+LATEX_HEADER: \newcommand{\numData}{\ensuremath{t}}
+#+LATEX_HEADER: \newcommand{\stateDim}{\ensuremath{d}}
+#+LATEX_HEADER: \newcommand{\controlDim}{\ensuremath{f}}
+#+LATEX_HEADER: \newcommand{\modeInd}{\ensuremath{k}}
+#+LATEX_HEADER: \newcommand{\NumData}{\ensuremath{\MakeUppercase{\numData}}}
+#+LATEX_HEADER: \newcommand{\StateDim}{\ensuremath{\MakeUppercase{\stateDim}}}
+#+LATEX_HEADER: \newcommand{\ControlDim}{\ensuremath{\MakeUppercase{\controlDim}}}
+#+LATEX_HEADER: \newcommand{\ModeInd}{\ensuremath{\MakeUppercase{\modeInd}}}
 
-# Macros for single/all data notation
-#+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{n}}}
-#+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{\MakeUppercase{#1}}}
-# #+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\dataSub}}}
-# #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1_{1:T}}}
-
-#+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{#1_{\dataSub, \dimSub}}}
-#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{#1_{\dimSub}}}
+# Macros for data dimensions
+# #+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{#1_{\stateDim, \numData}}}
+#+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{_{\stateDim}#1_{\numData}}}
+# #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{#1_{\stateDim}}}
+# #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{_{\stateDim}#1}}
+#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{\tensor[_{\stateDim}]{#1}{}}}
+# #+LATEX_HEADER: \newcommand{\allDataDim}[1]{\ensuremath{#1_{1:\NumData, \stateDim}}}
+#+LATEX_HEADER: \newcommand{\allDataDim}[1]{\ensuremath{_{\stateDim}#1_{1:\NumData}}}
 
 # Macros for mode k notation
-#+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{(\modeSup)}}}
+# #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{(\modeInd)}}}
+#+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{\modeInd}}}
 
-# Expert gating function notation
-#+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
-#+LATEX_HEADER: \newcommand{\f}{\ensuremath{f}}
-#+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mode{\latentFunc}}}
-#+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\singleDim{\fk}}}
-#+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\singleData{\mode{\mathbf{\latentFunc}}}}}
-#+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDataDim{\fk}}}
+# Macros for single/all data notation
+#+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\numData}}}
+# #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{\MakeUppercase{#1}}}
+# #+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\numData}}}
+#+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1_{1:\NumData}}}
 
-# #+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\allData{\mathbf{\latentFunc}}}}}
-#+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\mathbf{\latentFunc}}}}
-#+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}
-#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\mathbf{\latentFunc}}}
+*** Data set
+# Dataset/inputs/outputs
+#+LATEX_HEADER: \newcommand{\state}{\ensuremath{\mathbf{x}}}
+#+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{u}}}
 
-# Expert gating function notation
-#+LATEX_HEADER: \newcommand{\gatingFunc}{\ensuremath{h}}
-#+LATEX_HEADER: \newcommand{\hk}{\ensuremath{\mode{\gatingFunc}}}
-#+LATEX_HEADER: \newcommand{\hkn}{\ensuremath{\singleData{\hk}}}
+# #+LATEX_HEADER: \newcommand{\x}{\ensuremath{\mathbf{x}}}
+# #+LATEX_HEADER: \newcommand{\y}{\ensuremath{\mathbf{y}}}
+#+LATEX_HEADER: \newcommand{\x}{\ensuremath{\hat{\state}}}
+#+LATEX_HEADER: \newcommand{\y}{\ensuremath{\Delta\state}}
+#+LATEX_HEADER: \newcommand{\dataset}{\ensuremath{\mathcal{D}}}
 
-#+LATEX_HEADER: \newcommand{\singleInput}{\ensuremath{\singleData{\x}}}
+# Single/all input/output notation
+# #+LATEX_HEADER: \newcommand{\singleInput}{\ensuremath{\singleData{\x}}}
+#+LATEX_HEADER: \newcommand{\singleInput}{\ensuremath{\x_{\numData-1}}}
 #+LATEX_HEADER: \newcommand{\singleOutput}{\ensuremath{\singleData{\y}}}
 #+LATEX_HEADER: \newcommand{\allInput}{\ensuremath{\allData{\x}}}
 #+LATEX_HEADER: \newcommand{\allOutput}{\ensuremath{\allData{\y}}}
 
+# Single/all state/control notation
+#+LATEX_HEADER: \newcommand{\singleState}{\ensuremath{\state_{\numData-1}}}
+#+LATEX_HEADER: \newcommand{\singleControl}{\ensuremath{\control_{\numData-1}}}
+#+LATEX_HEADER: \newcommand{\allState}{\ensuremath{\allData{\state}}}
+#+LATEX_HEADER: \newcommand{\allControl}{\ensuremath{\allData{\control}}}
+
+*** Mixture Vars
 #+LATEX_HEADER: \newcommand{\pF}{\ensuremath{p\left(\F \mid \allInput\right)}}
 #+LATEX_HEADER: \newcommand{\pFk}{\ensuremath{p\left(\Fk \mid \allInput\right)}}
 #+LATEX_HEADER: \newcommand{\pfk}{\ensuremath{p\left(\fk \mid \allInput\right)}}
-#+LATEX_HEADER: \newcommand{\pFkd}{\ensuremath{p\left(\Fkd \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pfknd}{\ensuremath{p\left(\fknd \mid \allInput\right)}}
 
 # #+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{\allInput\allInput}}
 #+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{d, \allInput\allInput}}
 
+*** Mode Indicator Variable
+#+LATEX_HEADER: \newcommand{\modeVar}{\ensuremath{\alpha}}
+#+LATEX_HEADER: \newcommand{\modeVarn}{\ensuremath{\singleData{\modeVar}}}
+#+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\allData{\bm{\modeVar}}}}
+*** Gating Network
+# Function notation
+#+LATEX_HEADER: \newcommand{\gatingFunc}{\ensuremath{h}}
+#+LATEX_HEADER: \newcommand{\hk}{\ensuremath{\mode{\gatingFunc}}}
+
+# Single data notation
+#+LATEX_HEADER: \newcommand{\hkn}{\ensuremath{\singleData{\hk}}}
+#+LATEX_HEADER: \newcommand{\hn}{\ensuremath{\singleData{\mathbf{\gatingFunc}}}}
+
+# All inputs set/vector/tensor notation
+#+LATEX_HEADER: \newcommand{\GatingFunc}{\ensuremath{\mathbf{\gatingFunc}}}
+#+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\allData{\GatingFunc}}}
+#+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\allData{\mode{\GatingFunc}}}}
+*** Experts
+# Function notation
+#+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
+#+LATEX_HEADER: \newcommand{\f}{\ensuremath{f}}
+#+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mode{\latentFunc}}}
+#+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\singleDim{\fk}}}
+
+# Single input notation
+#+LATEX_HEADER: \newcommand{\fn}{\ensuremath{\singleData{\mathbf{\latentFunc}}}}
+#+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\singleData{\mode{\mathbf{\latentFunc}}}}}
+#+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDataDim{\fk}}}
+
+# All inputs set/vector/tensor notation
+#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\allData{\mathbf{\f}}}}
+#+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\F}}}
+#+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}}
+
+*** Sparse GPs
+# Sparse GP macro
+#+LATEX_HEADER: \newcommand{\inducing}[1]{\ensuremath{\hat{#1}}}
+
+#+LATEX_HEADER: \newcommand{\fu}{\ensuremath{\inducing{\latentFunc}}}
+#+LATEX_HEADER: \newcommand{\Fu}{\ensuremath{\inducing{\mathbf{\latentFunc}}}}
+#+LATEX_HEADER: \newcommand{\Fku}{\ensuremath{\mode{\inducing{\mathbf{\latentFunc}}}}}
+#+LATEX_HEADER: \newcommand{\Fkdu}{\ensuremath{\singleDim{\Fku}}}
+
 *** Continuous 
-#+LATEX_HEADER: \newcommand{\state}{\ensuremath{\mathbf{x}}}
-#+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{u}}}
 #+LATEX_HEADER: \newcommand{\derivative}[1]{\ensuremath{\dot{#1}}}
 #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\derivative{\state}}}
 # #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\dot{\mathbf{x}}}}
@@ -391,40 +442,92 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+END_EXPORT
 
 * Testing Maths Variables
+#+CAPTION: Variables
+| Name                    | Symbol     | Equation                                                   |
+|-------------------------+------------+------------------------------------------------------------|
+| State                   | $\state$   | $\R^{\StateDim}$                                           |
+| Control                 | $\control$ | $\R^{\ControlDim}$                                         |
+| Time                    | $t$        | $\R$                                                       |
+| State-action input      | $\x$       | $(\state, \control) \in \R^{\StateDim \times \ControlDim}$ |
+| State difference        | $\y$       | $\state_{t} - \state_{t-1} \in \R^{\StateDim}$             |
+| Mode indicator variable | $\modeVar$ | $\{1,\ldots,\ModeInd\}$                                    |
+|                         |            |                                                            |
 
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\singleOutput &= \latentFunc(\singleInput) \\
-\allOutput &= \latentFunc(\allInput)  \\
-\allOutput &= \fk(\allInput) \\
-\fkn &= \fk(\singleInput) = \{ \fkd(\singleInput) \}_{d=1}^{D} \\
-\Fk &= \fk(\allInput) \\
-\Fkd &= \fkd(\allInput) \\
-\F &= \f(\allInput)
-\end{align}
-#+END_EXPORT
+#+CAPTION: Variables at single data points
+| Name                         | Symbol           | Equation                                                                             |
+|------------------------------+------------------+--------------------------------------------------------------------------------------|
+| Time                         | $t$              |                                                                                      |
+| State                        | $\singleState$   | $\R^{\StateDim}$                                                                       |
+| Control                      | $\singleControl$ | $\R^{\ControlDim}$                                                                   |
+| State-Action input           | $\singleInput$   | $(\singleState, \singleControl) \in \R^{\StateDim \times \ControlDim}$                 |
+| State Difference             | $\singleOutput$  | $\R^{\StateDim}$                                                                       |
+| Mode indicator variable      | $\modeVarn$      | $\{1,\ldots,\ModeInd\}$                                                              |
 
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\hkn &= \hk(\singleInput)
-\end{align}
-#+END_EXPORT
+#+CAPTION: Gating network notation
+|                | Name                                | Symbol        | Equation                                                                         |
+|----------------+-------------------------------------+---------------+----------------------------------------------------------------------------------|
+| Function       | Gating function k                   | $\hk$         | $\hk : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R$                    |
+|                | Gating function                     | $\gatingFunc$ | $\gatingFunc : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\ModeInd}$ |
+|----------------+-------------------------------------+---------------+----------------------------------------------------------------------------------|
+| $\singleInput$ | Gating function k at $\singleInput$ | $\hkn$        | $\hk(\singleInput) \in \R$                                                       |
+|                | Gating function at $\singleInput$   | $\hn$         | $\gatingFunc(\singleInput) \in \R^{\ModeInd}$                                    |
+|                | Mode indicator variable             | $\modeVarn$   | $\{1,\ldots,\ModeInd\}$                                                          |
+|----------------+-------------------------------------+---------------+----------------------------------------------------------------------------------|
+| $\allInput$    | Gating function k                   | $\Hk$         | $\hk(\allInput) \in \R^{\NumData}$                                               |
+|                | Gating function                     | $\Hall$       | $\gatingFunc(\allInput) \in \R^{\NumData \times \ModeInd}$                       |
+|                | Mode indicator variable             | $\ModeVar$    | $\{1,\ldots,\ModeInd\}^{\NumData}$                                                  |
+
+#+CAPTION: Transition dynamics function notation
+|                | Name                         | Symbol        | Equation                                                                                      |
+|----------------+------------------------------+---------------+-----------------------------------------------------------------------------------------------|
+|                | Dimension d of mode k        | $\fkd$        | $\fkd : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R$                                  |
+| Function       | Mode k                       | $\fk$         | $\fk : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\StateDim}$                         |
+|                | Transition dynamics function | $\latentFunc$ | $\latentFunc : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\ModeInd \times \StateDim}$ |
+|----------------+------------------------------+---------------+-----------------------------------------------------------------------------------------------|
+|                | Dimension d mode k           | $\fknd$       | $\fkd(\singleInput) \in \R$                                                                   |
+| $\singleInput$ | Mode k                       | $\fkn$        | $\fk(\singleInput) \in \R^{\StateDim}$                                                          |
+|                | Transition dynamics function | $\fn$         | $\f(\singleInput) \in \R^{\ModeInd \times \StateDim}$                                           |
+|----------------+------------------------------+---------------+-----------------------------------------------------------------------------------------------|
+|                | Dimension d mode k           | $\Fkd$        | $\fkd(\allInput) \in \R^{\NumData}$                                                           |
+| $\allInput$    | Mode k                       | $\Fk$         | $\fk(\allInput) \in \R^{\NumData \times \StateDim}$                                             |
+|                | Transition dynamics function | $\F$          | $\f(\allInput) \in \R^{\NumData \times \ModeInd \times \StateDim}$                              |
+
+
+
 
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-prior-single-dim}
-p(\Fkd \mid \allInput) &= \mathcal{N}\left( \Fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
-\Kkxx
+p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
 \end{align}
 #+END_EXPORT
+
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-prior}
-\pFk &= \prod_{d=1}^{D} \pFkd
+\pfknd &= \mathcal{N}\left( \fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-prior}
+\pFk &= \prod_{\numData=1}^{\NumData} \prod_{\stateDim=1}^{\StateDim} \pfknd
 \end{align}
 #+END_EXPORT
 
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-experts-prior}
 \pF &= \prod_{k=1}^{K} \pFk = \prod_{k=1}^{K} \pFk
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-prior}
+q(\Fu) = \prod_{k=1}^{K} q\left(\Fku \right)
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-prior}
+p(\Fk \mid \allInput, \Fku) = \prod_{\numData = 1}^{\dataInd} p(\Fkn \mid \singleInput, \Fku)
 \end{align}
 #+END_EXPORT
 
@@ -522,7 +625,7 @@ and an orientation would be represented as $\mathbf{x}(t) = [x(t), y(t), \theta(
 The system can be controlled by applying control actions $\mathbf{u}(t) \in \R^F$ at any given time $t$.
 This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-unimodal-dynamics}
+\begin{align} \label{eq-unimodal-dynamics-cont}
 \stateDerivative(t) &= f(\state(t), \control(t)) + \epsilon(t) \quad \forall t
 \end{align}
 #+END_EXPORT
@@ -542,8 +645,8 @@ in the reinforcement learning literature.
 The system is controlled via a policy $\mathbf{u}(t) = \pi(\mathbf{x}(t), t)$, which given the state $\mathbf{x}(t)$
 and time step $t$ decides which control action $\mathbf{u}(t)$ to apply to the system.
 The policy can be time-dependent and can also depend on all past information up to time step $t$.
-In the time-independent case the policy is denoted $\pi(\mathbf{x}(t))$
-The resulting closed-loop system is denoted $f_{\pi}(\mathbf{x}) = f(\mathbf{x},\pi(\mathbf{x}))$.
+In the time-independent case the policy is denoted $\pi(\mathbf{x}(t))$ and
+the resulting closed-loop system is denoted $f_{\pi}(\mathbf{x}) = f(\mathbf{x},\pi(\mathbf{x}))$.
 
 
 *** Multimodal Modelling
@@ -587,7 +690,7 @@ The trajectory optimisation problem is given by,
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-objective}
 \min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \\
-\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics}} \\
+\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}} \\
 &c(\mathbf{x}(t)) \leq 0 \quad \forall t \\
 &\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f \numberthis
 \end{align*}
@@ -674,6 +777,7 @@ for the latent function values $\mathbf{f}$ cite:Titsias2009.
 *** Variational Inference
 
 * Probabilistic Inference for Multimodal Dynamical Systems
+** Intro :ignore:
 \todo[inline]{This section could be broad (more than just GP-based gating networks) and the next section focus on gating networks specifically.}
 This chapter introduces the class of continuous-time multimodal dynamical systems
 that this work considers and then details an approach to performing Bayesian inference in such models.
@@ -695,59 +799,66 @@ enables the model to be trained with stochastic gradient methods.
 
 
 ** Multimodal Dynamical Systems
-This work considers continuous-time, continuous-state, nonlinear stochastic dynamics, given by,
+This section considers the transition dynamics in Equation ref:eq-unimodal-dynamics-cont
+extended to multimodal systems, given by,
 #+BEGIN_EXPORT latex
-\begin{align*} \label{eq-dynamics-cont}
-\dot{\mathbf{x}}(t) &= f(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon(t) \numberthis \\
-&= f^{(k)}(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon^{(k)}(t)
-\quad \text{if} \quad \alpha(t)=k
+\begin{align} \label{eq-multimodal-dynamics-cont}
+\dot{\mathbf{x}}(t) &= \f(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon(t) \\
+&= \fk(\mathbf{x}(t), \mathbf{u}(t)) + \mode{\epsilon}(t) \nonumber
+\quad \text{if} \quad \alpha(t)=\modeInd
 %\quad \text{if} \quad \alpha(\mathbf{x}(t), \mathbf{u}(t))=k
-\end{align*}
+\end{align}
 #+END_EXPORT
 with states $\mathbf{x} \in \R^D$ and controls $\mathbf{u} \in \R^F$.
-One of $K$ dynamics modes $\{f^{(k)}\}_{k=1}^K$ and associated noise models
-$\epsilon^{(k)}(t) \sim \mathcal{N}(0, (\sigma^{(k)})^2)$
+One of $\ModeInd$ dynamics modes $\{\fk \}_{\modeInd=1}^\ModeInd$ and associated noise models
+$\mode{\epsilon}(t) \sim \mathcal{N}(0, (\mode{\sigma})^2)$
 are selected by a switching (or gating) variable
-$\alpha(t) \in \{1,\ldots,K\}$.
+$\alpha(t) \in \{1,\ldots,\ModeInd\}$.
 
 The gating variable $\alpha$ is of particular interest in this work.
 which governs the 
 
 ** Model Definition
-
 This work in this section assumes access to historical data comprising state transitions
 from $E$ trajectories of length $N$ sampled with a fixed time step $\Delta_t=t_*$.
 The resulting data set has $T = E N$ elements, and the independent trajectories
 are appended along time to get the data set
 $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$.
 
-This work learns a discrete-time representation of Eq. ref:eq-dynamics-cont,
+This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-dynamics-k}
-\Delta\mathbf{x}_{t}
-= f^{(k)}(\mathbf{x}_{t-1}, &\mathbf{u}_{t-1} ; \Delta t = t_*) + \epsilon_{t-1}^{(k)}
-\quad \text{if} \quad \alpha_t=k,
+\begin{align} \label{eq-multimodal-dynamics-disc}
+\singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
+\quad \text{if} \quad \alpha_t=\modeInd,
 \end{align}
 #+END_EXPORT
-where $\mathbf{x}_t \in \R^D$ and $\mathbf{u}_t \in \R^F$ are the states and controls
-at time $t$ respectively, and $\alpha_t \in \{1, \dotsc, K\}$ is a mode indicator variable that
-indicates one of $K$ dynamics modes at time $t$.
+where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
+at time $t$ respectively, and $\alpha_t \in \{1, \dotsc, \ModeInd\}$ is a mode indicator variable that
+indicates one of $\ModeInd$ dynamics modes at time $t$.
 
 A time series of observations from time $a$ to time $b$ (inclusive)
 is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
 A single input is denoted as
-$\hat{\mathbf{x}}_{t-1} = (\mathbf{x}_{t-1}, \mathbf{u}_{t-1})$, all inputs are denoted as
-$\hat{\mathbf{x}}_{1:T}$, and the set of all outputs as $\Delta\mathbf{x}_{1:T}$.
-The $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode's latent transition dynamics
-function $f^{(k)}$, evaluated at $\hat{\mathbf{x}}_{t-1}$,
-is denoted $f_{t,d}^{(k)} = f^{(k)}(\hat{\mathbf{x}}_{t-1})$,
+$\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+$\allInput$, and the set of all outputs as $\allOutput$.
+The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+function $\fk$, evaluated at $\singleInput$,
+is denoted $\fknd = \fk (\singleInput)$,
 for all dimensions as $\mathbf{f}^{(k)}_{t}$
+for all dimensions as $\fkn$
 and at all data points as $\mathbf{f}^{(k)}_{1:T}$.
+and at all data points as $\Fk$.
 
 ** Bayesian Model
 
 The model is built upon sparse GP priors on each of the transition dynamics functions $f^{(k)}$
 with independent GPs placed on each state dimension $d$,
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-prior}
+p(\Fk \mid \allInput, \Fku) = \prod_{\numData = 1}^{\dataInd} p(\Fkn \mid \singleInput, \Fku)
+\end{align}
+#+END_EXPORT
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-dynamics-prior}
 p\left(\mathbf{f}^{(k)}_{1:T} \mid \hat{\mathbf{x}}_{1:T}, \hat{\mathbf{f}}^{(k)} \right) =
@@ -1059,6 +1170,53 @@ epistemic uncertainty, i.e. where there are no observations.
 # it believes another mode is responsible and zero where it is uncertain.
 # The variance (right) has also clearly captured information regrading the
 # epistemic uncertainty, i.e. where there are no observations.
+
+* Inference 2.0 [[label:sec-inference]]
+Computing the posterior based on Eq. ref:eq-marginal-likelihood
+is intractable due to the marginalisation of $\mathbf{h}$ in the gating network.
+
+This work derives a variational approximation based on sparse GPs that provides scalability
+by utilising stochastic gradient-based optimisation.
+Following the approach by cite:Titsias2009, the probability space is augmented
+with a set of $M$ inducing points for each GP.
+However, instead of collapsing these inducing points they are explicitly
+represented as a variational distribution, as seen in cite:Hensman2013.
+A mean-field variational approximation is followed for the inducing output distribution of
+each GP, resulting in the variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-variational-dist}
+q\left(\hat{\mathbf{f}}, \hat{\mathbf{h}}\right)
+= \prod_{k=1}^K \bigg(& \mathcal{N}\left(\hat{\mathbf{h}}^{(k)} \mid \mathbf{m}^{(k)}_{h}, \mathbf{S}^{(k)}_{h}\right) \numberthis \\
+&\prod_{d=1}^D \mathcal{N}\left(\hat{\mathbf{f}}^{(k)}_d \mid \mathbf{m}^{(k)}_{f,d}, \mathbf{S}^{(k)}_{f,d}\right) \bigg).
+\end{align*}
+#+END_EXPORT
+This variational distribution and Jensen's inequality are used to lower bound the
+log marginal likelihood
+$\text{log} p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T})$,
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-lower-bound-fact}
+%\text{log} p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T}) \geq
+\mathcal{L} =
+&\sum_{t=1}^T \Bigg\langle \text{log} \sum_{k=1}^K
+\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}})
+p(\Delta\mathbf{x}_{t} \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)})
+\Bigg\rangle_{q(\hat{\mathbf{f}},\hat{\mathbf{h}})} \\
+&- \sum_{k=1}^K \text{KL}\left( q\left(\hat{\mathbf{f}}^{(k)}\right) \mid\mid p\left(\hat{\mathbf{f}}^{(k)} \mid \bm\xi_f^{(k)}\right) \right) \\
+&- \sum_{k=1}^K \text{KL} \left( q\left(\hat{\mathbf{h}}^{(k)}\right) \mid\mid p\left(\hat{\mathbf{h}}^{(k)} \mid \bm\xi_h^{(k)}\right) \right). \numberthis
+\end{align*}
+\normalsize
+#+END_EXPORT
+Importantly, taking samples for single data points is straightforward and can be implemented efficiently.
+Evaluating the variational expectation is not
+analytically tractable due to the variational distributions, so
+it is approximated by drawing single samples from
+$q(\hat{\mathbf{f}})$ and $q(\hat{\mathbf{h}})$.
+The model captures the dependencies in the joint distribution of the data through the
+inducing points, but as $M \ll N$ these have a much lower computational burden.
+The inducing inputs ($\bm\xi_f$ and $\bm\xi_h$) are treated as variational hyperparameters and are
+optimised along with
+the kernel hyperparameters and noise variances.
 
 * Trajectory Optimisation in Desired Modes
 This section presents a two-stage method to
