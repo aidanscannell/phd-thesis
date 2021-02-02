@@ -53,6 +53,9 @@
 #+LATEX_HEADER: \usepackage{amsmath,amssymb,amsfonts}
 #+LATEX_HEADER: \usepackage{graphicx}
 #+LATEX_HEADER: \usepackage{todonotes}
+*** Notes in margins
+#+LATEX_HEADER: \usepackage{marginnote}
+#+LATEX_HEADER: \renewcommand*{\marginfont}{\footnotesize}
 *** Tensor indexing (pre subscripts)
 #+LATEX_HEADER: \usepackage{tensor}
 
@@ -210,6 +213,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \DeclareMathOperator{\R}{\mathbb{R}}
 #+LATEX_HEADER: \DeclareMathOperator{\E}{\mathbb{E}}
 #+LATEX_HEADER: \DeclareMathOperator{\V}{\mathbb{V}}
+#+LATEX_HEADER: \DeclareMathOperator{\K}{\mathbf{K}}
 
 *** Num Data / Mode / State Dimension / Control Dimension (k, d, t/n)
 #+LATEX_HEADER: \newcommand{\numData}{\ensuremath{t}}
@@ -226,7 +230,8 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{_{\stateDim}#1_{\numData}}}
 # #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{#1_{\stateDim}}}
 # #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{_{\stateDim}#1}}
-#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{\tensor[_{\stateDim}]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\singleDimi}[2]{\ensuremath{\tensor[_{#2}]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{\singleDimi{#1}{\stateDim}}}
 # #+LATEX_HEADER: \newcommand{\allDataDim}[1]{\ensuremath{#1_{1:\NumData, \stateDim}}}
 #+LATEX_HEADER: \newcommand{\allDataDim}[1]{\ensuremath{_{\stateDim}#1_{1:\NumData}}}
 
@@ -238,7 +243,8 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\numData}}}
 # #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{\MakeUppercase{#1}}}
 # #+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\numData}}}
-#+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1_{1:\NumData}}}
+#+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1}}
+# #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1_{1:\NumData}}}
 
 *** Data set
 # Dataset/inputs/outputs
@@ -264,19 +270,26 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\allState}{\ensuremath{\allData{\state}}}
 #+LATEX_HEADER: \newcommand{\allControl}{\ensuremath{\allData{\control}}}
 
-*** Mixture Vars
-#+LATEX_HEADER: \newcommand{\pF}{\ensuremath{p\left(\F \mid \allInput\right)}}
-#+LATEX_HEADER: \newcommand{\pFk}{\ensuremath{p\left(\Fk \mid \allInput\right)}}
-#+LATEX_HEADER: \newcommand{\pfk}{\ensuremath{p\left(\fk \mid \allInput\right)}}
-#+LATEX_HEADER: \newcommand{\pfknd}{\ensuremath{p\left(\fknd \mid \allInput\right)}}
+*** Noise Vars
+#+LATEX_HEADER: \newcommand{\noiseVar}{\ensuremath{\sigma}}
+#+LATEX_HEADER: \newcommand{\noiseVarK}{\ensuremath{\mode{\noiseVar}}}
+#+LATEX_HEADER: \newcommand{\noiseVarOneK}{\ensuremath{\noiseVarK_{1}}}
+#+LATEX_HEADER: \newcommand{\noiseVarDK}{\ensuremath{\noiseVarK_{\StateDim}}}
+#+LATEX_HEADER: \newcommand{\noiseVardK}{\ensuremath{\noiseVarK_{\stateDim}}}
+# #+LATEX_HEADER: \newcommand{\noiseVardK2}{\ensuremath{\left(\noiseVardK\right)^2}}
 
+*** Kernels
 # #+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{\allInput\allInput}}
 #+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{d, \allInput\allInput}}
 
 *** Mode Indicator Variable
 #+LATEX_HEADER: \newcommand{\modeVar}{\ensuremath{\alpha}}
 #+LATEX_HEADER: \newcommand{\modeVarn}{\ensuremath{\singleData{\modeVar}}}
-#+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\allData{\bm{\modeVar}}}}
+#+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\bm{\modeVar}}}
+# #+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\allData{\bm{\modeVar}}}}
+#+LATEX_HEADER: \newcommand{\modeVarK}{\ensuremath{\modeVarn=\modeInd}}
+#+LATEX_HEADER: \newcommand{\ModeVarK}{\ensuremath{\bm{\modeVar}_{\modeInd}}}
+
 *** Gating Network
 # Function notation
 #+LATEX_HEADER: \newcommand{\gatingFunc}{\ensuremath{h}}
@@ -288,8 +301,10 @@ Make the equation numbers follow the chapter, not the whole thesis.
 
 # All inputs set/vector/tensor notation
 #+LATEX_HEADER: \newcommand{\GatingFunc}{\ensuremath{\mathbf{\gatingFunc}}}
-#+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\allData{\GatingFunc}}}
-#+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\allData{\mode{\GatingFunc}}}}
+#+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\GatingFunc}}
+#+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\mode{\GatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\allData{\GatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\allData{\mode{\GatingFunc}}}}
 *** Experts
 # Function notation
 #+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
@@ -300,12 +315,16 @@ Make the equation numbers follow the chapter, not the whole thesis.
 # Single input notation
 #+LATEX_HEADER: \newcommand{\fn}{\ensuremath{\singleData{\mathbf{\latentFunc}}}}
 #+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\singleData{\mode{\mathbf{\latentFunc}}}}}
-#+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDataDim{\fk}}}
+#+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDim{\singleData{\fk}}}}
 
 # All inputs set/vector/tensor notation
-#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\allData{\mathbf{\f}}}}
+# #+LATEX_HEADER: \newcommand{\F}{\ensuremath{\allData{\mathbf{\f}}}}
+#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\mathbf{\f}}}
 #+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\F}}}
 #+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}}
+
+#+LATEX_HEADER: \newcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
+#+LATEX_HEADER: \newcommand{\singleOutputK}{\ensuremath{\mode{\singleOutput}}}
 
 *** Sparse GPs
 # Sparse GP macro
@@ -316,10 +335,55 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\Fku}{\ensuremath{\mode{\inducing{\mathbf{\latentFunc}}}}}
 #+LATEX_HEADER: \newcommand{\Fkdu}{\ensuremath{\singleDim{\Fku}}}
 
+#+LATEX_HEADER: \newcommand{\Z}{\ensuremath{\mathbf{Z}}}
+# #+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}_{\latentFunc}}}
+
 *** Continuous 
 #+LATEX_HEADER: \newcommand{\derivative}[1]{\ensuremath{\dot{#1}}}
 #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\derivative{\state}}}
 # #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\dot{\mathbf{x}}}}
+
+*** Prob Dists
+#+LATEX_HEADER: \newcommand{\pFkd}{\ensuremath{p\left(\Fkd \mid \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\pFk}{\ensuremath{p\left(\Fk \mid \allInput\right)}}
+
+#+LATEX_HEADER: \newcommand{\pF}{\ensuremath{p\left(\F \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pfk}{\ensuremath{p\left(\fk \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pfknd}{\ensuremath{p\left(\fknd \mid \allInput\right)}}
+
+#+LATEX_HEADER: \newcommand{\pFkGivenUk}{\ensuremath{p\left(\Fk \mid \Fku \right)}}
+# #+LATEX_HEADER: \newcommand{\pYkGivenUk}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \Fku \right)}}
+#+LATEX_HEADER: \newcommand{\pYkGivenFku}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \Fku \right)}}
+
+#+LATEX_HEADER: \newcommand{\qF}{\ensuremath{q\left(\F \right)}}
+#+LATEX_HEADER: \newcommand{\qFu}{\ensuremath{q\left(\Fu \right)}}
+#+LATEX_HEADER: \newcommand{\qFku}{\ensuremath{q\left(\Fku \right)}}
+#+LATEX_HEADER: \newcommand{\pFku}{\ensuremath{p\left(\Fku \right)}}
+#+LATEX_HEADER: \newcommand{\pFkuGivenX}{\ensuremath{p\left(\Fku \mid \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\pFkGivenFku}{\ensuremath{p\left(\Fk \mid \Fku \right)}}
+#+LATEX_HEADER: \newcommand{\pYGivenUX}{\ensuremath{p\left(\allOutput \mid \Fu, \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\pYGivenU}{\ensuremath{p\left(\allOutput \mid \Fu \right)}}
+
+
+#+LATEX_HEADER: \newcommand{\pY}{\ensuremath{p\left(\allOutput \right)}}
+# #+LATEX_HEADER: \newcommand{\pykGivenfk}{\ensuremath{p\left(\singleOutputK \mid \fkn \right)}}
+# #+LATEX_HEADER: \newcommand{\pYkGivenFk}{\ensuremath{p\left(\allOutputK \mid \Fk \right)}}
+# #+LATEX_HEADER: \newcommand{\pYkGivenX}{\ensuremath{p(\allOutputK \mid \allInput)}}
+#+LATEX_HEADER: \newcommand{\pykGivenx}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \singleInput \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenxNegF}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \singleInput, \neg\Fk \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenfk}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \fkn \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenfkd}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \fknd \right)}}
+#+LATEX_HEADER: \newcommand{\pYkGivenFk}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \Fk \right)}}
+#+LATEX_HEADER: \newcommand{\pYkGivenX}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\pYGivenX}{\ensuremath{p\left(\allOutput \mid \allInput \right)}}
+
+#+LATEX_HEADER: \newcommand{\PrA}{\ensuremath{\Pr\left(\ModeVarK \right)}}
+#+LATEX_HEADER: \newcommand{\PaGivenhx}{\ensuremath{P\left(\modeVarn \mid \hn, \singleInput \right)}}
+#+LATEX_HEADER: \newcommand{\PraGivenx}{\ensuremath{\Pr\left(\modeVarn \mid \singleInput \right)}}
+#+LATEX_HEADER: \newcommand{\PraGivenhx}{\ensuremath{\Pr\left(\modeVarK \mid \hn, \singleInput \right)}}
+#+LATEX_HEADER: \newcommand{\PraGivenxNegH}{\ensuremath{\Pr\left(\modeVarK \mid \singleInput, \neg\Hall \right)}}
+#+LATEX_HEADER: \newcommand{\pHGivenX}{\ensuremath{p\left(\Hall \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pHkGivenX}{\ensuremath{p\left(\Hk \mid \allInput\right)}}
 
 ** Acronyms :noexport:
 {{{glossaryentry(LaTeX,\LaTeX,A document preparation system,LaTeX)}}}
@@ -442,6 +506,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+END_EXPORT
 
 * Testing Maths Variables
+** Tables :ignore:
 #+CAPTION: Variables
 | Name                    | Symbol     | Equation                                                   |
 |-------------------------+------------+------------------------------------------------------------|
@@ -492,46 +557,120 @@ Make the equation numbers follow the chapter, not the whole thesis.
 | $\allInput$    | Mode k                       | $\Fk$         | $\fk(\allInput) \in \R^{\NumData \times \StateDim}$                                             |
 |                | Transition dynamics function | $\F$          | $\f(\allInput) \in \R^{\NumData \times \ModeInd \times \StateDim}$                              |
 
-
-
-
+** Experts
+GP prior over each output dimension $d$ for each dynamics mode $k$, 
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-prior-single-dim}
+\begin{align} \label{eq-single-expert-prior-single-dim}
 p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
 \end{align}
 #+END_EXPORT
-
+Assume each output dimension is independent,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-prior}
-\pfknd &= \mathcal{N}\left( \fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
+\begin{align} \label{eq-single-expert-prior}
+\pFk &= \prod_{\stateDim=1}^{\StateDim} \pFkd
 \end{align}
 #+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-prior}
-\pFk &= \prod_{\numData=1}^{\NumData} \prod_{\stateDim=1}^{\StateDim} \pfknd
-\end{align}
-#+END_EXPORT
-
+Assume each dynamics mode $k$ is independent,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-experts-prior}
-\pF &= \prod_{k=1}^{K} \pFk = \prod_{k=1}^{K} \pFk
+\pF &= \prod_{k=1}^{K} \pFk
+\end{align}
+#+END_EXPORT
+The process noise in each mode is modelled as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-single-expert-likelihood}
+\pYkGivenFk = \prod_{\numData=1}^{\NumData} \pykGivenfk &= \prod_{\numData=1}^{\NumData} \mathcal{N}\left( \singleOutput \mid \fkn, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)
+\end{align}
+#+END_EXPORT
+where $\noiseVardK$ represents the noise variance associated with the $d$^{\text{th}} dimension of the $k$^{\text{th}} mode.
+
+Each expert is then given by marginalising its associated latent function values,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-single-expert}
+\pYkGivenX = \int  \pYkGivenFk \pFk \text{d} \Fk
 \end{align}
 #+END_EXPORT
 
+The dynamics modes are combined via a distribution over the mode indicator variable $\modeVar$.
+The resulting marginal likelihood is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-experts-prior}
-q(\Fu) = \prod_{k=1}^{K} q\left(\Fku \right)
+\pYGivenX = \sum_{\modeInd=1}^{\ModeInd} \Pr(\ModeVarK) \pYkGivenX
 \end{align}
 #+END_EXPORT
+
+** Mixture of Experts
+Mixture model marginal likelihood,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mixture-marginal-likelihood}
+\pYGivenX = \prod_{\numData=1}^{\NumData} \sum_{\modeInd=1}^{\ModeInd} \Pr(\modeVarK) p(\singleOutput \mid \modeVarn=\modeInd, \singleInput)
+\end{align}
+#+END_EXPORT
+Mixture of experts marginal likelihood,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-moe-marginal-likelihood}
+\pYGivenX &= \prod_{\numData=1}^{\NumData} \sum_{\modeInd=1}^{\ModeInd} \PraGivenx \pykGivenx
+\end{align}
+#+END_EXPORT
+
+** Gating Network
+# TODO: gating function depends on spatial component of state only
+This work is interested in transition dynamics where the governing mode varies over the input domain
+
+This work specifies a probability mass function over the mode indicator variable that is governed by a set of input-dependent
+latent functions. These model how the transition dynamics switch between modes over the input domain.
+In the literature they are commonly referred to as gating functions.
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mode-indicator-dist}
+\PaGivenhx = \prod_{\modeInd=1}^{\ModeInd} \PraGivenhx^{[\modeVarn = \modeInd]},
+\end{align}
+#+END_EXPORT
+The probabilities $\Pr(\modeVarn=\modeInd \mid \hn )$ are obtained by normalising the outputs of all the gating functions, e.g.
+$\text{softmax}(\hn)$.
+Following a Bayesian formulation independent GP priors are placed on each of the gating functions,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gating-funcs-prior}
+\pHGivenX = \prod_{\modeInd=1}^{\ModeInd} \pHkGivenX
+= \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \Hk \mid \mode{\mu}(\allInput), \mode{k}(\allInput, \allInput) \right).
+\end{align}
+#+END_EXPORT
+Each GP models the epistemic uncertainty associated with its gating function.
+The probabilities $\PraGivenx$ associated with the probability mass function over
+the mode indicator variable are then obtained by marginalising the
+latent gating functions,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-indicator-mult}
+\PraGivenxNegH
+&= \int \text{softmax}_k(\hn) p(\hn \mid \singleInput, \neg\Hall) \text{d} \mathbf{h}_t.
+\end{align}
+#+END_EXPORT
+This equation integrates out the uncertainty associated with the gating functions.
+High variance in the gating function GPs tends the distribution over the mode indicator variable
+to a uniform distribution.
+
+** Marginal Likelihood
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-expert}
+\pykGivenxNegF = \pyk
+\end{align*}
+#+END_EXPORT
+
+Our marginal likelihood can be written with the same factorisation as the \acrshort{moe}
+marginal likelihood in Equation ref:eq-moe-marginal-likelihood,
 
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-prior}
-p(\Fk \mid \allInput, \Fku) = \prod_{\numData = 1}^{\dataInd} p(\Fkn \mid \singleInput, \Fku)
+\begin{align} \label{eq-marginal-likelihood}
+\pYGivenX &= \prod_{\numData=1}^{\NumData} \sum_{\modeInd=1}^{\ModeInd} \underset{\text{Mixing probability}}{\PraGivenxNegH} \underset{\text{Dynamics mode } k}{\pykGivenxNegF}
 \end{align}
 #+END_EXPORT
+The 
+$\PraGivenxNegH$ contains $\ModeInd$ GP conditionals with complexity
 
-* Introduction
+$\pykGivenxNegF$ contains a GP conditional with complexity 
+
+** Inference
+
+* Introduction :noexport:
 Many physical systems operate under switching dynamics modes due to
 changing environmental or internal conditions.
 Examples include: robotic grasping where objects with different
@@ -698,8 +837,7 @@ The trajectory optimisation problem is given by,
 *** Model Predictive Control
 ** Reinforcement Learning
 ** Bayesian Inference
-*** Modelling Epistemic Uncertainty
-*** Epistemic Uncertainty
+*** Epistemic Uncertainty :noexport:
 
 If we have used observations of a system to train a predictive model then we can only be confident in predictions near our observations.
 As we extrapolate away from the observations we can no longer be certain and this is known as
@@ -711,7 +849,7 @@ This is shown in Figure [[ref:epistemic]].
 #+caption: Plot demonstrating the concept of epistemic uncertainty. We can be confident in the learnt function close to our observations but as we exptrapolate away from them we become uncertain what the function should look like. If we have a notion of epistemic uncertainty in a MBRL algorithm we can use it to encourage the agent to visit these areas and collect data, which in turn will reduce the epistemic uncertainty.
 [[file:images/limited_data.pdf]]
 
-*** Aleatoric Uncertainty
+*** Aleatoric Uncertainty :noexport:
 
 As mentioned previously, aleatoric uncertainty consists of process noise and observation noise; uncertainties that are inherent in a system and cannot be reduced.
 #+NAME: bimodal-dataset
@@ -721,8 +859,164 @@ As mentioned previously, aleatoric uncertainty consists of process noise and obs
 Figure [[ref:bimodal-dataset]] shows an artificial 1D dataset that demonstrates the concept of aleatoric uncertainty.
 In our work we generally assume that there is no observation noise and therefore the aleatoric uncertainty only consists of process noise.
 
+*** Variational Inference :noexport:
+*** Modelling Epistemic Uncertainty :noexport:
 *** Gaussian Processes
-This section first introduces GPs and the sparse GP approximation that is exploited throughout this work.
+This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
+In particular, it walks through the lower bounds (used to perform inference) that are the building blocks
+of the inference in this thesis.
+
+#+BEGIN_EXPORT latex
+\begin{definition}[Gaussian process]
+A Gaussian process (GP) is a collection of random variables, any finite number of which
+have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
+\end{definition}
+#+END_EXPORT
+
+More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
+\marginnote{covariance and mean function}
+fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-mean-cov}
+\mu(\mathbf{x}) &= \E[f(\mathbf{x})], \\
+k(\mathbf{x}, \mathbf{x}') &= \E[(f(\mathbf{x}) -\mu(\mathbf{x})) (f(\mathbf{x}') - \mu(\mathbf{x}'))],
+\end{align}
+#+END_EXPORT
+Importantly, for a given set of training inputs from the
+\marginnote{Gaussian process prior}
+functions domain $\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}$ the associated function values
+$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$
+are jointly Gaussian. The prior distribution over $\mathbf{f}$ is then given by,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+\end{equation}
+#+END_EXPORT
+By definition, the training observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
+$f_*$ at a new test input $\mathbf{x}_*$,
+\marginnote{jointly Gaussian}
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-spare-gp-joint}
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      \mathbf{f}^{*}
+\end{array}\right]
+\sim\ &\mathcal{N}\left(
+      \bm{0} ,
+\left[\begin{array}{cc}
+      k(\mathbf{X}, \mathbf{X}) & k(\mathbf{X},\mathbf{x}_{*}) \\
+      k(\mathbf{x}_{*},\mathbf{X}) & k(\mathbf{x}_{*},\mathbf{x}_{*})
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+The distribution over the test function value $f_*$ (i.e. to make a prediction)
+\marginnote{noise-free predictions}
+can therefore easily be obtained by conditioning on the prior observations.
+This is easily obtained using the properties of multivariate normal distributions to give
+the predictive conditional distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-prediction}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
+\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} (\mathbf{f} - \mu(\mathbf{X})) \nonumber\\
+\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) - k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} k(\mathbf{X}, \mathbf{x}_*). \nonumber
+\end{align}
+#+END_EXPORT
+The conditional in Eq. ref:eq-gp-prediction is computationally expensive due to conditioning
+on all of the training data $\mathbf{X}, \mathbf{f}$.
+The computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$
+due to the inversion of the covariance matrix $k(\mathbf{X},\mathbf{X})$.
+Many approximation schemes have been proposed to reduce the computational complexity, see
+cite:quinonero-candelaUnifying2005 for a review.
+
+\todo{introduce noisy outputs and Gaussian likelihood}
+
+**** Sparse Gaussian Processes for Regression
+This work focuses on inducing point methods cite:snelsonSparse2005a, where the latent variables
+are augmented with inducing input-output pairs known as inducing "inputs" $\Z$, and inducing
+"variables" $\Fu = f(\Z)$.
+Introducing a set of $M$ inducing points from the same GP prior can reduce the computational cost
+if $M < N$.
+Note that these inducing outputs $\Fu$ are jointly Gaussian with the latent function values $\F$,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-spare-gp-joint}
+p(\mathbf{f}, \Fu) =\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      \Fu
+\end{array}\right]
+      \mid \bm{0} ,
+\left[\begin{array}{cc}
+      \mathbf{K}_{nn} & \mathbf{K}_{nm} \\
+      \mathbf{K}_{nm}^{T} & \mathbf{K}_{mm}
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+where $\K_{mm}$ is the covariance function evaluated between all inducing inputs $\Z$, and
+$\K_{nm}$ is the covariance function evaluated between the data inputs $\mathbf{X}$ and the inducing inputs $\Z$.
+This joint distribution can be re-written using the properties of multivariate normal distributions as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-joint-cond}
+p(\mathbf{f}, \Fu) &= p(\mathbf{f} \mid \Fu) p(\Fu) \\
+&= \mathcal{N}(\mathbf{f} \mid \mathbf{K}_{nm} \mathbf{K}_{mm}^{-1} \Fu, \mathbf{K}_{nn} - \mathbf{Q}_{nn})
+\mathcal{N}(\Fu \mid \mathbf{0}, \mathbf{K}_{mm})
+\end{align}
+#+END_EXPORT
+where $\mathbf{Q}_{nn} = \mathbf{K}_{nm}\mathbf{K}_{mm}^{-1}\mathbf{K}_{nm}^{T}$.
+The full joint distribution is then given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-full-joint}
+p(\mathbf{y}, \mathbf{f}, \Fu) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \Fu) p(\Fu)
+\end{align}
+#+END_EXPORT
+Computationally efficient inference is obtained by approximating the integration over $\mathbf{f}$.
+\marginnote{FITC}
+The popular Fully Independent Training Conditional (FITC) method (in the case of a Gaussian likelihood)
+is obtained via the factorisation: $p(\mathbf{y} \mid \Fu) \approx \prod^{N}_{n=1} p(y_{n} \mid \Fu)$.
+To obtain a variational approximation Jensen's inequality is first used to bound this conditional,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-bound-cond}
+\text{log}p(\mathbf{y}\mid\Fu) \geq \E_{p(\F \mid \Fu)} \left[ \text{log} p(\mathbf{y} \mid \F) \right].
+\end{align}
+#+END_EXPORT
+This bound is then substituted into the marginal likelihood
+$p(\mathbf{y}) = \int p(\mathbf{y} \mid \Fu) p(\Fu) \text{d}\Fu$
+to obtain a tractable lower bound cite:titsiasVariational2009,
+\marginnote{Titsias' bound}
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-titsias-bound}
+\text{log}p(\mathbf{y}) \geq \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
+- \frac{1}{2\sigma^2}\text{tr}(\K_{nn} - \mathbf{Q}_{nn}),
+\end{align}
+#+END_EXPORT
+where $\sigma^2$ is the noise variance associated with the Gaussian likelihood.
+The bound in Eq. ref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
+when the inducing inputs $\Z$ equal the
+data inputs $\mathbf{X}$ as $\K_{nm}=\K_{mm}=\K_{nn}$ so $\mathbf{Q}_{nn}=\K_{nn}$.
+
+cite:hensmanGaussian2013 noted that this bound has complexity $O(NM^{2})$ so
+introduced additional variational parameters to achieve a more computationally scalable bound.
+
+\todo{Add hensman's SVGP bound}
+
+
+
+The GP predictive distribution can be approximated by conditioning on this
+smaller set of inducing points,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-prediction}
+p({f}_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &\approx
+p({f}_* \mid \mathbf{x}_*, \hat{\mathbf{f}}, \bm\xi) \\
+p(\hat{\mathbf{f}}) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mathbf{m}, \mathbf{S}).
+\end{align}
+#+END_EXPORT
+The approximation becomes exact when the
+inducing points $\hat{\mathbf{f}}$ are a sufficient statistic
+for the latent function values $\mathbf{f}$ cite:Titsias2009.
+# The predicted latent function values are then mutually independent given the inducing points.
+# A central assumption is that given enough well
+# placed inducing points $\hat{\mathbf{f}}$ they are a
+# sufficient statistic for the latent function values $\mathbf{f}$.
+
 **** Sparse Gaussian Processes
 A GP cite:edwardrasmussenGaussian2010 is a distribution over functions $f : \R^{D_f} \rightarrow \R$
 fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$.
@@ -774,8 +1068,6 @@ for the latent function values $\mathbf{f}$ cite:Titsias2009.
 # placed inducing points $\hat{\mathbf{f}}$ they are a
 # sufficient statistic for the latent function values $\mathbf{f}$.
 
-*** Variational Inference
-
 * Probabilistic Inference for Multimodal Dynamical Systems
 ** Intro :ignore:
 \todo[inline]{This section could be broad (more than just GP-based gating networks) and the next section focus on gating networks specifically.}
@@ -797,7 +1089,6 @@ with a \acrshort{gp}-based gating network.
 This work derives a novel variational lower bound based on sparse GPs that
 enables the model to be trained with stochastic gradient methods.
 
-
 ** Multimodal Dynamical Systems
 This section considers the transition dynamics in Equation ref:eq-unimodal-dynamics-cont
 extended to multimodal systems, given by,
@@ -809,27 +1100,26 @@ extended to multimodal systems, given by,
 %\quad \text{if} \quad \alpha(\mathbf{x}(t), \mathbf{u}(t))=k
 \end{align}
 #+END_EXPORT
-with states $\mathbf{x} \in \R^D$ and controls $\mathbf{u} \in \R^F$.
+with states $\state \in \R^D$ and controls $\control \in \R^F$.
 One of $\ModeInd$ dynamics modes $\{\fk \}_{\modeInd=1}^\ModeInd$ and associated noise models
-$\mode{\epsilon}(t) \sim \mathcal{N}(0, (\mode{\sigma})^2)$
+$\mode{\epsilon}(t) \sim \mathcal{N}\left(0, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)$
 are selected by a switching (or gating) variable
 $\alpha(t) \in \{1,\ldots,\ModeInd\}$.
 
-The gating variable $\alpha$ is of particular interest in this work.
-which governs the 
+# The gating variable $\alpha$ is of particular interest in this work.
 
 ** Model Definition
-This work in this section assumes access to historical data comprising state transitions
-from $E$ trajectories of length $N$ sampled with a fixed time step $\Delta_t=t_*$.
-The resulting data set has $T = E N$ elements, and the independent trajectories
-are appended along time to get the data set
+The work in this section assumes access to historical data comprising state transitions
+from $E$ trajectories of length $N$ sampled with a fixed time step $\Delta t=t_*$.
+This gives a data set with $T = E N$ elements.
+We abuse notation and append independent trajectories along time to get the data set
 $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$.
 
 This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-disc}
 \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
-\quad \text{if} \quad \alpha_t=\modeInd,
+\quad \text{if} \quad \modeVarK,
 \end{align}
 #+END_EXPORT
 where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
@@ -843,14 +1133,60 @@ $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
 $\allInput$, and the set of all outputs as $\allOutput$.
 The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
 function $\fk$, evaluated at $\singleInput$,
-is denoted $\fknd = \fk (\singleInput)$,
-for all dimensions as $\mathbf{f}^{(k)}_{t}$
-for all dimensions as $\fkn$
-and at all data points as $\mathbf{f}^{(k)}_{1:T}$.
-and at all data points as $\Fk$.
+is denoted $\fknd = \fkd (\singleInput)$,
+for all dimensions as $\fkn$ and at all data points as $\Fk$.
 
 ** Bayesian Model
+The model is built upon GP priors on each of the transition dynamics functions $\fk$
+with independent GPs placed on each output (state) dimension $d$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-single-expert-prior-single-dim}
+p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
+\end{align}
+#+END_EXPORT
+where $\singleDim{\mode{\mu}}(\cdot)$ and $\singleDim{\mode{k}}(\cdot, \cdot)$ represent the mean and
+covariance functions associated with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ dynamics mode respectively.
+Each mode's output dimensions are assumed independent and are given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-single-expert-prior}
+\pFk &= \prod_{\stateDim=1}^{\StateDim} \pFkd.
+\end{align}
+#+END_EXPORT
+The process noise in each mode is assumed to be factorised across both observations and output (state) dimensions.
+It is modelled as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-single-expert-likelihood}
+\pYkGivenFk
+&= \prod_{\numData=1}^{\NumData} \prod_{\stateDim=1}^{\StateDim} \pykGivenfkd \\
+&= \prod_{\numData=1}^{\NumData} \prod_{\stateDim=1}^{\StateDim} \mathcal{N}\left( \singleOutput \mid \fknd, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)
+\end{align}
+#+END_EXPORT
+where $\noiseVardK$ represents the noise variance associated with the $d$^{\text{th}} dimension of the $k$^{\text{th}} mode.
 
+Each expert is then given by marginalising its associated latent function values,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-single-expert}
+\pYkGivenX = \int  \pYkGivenFk \pFk \text{d} \Fk
+\end{align}
+#+END_EXPORT
+
+
+Assume each dynamics mode $k$ is independent,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-prior}
+\pF &= \prod_{k=1}^{K} \pFk
+\end{align}
+#+END_EXPORT
+
+The dynamics modes are combined via a distribution over the mode indicator variable $\modeVar$.
+The resulting marginal likelihood is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-prior}
+\pYGivenX = \sum_{\modeInd=1}^{\ModeInd} \Pr(\ModeVarK) \pYkGivenX
+\end{align}
+#+END_EXPORT
+
+** Bayesian Model
 The model is built upon sparse GP priors on each of the transition dynamics functions $f^{(k)}$
 with independent GPs placed on each state dimension $d$,
 
@@ -1217,6 +1553,82 @@ inducing points, but as $M \ll N$ these have a much lower computational burden.
 The inducing inputs ($\bm\xi_f$ and $\bm\xi_h$) are treated as variational hyperparameters and are
 optimised along with
 the kernel hyperparameters and noise variances.
+
+* Inference 3.0 [[label:sec-inference]]
+The marginal likelihood in Eq. ref:eq-marginal-likelihood is extremely expensive to evaluate ($\mathcal{O}(KN^{4})$)
+\todo{add marginal likelihood's correct complexity}
+and is also intractable due to the marginalisation of $\mathbf{h}$ in the gating network
+(except for the two expert case).
+For these reasons this work derives a variational approximation based on inducing points that provides scalability
+by utilising stochastic gradient-based optimisation.
+
+Following the approach by cite:titsiasVariational2009, the probability space is augmented
+with a set of $M$ inducing points for each GP.
+However, instead of collapsing these inducing points they are explicitly
+represented as a variational distribution, as seen in cite:hensmanGaussian2013.
+
+\todo{start by bounding mixture of SVGP experts with any gating network.}
+
+Let us first derive a bound for the model with a general MoE gating network, that is,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-variational-dist}
+\text{log} \pYGivenX = \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \pFk
+\end{align*}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-variational-dist}
+\text{log} \pYGivenU \geq \E_{\pFkGivenUk} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right]
+\end{align*}
+#+END_EXPORT
+
+Let us first consider a bound on each expert's conditional given its inducing points,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound}
+\text{log} \pYkGivenFku&\geq \E_{\pFkGivenUk}\left[ \text{log} \pYkGivenFk  \right]
+\end{align}
+#+END_EXPORT
+
+For notational conciseness the dependency on the inputs is dropped.
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-variational-dist}
+\text{log} \pY &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFku} \left[ \pYkGivenFku \right] \\
+&\geq \text{log} \sum_{k=1}^{K} \PrA \E_{\qFku} \left[ \pYkGivenFku \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] \\
+&\geq \E_{\prod_{k=1}^{K}\qFku} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFku \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] \\
+&\geq \E_{\prod_{k=1}^{K}\qFku} \left[ \E_{\pFkGivenFku} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] \\
+&= \E_{\qF} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] \\
+\end{align*}
+#+END_EXPORT
+where $\qF := \prod_{k=1}^{K} \int \pFkGivenFku \qFku \text{d} \Fku$.
+
+A mean-field variational approximation is followed for the inducing output distribution of
+each GP, resulting in the variational distribution,
+
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-variational-dist}
+q\left(\hat{\mathbf{f}}, \hat{\mathbf{h}}\right)
+= \prod_{k=1}^K \bigg(& \mathcal{N}\left(\hat{\mathbf{h}}^{(k)} \mid \mathbf{m}^{(k)}_{h}, \mathbf{S}^{(k)}_{h}\right) \numberthis \\
+&\prod_{d=1}^D \mathcal{N}\left(\hat{\mathbf{f}}^{(k)}_d \mid \mathbf{m}^{(k)}_{f,d}, \mathbf{S}^{(k)}_{f,d}\right) \bigg).
+\end{align*}
+#+END_EXPORT
+This variational distribution and Jensen's inequality are used to lower bound the
+log marginal likelihood
+$\text{log} p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T})$,
+
+eq-titsias-bound
+
+
+Following cite:hensmanGaussian2013 the variational parameters are introduced
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-inducing-dist}
+\qFu = \prod_{k=1}^{K} \qFku = \prod_{k=1}^{K} \mathcal{N}\left(\Fku \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound}
+\text{log} \pYGivenX &\geq \E_{\qFu}\left[ \text{log} \pYkGivenUk \PrA \right] - \sum_{k=1}^{K} \text{KL}\left( \qFku \mid \mid \pFku \right)
+\end{align}
+#+END_EXPORT
 
 * Trajectory Optimisation in Desired Modes
 This section presents a two-stage method to
