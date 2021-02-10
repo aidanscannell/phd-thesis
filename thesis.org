@@ -53,9 +53,6 @@
 #+LATEX_HEADER: \usepackage{amsmath,amssymb,amsfonts}
 #+LATEX_HEADER: \usepackage{graphicx}
 #+LATEX_HEADER: \usepackage{todonotes}
-*** Notes in margins
-#+LATEX_HEADER: \usepackage{marginnote}
-#+LATEX_HEADER: \renewcommand*{\marginfont}{\footnotesize}
 *** Tensor indexing (pre subscripts)
 #+LATEX_HEADER: \usepackage{tensor}
 
@@ -199,6 +196,12 @@ Make the equation numbers follow the chapter, not the whole thesis.
 # #+LATEX_HEADER: \usepackage{textcomp}
 # #+LATEX_HEADER: \usepackage{algorithmic}
 
+*** Notes in margins
+# #+LATEX_HEADER: \usepackage{geometry}
+#+LATEX_HEADER: \setlength{\marginparwidth}{3cm}
+# #+LATEX_HEADER: \xdef\marginnotetextwidth{\textwidth}
+#+LATEX_HEADER: \usepackage{marginnote}
+# #+LATEX_HEADER: \renewcommand*{\marginfont}{\footnotesize}
 ** Text Variables :noexport:
   #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Control in Multimodal Dynamical Systems}}
   #+latex_header: \newcommand{\ThesisSubTitle}{}
@@ -359,6 +362,9 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\qFu}{\ensuremath{q\left(\Fu \right)}}
 #+LATEX_HEADER: \newcommand{\qFku}{\ensuremath{q\left(\Fku \right)}}
 #+LATEX_HEADER: \newcommand{\pFku}{\ensuremath{p\left(\Fku \right)}}
+#+LATEX_HEADER: \newcommand{\qFk}{\ensuremath{q\left(\Fk \right)}}
+#+LATEX_HEADER: \newcommand{\qfk}{\ensuremath{q\left(\fk \right)}}
+#+LATEX_HEADER: \newcommand{\qfkn}{\ensuremath{q\left(\fkn \right)}}
 #+LATEX_HEADER: \newcommand{\pFkuGivenX}{\ensuremath{p\left(\Fku \mid \allInput \right)}}
 #+LATEX_HEADER: \newcommand{\pFkGivenFku}{\ensuremath{p\left(\Fk \mid \Fku \right)}}
 #+LATEX_HEADER: \newcommand{\pYGivenUX}{\ensuremath{p\left(\allOutput \mid \Fu, \allInput \right)}}
@@ -863,7 +869,7 @@ In our work we generally assume that there is no observation noise and therefore
 *** Modelling Epistemic Uncertainty :noexport:
 *** Gaussian Processes
 This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
-In particular, it walks through the lower bounds (used to perform inference) that are the building blocks
+In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
 of the inference in this thesis.
 
 #+BEGIN_EXPORT latex
@@ -874,7 +880,7 @@ have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
 #+END_EXPORT
 
 More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
-\marginnote{covariance and mean function}
+\marginpar{mean and covariance functions}
 fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-gp-mean-cov}
@@ -883,7 +889,7 @@ k(\mathbf{x}, \mathbf{x}') &= \E[(f(\mathbf{x}) -\mu(\mathbf{x})) (f(\mathbf{x}'
 \end{align}
 #+END_EXPORT
 Importantly, for a given set of training inputs from the
-\marginnote{Gaussian process prior}
+\marginpar{Gaussian process prior}
 functions domain $\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}$ the associated function values
 $\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$
 are jointly Gaussian. The prior distribution over $\mathbf{f}$ is then given by,
@@ -893,13 +899,13 @@ p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\
 \end{equation}
 #+END_EXPORT
 By definition, the training observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
+\marginpar{jointly Gaussian}
 $f_*$ at a new test input $\mathbf{x}_*$,
-\marginnote{jointly Gaussian}
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-spare-gp-joint}
 \left[\begin{array}{c}
       \mathbf{f} \\
-      \mathbf{f}^{*}
+      f^{*}
 \end{array}\right]
 \sim\ &\mathcal{N}\left(
       \bm{0} ,
@@ -910,7 +916,7 @@ $f_*$ at a new test input $\mathbf{x}_*$,
 \end{align*}
 #+END_EXPORT
 The distribution over the test function value $f_*$ (i.e. to make a prediction)
-\marginnote{noise-free predictions}
+\marginpar{noise-free predictions}
 can therefore easily be obtained by conditioning on the prior observations.
 This is easily obtained using the properties of multivariate normal distributions to give
 the predictive conditional distribution,
@@ -934,12 +940,14 @@ cite:quinonero-candelaUnifying2005 for a review.
 This work focuses on inducing point methods cite:snelsonSparse2005a, where the latent variables
 are augmented with inducing input-output pairs known as inducing "inputs" $\Z$, and inducing
 "variables" $\Fu = f(\Z)$.
-Introducing a set of $M$ inducing points from the same GP prior can reduce the computational cost
+Introducing a set of $M$ inducing points from the same GP prior
+$p(\Fu \mid \Z) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mu(\Z), k(\Z, \Z))$
+can reduce the computational cost
 if $M < N$.
-Note that these inducing outputs $\Fu$ are jointly Gaussian with the latent function values $\F$,
+Note that these inducing outputs $\Fu$ are jointly gaussian with the latent function values $\F$,
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-spare-gp-joint}
-p(\mathbf{f}, \Fu) =\ &\mathcal{N}\left(
+p(\mathbf{f}, \Fu \mid \mathbf{X}) =\ &\mathcal{N}\left(
 \left[\begin{array}{c}
       \mathbf{f} \\
       \Fu
@@ -956,7 +964,7 @@ $\K_{nm}$ is the covariance function evaluated between the data inputs $\mathbf{
 This joint distribution can be re-written using the properties of multivariate normal distributions as,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-sparse-gp-joint-cond}
-p(\mathbf{f}, \Fu) &= p(\mathbf{f} \mid \Fu) p(\Fu) \\
+p(\mathbf{f}, \Fu \mid \mathbf{X}) &= p(\mathbf{f} \mid \Fu) p(\Fu \mid \mathbf{X}) \\
 &= \mathcal{N}(\mathbf{f} \mid \mathbf{K}_{nm} \mathbf{K}_{mm}^{-1} \Fu, \mathbf{K}_{nn} - \mathbf{Q}_{nn})
 \mathcal{N}(\Fu \mid \mathbf{0}, \mathbf{K}_{mm})
 \end{align}
@@ -965,27 +973,30 @@ where $\mathbf{Q}_{nn} = \mathbf{K}_{nm}\mathbf{K}_{mm}^{-1}\mathbf{K}_{nm}^{T}$
 The full joint distribution is then given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-sparse-gp-full-joint}
-p(\mathbf{y}, \mathbf{f}, \Fu) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \Fu) p(\Fu)
+p(\mathbf{y}, \mathbf{f}, \Fu \mid \mathbf{X}) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \Fu) p(\Fu \mid \mathbf{X})
 \end{align}
 #+END_EXPORT
 Computationally efficient inference is obtained by approximating the integration over $\mathbf{f}$.
-\marginnote{FITC}
+\marginpar{FITC}
 The popular Fully Independent Training Conditional (FITC) method (in the case of a Gaussian likelihood)
 is obtained via the factorisation: $p(\mathbf{y} \mid \Fu) \approx \prod^{N}_{n=1} p(y_{n} \mid \Fu)$.
 To obtain a variational approximation Jensen's inequality is first used to bound this conditional,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-sparse-gp-bound-cond}
-\text{log}p(\mathbf{y}\mid\Fu) \geq \E_{p(\F \mid \Fu)} \left[ \text{log} p(\mathbf{y} \mid \F) \right].
+\text{log}p(\mathbf{y}\mid\Fu) \geq \E_{p(\F \mid \Fu)} \left[ \text{log} p(\mathbf{y} \mid \F) \right] := \mathcal{L}_{1}.
 \end{align}
 #+END_EXPORT
-This bound is then substituted into the marginal likelihood
-$p(\mathbf{y}) = \int p(\mathbf{y} \mid \Fu) p(\Fu) \text{d}\Fu$
-to obtain a tractable lower bound cite:titsiasVariational2009,
-\marginnote{Titsias' bound}
+This is the standard bound shown in cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
+In cite:titsiasVariational2009 this bound is then substituted into the marginal likelihood
+to obtain a tractable lower bound,
+\marginpar{Titsias' bound}
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-titsias-bound}
-\text{log}p(\mathbf{y}) \geq \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
-- \frac{1}{2\sigma^2}\text{tr}(\K_{nn} - \mathbf{Q}_{nn}),
+\begin{align}
+\text{log} p(\mathbf{y} \mid \mathbf{X}) 
+&= \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ p(\mathbf{y} \mid \Fu) \right] \\
+&\geq \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] := \mathcal{L}_{\text{titsias}} \label{eq-titsias-bound-2} \\
+&= \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
+- \frac{1}{2\sigma^2}\text{tr}(\K_{nn} - \mathbf{Q}_{nn}) \label{eq-titsias-bound},
 \end{align}
 #+END_EXPORT
 where $\sigma^2$ is the noise variance associated with the Gaussian likelihood.
@@ -994,30 +1005,43 @@ when the inducing inputs $\Z$ equal the
 data inputs $\mathbf{X}$ as $\K_{nm}=\K_{mm}=\K_{nn}$ so $\mathbf{Q}_{nn}=\K_{nn}$.
 
 cite:hensmanGaussian2013 noted that this bound has complexity $O(NM^{2})$ so
-introduced additional variational parameters to achieve a more computationally scalable bound.
-
-\todo{Add hensman's SVGP bound}
-
-
-
-The GP predictive distribution can be approximated by conditioning on this
-smaller set of inducing points,
+introduced additional variational parameters to achieve a more computationally scalable bound
+with complexity $O(M^{3})$.
+Instead of collapsing the inducing points in Eq. ref:eq-titsias-bound
+they explicitly represent them as a variational distribution,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-sparse-gp-prediction}
-p({f}_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &\approx
-p({f}_* \mid \mathbf{x}_*, \hat{\mathbf{f}}, \bm\xi) \\
-p(\hat{\mathbf{f}}) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mathbf{m}, \mathbf{S}).
+\begin{align} \label{eq--inducing-dist}
+q(\Fu) = \mathcal{N}\left(\Fu \mid \mathbf{m}, \mathbf{S} \right),
 \end{align}
 #+END_EXPORT
-The approximation becomes exact when the
-inducing points $\hat{\mathbf{f}}$ are a sufficient statistic
-for the latent function values $\mathbf{f}$ cite:Titsias2009.
-# The predicted latent function values are then mutually independent given the inducing points.
-# A central assumption is that given enough well
-# placed inducing points $\hat{\mathbf{f}}$ they are a
-# sufficient statistic for the latent function values $\mathbf{f}$.
+which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf{X})$ by
+\marginpar{Hensman's bound}
+further bounding $\mathcal{L}_{\text{titsias}}$,
+#+BEGIN_EXPORT latex
+\begin{align} 
+\mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
+&\geq \E_{q(\Fu)} \left[ \mathcal{L}_{1} \right]
+- \text{KL}\left[q(\Fu) \mid\mid p(\Fu \mid \mathbf{X})\right] \\
+&\geq \E_{q(\F)} \left[ p(\mathbf{y} \mid \F) \right]
+- \text{KL}\left[q(\Fu) \mid\mid p(\Fu \mid \mathbf{X})\right] := \mathcal{L}_{\text{hensman}}, \label{eq-hensman-bound}
+\end{align}
+#+END_EXPORT
+where $q(\F) = \int p(\F \mid \Fu) q(\Fu) \text{d} \Fu$.
+This is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
+If the likelihood factorizes across data $p(\mathbf{y} \mid \F) = \prod_{n=1}^{N} p(y_{n} \mid f_{n})$
+only the marginals of $q(\F)$ are needed to calculate Eq. ref:eq-hensman-bound,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-3-fact}
+\mathcal{L}_{\text{hensman}}
+= \sum_{n=1}^{N}\E_{q(f_{n})} \left[ \text{log} p(y_{n} \mid f_{n}) \right]
+- \text{KL}\left[q(\Fu) \mid\mid p(\Fu \mid \mathbf{X}) \right].
+\end{align}
+#+END_EXPORT
+Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
+to preform stochastic gradient methods on $q(\Fu)$.
 
-**** Sparse Gaussian Processes
+
+**** Sparse Gaussian Processes :noexport:
 A GP cite:edwardrasmussenGaussian2010 is a distribution over functions $f : \R^{D_f} \rightarrow \R$
 fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$.
 For a given set of inputs  from the
@@ -1565,9 +1589,58 @@ by utilising stochastic gradient-based optimisation.
 Following the approach by cite:titsiasVariational2009, the probability space is augmented
 with a set of $M$ inducing points for each GP.
 However, instead of collapsing these inducing points they are explicitly
-represented as a variational distribution, as seen in cite:hensmanGaussian2013.
+represented as a variational distribution, as seen in cite:hensmanGaussian2013 for regression and in
+cite:hensmanScalable2015 for classification.
+We follow cite:hensmanGaussian2013 for each expert's GP and cite:hensmanScalable2015 for the gating network
+GPs.
+
+Let us first apply Jensen's inequality to the conditional probability $\pYkGivenFku$, i.e.
+let us bound each expert's conditional given its inducing points,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-1}
+\text{log} \pYkGivenFku&\geq \E_{\pFkGivenUk}\left[ \text{log} \pYkGivenFk  \right].
+\end{align}
+#+END_EXPORT
+This is the standard bound from cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
+Instead of collapsing the inducing points here (as seen in cite:titsiasVariational2009)
+they can be explicitly represented as a variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-inducing-dist}
+\qFku = \mathcal{N}\left(\Fku \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right),
+\end{align}
+#+END_EXPORT
+and used to lower bound $\pYkGivenX$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-2}
+\text{log} \pYkGivenX &\geq \text{log} \E_{\qFku} \left[ \pYkGivenFku \right] - \text{KL}\left[\qFku \mid\mid \pFku\right],
+\end{align}
+#+END_EXPORT
+which is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
+Substituting Eq. ref:eq-expert-bound-1 into Eq. ref:eq-expert-bound-2 results in a further bound,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-3}
+\text{log} \pYkGivenX
+&\geq \E_{\qFku} \left[ \E_{\pFkGivenFku} \left[ \text{log} \pYkGivenFk \right] \right]
+- \text{KL}\left[\qFku \mid\mid \pFku\right] \nonumber \\
+&= \E_{\qFk} \left[ \text{log} \pYkGivenFk \right]
+- \text{KL}\left[\qFku \mid\mid \pFku\right],
+\end{align}
+#+END_EXPORT
+where $\qFk = \int \qFku \pFkGivenFku \text{d} \Fku$.
+Since the likelihood factorizes across data $\pYkGivenFk = \prod_{\numData=1}^{\NumData} \pykGivenfk$
+only the marginals of $\qFk$ are needed to calculate Eq. ref:eq-expert-bound-3,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-3-fact}
+\text{log} \pYkGivenX
+&\geq \sum_{\numData=1}^{\NumData}\E_{\qfkn} \left[ \text{log} \pykGivenfk \right]
+- \text{KL}\left[\qFku \mid\mid \pFku\right].
+\end{align}
+#+END_EXPORT
+
+This is the standard variational equation from cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
 
 \todo{start by bounding mixture of SVGP experts with any gating network.}
+
 
 Let us first derive a bound for the model with a general MoE gating network, that is,
 #+BEGIN_EXPORT latex
@@ -1577,18 +1650,20 @@ Let us first derive a bound for the model with a general MoE gating network, tha
 #+END_EXPORT
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-variational-dist}
-\text{log} \pYGivenU \geq \E_{\pFkGivenUk} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right]
+\text{log} \pYGivenU \geq \E_{\prod_{k=1}^{K}\pFkGivenUk} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right]
 \end{align*}
 #+END_EXPORT
 
-Let us first consider a bound on each expert's conditional given its inducing points,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound}
-\text{log} \pYkGivenFku&\geq \E_{\pFkGivenUk}\left[ \text{log} \pYkGivenFk  \right]
-\end{align}
-#+END_EXPORT
 
 For notational conciseness the dependency on the inputs is dropped.
+The MoE log marignal likelihood is given by,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-moe-log-marginal-likelihood}
+\text{log} \pY &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFku} \left[ \pYkGivenFku \right]
+\end{align*}
+#+END_EXPORT
+Eq. ref:eq-expert-bound can be used to bound Eq. ref:eq-moe-log-marginal-likelihood
+for each expert,
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-variational-dist}
 \text{log} \pY &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFku} \left[ \pYkGivenFku \right] \\
