@@ -219,7 +219,8 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \DeclareMathOperator{\K}{\mathbf{K}}
 
 *** Num Data / Mode / State Dimension / Control Dimension (k, d, t/n)
-#+LATEX_HEADER: \newcommand{\numData}{\ensuremath{t}}
+# #+LATEX_HEADER: \newcommand{\numData}{\ensuremath{t}}
+#+LATEX_HEADER: \newcommand{\numData}{\ensuremath{n}}
 #+LATEX_HEADER: \newcommand{\stateDim}{\ensuremath{d}}
 #+LATEX_HEADER: \newcommand{\controlDim}{\ensuremath{f}}
 #+LATEX_HEADER: \newcommand{\modeInd}{\ensuremath{k}}
@@ -339,6 +340,8 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\Fkdu}{\ensuremath{\singleDim{\Fku}}}
 
 #+LATEX_HEADER: \newcommand{\Z}{\ensuremath{\mathbf{Z}}}
+#+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\mathbf{Z}}}}
+#+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}}}
 # #+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}_{\latentFunc}}}
 
 *** Continuous 
@@ -361,12 +364,16 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\qF}{\ensuremath{q\left(\F \right)}}
 #+LATEX_HEADER: \newcommand{\qFu}{\ensuremath{q\left(\Fu \right)}}
 #+LATEX_HEADER: \newcommand{\qFku}{\ensuremath{q\left(\Fku \right)}}
-#+LATEX_HEADER: \newcommand{\pFku}{\ensuremath{p\left(\Fku \right)}}
+#+LATEX_HEADER: \newcommand{\pFku}{\ensuremath{p\left(\Fku \mid \Zfk \right)}}
+#+LATEX_HEADER: \newcommand{\pFkuGivenX}{\ensuremath{p\left(\Fku \mid \Zfk \right)}}
+#+LATEX_HEADER: \newcommand{\pFuGivenX}{\ensuremath{p\left(\Fu \mid \Zf \right)}}
 #+LATEX_HEADER: \newcommand{\qFk}{\ensuremath{q\left(\Fk \right)}}
 #+LATEX_HEADER: \newcommand{\qfk}{\ensuremath{q\left(\fk \right)}}
 #+LATEX_HEADER: \newcommand{\qfkn}{\ensuremath{q\left(\fkn \right)}}
-#+LATEX_HEADER: \newcommand{\pFkuGivenX}{\ensuremath{p\left(\Fku \mid \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\qfn}{\ensuremath{q\left(\fn \right)}}
 #+LATEX_HEADER: \newcommand{\pFkGivenFku}{\ensuremath{p\left(\Fk \mid \Fku \right)}}
+#+LATEX_HEADER: \newcommand{\pfkGivenFku}{\ensuremath{p\left(\fkn \mid \Fku \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenFku}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \Fku \right)}}
 #+LATEX_HEADER: \newcommand{\pYGivenUX}{\ensuremath{p\left(\allOutput \mid \Fu, \allInput \right)}}
 #+LATEX_HEADER: \newcommand{\pYGivenU}{\ensuremath{p\left(\allOutput \mid \Fu \right)}}
 
@@ -384,6 +391,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\pYGivenX}{\ensuremath{p\left(\allOutput \mid \allInput \right)}}
 
 #+LATEX_HEADER: \newcommand{\PrA}{\ensuremath{\Pr\left(\ModeVarK \right)}}
+#+LATEX_HEADER: \newcommand{\Pra}{\ensuremath{\Pr\left(\modeVarK \right)}}
 #+LATEX_HEADER: \newcommand{\PaGivenhx}{\ensuremath{P\left(\modeVarn \mid \hn, \singleInput \right)}}
 #+LATEX_HEADER: \newcommand{\PraGivenx}{\ensuremath{\Pr\left(\modeVarn \mid \singleInput \right)}}
 #+LATEX_HEADER: \newcommand{\PraGivenhx}{\ensuremath{\Pr\left(\modeVarK \mid \hn, \singleInput \right)}}
@@ -936,7 +944,7 @@ cite:quinonero-candelaUnifying2005 for a review.
 
 \todo{introduce noisy outputs and Gaussian likelihood}
 
-**** Sparse Gaussian Processes for Regression
+**** Sparse Gaussian Processes for Regression label:sec-sparse-gps
 This work focuses on inducing point methods cite:snelsonSparse2005a, where the latent variables
 are augmented with inducing input-output pairs known as inducing "inputs" $\Z$, and inducing
 "variables" $\Fu = f(\Z)$.
@@ -1100,8 +1108,8 @@ that this work considers and then details an approach to performing Bayesian inf
 Throughout this chapter it is assumed that pairs of input $\x$ and output $\y$ observations
 have previously been sampled from the system at a constant frequency,
 (i.e. with a fixed time-step) to give a data set $\dataset$.
-Based on this assumption, this chapter constructs a discrete-time representation of the systems transition dynamics
-and then formulates this discrete-time representation as a probabilistic model based on GPs.
+Based on this assumption, this chapter constructs a discrete-time representation of the system's transition dynamics
+and then formulates it as a probabilistic model based on GPs.
 This thesis is interested in multimodal systems where the dynamics modes vary over the
 input (state, control) domain, such that the mode switching can by modelled
 by input-dependent functions.
@@ -1202,15 +1210,17 @@ Assume each dynamics mode $k$ is independent,
 \end{align}
 #+END_EXPORT
 
-The dynamics modes are combined via a distribution over the mode indicator variable $\modeVar$.
+The dynamics modes are combined via a distribution over the discrete mode indicator variable $\modeVar$.
 The resulting marginal likelihood is given by,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-prior}
-\pYGivenX = \sum_{\modeInd=1}^{\ModeInd} \Pr(\ModeVarK) \pYkGivenX
+\begin{align} \label{eq-mixture-marginal-likelihood}
+\pYGivenX = \sum_{\modeInd=1}^{\ModeInd} \PrA \pYkGivenX.
 \end{align}
 #+END_EXPORT
+The distribution over the discrete mode indicator variable $\PrA$ is referred to as the gating network
+which will now be detailed.
 
-** Bayesian Model
+** Bayesian Model Old :noexport:
 The model is built upon sparse GP priors on each of the transition dynamics functions $f^{(k)}$
 with independent GPs placed on each state dimension $d$,
 
@@ -1423,6 +1433,7 @@ through the latent process.}
 \end{figure}
 #+END_EXPORT
 
+** Inference 3.0 [[label:sec-inference]]
 The marginal likelihood in Eq. ref:eq-marginal-likelihood is extremely expensive to evaluate ($\mathcal{O}(KN^{4})$)
 \todo{add marginal likelihood's correct complexity}
 and is also intractable due to the marginalisation of $\mathbf{h}$ in the gating network
@@ -1433,121 +1444,196 @@ by utilising stochastic gradient-based optimisation.
 Following the approach by cite:titsiasVariational2009, the probability space is augmented
 with a set of $M$ inducing points for each GP.
 However, instead of collapsing these inducing points they are explicitly
-represented as a variational distribution, as seen in cite:hensmanGaussian2013 for regression and in
-cite:hensmanScalable2015 for classification.
-We follow cite:hensmanGaussian2013 for each expert's GP and cite:hensmanScalable2015 for the gating network
-GPs.
-
-Let us first apply Jensen's inequality to the conditional probability $\pYkGivenFku$, i.e.
-let us bound each expert's conditional given its inducing points,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-1}
-\text{log} \pYkGivenFku&\geq \E_{\pFkGivenUk}\left[ \text{log} \pYkGivenFk  \right].
-\end{align}
-#+END_EXPORT
-This is the standard bound from cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
-Instead of collapsing the inducing points here (as seen in cite:titsiasVariational2009)
-they can be explicitly represented as a variational distribution,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-inducing-dist}
-\qFku = \mathcal{N}\left(\Fku \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right),
-\end{align}
-#+END_EXPORT
-and used to lower bound $\pYkGivenX$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-2}
-\text{log} \pYkGivenX &\geq \text{log} \E_{\qFku} \left[ \pYkGivenFku \right] - \text{KL}\left[\qFku \mid\mid \pFku\right],
-\end{align}
-#+END_EXPORT
-which is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
-Substituting Eq. ref:eq-expert-bound-1 into Eq. ref:eq-expert-bound-2 results in a further bound,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-3}
-\text{log} \pYkGivenX
-&\geq \E_{\qFku} \left[ \E_{\pFkGivenFku} \left[ \text{log} \pYkGivenFk \right] \right]
-- \text{KL}\left[\qFku \mid\mid \pFku\right] \nonumber \\
-&= \E_{\qFk} \left[ \text{log} \pYkGivenFk \right]
-- \text{KL}\left[\qFku \mid\mid \pFku\right],
-\end{align}
-#+END_EXPORT
-where $\qFk = \int \qFku \pFkGivenFku \text{d} \Fku$.
-Since the likelihood factorizes across data $\pYkGivenFk = \prod_{\numData=1}^{\NumData} \pykGivenfk$
-only the marginals of $\qFk$ are needed to calculate Eq. ref:eq-expert-bound-3,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-3-fact}
-\text{log} \pYkGivenX
-&\geq \sum_{\numData=1}^{\NumData}\E_{\qfkn} \left[ \text{log} \pykGivenfk \right]
-- \text{KL}\left[\qFku \mid\mid \pFku\right].
-\end{align}
-#+END_EXPORT
-
-This is the standard variational equation from cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
-
-\todo{start by bounding mixture of SVGP experts with any gating network.}
+represented as variational distributions and used to lower bound cite:hensmanGaussian2013
+and then further bound cite:hensmanScalable2015 the marginal likelihood.
 
 
-Let us first derive a bound for the model with a general MoE gating network, that is,
+
+Let us first consider lower bounding the MoGPE model for the general gating network case
+i.e. without specifying a particular gating network. The marginal likelihood of this model is given by,
 #+BEGIN_EXPORT latex
-\begin{align*} \label{eq-variational-dist}
-\text{log} \pYGivenX = \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \pFk
+\begin{align*} \label{eq-general-moe-marginal-likelihood}
+\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFk} \left[ \pYkGivenFk \right],
 \end{align*}
 #+END_EXPORT
+Following the approach by cite:titsiasVariational2009 and cite:hensmanGaussian2013, which is
+detailed in Section ref:sec-sparse-gps Eqs. ref:eq-titsias-bound - ref:eq-hensman-bound,
+the probability space is first augmented with a set of $M$ inducing points from each GP prior,
 #+BEGIN_EXPORT latex
-\begin{align*} \label{eq-variational-dist}
-\text{log} \pYGivenU \geq \E_{\prod_{k=1}^{K}\pFkGivenUk} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right]
+\begin{align*} \label{eq-experts-inducing-dist}
+\pFuGivenX = \prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \Fku \mid \mode{\mu}(\Zfk), \mode{k}(\Zfk, \Zfk) \right).
 \end{align*}
 #+END_EXPORT
-
-
-For notational conciseness the dependency on the inputs is dropped.
-The MoE log marignal likelihood is given by,
+The augmented log marginal likelihood is then given by,
 #+BEGIN_EXPORT latex
-\begin{align*} \label{eq-moe-log-marginal-likelihood}
-\text{log} \pY &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFku} \left[ \pYkGivenFku \right]
+\begin{align*} \label{eq-general-moe-marginal-likelihood}
+\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX} \left[ \E_{\pFkGivenFku} \left[ \pYkGivenFk \right] \right] .
+%\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \prod_{\modeInd=1}^{\ModeInd} \pYkGivenFk \pFkGivenFku \pFkuGivenX.
 \end{align*}
 #+END_EXPORT
-Eq. ref:eq-expert-bound can be used to bound Eq. ref:eq-moe-log-marginal-likelihood
-for each expert,
+For notational conciseness the dependency on the inputs has been dropped.
+Note that we have assumed each expert's inducing points are independent and augmented each expert with
+the product over all experts inducing points.
+This will enable us to move the expectation over the inducing points outside the sum over the indicator variable.
+
+We start by considering the augmented log marginal likelihood,
 #+BEGIN_EXPORT latex
-\begin{align*} \label{eq-variational-dist}
-\text{log} \pY &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFku} \left[ \pYkGivenFku \right] \\
-&\geq \text{log} \sum_{k=1}^{K} \PrA \E_{\qFku} \left[ \pYkGivenFku \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] \\
-&\geq \E_{\prod_{k=1}^{K}\qFku} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFku \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] \\
-&\geq \E_{\prod_{k=1}^{K}\qFku} \left[ \E_{\pFkGivenFku} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] \\
-&= \E_{\qF} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] \\
-\end{align*}
+\begin{align} \label{eq-expert-marginal-likelihood}
+\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \pFku} \left[ \pYkGivenFku \right].
+\end{align}
 #+END_EXPORT
-where $\qF := \prod_{k=1}^{K} \int \pFkGivenFku \qFku \text{d} \Fku$.
-
-A mean-field variational approximation is followed for the inducing output distribution of
-each GP, resulting in the variational distribution,
-
+and moving the integrals over the inducing variables outside of the sum over the indicator variable,
 #+BEGIN_EXPORT latex
-\begin{align*} \label{eq-variational-dist}
-q\left(\hat{\mathbf{f}}, \hat{\mathbf{h}}\right)
-= \prod_{k=1}^K \bigg(& \mathcal{N}\left(\hat{\mathbf{h}}^{(k)} \mid \mathbf{m}^{(k)}_{h}, \mathbf{S}^{(k)}_{h}\right) \numberthis \\
-&\prod_{d=1}^D \mathcal{N}\left(\hat{\mathbf{f}}^{(k)}_d \mid \mathbf{m}^{(k)}_{f,d}, \mathbf{S}^{(k)}_{f,d}\right) \bigg).
-\end{align*}
+\begin{align} \label{eq-expert-marginal-likelihood-fact}
+\text{log} \pYGivenX = \text{log} \E_{\prod_{\modeInd=1}^{\ModeInd} \pFku} \left[ \sum_{k=1}^{K} \PrA  \pYkGivenFku \right],
+\end{align}
+\todo{Don't think I need to mention Fubini-Tonelli theorem here}
 #+END_EXPORT
-This variational distribution and Jensen's inequality are used to lower bound the
-log marginal likelihood
-$\text{log} p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T})$,
-
-eq-titsias-bound
-
-
-Following cite:hensmanGaussian2013 the variational parameters are introduced
+Instead of collapsing the inducing points here cite:titsiasVariational2009
+they can be explicitly represented as variational distributions cite:hensmanGaussian2013,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-inducing-dist}
+\begin{align} \label{eq-var-experts-inducing-dist}
 \qFu = \prod_{k=1}^{K} \qFku = \prod_{k=1}^{K} \mathcal{N}\left(\Fku \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
 \end{align}
 #+END_EXPORT
-
+These variational distributions can then be used to obtain a lower
+bound on Eq. ref:eq-expert-marginal-likelihood-fact,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound}
-\text{log} \pYGivenX &\geq \E_{\qFu}\left[ \text{log} \pYkGivenUk \PrA \right] - \sum_{k=1}^{K} \text{KL}\left( \qFku \mid \mid \pFku \right)
+\begin{align} \label{eq-expert-bound-2}
+\text{log} \pYGivenX
+\geq &\E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \PrA  \pYkGivenFku \right] \nonumber \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] := \mathcal{L}_{1}.
 \end{align}
 #+END_EXPORT
+This bound meets the necessary conditions to perform stochastic gradient methods on $\qFu$ as the first term
+can be written as a sum over input-output pairs,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-2-fact}
+\mathcal{L}_{1} =
+&\sum_{\numData=1}^{\NumData} \E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \Pra  \pykGivenFku \right] \nonumber \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right].
+\end{align}
+#+END_EXPORT
+However, the expectation over the inducing variables cannot be calculated in closed form and
+must be approximated. The joint distribution over the inducing variables $\qFku$ is $M$ dimensional and as
+a result the integral is $M$ dimensional.
+Following cite:hensmanScalable2015 this bound (Eq. ref:eq-expert-bound-2-fact) can be further bounded by
+moving the expectations over each expert's conditional of its latent function values given its inducing points
+outside the log, i.e. applying Jensen's inequality to the conditional probability $\pYkGivenFku$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-3}
+\mathcal{L}_{1}
+\geq &\E_{\prod_{k=1}^{K}\qFku} \left[ \E_{\pFkGivenFku} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] \right] \nonumber \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] := \mathcal{L}_{\text{experts}},
+\end{align}
+#+END_EXPORT
+Denoting the variational posterior
+$\qF := \prod_{k=1}^{K} \qFk = \prod_{k=1}^{K} \int \pFkGivenFku \qFku \text{d} \Fku$ enables us
+to rewrite Eq. ref:eq-expert-bound-3 as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-4}
+\mathcal{L}_{\text{experts}}
+&= \E_{\qF} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right]
+\end{align}
+#+END_EXPORT
+As each $\qFku$ is Gaussian in our case the functional form of the variational posterior is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-var-dist}
+\qF = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \Fk \mid \mode{\mathbf{A}} \mode{\mathbf{m}}, \mode{\K}_{\numData \numData } + (\mode{\mathbf{S}} - \mode{\K}_{mm}) \left(\mode{\mathbf{A}}\right)^{T} \right),
+\end{align}
+#+END_EXPORT
+where $\mode{\mathbf{A}} = \mode{\K}_{\numData m}\left(\mode{\K}_{mm}\right)^{-1}$.
+The model's likelihood is a mixture of Gaussians and factorizes
+across data as $\prod_{\numData=1}^{\NumData} \Pra \pykGivenfk$. $\mathcal{L}_{\text{experts}}$ can thus be
+written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-bound-4-fact}
+\mathcal{L}_{\text{experts}} =
+&\sum_{\numData=1}^{\NumData}\E_{\qfn} \left[ \text{log} \sum_{k=1}^{K} \Pra \pykGivenfk \right] \nonumber \\
+&- \sum_{\modeInd=1}^{\ModeInd} \text{KL}\left[\qFku \mid\mid \pFku\right].
+\end{align}
+#+END_EXPORT
+Importantly, the variational posterior $\qfn$ analytically marginalises each $\qFku$
+(with Gaussian convolutions) removing the undesirable approximate $M$ dimensional integrals from
+Eq. ref:eq-expert-bound-2-fact. The expectation in Eq. ref:eq-experts-bound-4-fact still requires approximation
+but now only requires one dimensional integrals of the log-likelihood to be approximated.
+We approximate the integrals with Gibbs sampling and
+in practice only use single samples because the added stochasticity helps the optimisation.
+
+The bound in Eq. ref:eq-experts-bound-4-fact meets the necessary conditions to perform stochastic
+gradient methods on $\qFu$ as the sum of $\NumData$ terms corresponds to input-output pairs.
+The inducing inputs $\{\Z\}_{\modeInd=1}^{\ModeInd}$, kernel hyperparameters and noise variances are treated as
+variational hyperparameters and are optimised using stochastic gradient desecnt alongside the variational
+parameters.
+Note that our augmented model captures the dependencies in the joint distribution of the data through the
+inducing points, but as $M \ll \NumData$ these have a much lower computational burden.
+This bound $\mathcal{L}_{\text{experts}}$ has complexity $\mathcal{O}\left( \NumData_{b} \ModeInd M^{3} \right)$
+
+
+
+#+BEGIN_EXPORT latex
+\todo[inline]{
+\begin{itemize}
+\item We want $\pFGivenFu$ outside the log (and not just $\qFu$) so we can analytically integrate $\qFu$ (like in Eq. \ref{eq-experts-var-dist})??
+\item In the ICRA paper I had only $\qFu$ outside the log so we had to approximate the M-dimensional integral over $\qFu$ with samples.
+\end{itemize}
+}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\todo[inline]{
+This is the bound I had coded up previously,
+\begin{align} \label{eq-expert-bound-old}
+\mathcal{L}_{\text{old}} =
+&\sum_{\numData}^{\NumData} E_{\prod_{\modeInd=1}^{\ModeInd} \qFku} \text{log} \sum_{k=1}^{K} \PrA \left[ \pykGivenFku \right] \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right]
+\end{align}
+This bound is valid but it is nicer to move the expectations over $\pFk$ outside the log, like in Eq. \ref{eq-experts-bound-4-fact}.
+}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\todo[inline]{
+This is another bound I implemented,
+\begin{align} \label{eq-expert-bound-old}
+\mathcal{L}_{\text{old}} =
+&\sum_{\numData}^{\NumData} \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \qFku} \left[ \pykGivenFku \right] \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right]
+\end{align}
+\begin{itemize}
+\item THIS IS WRONG as the expectation over $\qFku$ should be outside the log.
+\item which is why I used to approximate it with single samples....
+\end{itemize}
+}
+#+END_EXPORT
+
+\todo[inline]{Need to extend bound for the gating network}
+
+
+
+
+
+
+
+** Results
+\todo{Add results for mcycle, quadcopter-sim and quadcopter and more??}
+The model was trained on data collected from the velocity-controlled quadcopter experiment.
+The controls were kept constant during data collection to reduce the dynamics model to
+$\Delta\mathbf{x}_t = f(\mathbf{x}_{t-1})$.
+The trajectory optimisation then exploits differential flatness cite:Ross2004 to
+recover the velocity controls.
+The model was trained with $K=2$ dynamics modes,
+and a subset of the observations were withheld during training to test the model's ability to model
+epistemic uncertainty.
+Fig. ref:fig-problem-statement shows mode 1's mixing probability over the domain
+which has clearly learned two dynamics modes characterised by process noise.
+Fig. ref:fig-svgp_2d_traj shows the predictive mean (left) and variance (right) of the gating
+function associated with dynamics mode 1 ($h^{(1)}$).
+The mean is high where the model believes mode 1 is responsible for predicting, low where
+it believes another mode is responsible, and zero where it is uncertain.
+The variance (right) has also clearly captured information regrading the
+epistemic uncertainty, i.e. where there are no observations.
+
 
 * Trajectory Optimisation in Desired Modes
 This section presents a two-stage method to
