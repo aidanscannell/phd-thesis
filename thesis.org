@@ -33,6 +33,7 @@
                ("\\paragraph{%s}" . "\\paragraph*{%s}")
                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 #+end_src
+# #+EXPORT_FILE_NAME: ./tmp/thesis.pdf
 
 * Config :ignore:
 ** Org Mode Export Options :noexport:
@@ -234,7 +235,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{_{\stateDim}#1_{\numData}}}
 # #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{#1_{\stateDim}}}
 # #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{_{\stateDim}#1}}
-#+LATEX_HEADER: \newcommand{\singleDimi}[2]{\ensuremath{\tensor[_{#2}]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\singleDimi}[2]{\ensuremath{\tensor*[_{#2}]{#1}{}}}
 #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{\singleDimi{#1}{\stateDim}}}
 # #+LATEX_HEADER: \newcommand{\allDataDim}[1]{\ensuremath{#1_{1:\NumData, \stateDim}}}
 #+LATEX_HEADER: \newcommand{\allDataDim}[1]{\ensuremath{_{\stateDim}#1_{1:\NumData}}}
@@ -325,10 +326,15 @@ Make the equation numbers follow the chapter, not the whole thesis.
 # #+LATEX_HEADER: \newcommand{\F}{\ensuremath{\allData{\mathbf{\f}}}}
 #+LATEX_HEADER: \newcommand{\F}{\ensuremath{\mathbf{\f}}}
 #+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\F}}}
-#+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}}
+#+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}
 
 #+LATEX_HEADER: \newcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
 #+LATEX_HEADER: \newcommand{\singleOutputK}{\ensuremath{\mode{\singleOutput}}}
+
+#+LATEX_HEADER: \newcommand{\gatingParams}{\ensuremath{\mode{\bm\phi}}}
+#+LATEX_HEADER: \newcommand{\expertParams}{\ensuremath{\mode{\bm\theta}}}
+#+LATEX_HEADER: \newcommand{\gatingParamsK}{\ensuremath{\mode{\bm\phi}}}
+#+LATEX_HEADER: \newcommand{\expertParamsK}{\ensuremath{\mode{\bm\theta}}}
 
 *** Sparse GPs
 # Sparse GP macro
@@ -339,10 +345,18 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\Fku}{\ensuremath{\mode{\inducing{\mathbf{\latentFunc}}}}}
 #+LATEX_HEADER: \newcommand{\Fkdu}{\ensuremath{\singleDim{\Fku}}}
 
+#+LATEX_HEADER: \newcommand{\hu}{\ensuremath{\inducing{\gatingFunc}}}
+#+LATEX_HEADER: \newcommand{\Hu}{\ensuremath{\inducing{\mathbf{\gatingFunc}}}}
+#+LATEX_HEADER: \newcommand{\Hku}{\ensuremath{\mode{\inducing{\mathbf{\gatingFunc}}}}}
+
 #+LATEX_HEADER: \newcommand{\Z}{\ensuremath{\mathbf{Z}}}
-#+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\mathbf{Z}}}}
+# #+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\mathbf{Z}}_{\latentFunc}}}
+#+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\bm{\zeta}}}}
 #+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}}}
 # #+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}_{\latentFunc}}}
+
+# #+LATEX_HEADER: \newcommand{\Zhk}{\ensuremath{\mode{\mathbf{Z}}_{\gatingFunc}}}
+#+LATEX_HEADER: \newcommand{\Zhk}{\ensuremath{\mode{\bm{\xi}}}}
 
 *** Continuous 
 #+LATEX_HEADER: \newcommand{\derivative}[1]{\ensuremath{\dot{#1}}}
@@ -817,39 +831,6 @@ pros and cons of different gating networks
 **** Our Motivations
 Motivated by obtaining well-calibrated variance's throughout the model
 placing priors on the gating network
-** Optimal Control
-Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
-over a time period $t \in [t_0, t_f]$ that optimises an objective function $\mathbf{J}_{\pi}(\x)$.
-The objective function might be formulated to solve a particular task or to make the dynamical
-system behave in a certain way.
-
-Typically this objective function is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-objective}
-\mathbf{J} \defeq \phi(\x(t_{f}), t_{f}) + \int^{t_{f}}_{t_{0}} L(\mathbf{x}(t), \mathbf{u}(t), t) \text{d}t,
-\end{align}
-#+END_EXPORT
-which consists of two terms:
-1. a terminal cost term $\phi : \R^{D} \times \R \rightarrow \R$,
-2. an integral cost term (or Lagrangian) $L : \R^{D} \times \R^{F} \times \R \rightarrow \R$.
-
-
-*** Trajectory Optimisation
-Trajectory optimisation seeks to find the state and control trajectories
-for times $t \in [t_0, t_f]$ that
-minimise some cost function $g$ whilst satisfying constraints $c$
-and boundary conditions.
-The trajectory optimisation problem is given by,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-objective}
-\min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \\
-\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}} \\
-&c(\mathbf{x}(t)) \leq 0 \quad \forall t \\
-&\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f \numberthis
-\end{align*}
-#+END_EXPORT
-*** Model Predictive Control
-** Reinforcement Learning
 ** Bayesian Inference
 *** Epistemic Uncertainty :noexport:
 
@@ -1000,7 +981,7 @@ to obtain a tractable lower bound,
 \marginpar{Titsias' bound}
 #+BEGIN_EXPORT latex
 \begin{align}
-\text{log} p(\mathbf{y} \mid \mathbf{X}) 
+\text{log} p(\mathbf{y} \mid \mathbf{X})
 &= \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ p(\mathbf{y} \mid \Fu) \right] \\
 &\geq \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] := \mathcal{L}_{\text{titsias}} \label{eq-titsias-bound-2} \\
 &= \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
@@ -1026,7 +1007,7 @@ which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf
 \marginpar{Hensman's bound}
 further bounding $\mathcal{L}_{\text{titsias}}$,
 #+BEGIN_EXPORT latex
-\begin{align} 
+\begin{align}
 \mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
 &\geq \E_{q(\Fu)} \left[ \mathcal{L}_{1} \right]
 - \text{KL}\left[q(\Fu) \mid\mid p(\Fu \mid \mathbf{X})\right] \\
@@ -1100,7 +1081,146 @@ for the latent function values $\mathbf{f}$ cite:Titsias2009.
 # placed inducing points $\hat{\mathbf{f}}$ they are a
 # sufficient statistic for the latent function values $\mathbf{f}$.
 
-* Probabilistic Inference for Multimodal Dynamical Systems
+** Optimal Control
+Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
+over a time period $t \in [t_0, t_f]$ that optimises an objective function $\mathbf{J}_{\pi}(\x)$.
+The objective function might be formulated to solve a particular task or to make the dynamical
+system behave in a certain way.
+
+Typically this objective function is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-objective}
+\mathbf{J} \defeq \phi(\x(t_{f}), t_{f}) + \int^{t_{f}}_{t_{0}} L(\mathbf{x}(t), \mathbf{u}(t), t) \text{d}t,
+\end{align}
+#+END_EXPORT
+which consists of two terms:
+1. a terminal cost term $\phi : \R^{D} \times \R \rightarrow \R$,
+2. an integral cost term (or Lagrangian) $L : \R^{D} \times \R^{F} \times \R \rightarrow \R$.
+
+
+*** Trajectory Optimisation
+Trajectory optimisation seeks to find the state and control trajectories
+for times $t \in [t_0, t_f]$ that
+minimise some cost function $g$ whilst satisfying constraints $c$
+and boundary conditions.
+The trajectory optimisation problem is given by,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-objective}
+\min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \\
+\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}} \\
+&c(\mathbf{x}(t)) \leq 0 \quad \forall t \\
+&\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f \numberthis
+\end{align*}
+#+END_EXPORT
+*** Model Predictive Control
+** Reinforcement Learning
+** Concepts of Riemannian Geometry label:sec-riemannian-geometry
+This section introduces the concepts of Riemannian geometry that are used to formulate
+a \textit{geometric} objective function for
+the trajectory optimisation presented in Chapter ref:chap-traj-opt.
+The aim of the \textit{geometric} objective function is to find shortest trajectories
+(known as geodesics) on a Riemannian manifold.
+This section starts by defining Riemannian manifolds and then details how lengths can
+be calculated on these manifolds.
+
+The Euclidean norm provides an intuitive notion for the length of a vector in the Euclidean space.
+Just as the dot product is the inner product of the Euclidean space it is possible to
+define inner products for Riemannian spaces (also known as Riemannian manifolds).
+Remembering that a norm can be expressed for any space endowed with an inner product
+provides us with the tools to for calculating lengths on manifolds.
+
+*** Riemannian Manifolds
+Intuitively Riemannian manifolds are smoothly curved spaces with an inner product.
+Formally, cite:carmoRiemannian1992 define them as smooth manifolds equipped with a Riemannian metric.
+#+BEGIN_EXPORT latex
+\begin{definition}[Riemannian Metric]
+A Riemannian metric $\mathbf{G}$ on a
+manifold $\mathcal{M}$ is a symmetric and positive definite matrix which defines
+a smoothly varying inner product
+$\langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b$
+in the tangent space $T_{\mathbf{x}}\mathcal{M}$, for each point $\mathbf{x} \in \mathcal{M}$ and
+$\dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \in T_{\mathbf{x}}\mathcal{M}$.
+\end{definition}
+\todo{comment on how I have assumed tangent space is velocity etc}
+#+END_EXPORT
+Riemannian manifolds are often represented as charts; a parameter space for the
+curved surface. An example of a chart is the spherical coordinate system that is
+used to describe a sphere.
+The chart is often a flat space and the curvature of the manifold arises
+through smooth changes in the metric.
+Measurements on the surface can thus be computed in the chart locally and
+integrated to give global measures.
+On a Riemannian manifold $\mathcal{M}$ the length of a trajectory (curve) $\bar{\mathbf{x}}$
+is given by the norm of the tangent vector along the trajectory,
+#+BEGIN_EXPORT latex
+\todo{define $\bar{\mathbf{x}}$}
+\begin{align} \label{eq-manifold-length}
+\text{Length}(\bar{\mathbf{x}})
+&=\int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t \\
+&=\int_{t_0}^{t_f}\sqrt{\dot{\mathbf{x}}(t)^T \mathbf{G}(\mathbf{x}(t)) \dot{\mathbf{x}}(t) } \mathrm{d} t,
+\end{align}
+#+END_EXPORT
+where $\mathbf{G}(\mathbf{x}(t))$ is the metric tensor at $\mathbf{x}(t)$.
+Throughout this thesis we use Newton's notation to denote differentiation with respect to time.
+\todo{Make this point about Newton's notation at earliest use of it.}
+
+*** Lengths on Riemannian Manifolds
+With this method for calculating lengths on Riemannian manifolds
+let us now turn to the definition of geodesics, i.e. the notion of shortest paths on Riemannian manifolds.
+Formally, a geodesic is defined as follows.
+#+BEGIN_EXPORT latex
+\begin{definition}[Geodesic]
+Given two points $\mathbf{x}_0, \mathbf{x}_f \in
+\mathcal{M}$, a Geodesic is a length minimising trajectory (curve)
+$\bar{\mathbf{x}}_g$ connecting the points such that,
+\begin{align} \label{eq-geodesic-conds}
+  \bar{\mathbf{x}}_{g}=\arg \min_{\bar{\mathbf{x}}} \operatorname{Length}(\bar{\mathbf{x}}), \quad \bar{\mathbf{x}}(t_0)=\mathbf{x}_{0}, \bar{\mathbf{x}}(t_f)=\mathbf{x}_{f}.
+\end{align}
+\end{definition}
+#+END_EXPORT
+An important observation from cite:carmoRiemannian1992 that we exploit in
+Chapter ref:chap-traj-opt, is that geodesics satisfy a continuous-time $2^{\text{nd}}$ order ODE,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-2ode}
+ \ddot{\mathbf{x}}(t)
+&= y(t, \mathbf{x}, \dot{\mathbf{x}}) \\
+&=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{x}(t))]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right),
+\end{align}
+\normalsize
+#+END_EXPORT
+where $\operatorname{vec}[\mathbf{G}(\mathbf{x}(t)])$ stacks the columns of $\mathbf{G}(\mathbf{x}(t))$
+and $\otimes$ denotes the Kronecker product.
+The implication of Eqs. ref:eq-geodesic-conds and ref:eq-2ode is that trajectories that are solutions
+to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode implicitly minimise the objective,
+#+BEGIN_EXPORT latex
+\todo{define $\bar{\mathbf{x}}$}
+\begin{align} \label{eq-length-objective}
+J &= \min \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t
+\end{align}
+#+END_EXPORT
+
+
+# Computing geodesics involves finding a solution to Eq. ref:eq-2ode
+# with $\mathbf{x}(t_0) = \mathbf{x}_1$ and $\mathbf{x}(t_f) = \mathbf{x}_2$.
+# This is a boundary value problem with a smooth solution so it can be solved
+# using any direct trajectory optimisation framework and can therefore
+# incorporate state and action constraints.
+# #+BEGIN_EXPORT latex
+# \todo[inline]{Hmm, not sure this is true, read up - It only involves discretizing the geodesic curve and not
+# the feature space and as this is always 1-dimensional the approach scales
+# to higher dimensional feature spaces.}
+# #+END_EXPORT
+
+
+# We can formulate this as an initial value problem and use techniques such as the
+# shooting method to determine the correct inintial velocity and from this the
+# geodesic path.
+# This is advantageous as it only involves discretizing the geodesic curve and not
+# the the feature space. This is always 1-dimensional and thus the approach scales
+# to highgher dimensional feature spaces.
+
+* Probabilistic Inference for Multimodal Dynamical Systems label:chap-dynamics
 ** Intro :ignore:
 \todo[inline]{This section could be broad (more than just GP-based gating networks) and the next section focus on gating networks specifically.}
 This chapter introduces the class of continuous-time multimodal dynamical systems
@@ -1365,14 +1485,15 @@ p(\Delta\mathbf{x}_{1:T} | \hat{\mathbf{x}}_{1:T}) =
 \normalsize
 #+END_EXPORT
 where $\left\langle \cdot \right\rangle_{p(x)}$ denotes an expectation under $p(x)$.
-Fig. [[ref:fig:graphical_model]]
+Fig. [[ref:fig-graphical-model]]
 shows the graphical model where the $K$ latent gating functions $h^{(k)}$
 are evaluated and normalised to obtain the mixing probabilities
 $\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1})$.
 The mode indicator variable $\alpha_t$ is then sampled from a Categorical distribution
-goverend by these probabilities.
+governed by these probabilities.
 The indicated mode's latent function $f^{(k)}$ and process noise $\sigma^{(k)}$ are
 then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
+
 #+BEGIN_EXPORT latex
 \begin{figure}[t]
   \centering
@@ -1381,24 +1502,24 @@ then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
       pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
       post/.style={->,shorten >=0.4pt,>=stealth',semithick}
       ]
-      \node[const] (x) {$\hat{\mathbf{x}}_{t-1}$};
-      \node[latent, left=of x, yshift=-1.4cm] (f) {$\mathbf{f}^{(k)}_t$};
+      \node[const] (x) {$\singleInput$};
+      \node[latent, left=of x, yshift=-1.4cm] (f) {$\fkn$};
       %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
-      \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {${h}^{(k)}_t$};
+      \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {$\hkn$};
 
-      \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\hat{\mathbf{f}}^{(k)}$};
-      \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\hat{\mathbf{h}}^{(k)}$};
-      \node[const, left=of uk, xshift=0.4cm] (zk) {$\bm\xi^{(k)}_f$};
-      \node[const, right=of uh, xshift=-0.4cm] (zh) {$\bm\xi^{(k)}_h$};
+      \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\Fku$};
+      \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\Hku$};
+      \node[const, left=of uk, xshift=0.4cm] (zk) {$\Zfk$};
+      \node[const, right=of uh, xshift=-0.4cm] (zh) {$\Zhk$};
 
-      \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\bm\theta^{(k)}$};
-      \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\bm\phi^{(k)}$};
+      \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\expertParamsK$};
+      \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\gatingParamsK$};
 
-      \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\sigma^{(k)}$};
+      \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\noiseVarK$};
 
-      \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\Delta\mathbf{x}_t$};
+      \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\singleOutput$};
       %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
-      \node[latent, right=of y, xshift=-0.4cm] (a) {${\alpha}_t$};
+      \node[latent, right=of y, xshift=-0.4cm] (a) {$\modeVarn$};
 
       %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
 
@@ -1419,19 +1540,77 @@ then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
       \draw[post] (phik)--(h);
       \draw[post] (sigmak)|-(y);
 
-      \plate {} {(x) (y) (a) (f) (h)} {$T$};
+      \plate {} {(x) (y) (a) (f) (h)} {$\NumData$};
       %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
-      \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$K$};
-      \plate {} {(zh) (uh) (h) (phik)} {$K$};
+      \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$\ModeInd$};
+      \plate {} {(zh) (uh) (h) (phik)} {$\ModeInd$};
     \end{tikzpicture}
     }
-  \caption{Graphical model of the transition dynamics
-where the state difference $\Delta\mathbf{x}_{t}$
-is generated by pushing the state and control $\hat{\mathbf{x}}_{t-1}$
-through the latent process.}
-\label{fig:graphical_model}
+  \caption{Graphical model of the transition dynamics where the state difference $\singleOutput$
+is generated by pushing the state and control $\singleInput$ through the latent process.}
+\label{fig-graphical-model}
 \end{figure}
 #+END_EXPORT
+
+# #+BEGIN_EXPORT latex
+# \begin{figure}[t]
+#   \centering
+#   \resizebox{0.8\columnwidth}{!}{
+#     \begin{tikzpicture}[
+#       pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+#       post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+#       ]
+#       \node[const] (x) {$\hat{\mathbf{x}}_{t-1}$};
+#       \node[latent, left=of x, yshift=-1.4cm] (f) {$\mathbf{f}^{(k)}_t$};
+#       %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
+#       \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {${h}^{(k)}_t$};
+
+#       \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\hat{\mathbf{f}}^{(k)}$};
+#       \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\hat{\mathbf{h}}^{(k)}$};
+#       \node[const, left=of uk, xshift=0.4cm] (zk) {$\bm\xi^{(k)}_f$};
+#       \node[const, right=of uh, xshift=-0.4cm] (zh) {$\bm\xi^{(k)}_h$};
+
+#       \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\bm\theta^{(k)}$};
+#       \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\bm\phi^{(k)}$};
+
+#       \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\sigma^{(k)}$};
+
+#       \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\Delta\mathbf{x}_t$};
+#       %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
+#       \node[latent, right=of y, xshift=-0.4cm] (a) {${\alpha}_t$};
+
+#       %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
+
+#       \factor[above=of a] {h-a} {left:Cat} {h} {a};
+
+#       \draw[post] (a)--(y);
+#       \draw[post] (x)-|(f);
+#       %\draw[post] (f)--(yk);
+#       \draw[post] (f)--(y);
+#       %\draw[post] (yk)--(y);
+#       %\draw[post] (h)--(a);
+#       \draw[post] (x)-|(h);
+#       \draw[post] (uk)--(f);
+#       \draw[post] (uh)--(h);
+#       \draw[post] (zk)--(uk);
+#       \draw[post] (zh)--(uh);
+#       \draw[post] (thetak)--(f);
+#       \draw[post] (phik)--(h);
+#       \draw[post] (sigmak)|-(y);
+
+#       \plate {} {(x) (y) (a) (f) (h)} {$T$};
+#       %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
+#       \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$K$};
+#       \plate {} {(zh) (uh) (h) (phik)} {$K$};
+#     \end{tikzpicture}
+#     }
+#   \caption{Graphical model of the transition dynamics
+# where the state difference $\Delta\mathbf{x}_{t}$
+# is generated by pushing the state and control $\hat{\mathbf{x}}_{t-1}$
+# through the latent process.}
+# %\label{fig:graphical_model}
+# \end{figure}
+# #+END_EXPORT
 
 ** Inference 3.0 [[label:sec-inference]]
 The marginal likelihood in Eq. ref:eq-marginal-likelihood is extremely expensive to evaluate ($\mathcal{O}(KN^{4})$)
@@ -1519,6 +1698,7 @@ must be approximated. The joint distribution over the inducing variables $\qFku$
 a result the integral is $M$ dimensional.
 Following cite:hensmanScalable2015 this bound (Eq. ref:eq-expert-bound-2-fact) can be further bounded by
 moving the expectations over each expert's conditional of its latent function values given its inducing points
+$\pFkGivenFku$
 outside the log, i.e. applying Jensen's inequality to the conditional probability $\pYkGivenFku$,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-bound-3}
@@ -1614,13 +1794,12 @@ This is another bound I implemented,
 
 
 
-
 ** Results
 \todo{Add results for mcycle, quadcopter-sim and quadcopter and more??}
 The model was trained on data collected from the velocity-controlled quadcopter experiment.
 The controls were kept constant during data collection to reduce the dynamics model to
 $\Delta\mathbf{x}_t = f(\mathbf{x}_{t-1})$.
-The trajectory optimisation then exploits differential flatness cite:Ross2004 to
+The trajectory optimisation then exploits differential flatness cite:rossPseudospectral2004 to
 recover the velocity controls.
 The model was trained with $K=2$ dynamics modes,
 and a subset of the observations were withheld during training to test the model's ability to model
@@ -1634,45 +1813,33 @@ it believes another mode is responsible, and zero where it is uncertain.
 The variance (right) has also clearly captured information regrading the
 epistemic uncertainty, i.e. where there are no observations.
 
-
-* Trajectory Optimisation in Desired Modes
-This section presents a two-stage method to
+* Trajectory Optimisation in Desired Modes label:chap-traj-opt
+** Intro :ignore:
+This chapter presents the second stage of a two-stage method to
 perform trajectory optimisation in multimodal dynamical systems with unknown nonlinear stochastic
 transition dynamics.
-The method finds trajectories that remain in a preferred dynamics mode
-where possible and in regions of the transition dynamics model that
+The method aims to find trajectories that remain in a preferred dynamics mode
+where possible and in regions of the transition dynamics that
 have been observed and can be predicted confidently.
-The first stage leverages a mixture of Gaussian process experts method to learn a predictive
-dynamics model from historical data.
-Importantly, this model learns a gating function that indicates the probability of being in a particular
+The first stage leverages the Mixture of Gaussian Process Experts (MoGPE) method from Chapter ref:chap-dynamics to learn
+a predictive dynamics model from historical data.
+Importantly, this model learns gating functions that indicate the probability of being in a particular
 dynamics mode at a given state location.
-In the second stage,
-this gating function acts as a coordinate map for a latent Riemannian manifold on which
-geodesics are solutions to our trajectory optimisation problem.
-Geodesics on this manifold satisfy a continuous-time second-order ODE.
-A set of collocation constraints are derived that ensure trajectories are solutions to this ODE,
-implicitly solving the trajectory optimisation problem.
+In the second stage, presented in this chapter,
+the geometry and GP posterior covariance associated with these latent gating functions
+are used to formulate an objective function aimed at finding trajectories that,
 
-Motivated by trajectory optimisation, this work adopts (and extends) the well-known
-mixture of GP experts (MoGPE) method with a GP-based gating network to learn a time-invariant
-transition dynamics model cite:Tresp.
-The trajectory optimisation exploits the geometric structure
-learned by the GP-based gating network along with its well calibrated uncertainty estimates.
-The trajectory optimisation is projected onto a continuous-time
-ODE whose solutions are geodesics on a probabilistic manifold, induced
-by one of the latent gating function GPs.
-Solutions to this ODE are trajectories that remain in a single dynamics mode
-(where possible) and avoid regions of the dynamics that cannot be predicted confidently.
-This latent geodesic ODE is solved using a Hermite-Simpson collocation method cite:Kelly2017.
+- Goal 1 :: remain in a preferred dynamics mode $k^*$ where possible, label:to-goal-mode
+- Goal 2 :: avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
+This chapter formulates such an objective function and then presents a method that finds trajectories that
+implicitly minimise it by exploiting concepts of Riemannian geometry.
+More specifically, the trajectory optimisation is projected onto a continuous-time
+ODE whose solutions implicitly minimise the objective function.
 
-The remainder of this paper details our two-stage approach to learning the transition dynamics
-and performing trajectory optimisation.
 Section ref:sec-problem-statement formally states our problem and
-Section ref:sec-dynamics details the formulation of the transition dynamics as a probabilistic
-model.
-Section ref:sec-inference then derives a novel variational lower bound for performing scalable Bayesian
-inference in the model. Section ref:sec-traj-opt recaps concepts from Riemannian
-geometry before detailing how they are extended to probabilistic geometries and
+Section ref:sec-traj-opt recaps concepts from Riemannian
+geometry before detailing how they are extended to probabilistic geometries
+and
 used to project the trajectory optimisation onto the latent geodesic ODE.
 It then details how this latent geodesic ODE is solved using direct collocation.
 Section ref:sec-results gives results of the method tested on a real-world
@@ -1680,23 +1847,214 @@ velocity-controlled quadcopter example.
 
 
 ** Problem Statement label:sec-problem-statement
-This work is interested in finding trajectories that,
-1. remain in a preferred dynamics mode $k^*$ where possible,
-2. avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations).
-The cost over a trajectory takes the form,
+Formally, trajectory optimisation seeks to find the state and control trajectories
+for times $t \in [t_0, t_f]$ that minimise some cost function $g$ whilst satisfying constraints $c$
+and boundary conditions.
+The trajectory optimisation problem is given by,
 #+BEGIN_EXPORT latex
-\begin{align*} \label{eq-cost-trajectory}
-J&= \int_{t_0}^{t_f}  g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t)) + g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \numberthis \\
-&= \int_{t_0}^{t_f} - \Pr(\alpha(t)=k^*) + \lambda \V_{\text{epistemic}}\left[f(\mathbf{x}(t), \mathbf{u}(t))\right]  \text{d}t
+\begin{align} \label{eq-traj-opt}
+\min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \nonumber \\
+\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}} \nonumber \\
+&c(\mathbf{x}(t)) \leq 0 \quad \forall t \nonumber \\
+&\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f
+\end{align}
+#+END_EXPORT
+
+The trajectory optimisation in this chapter aims to find trajectories that satisfy
+two goals,
+- Goal 1 :: remain in a preferred dynamics mode $k^*$ where possible, label:to-goal-mode
+- Goal 2 :: avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
+
+** Our Approach
+The standard approach to solving such a problem is to construct an objective function that encodes
+our two goals.
+We follow this approach and construct an objective function based on probabilistic Riemannian geometries.
+However, instead of minimising this objective function subject to our systems transition dynamics,
+we exploit the observation detailed in Section ref:sec-riemannian-geometry Eq. ref:eq-length-objective.
+That is, trajectories that minimise our objective function are actually solutions
+to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode;
+an ODE whose solutions are geodesics (i.e. shortest paths) on the Riemannian manifold endowed with the metric
+$\mathbf{G}$.
+The trajectory optimisation is then projected onto this ODE (from our system's transition dynamics)
+and a simple objective function is used,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt-geometric}
+\min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g_{\text{simple}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \nonumber \\
+\text{s.t. }&\text{Eq. \ref{eq-2ode}} \nonumber \\
+&c(\mathbf{x}(t)) \leq 0 \quad \forall t \nonumber \\
+&\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f.
+\end{align}
+\todo{need to mention how we projected from stochastic dynamics to an expected ODE...}
+#+END_EXPORT
+Our objective function is thus encoded into the Riemannian metric tensor $\mathbf{G}$ that
+appears in Eq ref:eq-2ode.
+Let us now provide an intuitive and thorough walk-through of the approach detailed above.
+
+To help provide intuition let us first formulate an objective function with two terms,
+one to address each of our goals,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-cost-trajectory}
+J&= \int_{t_0}^{t_f}  g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t)) + g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t,
+\end{align}
+#+END_EXPORT
+where the $g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t))$ term favours remaining in dynamics mode $k^*$
+and the $g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t))$ term favours trajectories that avoid regions of the
+dynamics with high epistemic uncertainty.
+
+Eq. ref:eq-cost-trajectory can be instantiated using information learned by our transition dynamics model.
+The first objective is simple to construct and is intuitively the "go to" objective function for our problem.
+The second objective is more involved and requires the concepts of Riemannian geometry
+from Section ref:sec-riemannian-geometry to be extended to probabilistic geometries.
+
+
+*** A Simple Cost Function
+\todo{only variance and not covariance?}
+Remembering that the gating network indicates the probability of being in a particular dynamics mode at a given
+time step and that the Bayesian formulation of the dynamics model lends itself to well-calibrated uncertainty estimates,
+the two terms can be instantiated as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-cost-trajectory-learned}
+J &= \int_{t_0}^{t_f} - \Pr(\alpha(t)=k^*) + \lambda \V_{\text{epistemic}}\left[\gatingFunc(\mathbf{x}(t), \mathbf{u}(t))\right]  \text{d}t,
+\end{align}
+#+END_EXPORT
+where the variance term $\V_{\text{epistemic}}$ is due to the epistemic uncertainty arising from
+learning $f$ from observations and $\lambda$ is a user-tuneable parameter.
+
+
+*** A Geometric Cost Function
+The geometry of the latent gating functions can also be used to formulate a cost term
+that favours trajectories remaining in a preferred dynamics mode.
+The cost function in Eq. ref:eq-cost-trajectory is difficult to pose, but
+the $g_{\text{mode}}$ term can be expressed as finding shortest
+paths on the desired mode's gating function.
+This formulation is given by,
+\todo[inline]{Add more intuition here, e.g. hill climbing}
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-geodesic-objective}
+J = \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t,
+\end{align}
+#+END_EXPORT
+where $\mathbf{G}(\mathbf{x}(t))$ represents a metric tensor of a Riemannian manifold evaluated at $\mathbf{x}(t)$
+encoding the desired cost, i.e. the desired mode's gating function.
+
+The cost term in Eq ref:eq-geodesic-objective can be combined with the
+$g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t))$ term from Eq. ref:eq-cost-trajectory-learned
+to obtain an objective function that appears to address our goals.
+However, closer inspection of the geometric cost term reveals that the
+Riemannian manifold in this work is actually probabilistic because its coordinate
+map is modelled as a GP.
+With this observation, we construct the Riemannian metric tensor $\mathbf{G}(\mathbf{x})$ such
+that it can be extended to probabilistic geometries; absorbing the role of the epistemic cost term.
+
+**** Extension to Probabilistic Geometries
+The Riemannian manifold in this work is actually probabilistic because its coordinate
+map is modelled as a sparse variational GP.
+This work follows cite:tosiMetrics2014  and uses a metric tensor that captures the variance in the manifold
+by means of a probability distribution.
+In particular, the expected value of this metric tensor contains a covariance term which
+leads to lengths on the manifold increasing in areas of high covariance.
+This is a desirable behaviour because it encourages trajectories to
+avoid regions of the learned dynamics with high epistemic uncertainty -
+implementing the $g_{\text{epistemic}}$ cost term in Eq. ref:eq-cost-trajectory.
+
+Motivated by obtaining a probability distribution over the metric tensor, they
+introduce the following Riemannian metric,
+#+BEGIN_EXPORT latex
+\begin{align}
+  \langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{J}^T \mathbf{J} \dot{\mathbf{x}}_b =
+  \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b
+\end{align}
+#+END_EXPORT
+where $\mathbf{J}=\frac{\partial h}{\partial \mathbf{x}}$ denotes the Jacobian of $h$.
+As the differential operator is linear, the derivative of a GP is also a GP.
+For a GP
+the Jacobian $\mathbf{J}_*$ of the function evaluated at a new input $\mathbf{x}_*$
+is jointly Gaussian with the function's associated inducing outputs.
+For the $k^{\text{th}}$ gating function it is given by,
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-joint-jacobian-dist}
+p(\mathbf{J}^{(k)}_*, \hat{\mathbf{h}}^{(k)} &\mid \mathbf{x}_*, \bm\xi_h^{(k)}) = \\
+& \mathcal{N}\left(
+\left[\begin{array}{c}
+        \mathbf{J}^{(k)}_* \\
+        \hat{\mathbf{h}}^{(k)}
+      \end{array}\right] \mid
+\left[\begin{array}{c}
+        \bm{0} \\
+        \bm{\mu}_h^{(k)}
+      \end{array}\right], \left[\begin{array}{cc}
+                              \partial^2\mathbf{K}_{**}^{(k)} & \partial\mathbf{K}_{*h}^{(k)} \\
+                            \partial\mathbf{K}_{h*}^{(k)} & \mathbf{K}_{hh}^{(k)}
+                          \end{array}\right]\right),
+\end{align*}
+\normalsize
+#+END_EXPORT
+where $\K_{hh}^{(k)} = k^{(k)}\left(\bm\xi_h^{(k)}, \bm\xi_h^{(k)}\right) \in \R^{M \times M}$ is the
+$k^{\text{th}}$ gating function's covariance function evaluated between its inducing inputs,
+$\partial\K_{*h}^{(k)} = \frac{\partial k^{(k)}\left(\mathbf{x}_*, \bm\xi_h^{(k)}\right)}{\partial \mathbf{x}_*} \in \R^{D \times M}$ is
+its partial derivative w.r.t its first input (the new input $\mathbf{x}_*$), and
+$\partial^2\K_{**}^{(k)} = \frac{\partial^2 k^{(k)}\left(\mathbf{x}_*, \mathbf{x}_*\right)}{\partial \mathbf{x}_* \partial \mathbf{x}_*} \in \R^{D \times D}$
+is its derivative w.r.t both inputs (which are both the new input $\mathbf{x}_*$).
+Remembering that the inducing outputs are actually probabilistic and modelled as a Gaussian
+$q\left(\hat{\mathbf{h}}^{(k)}\right) = \mathcal{N}\left(\hat{\mathbf{h}}^{(k)} \mid \mathbf{m}_h^{(k)}, \mathbf{S}_h^{(k)}\right)$,
+the predictive distribution of the Jacobian given a new input $\mathbf{x}_*$
+is obtained by marginalising the inducing outputs,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-predictive-jacobian-dist}
+p\left(\mathbf{J}^{(k)}_* | \mathbf{x}_*, \bm\xi_h^{(k)}\right)
+&=\int q\left(\hat{\mathbf{h}}^{(k)}\right) p\left(\mathbf{J}^{(k)}_* \mid \mathbf{x}_*, \hat{\mathbf{h}}^{(k)}, \bm\xi_h^{(k)}\right) \text{d} \hat{\mathbf{h}}^{(k)} \\
+&= \mathcal{N}\left(\mathbf{J}^{(k)}_* \mid \bm\mu_J^{(k)}, \mathbf{\Sigma}_{J}^{(k)}\right). \numberthis
 \end{align*}
 #+END_EXPORT
-where $\V_{\text{epistemic}}$ is the variance due to epistemic uncertainty arising due to
-learning $f$ from observations and $\lambda$ is a user-tuneable parameter.
-The cost has a term which favours remaining in dynamics mode $k^*$
-and a term which favours trajectories avoiding regions of the
-dynamics with high epistemic uncertainty.
-This work does not explicitly define the cost function in Eq. ref:eq-cost-trajectory but instead
-projects the trajectory optimisation onto a latent ODE whose solutions implicitly minimise it.
+This induces a non-central Wishart distribution over the metric tensor $\mathbf{G}$,
+#+BEGIN_EXPORT latex
+\begin{align}
+  \mathbf{G}=\mathcal{W}_{D+F}\left(p, \boldsymbol{\Sigma}_{J}, \mathbb{E}\left[\mathbf{J}^{\top}\right] \mathbb{E}[\mathbf{J}]\right),
+\end{align}
+#+END_EXPORT
+where $p$ is the number of degrees of freedom (always one in our case).
+The expected metric tensor is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expected-metric}
+  \E[\mathbf{G}] = \E[\mathbf{J}^T] \E[\mathbf{J}] + \mathbf{\Sigma}_J.
+\end{align}
+#+END_EXPORT
+This expected metric tensor includes a covariance term $\mathbf{\Sigma}_J$ which implies that the
+metric is larger when the covariance in the mapping is higher.
+As a result, trajectories minimising Eq. ref:eq-geodesic-objective endowed with this
+metric will attempt to avoid regions of the transition dynamics with high epistemic uncertainty.
+
+
+**** Old :ignore:
+The trajectory optimisation is projected onto a continuous-time
+ODE whose solutions are geodesics on a probabilistic manifold, induced
+by one of the latent gating function GPs.
+Solutions to this ODE are trajectories that remain in a single dynamics mode
+(where possible) and avoid regions of the dynamics that cannot be predicted confidently.
+This latent geodesic ODE is solved using a Hermite-Simpson collocation method cite:kellyIntroduction2017.
+
+The second stage,
+this gating function acts as a coordinate map for a latent Riemannian manifold on which
+geodesics are solutions to our trajectory optimisation problem.
+Geodesics on this manifold satisfy a continuous-time second-order ODE.
+
+A set of collocation constraints are derived that ensure trajectories are solutions to this ODE,
+implicitly solving the trajectory optimisation problem.
+
+Motivated by trajectory optimisation, this work adopts (and extends) the well-known
+mixture of GP experts (MoGPE) method with a GP-based gating network to learn a time-invariant
+transition dynamics model cite:trespMixtures2000a.
+The trajectory optimisation exploits the geometric structure
+learned by the GP-based gating network along with its well calibrated uncertainty estimates.
+The trajectory optimisation is projected onto a continuous-time
+ODE whose solutions are geodesics on a probabilistic manifold, induced
+by one of the latent gating function GPs.
+Solutions to this ODE are trajectories that remain in a single dynamics mode
+(where possible) and avoid regions of the dynamics that cannot be predicted confidently.
+This latent geodesic ODE is solved using a Hermite-Simpson collocation method cite:kellyIntroduction2017.
+
+
 
 ** Trajectory Optimisation label:sec-traj-opt
 This work seeks to solve the trajectory optimisation in Eq. ref:eq-objective, i.e.
@@ -1731,7 +2089,7 @@ where $\mathbf{G}(\mathbf{x}(t))$ is the metric tensor at $\mathbf{x}(t)$ for a 
 encoding the desired cost, i.e. the desired mode's gating function.
 Intuitively Riemannian manifolds are smoothly curved spaces with
 an inner product.
-Formally, they are smooth manifolds equipped with a Riemannian metric cite:Carmo1992.
+Formally, they are smooth manifolds equipped with a Riemannian metric cite:carmoRiemannian1992,
 #+BEGIN_EXPORT latex
 \begin{definition}[Riemannian Metric]
 A Riemannian metric $\mathbf{G}$ on a
@@ -1750,7 +2108,7 @@ $\dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \in T_{\mathbf{x}}\mathcal{M}$.
 # variational GPs.
 The Riemannian manifold in this work is actually probabilistic because its coordinate
 map is modelled as a sparse variational GP.
-This work follows cite:Tosi2014 and uses a metric tensor that captures the variance in the manifold
+This work follows cite:tosiMetrics2014 and uses a metric tensor that captures the variance in the manifold
 by means of a probability distribution.
 In particular, the expected value of this metric tensor contains a covariance term which
 leads to lengths on the manifold increasing in areas of high covariance.
@@ -1859,7 +2217,7 @@ trajectories.}
 \end{figure}
 #+END_EXPORT
 Trajectories minimising Eq. ref:eq-geodesic-objective are geodesics on $\mathcal{M}$
-and must satisfy the continuous-time second-order ODE cite:Carmo1992,
+and must satisfy the continuous-time second-order ODE cite:carmoRiemannian1992,
 #+BEGIN_EXPORT latex
 \small
 \begin{align*} \label{eq-2ode}
@@ -1876,7 +2234,7 @@ is equivalent to solving the ODE in Eq. ref:eq-2ode subject to the same boundary
 However, since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, it cannot
 be solved with simple forward or backward integration.
 Instead, the problem is transcribed using the approach of differential
-flatness cite:Milam2000,Ross2004.
+flatness cite:milamNew2000c,rossPseudospectral2004.
 A set of outputs $\mathbf{z}(t)$ are defined such that the
 states $\mathbf{x}(t)$ and controls $\mathbf{u}(t)$ can be
 expressed in terms of the flat output $\mathbf{z}(t)$ and a finite number of its derivatives,
@@ -1899,7 +2257,7 @@ for $t \in [t_0, t_f]$ subject to the boundary conditions and the dynamics,
 \end{align}
 #+END_EXPORT
 Collocation methods are used to transcribe continuous-time trajectory optimisation problems into
-nonlinear programs, i.e. constrained parameter optimisation cite:Kelly2017,Fahroo2000.
+nonlinear programs, i.e. constrained parameter optimisation cite:kellyIntroduction2017,fahrooDirect2000  .
 The expected metric in Eq. ref:eq-expected-metric is substituted into
 Eq. ref:eq-diff-flat-ode and solved via direct collocation.
 This work implements a simple Hermite-Simpson collocation method
@@ -1965,7 +2323,7 @@ manifolds.
 This section considers continuous-time inputs denoted as $\mathbf{z}(t) = \mathbf{x}(t)$.
 Intuitively Riemannian manifolds are smoothly curved spaces with
 an inner product.
-Formally they are smooth manifolds equipped with a Riemannian metric cite:Carmo1992.
+Formally they are smooth manifolds equipped with a Riemannian metric cite:carmoRiemannian1992,
 #+BEGIN_EXPORT latex
 \begin{definition}[Riemannian Metric]
 A Riemannian metric $\mathbf{G}$ on a
@@ -2009,7 +2367,7 @@ $\bar{\mathbf{z}}_g$ connecting the points such that,
 \end{align}
 \end{definition}
 #+END_EXPORT
-Geodesics satisfy a continuous-time $2^{\text{nd}}$ order ODE cite:Carmo1992,
+Geodesics satisfy a continuous-time $2^{\text{nd}}$ order ODE cite:carmoRiemannian1992,
 #+BEGIN_EXPORT latex
 \small
 \begin{align} \label{eq-2ode}
