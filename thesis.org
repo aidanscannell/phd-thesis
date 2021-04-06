@@ -2438,23 +2438,13 @@ and $\otimes$ denotes the Kronecker product.
 # to highgher dimensional feature spaces.
 
 ** Conclusion
-
-This section presented a novel two-stage method for performing trajectory optimisation in
-unknown multimodal dynamical systems.
-It first trains a probabilistic transition dynamics model,
-resembling a mixture of GP experts method,
-using a novel variational lower bound that
-principally handles uncertainty and provides scalability
-via stochastic gradient-based optimisation.
-The trajectory optimisation is then projected onto a probabilistic Riemannian
-manifold parameterised by the gating network.
-The method is evaluated on a real-world quadcopter example
-that shows the transition dynamics model can successfully learn a factorised representation
-of the underlying dynamics modes.
+This chapter has presented a method for performing trajectory optimisation in
+multimodal dynamical systems with the transition dynamics modelled as a
+Mixtures of Gaussian Process Experts method.
+The trajectory optimisation is projected onto a probabilistic Riemannian
+manifold parameterised by the gating network of the MoGPE model.
 Given a start and end state, the trajectory optimisation can be tuned to find trajectories that either
-prioritise
-remaining in a desired dynamics mode or
-prioritise avoiding regions of the learned transition
+prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
 dynamics model with high epistemic uncertainty.
 
 * Back Matter :ignore:
