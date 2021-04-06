@@ -856,6 +856,45 @@ In our work we generally assume that there is no observation noise and therefore
 
 *** Variational Inference :noexport:
 *** Modelling Epistemic Uncertainty :noexport:
+*** Bayesian Inference
+
+Suppose we have some observations $\mathbf{Y}$ generated from a family of models $p(\mathbf{Y}, \mathbf{\Theta})$, where $\mathbf{\Theta}$ represents the unknown random variables that the model depends on.
+
+**** Maximum Likelihood
+In maximum likelihood we seek to find the best model by maximising the likelihood $p(\mathbf{Y} | \mathbf{\Theta})$. We obtain a point estimate for the "best" variables $\mathbf{\Theta}$. The likelihood function is higher for more complex model structures, leading to overfitting.
+
+**** Type II MLE/MAP
+Bayesian methods overcome overfitting by treating the model parameters as random variables and averaging over the likelihood for different settings of the parameters. They achieve this by maximising the logarithm of the marginal likelihood (or evidence) $p(\mathbf{Y})$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq:type-2-ml}
+	\text{log}\ p(\mathbf{Y}) &= \text{log} \int p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta} = \text{log} \int p(\mathbf{Y} | \mathbf{\Theta}) p(\mathbf{\Theta}) \text{d}\mathbf{\Theta}.
+\end{align}
+#+END_EXPORT
+This is advantageous as we now take a weighted average over all possible settings of $\mathbf{\Theta}$ and we obtain the posterior $p(\mathbf{\Theta} | \mathbf{Y})$ for the unknown variables, as opposed to just a point estimate as in maximum likelihood. This provides automatic Occam's razor, penalising complex models and preventing overfitting.
+
+The integral in Eq. ref:eq:type-2-ml is often always tractable so approximations
+
+**** Variational Inference
+\todo{seek to convert inference into an optimisation}
+
+Variational approaches seek to lower bound the marginal likelihood (or evidence) $p(\mathbf{Y})$ using a functional that depends on variational parameters $q(\mathbf{\Theta})$.
+
+#+BEGIN_EXPORT latex
+\begin{align}
+	\text{log}\ p(\mathbf{Y}) &= \text{log} \int p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta} = \text{log} \int p(\mathbf{Y} | \mathbf{\Theta}) p(\mathbf{\Theta}) \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \int \frac{q(\mathbf{\Theta})}{q(\mathbf{\Theta})} p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \int q(\mathbf{\Theta}) \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \E_{q(\mathbf{\Theta})} \bigg[ \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \bigg]
+	\\
+	&\geq \E_{q(\mathbf{\Theta})} \bigg[ \text{log} \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \bigg]
+\end{align}
+#+END_EXPORT
+
+The bound becomes exact if $q(\mathbf{\Theta}) = p(\mathbf{\Theta} | \mathbf{Y})$. The true posterior is intractable but the variational posterior $q(\mathbf{\Theta})$ must be constrained (so that it is tractable). It is common to factorise $q(\mathbf{\Theta})$ with respect to groups of elements belonging to parameter set $\mathbf{\Theta}$, this is known as mean field approximation.
+
 *** Gaussian Processes
 This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
 In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
