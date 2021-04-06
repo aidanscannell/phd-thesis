@@ -57,6 +57,11 @@
 *** Tensor indexing (pre subscripts)
 #+LATEX_HEADER: \usepackage{tensor}
 
+*** Grey box for block quotes
+#+LATEX_HEADER: \usepackage[most]{tcolorbox}
+#+LATEX_HEADER: \definecolor{block-gray}{gray}{0.85}
+#+LATEX_HEADER: \newtcolorbox{myquote}{colback=block-gray,boxrule=0pt,boxsep=0pt,breakable}
+# #+LATEX_HEADER: \newtcolorbox{myquote}{colback=block-gray,grow to right by=-10mm,grow to left by=-10mm, boxrule=0pt,boxsep=0pt,breakable}
 *** Acronym and Glossary :ignore:
 #+latex_header: \usepackage[acronym]{glossaries}
 #+latex_header: \makeglossaries
@@ -220,36 +225,50 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \DeclareMathOperator{\K}{\mathbf{K}}
 
 *** Num Data / Mode / State Dimension / Control Dimension (k, d, t/n)
-# #+LATEX_HEADER: \newcommand{\numData}{\ensuremath{t}}
-#+LATEX_HEADER: \newcommand{\numData}{\ensuremath{n}}
+#+LATEX_HEADER: \newcommand{\numData}{\ensuremath{t}}
+# #+LATEX_HEADER: \newcommand{\numData}{\ensuremath{n}}
+#+LATEX_HEADER: \newcommand{\numEpisodes}{\ensuremath{e}}
+#+LATEX_HEADER: \newcommand{\numTimesteps}{\ensuremath{t}}
+#+LATEX_HEADER: \newcommand{\numInd}{\ensuremath{m}}
 #+LATEX_HEADER: \newcommand{\stateDim}{\ensuremath{d}}
 #+LATEX_HEADER: \newcommand{\controlDim}{\ensuremath{f}}
 #+LATEX_HEADER: \newcommand{\modeInd}{\ensuremath{k}}
+#+LATEX_HEADER: \newcommand{\modeDesInd}{\ensuremath{\text{des}}}
+#+LATEX_HEADER: \newcommand{\testInd}{\ensuremath{*}}
 #+LATEX_HEADER: \newcommand{\NumData}{\ensuremath{\MakeUppercase{\numData}}}
+#+LATEX_HEADER: \newcommand{\NumInd}{\ensuremath{\MakeUppercase{\numInd}}}
 #+LATEX_HEADER: \newcommand{\StateDim}{\ensuremath{\MakeUppercase{\stateDim}}}
 #+LATEX_HEADER: \newcommand{\ControlDim}{\ensuremath{\MakeUppercase{\controlDim}}}
 #+LATEX_HEADER: \newcommand{\ModeInd}{\ensuremath{\MakeUppercase{\modeInd}}}
-
-# Macros for data dimensions
-# #+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{#1_{\stateDim, \numData}}}
-#+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{_{\stateDim}#1_{\numData}}}
-# #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{#1_{\stateDim}}}
-# #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{_{\stateDim}#1}}
-#+LATEX_HEADER: \newcommand{\singleDimi}[2]{\ensuremath{\tensor*[_{#2}]{#1}{}}}
-#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{\singleDimi{#1}{\stateDim}}}
-# #+LATEX_HEADER: \newcommand{\allDataDim}[1]{\ensuremath{#1_{1:\NumData, \stateDim}}}
-#+LATEX_HEADER: \newcommand{\allDataDim}[1]{\ensuremath{_{\stateDim}#1_{1:\NumData}}}
-
-# Macros for mode k notation
-# #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{(\modeInd)}}}
-#+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{\modeInd}}}
+#+LATEX_HEADER: \newcommand{\NumEpisodes}{\MakeUppercase{\numEpisodes}}
+#+LATEX_HEADER: \newcommand{\NumTimesteps}{\MakeUppercase{\numTimesteps}}
 
 # Macros for single/all data notation
 #+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\numData}}}
-# #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{\MakeUppercase{#1}}}
+#+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{\MakeUppercase{#1}}}
 # #+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\numData}}}
-#+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1}}
+# #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1}}
 # #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1_{1:\NumData}}}
+
+**** Old
+# Macros for data dimensions
+# #+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{#1_{\stateDim, \numData}}}
+#+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{_{\stateDim}#1_{\numData}}}
+#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{#1_{\stateDim}}}
+# #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{_{\stateDim}#1}}
+# #+LATEX_HEADER: \newcommand{\singleDimi}[2]{\ensuremath{\tensor*[_{#2}]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{\singleDimi{#1}{\stateDim}}}
+
+# Macros for mode k notation
+#+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{(\modeInd)}}}
+# #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{\modeInd}}}
+# #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{\tensor*[^{\modeInd}]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\modeDes}[1]{\ensuremath{#1^{\modeDesInd}}}
+
+#+LATEX_HEADER: \newcommand{\singleDimiMode}[2]{\ensuremath{\tensor*[_#2^\modeInd]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\singleDimMode}[1]{\ensuremath{\singleDimiMode{#1}{\stateDim}}}
+#+LATEX_HEADER: \newcommand{\singleDimModeData}[1]{\ensuremath{\tensor*[_\stateDim^\modeInd]{#1}{_\numData}}}
+
 
 *** Data set
 # Dataset/inputs/outputs
@@ -278,87 +297,156 @@ Make the equation numbers follow the chapter, not the whole thesis.
 *** Noise Vars
 #+LATEX_HEADER: \newcommand{\noiseVar}{\ensuremath{\sigma}}
 #+LATEX_HEADER: \newcommand{\noiseVarK}{\ensuremath{\mode{\noiseVar}}}
-#+LATEX_HEADER: \newcommand{\noiseVarOneK}{\ensuremath{\noiseVarK_{1}}}
-#+LATEX_HEADER: \newcommand{\noiseVarDK}{\ensuremath{\noiseVarK_{\StateDim}}}
-#+LATEX_HEADER: \newcommand{\noiseVardK}{\ensuremath{\noiseVarK_{\stateDim}}}
+#+LATEX_HEADER: \newcommand{\noiseVarOneK}{\ensuremath{\singleDimiMode{\noiseVar}{1}}}
+#+LATEX_HEADER: \newcommand{\noiseVarDK}{\ensuremath{\singleDimiMode{\noiseVar}{\StateDim}}}
+#+LATEX_HEADER: \newcommand{\noiseVardK}{\ensuremath{\singleDimMode{\noiseVar}}}
+# #+LATEX_HEADER: \newcommand{\noiseVarOneK}{\ensuremath{\noiseVarK_{1}}}
+# #+LATEX_HEADER: \newcommand{\noiseVarDK}{\ensuremath{\noiseVarK_{\StateDim}}}
+# #+LATEX_HEADER: \newcommand{\noiseVardK}{\ensuremath{\noiseVarK_{\stateDim}}}
 # #+LATEX_HEADER: \newcommand{\noiseVardK2}{\ensuremath{\left(\noiseVardK\right)^2}}
-
-*** Kernels
-# #+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{\allInput\allInput}}
-#+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{d, \allInput\allInput}}
 
 *** Mode Indicator Variable
 #+LATEX_HEADER: \newcommand{\modeVar}{\ensuremath{\alpha}}
 #+LATEX_HEADER: \newcommand{\modeVarn}{\ensuremath{\singleData{\modeVar}}}
 #+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\bm{\modeVar}}}
 # #+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\allData{\bm{\modeVar}}}}
-#+LATEX_HEADER: \newcommand{\modeVarK}{\ensuremath{\modeVarn=\modeInd}}
-#+LATEX_HEADER: \newcommand{\ModeVarK}{\ensuremath{\bm{\modeVar}_{\modeInd}}}
+# #+LATEX_HEADER: \newcommand{\modeVarK}{\ensuremath{\modeVarn=\modeInd}}
+# #+LATEX_HEADER: \newcommand{\ModeVarK}{\ensuremath{\mode{\bm{\modeVar}}}}
+#+LATEX_HEADER: \newcommand{\ModeVarK}{\ensuremath{\ModeVar_{\modeInd}}}
 
-*** Gating Network
+*** Tensor Indexing
+# Experts indexing
+#+LATEX_HEADER: \newcommand{\nkd}[1]{\ensuremath{#1_{\numData,\modeInd,\stateDim}}}
+#+LATEX_HEADER: \newcommand{\nkD}[1]{\ensuremath{#1_{\numData,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\NkD}[1]{\ensuremath{#1_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\nKD}[1]{\ensuremath{#1_{\numData}}}
+#+LATEX_HEADER: \newcommand{\Nkd}[1]{\ensuremath{#1_{:,\modeInd,\stateDim}}}
+
+# Gating function indexing
+#+LATEX_HEADER: \newcommand{\nk}[1]{\ensuremath{#1_{\numData,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\Nk}[1]{\ensuremath{#1_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\nK}[1]{\ensuremath{#1_{\numData}}}
+
+# Experts Inducing indexing
+#+LATEX_HEADER: \newcommand{\mkd}[1]{\ensuremath{#1_{\numData,\modeInd,\stateDim}}}
+#+LATEX_HEADER: \newcommand{\mkD}[1]{\ensuremath{#1_{\numData,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\MkD}[1]{\ensuremath{#1_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\mKD}[1]{\ensuremath{#1_{\numData}}}
+#+LATEX_HEADER: \newcommand{\Mkd}[1]{\ensuremath{#1_{:,\modeInd,\stateDim}}}
+
+# Gating Inducing indexing
+#+LATEX_HEADER: \newcommand{\mk}[1]{\ensuremath{#1_{\numData,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\Mk}[1]{\ensuremath{#1_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\mK}[1]{\ensuremath{#1_{\numData}}}
+
+# Desired Mode Gating indexing
+#+LATEX_HEADER: \newcommand{\MDes}[1]{\ensuremath{#1_{:, k^*}}}
+
+*** Gating Network New
 # Function notation
 #+LATEX_HEADER: \newcommand{\gatingFunc}{\ensuremath{h}}
 #+LATEX_HEADER: \newcommand{\hk}{\ensuremath{\mode{\gatingFunc}}}
 
 # Single data notation
-#+LATEX_HEADER: \newcommand{\hkn}{\ensuremath{\singleData{\hk}}}
-#+LATEX_HEADER: \newcommand{\hn}{\ensuremath{\singleData{\mathbf{\gatingFunc}}}}
+#+LATEX_HEADER: \newcommand{\hkn}{\ensuremath{\nk{\gatingFunc}}}
+#+LATEX_HEADER: \newcommand{\hn}{\ensuremath{\nK{\mathbf{\gatingFunc}}}}
 
 # All inputs set/vector/tensor notation
 #+LATEX_HEADER: \newcommand{\GatingFunc}{\ensuremath{\mathbf{\gatingFunc}}}
-#+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\GatingFunc}}
-#+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\mode{\GatingFunc}}}
+#+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\MakeUppercase\GatingFunc}}}}
+#+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\Nk{\GatingFunc}}}
 # #+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\allData{\GatingFunc}}}
 # #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\allData{\mode{\GatingFunc}}}}
-*** Experts
+
+*** Experts New
 # Function notation
 #+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
-#+LATEX_HEADER: \newcommand{\f}{\ensuremath{f}}
-#+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mode{\latentFunc}}}
-#+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\singleDim{\fk}}}
+#+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\latentFunc_{\modeInd,\stateDim}}}
+#+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mathbf{\latentFunc}_{\modeInd}}}
+# #+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\latentFunc_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\f}{\ensuremath{\mathbf{f}}}
+
+# Vector/Matrix/Tensor notation
+#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\MakeUppercase{\mathbf{\latentFunc}}}}
+# #+LATEX_HEADER: \newcommand{\Fnkd}{\ensuremath{\latentFunc_{\numData, \modeInd, \stateDim}}}
+# #+LATEX_HEADER: \newcommand{\Fnk}{\ensuremath{\mathbf{\latentFunc}_{\numData, \modeInd}}}
+# #+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\F_{:,\modeInd}}}
+# #+LATEX_HEADER: \newcommand{\Fn}{\ensuremath{\F_{\numData}}}
+#+LATEX_HEADER: \newcommand{\Fnkd}{\ensuremath{\nkd{\latentFunc}}}
+#+LATEX_HEADER: \newcommand{\Fnk}{\ensuremath{\nkD{\mathbf{\latentFunc}}}}
+#+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\NkD{\F}}}
+#+LATEX_HEADER: \newcommand{\Fn}{\ensuremath{\nKD{\F}}}
+#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\F}}
+
+# #+LATEX_HEADER: \newcommand{\Fdk}{\ensuremath{\mathbf{\latentFunc}_{:,\modeInd,\stateDim}}}
+#+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\Nkd{\mathbf{\latentFunc}}}}
 
 # Single input notation
-#+LATEX_HEADER: \newcommand{\fn}{\ensuremath{\singleData{\mathbf{\latentFunc}}}}
-#+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\singleData{\mode{\mathbf{\latentFunc}}}}}
-#+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDim{\singleData{\fk}}}}
+#+LATEX_HEADER: \newcommand{\fn}{\ensuremath{\Fn}}
+#+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\Fnk}}
+#+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\Fnkd}}
 
 # All inputs set/vector/tensor notation
-# #+LATEX_HEADER: \newcommand{\F}{\ensuremath{\allData{\mathbf{\f}}}}
-#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\mathbf{\f}}}
-#+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\F}}}
-#+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}
-
-#+LATEX_HEADER: \newcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
-#+LATEX_HEADER: \newcommand{\singleOutputK}{\ensuremath{\mode{\singleOutput}}}
-
-#+LATEX_HEADER: \newcommand{\gatingParams}{\ensuremath{\mode{\bm\phi}}}
-#+LATEX_HEADER: \newcommand{\expertParams}{\ensuremath{\mode{\bm\theta}}}
-#+LATEX_HEADER: \newcommand{\gatingParamsK}{\ensuremath{\mode{\bm\phi}}}
-#+LATEX_HEADER: \newcommand{\expertParamsK}{\ensuremath{\mode{\bm\theta}}}
+# #+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\Fdk}}
 
 *** Sparse GPs
-# Sparse GP macro
-#+LATEX_HEADER: \newcommand{\inducing}[1]{\ensuremath{\hat{#1}}}
+**** Experts
+***** Variables
+#+LATEX_HEADER: \newcommand{\uf}{\ensuremath{u}}
+#+LATEX_HEADER: \newcommand{\uFkd}{\ensuremath{\Mkd{\mathbf{\uf}}}}
+#+LATEX_HEADER: \newcommand{\uFk}{\ensuremath{\MkD{\MakeUppercase{\mathbf{\uf}}}}}
+#+LATEX_HEADER: \newcommand{\uF}{\ensuremath{\MakeUppercase{\mathbf{\uf}}}}
 
-#+LATEX_HEADER: \newcommand{\fu}{\ensuremath{\inducing{\latentFunc}}}
-#+LATEX_HEADER: \newcommand{\Fu}{\ensuremath{\inducing{\mathbf{\latentFunc}}}}
-#+LATEX_HEADER: \newcommand{\Fku}{\ensuremath{\mode{\inducing{\mathbf{\latentFunc}}}}}
-#+LATEX_HEADER: \newcommand{\Fkdu}{\ensuremath{\singleDim{\Fku}}}
+***** Inputs
+#+LATEX_HEADER: \newcommand{\zf}{\ensuremath{\bm{\zeta}}}
+#+LATEX_HEADER: \newcommand{\zFkd}{\ensuremath{\Mkd{\zf}}}
+#+LATEX_HEADER: \newcommand{\zFk}{\ensuremath{\MkD{\zf}}}
+#+LATEX_HEADER: \newcommand{\zF}{\ensuremath{\MKD{\zf}}}
 
-#+LATEX_HEADER: \newcommand{\hu}{\ensuremath{\inducing{\gatingFunc}}}
-#+LATEX_HEADER: \newcommand{\Hu}{\ensuremath{\inducing{\mathbf{\gatingFunc}}}}
-#+LATEX_HEADER: \newcommand{\Hku}{\ensuremath{\mode{\inducing{\mathbf{\gatingFunc}}}}}
+**** Gating
+***** Variables
+#+LATEX_HEADER: \newcommand{\uh}{\ensuremath{v}}
+#+LATEX_HEADER: \newcommand{\uHk}{\ensuremath{\Mk{\mathbf{\uh}}}}
+#+LATEX_HEADER: \newcommand{\uH}{\ensuremath{\MakeUppercase{\mathbf{\uh}}}}
 
+#+LATEX_HEADER: \newcommand{\hu}{\ensuremath{\uh}}
+#+LATEX_HEADER: \newcommand{\Hku}{\ensuremath{\uHk}}
+#+LATEX_HEADER: \newcommand{\Hu}{\ensuremath{\uH}}
+
+***** Inputs
+#+LATEX_HEADER: \newcommand{\zh}{\ensuremath{\bm{\xi}}}
+#+LATEX_HEADER: \newcommand{\zHk}{\ensuremath{\Mk{\zh}}}
+#+LATEX_HEADER: \newcommand{\zH}{\ensuremath{\MK{\zh}}}
+
+# #+LATEX_HEADER: \newcommand{\zHDes}{\ensuremath{\zH_{:, k^*}}}
+#+LATEX_HEADER: \newcommand{\zHDes}{\ensuremath{\MDes{\zH}}}
+
+**** Misc
 #+LATEX_HEADER: \newcommand{\Z}{\ensuremath{\mathbf{Z}}}
+**** Old
+# Sparse GP macro
+# #+LATEX_HEADER: \newcommand{\inducing}[1]{\ensuremath{\hat{#1}}}
+
+# #+LATEX_HEADER: \newcommand{\fu}{\ensuremath{\inducing{\latentFunc}}}
+# #+LATEX_HEADER: \newcommand{\Fu}{\ensuremath{\inducing{\mathbf{\latentFunc}}}}
+# #+LATEX_HEADER: \newcommand{\Fku}{\ensuremath{\mode{\inducing{\mathbf{\latentFunc}}}}}
+# #+LATEX_HEADER: \newcommand{\Fkdu}{\ensuremath{\singleDim{\Fku}}}
+# #+LATEX_HEADER: \newcommand{\hu}{\ensuremath{\inducing{\gatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Hu}{\ensuremath{\inducing{\mathbf{\gatingFunc}}}}
+# #+LATEX_HEADER: \newcommand{\Hku}{\ensuremath{\mode{\inducing{\mathbf{\gatingFunc}}}}}
+
 # #+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\mathbf{Z}}_{\latentFunc}}}
-#+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\bm{\zeta}}}}
-#+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}}}
+# #+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\bm{\zeta}}}}
+# #+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}}}
 # #+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}_{\latentFunc}}}
 
 # #+LATEX_HEADER: \newcommand{\Zhk}{\ensuremath{\mode{\mathbf{Z}}_{\gatingFunc}}}
-#+LATEX_HEADER: \newcommand{\Zhk}{\ensuremath{\mode{\bm{\xi}}}}
+# #+LATEX_HEADER: \newcommand{\Zh}{\ensuremath{\bm{\xi}}}
+# #+LATEX_HEADER: \newcommand{\Zhk}{\ensuremath{\mode{\Zh}}}
 
-*** Continuous 
+# #+LATEX_HEADER: \newcommand{\ZhDes}{\ensuremath{\modeDes{\zH}}}
+
+*** Continuous
 #+LATEX_HEADER: \newcommand{\derivative}[1]{\ensuremath{\dot{#1}}}
 #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\derivative{\state}}}
 # #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\dot{\mathbf{x}}}}
@@ -371,25 +459,25 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\pfk}{\ensuremath{p\left(\fk \mid \allInput\right)}}
 #+LATEX_HEADER: \newcommand{\pfknd}{\ensuremath{p\left(\fknd \mid \allInput\right)}}
 
-#+LATEX_HEADER: \newcommand{\pFkGivenUk}{\ensuremath{p\left(\Fk \mid \Fku \right)}}
-# #+LATEX_HEADER: \newcommand{\pYkGivenUk}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \Fku \right)}}
-#+LATEX_HEADER: \newcommand{\pYkGivenFku}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \Fku \right)}}
+#+LATEX_HEADER: \newcommand{\pFkGivenUk}{\ensuremath{p\left(\Fk \mid \uFk \right)}}
+# #+LATEX_HEADER: \newcommand{\pYkGivenUk}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pYkGivenFku}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \uFk \right)}}
 
 #+LATEX_HEADER: \newcommand{\qF}{\ensuremath{q\left(\F \right)}}
-#+LATEX_HEADER: \newcommand{\qFu}{\ensuremath{q\left(\Fu \right)}}
-#+LATEX_HEADER: \newcommand{\qFku}{\ensuremath{q\left(\Fku \right)}}
-#+LATEX_HEADER: \newcommand{\pFku}{\ensuremath{p\left(\Fku \mid \Zfk \right)}}
-#+LATEX_HEADER: \newcommand{\pFkuGivenX}{\ensuremath{p\left(\Fku \mid \Zfk \right)}}
-#+LATEX_HEADER: \newcommand{\pFuGivenX}{\ensuremath{p\left(\Fu \mid \Zf \right)}}
+#+LATEX_HEADER: \newcommand{\qFu}{\ensuremath{q\left(\uF \right)}}
+#+LATEX_HEADER: \newcommand{\qFku}{\ensuremath{q\left(\uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pFku}{\ensuremath{p\left(\uFk \mid \zFk \right)}}
+#+LATEX_HEADER: \newcommand{\pFkuGivenX}{\ensuremath{p\left(\uFk \mid \zFk \right)}}
+#+LATEX_HEADER: \newcommand{\pFuGivenX}{\ensuremath{p\left(\uF \mid \zF \right)}}
 #+LATEX_HEADER: \newcommand{\qFk}{\ensuremath{q\left(\Fk \right)}}
 #+LATEX_HEADER: \newcommand{\qfk}{\ensuremath{q\left(\fk \right)}}
 #+LATEX_HEADER: \newcommand{\qfkn}{\ensuremath{q\left(\fkn \right)}}
 #+LATEX_HEADER: \newcommand{\qfn}{\ensuremath{q\left(\fn \right)}}
-#+LATEX_HEADER: \newcommand{\pFkGivenFku}{\ensuremath{p\left(\Fk \mid \Fku \right)}}
-#+LATEX_HEADER: \newcommand{\pfkGivenFku}{\ensuremath{p\left(\fkn \mid \Fku \right)}}
-#+LATEX_HEADER: \newcommand{\pykGivenFku}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \Fku \right)}}
-#+LATEX_HEADER: \newcommand{\pYGivenUX}{\ensuremath{p\left(\allOutput \mid \Fu, \allInput \right)}}
-#+LATEX_HEADER: \newcommand{\pYGivenU}{\ensuremath{p\left(\allOutput \mid \Fu \right)}}
+#+LATEX_HEADER: \newcommand{\pFkGivenFku}{\ensuremath{p\left(\Fk \mid \uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pfkGivenFku}{\ensuremath{p\left(\fkn \mid \uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenFku}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pYGivenUX}{\ensuremath{p\left(\allOutput \mid \uF, \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\pYGivenU}{\ensuremath{p\left(\allOutput \mid \uF \right)}}
 
 
 #+LATEX_HEADER: \newcommand{\pY}{\ensuremath{p\left(\allOutput \right)}}
@@ -412,6 +500,93 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\PraGivenxNegH}{\ensuremath{\Pr\left(\modeVarK \mid \singleInput, \neg\Hall \right)}}
 #+LATEX_HEADER: \newcommand{\pHGivenX}{\ensuremath{p\left(\Hall \mid \allInput\right)}}
 #+LATEX_HEADER: \newcommand{\pHkGivenX}{\ensuremath{p\left(\Hk \mid \allInput\right)}}
+
+*** Kernels
+# #+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{\allInput\allInput}}
+#+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{d, \allInput\allInput}}
+
+# TO derivative kernels
+#+LATEX_HEADER: \newcommand{\ddK}{\ensuremath{\partial^2\K_{**}}}
+#+LATEX_HEADER: \newcommand{\dK}{\ensuremath{\partial\K_{*}}}
+#+LATEX_HEADER: \newcommand{\Kxx}{\ensuremath{\K_{}}}
+#+LATEX_HEADER: \newcommand{\iKxx}{\ensuremath{\Kxx^{-1}}}
+
+#+LATEX_HEADER: \newcommand{\dKz}{\ensuremath{\partial\K_{*\zH}}}
+#+LATEX_HEADER: \newcommand{\Kzz}{\ensuremath{\K_{\zH\zH}}}
+#+LATEX_HEADER: \newcommand{\iKzz}{\ensuremath{\Kzz^{-1}}}
+*** Desired Mode
+# Function notation
+#+LATEX_HEADER: \newcommand{\HDes}{\ensuremath{\MDes{\GatingFunc}}}
+#+LATEX_HEADER: \newcommand{\uHDes}{\ensuremath{\MDes{\uH}}}
+
+# Inducing points
+#+LATEX_HEADER: \newcommand{\pDes}{\ensuremath{p\left( \uHDes \mid \zHDes \right)}}
+#+LATEX_HEADER: \newcommand{\qDes}{\ensuremath{q\left( \uHDes \right)}}
+#+LATEX_HEADER: \newcommand{\mDes}{\ensuremath{\MDes{\mathbf{m}}}}
+#+LATEX_HEADER: \newcommand{\SDes}{\ensuremath{\MDes{\mathbf{S}}}}
+
+*** Jacobian
+# Single data notation
+#+LATEX_HEADER: \newcommand{\singleTest}[1]{\ensuremath{#1_{\testInd}}}
+#+LATEX_HEADER: \newcommand{\testInput}{\ensuremath{\singleTest{\state}}}
+
+# Jacobian notation
+#+LATEX_HEADER: \newcommand{\Jac}{\ensuremath{\mathbf{J}}}
+#+LATEX_HEADER: \newcommand{\testJac}{\ensuremath{\singleTest{\Jac}}}
+#+LATEX_HEADER: \newcommand{\muJac}{\ensuremath{\mu_{\Jac}}}
+#+LATEX_HEADER: \newcommand{\covJac}{\ensuremath{\Sigma_{\Jac}}}
+
+*** Old
+**** Gating Network Old
+# # Function notation
+# #+LATEX_HEADER: \newcommand{\gatingFunc}{\ensuremath{h}}
+# #+LATEX_HEADER: \newcommand{\hk}{\ensuremath{\mode{\gatingFunc}}}
+
+# # Single data notation
+# #+LATEX_HEADER: \newcommand{\hkn}{\ensuremath{\singleData{\hk}}}
+# #+LATEX_HEADER: \newcommand{\hn}{\ensuremath{\singleData{\mathbf{\gatingFunc}}}}
+
+# # All inputs set/vector/tensor notation
+# #+LATEX_HEADER: \newcommand{\GatingFunc}{\ensuremath{\mathbf{\gatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\GatingFunc}}
+# #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\mode{\GatingFunc}}}
+# # #+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\allData{\GatingFunc}}}
+# # #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\allData{\mode{\GatingFunc}}}}
+**** Desired Mode Old
+# #+LATEX_HEADER: \newcommand{\HDes}{\ensuremath{\modeDes{\GatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\HuDes}{\ensuremath{\modeDes{\Hu}}}
+# #+LATEX_HEADER: \newcommand{\mDes}{\ensuremath{\modeDes{\mathbf{m}}}}
+# #+LATEX_HEADER: \newcommand{\SDes}{\ensuremath{\modeDes{\mathbf{S}}}}
+
+**** Experts Old
+# # Function notation
+# #+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
+# #+LATEX_HEADER: \newcommand{\f}{\ensuremath{f}}
+# #+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mode{\latentFunc}}}
+# # #+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\singleDim{\fk}}}
+# #+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\singleDimMode{\f}}}
+
+# # Single input notation
+# #+LATEX_HEADER: \newcommand{\fn}{\ensuremath{\singleData{\mathbf{\latentFunc}}}}
+# #+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\singleData{\mode{\mathbf{\latentFunc}}}}}
+# # #+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDim{\singleData{\fk}}}}
+# # #+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDimMode{\singleData{\f}}}}
+# #+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDimModeData{\f}}}
+
+# # All inputs set/vector/tensor notation
+# # #+LATEX_HEADER: \newcommand{\F}{\ensuremath{\allData{\mathbf{\f}}}}
+# #+LATEX_HEADER: \newcommand{\F}{\ensuremath{\mathbf{\f}}}
+# #+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\F}}}
+# # #+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}
+# #+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDimMode{\F}}}
+
+#+LATEX_HEADER: \newcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
+#+LATEX_HEADER: \newcommand{\singleOutputK}{\ensuremath{\mode{\singleOutput}}}
+
+#+LATEX_HEADER: \newcommand{\gatingParams}{\ensuremath{\mode{\bm\phi}}}
+#+LATEX_HEADER: \newcommand{\expertParams}{\ensuremath{\mode{\bm\theta}}}
+#+LATEX_HEADER: \newcommand{\gatingParamsK}{\ensuremath{\mode{\bm\phi}}}
+#+LATEX_HEADER: \newcommand{\expertParamsK}{\ensuremath{\mode{\bm\theta}}}
 
 ** Acronyms :noexport:
 {{{glossaryentry(LaTeX,\LaTeX,A document preparation system,LaTeX)}}}
@@ -547,49 +722,62 @@ Make the equation numbers follow the chapter, not the whole thesis.
 |                         |            |                                                            |
 
 #+CAPTION: Variables at single data points
-| Name                         | Symbol           | Equation                                                                             |
-|------------------------------+------------------+--------------------------------------------------------------------------------------|
-| Time                         | $t$              |                                                                                      |
-| State                        | $\singleState$   | $\R^{\StateDim}$                                                                       |
-| Control                      | $\singleControl$ | $\R^{\ControlDim}$                                                                   |
-| State-Action input           | $\singleInput$   | $(\singleState, \singleControl) \in \R^{\StateDim \times \ControlDim}$                 |
-| State Difference             | $\singleOutput$  | $\R^{\StateDim}$                                                                       |
-| Mode indicator variable      | $\modeVarn$      | $\{1,\ldots,\ModeInd\}$                                                              |
+| Name                    | Symbol           | Equation                                                          |
+|-------------------------+------------------+-------------------------------------------------------------------|
+| State                   | $\singleState$   | $\R^{\StateDim}$                                                  |
+| Control                 | $\singleControl$ | $\R^{\ControlDim}$                                                |
+| State-Action input      | $\singleInput$   | $(\singleState, \singleControl) \in \R^{\StateDim + \ControlDim}$ |
+| State Difference        | $\singleOutput$  | $\R^{\StateDim}$                                                  |
+| Mode indicator variable | $\modeVarn$      | $\{1,\ldots,\ModeInd\}$                                           |
+
+#+CAPTION: Variables at all data points
+| Name                    | Symbol        | Equation                                                                      |
+|-------------------------+---------------+-------------------------------------------------------------------------------|
+| State                   | $\allState$   | $\R^{\NumData \times \StateDim}$                                              |
+| Control                 | $\allControl$ | $\R^{\NumData \times \ControlDim}$                                            |
+| State-Action input      | $\allInput$   | $(\allState, \allControl) \in \R^{\NumData \times (\StateDim + \ControlDim)}$ |
+| State Difference        | $\allOutput$  | $\R^{\NumData \times \StateDim}$                                              |
+| Mode indicator variable | $\ModeVarK$   | $\{\singleData{\modeVar}=k\}_{\numData=1}^{\NumData}$                         |
 
 #+CAPTION: Gating network notation
-|                | Name                                | Symbol        | Equation                                                                         |
-|----------------+-------------------------------------+---------------+----------------------------------------------------------------------------------|
-| Function       | Gating function k                   | $\hk$         | $\hk : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R$                    |
-|                | Gating function                     | $\gatingFunc$ | $\gatingFunc : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\ModeInd}$ |
-|----------------+-------------------------------------+---------------+----------------------------------------------------------------------------------|
-| $\singleInput$ | Gating function k at $\singleInput$ | $\hkn$        | $\hk(\singleInput) \in \R$                                                       |
-|                | Gating function at $\singleInput$   | $\hn$         | $\gatingFunc(\singleInput) \in \R^{\ModeInd}$                                    |
-|                | Mode indicator variable             | $\modeVarn$   | $\{1,\ldots,\ModeInd\}$                                                          |
-|----------------+-------------------------------------+---------------+----------------------------------------------------------------------------------|
-| $\allInput$    | Gating function k                   | $\Hk$         | $\hk(\allInput) \in \R^{\NumData}$                                               |
-|                | Gating function                     | $\Hall$       | $\gatingFunc(\allInput) \in \R^{\NumData \times \ModeInd}$                       |
-|                | Mode indicator variable             | $\ModeVar$    | $\{1,\ldots,\ModeInd\}^{\NumData}$                                                  |
+|                | Name                                   | Symbol        | Equation                                                                         |
+|----------------+----------------------------------------+---------------+----------------------------------------------------------------------------------|
+| Function       | Gating function k                      | $\hk$         | $\hk : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R$                    |
+|                | Gating function                        | $\gatingFunc$ | $\gatingFunc : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\ModeInd}$ |
+|----------------+----------------------------------------+---------------+----------------------------------------------------------------------------------|
+| $\singleInput$ | Gating function k at $\singleInput$    | $\hkn$        | $\hk(\singleInput) \in \R$                                                       |
+|                | Gating function at $\singleInput$      | $\hn$         | $\gatingFunc(\singleInput) \in \R^{\ModeInd}$                                    |
+|----------------+----------------------------------------+---------------+----------------------------------------------------------------------------------|
+| $\allInput$    | Gating function k                      | $\Hk$         | $\hk(\allInput) \in \R^{\NumData}$                                               |
+|                | Gating functions                       | $\Hall$       | $\gatingFunc(\allInput) \in \R^{\NumData \times \ModeInd}$                       |
+|----------------+----------------------------------------+---------------+----------------------------------------------------------------------------------|
+| $\zH$          | Inducing variables - gating function k | $\uHk$        | $\hk(\zHk) \in \R^{\NumInd}$                                                     |
+|                | Inducing variables - gating functions | $\uH$         | $\h(\zH) \in \R^{\NumInd \times \ModeInd}$                                       |
+
 
 #+CAPTION: Transition dynamics function notation
-|                | Name                         | Symbol        | Equation                                                                                      |
-|----------------+------------------------------+---------------+-----------------------------------------------------------------------------------------------|
-|                | Dimension d of mode k        | $\fkd$        | $\fkd : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R$                                  |
-| Function       | Mode k                       | $\fk$         | $\fk : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\StateDim}$                         |
-|                | Transition dynamics function | $\latentFunc$ | $\latentFunc : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\ModeInd \times \StateDim}$ |
-|----------------+------------------------------+---------------+-----------------------------------------------------------------------------------------------|
-|                | Dimension d mode k           | $\fknd$       | $\fkd(\singleInput) \in \R$                                                                   |
-| $\singleInput$ | Mode k                       | $\fkn$        | $\fk(\singleInput) \in \R^{\StateDim}$                                                          |
-|                | Transition dynamics function | $\fn$         | $\f(\singleInput) \in \R^{\ModeInd \times \StateDim}$                                           |
-|----------------+------------------------------+---------------+-----------------------------------------------------------------------------------------------|
-|                | Dimension d mode k           | $\Fkd$        | $\fkd(\allInput) \in \R^{\NumData}$                                                           |
-| $\allInput$    | Mode k                       | $\Fk$         | $\fk(\allInput) \in \R^{\NumData \times \StateDim}$                                             |
-|                | Transition dynamics function | $\F$          | $\f(\allInput) \in \R^{\NumData \times \ModeInd \times \StateDim}$                              |
-
+|                | Name                                    | Symbol  | Equation                                                                                 |
+|----------------+-----------------------------------------+---------+------------------------------------------------------------------------------------------|
+|                | Dimension d of mode k                   | $\fkd$  | $\fkd : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R$                           |
+| Function       | Mode k                                  | $\fk$   | $\fk : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\StateDim}$                |
+|                | All modes function                                          | $\f$    | $\f : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\ModeInd \times \StateDim}$ |
+|----------------+-----------------------------------------+---------+------------------------------------------------------------------------------------------|
+|                | Dimension d mode k                      | $\fknd$ | $\fkd(\singleInput) \in \R$                                                              |
+| $\singleInput$ | Mode k                                  | $\fkn$  | $\fk(\singleInput) \in \R^{\StateDim}$                                                   |
+|                | All modes                               | $\fn$   | $\f(\singleInput) \in \R^{\ModeInd \times \StateDim}$                                    |
+|----------------+-----------------------------------------+---------+------------------------------------------------------------------------------------------|
+|                | Dimension d mode k                      | $\Fkd$  | $\fkd(\allInput) \in \R^{\NumData}$                                                      |
+| $\allInput$    | Mode k                                  | $\Fk$   | $\fk(\allInput) \in \R^{\NumData \times \StateDim}$                                      |
+|                | All modes                               | $\F$    | $\f(\allInput) \in \R^{\NumData \times \ModeInd \times \StateDim}$                       |
+|----------------+-----------------------------------------+---------+------------------------------------------------------------------------------------------|
+|                | Inducing variables - dimension d mode k | $\uFkd$ | $\fkd(\zFkd) \in \R^{\NumInd}$                                                           |
+| $\zF$          | Inducing variables - mode k             | $\uFk$  | $\fk(\zFk) \in \R^{\NumInd \times \StateDim}$                                            |
+|                | Inducing variables - all modes          | $\uF$   | $\f(\zF) \in \R^{\NumInd \times \ModeInd \times \StateDim}$                              |
 ** Experts
 GP prior over each output dimension $d$ for each dynamics mode $k$, 
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-prior-single-dim}
-p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
+p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDimMode{\mu}(\allInput), \singleDimMode{k}(\allInput, \allInput) \right)
 \end{align}
 #+END_EXPORT
 Assume each output dimension is independent,
@@ -831,7 +1019,7 @@ pros and cons of different gating networks
 **** Our Motivations
 Motivated by obtaining well-calibrated variance's throughout the model
 placing priors on the gating network
-** Bayesian Inference
+** Probabilistic Modelling
 *** Epistemic Uncertainty :noexport:
 
 If we have used observations of a system to train a predictive model then we can only be confident in predictions near our observations.
@@ -964,21 +1152,23 @@ cite:quinonero-candelaUnifying2005 for a review.
 
 \todo{introduce noisy outputs and Gaussian likelihood}
 
+
+
 **** Sparse Gaussian Processes for Regression label:sec-sparse-gps
 This work focuses on inducing point methods cite:snelsonSparse2005a, where the latent variables
 are augmented with inducing input-output pairs known as inducing "inputs" $\Z$, and inducing
-"variables" $\Fu = f(\Z)$.
+"variables" $\uF = f(\Z)$.
 Introducing a set of $M$ inducing points from the same GP prior
-$p(\Fu \mid \Z) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mu(\Z), k(\Z, \Z))$
+$p(\uF \mid \Z) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mu(\Z), k(\Z, \Z))$
 can reduce the computational cost
 if $M < N$.
-Note that these inducing outputs $\Fu$ are jointly gaussian with the latent function values $\F$,
+Note that these inducing variables $\uF$ are jointly gaussian with the latent function values $\F$,
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-spare-gp-joint}
-p(\mathbf{f}, \Fu \mid \mathbf{X}) =\ &\mathcal{N}\left(
+p(\mathbf{f}, \uF \mid \mathbf{X}) =\ &\mathcal{N}\left(
 \left[\begin{array}{c}
       \mathbf{f} \\
-      \Fu
+      \uF
 \end{array}\right]
       \mid \bm{0} ,
 \left[\begin{array}{cc}
@@ -992,26 +1182,26 @@ $\K_{nm}$ is the covariance function evaluated between the data inputs $\mathbf{
 This joint distribution can be re-written using the properties of multivariate normal distributions as,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-sparse-gp-joint-cond}
-p(\mathbf{f}, \Fu \mid \mathbf{X}) &= p(\mathbf{f} \mid \Fu) p(\Fu \mid \mathbf{X}) \\
-&= \mathcal{N}(\mathbf{f} \mid \mathbf{K}_{nm} \mathbf{K}_{mm}^{-1} \Fu, \mathbf{K}_{nn} - \mathbf{Q}_{nn})
-\mathcal{N}(\Fu \mid \mathbf{0}, \mathbf{K}_{mm})
+p(\mathbf{f}, \uF \mid \mathbf{X}) &= p(\mathbf{f} \mid \uF) p(\uF \mid \mathbf{X}) \\
+&= \mathcal{N}(\mathbf{f} \mid \mathbf{K}_{nm} \mathbf{K}_{mm}^{-1} \uF, \mathbf{K}_{nn} - \mathbf{Q}_{nn})
+\mathcal{N}(\uF \mid \mathbf{0}, \mathbf{K}_{mm})
 \end{align}
 #+END_EXPORT
 where $\mathbf{Q}_{nn} = \mathbf{K}_{nm}\mathbf{K}_{mm}^{-1}\mathbf{K}_{nm}^{T}$.
 The full joint distribution is then given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-sparse-gp-full-joint}
-p(\mathbf{y}, \mathbf{f}, \Fu \mid \mathbf{X}) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \Fu) p(\Fu \mid \mathbf{X})
+p(\mathbf{y}, \mathbf{f}, \uF \mid \mathbf{X}) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \uF) p(\uF \mid \mathbf{X})
 \end{align}
 #+END_EXPORT
 Computationally efficient inference is obtained by approximating the integration over $\mathbf{f}$.
 \marginpar{FITC}
 The popular Fully Independent Training Conditional (FITC) method (in the case of a Gaussian likelihood)
-is obtained via the factorisation: $p(\mathbf{y} \mid \Fu) \approx \prod^{N}_{n=1} p(y_{n} \mid \Fu)$.
+is obtained via the factorisation: $p(\mathbf{y} \mid \uF) \approx \prod^{N}_{n=1} p(y_{n} \mid \uF)$.
 To obtain a variational approximation Jensen's inequality is first used to bound this conditional,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-sparse-gp-bound-cond}
-\text{log}p(\mathbf{y}\mid\Fu) \geq \E_{p(\F \mid \Fu)} \left[ \text{log} p(\mathbf{y} \mid \F) \right] := \mathcal{L}_{1}.
+\text{log}p(\mathbf{y}\mid\uF) \geq \E_{p(\F \mid \uF)} \left[ \text{log} p(\mathbf{y} \mid \F) \right] := \mathcal{L}_{1}.
 \end{align}
 #+END_EXPORT
 This is the standard bound shown in cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
@@ -1021,8 +1211,8 @@ to obtain a tractable lower bound,
 #+BEGIN_EXPORT latex
 \begin{align}
 \text{log} p(\mathbf{y} \mid \mathbf{X})
-&= \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ p(\mathbf{y} \mid \Fu) \right] \\
-&\geq \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] := \mathcal{L}_{\text{titsias}} \label{eq-titsias-bound-2} \\
+&= \text{log} \E_{p(\uF \mid \mathbf{X})} \left[ p(\mathbf{y} \mid \uF) \right] \\
+&\geq \text{log} \E_{p(\uF \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] := \mathcal{L}_{\text{titsias}} \label{eq-titsias-bound-2} \\
 &= \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
 - \frac{1}{2\sigma^2}\text{tr}(\K_{nn} - \mathbf{Q}_{nn}) \label{eq-titsias-bound},
 \end{align}
@@ -1039,7 +1229,7 @@ Instead of collapsing the inducing points in Eq. ref:eq-titsias-bound
 they explicitly represent them as a variational distribution,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq--inducing-dist}
-q(\Fu) = \mathcal{N}\left(\Fu \mid \mathbf{m}, \mathbf{S} \right),
+q(\uF) = \mathcal{N}\left(\uF \mid \mathbf{m}, \mathbf{S} \right),
 \end{align}
 #+END_EXPORT
 which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf{X})$ by
@@ -1047,14 +1237,14 @@ which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf
 further bounding $\mathcal{L}_{\text{titsias}}$,
 #+BEGIN_EXPORT latex
 \begin{align}
-\mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\Fu \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
-&\geq \E_{q(\Fu)} \left[ \mathcal{L}_{1} \right]
-- \text{KL}\left[q(\Fu) \mid\mid p(\Fu \mid \mathbf{X})\right] \\
+\mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\uF \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
+&\geq \E_{q(\uF)} \left[ \mathcal{L}_{1} \right]
+- \text{KL}\left[q(\uF) \mid\mid p(\uF \mid \mathbf{X})\right] \\
 &\geq \E_{q(\F)} \left[ p(\mathbf{y} \mid \F) \right]
-- \text{KL}\left[q(\Fu) \mid\mid p(\Fu \mid \mathbf{X})\right] := \mathcal{L}_{\text{hensman}}, \label{eq-hensman-bound}
+- \text{KL}\left[q(\uF) \mid\mid p(\uF \mid \mathbf{X})\right] := \mathcal{L}_{\text{hensman}}, \label{eq-hensman-bound}
 \end{align}
 #+END_EXPORT
-where $q(\F) = \int p(\F \mid \Fu) q(\Fu) \text{d} \Fu$.
+where $q(\F) = \int p(\F \mid \uF) q(\uF) \text{d} \uF$.
 This is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
 If the likelihood factorizes across data $p(\mathbf{y} \mid \F) = \prod_{n=1}^{N} p(y_{n} \mid f_{n})$
 only the marginals of $q(\F)$ are needed to calculate Eq. ref:eq-hensman-bound,
@@ -1062,11 +1252,11 @@ only the marginals of $q(\F)$ are needed to calculate Eq. ref:eq-hensman-bound,
 \begin{align} \label{eq-expert-bound-3-fact}
 \mathcal{L}_{\text{hensman}}
 = \sum_{n=1}^{N}\E_{q(f_{n})} \left[ \text{log} p(y_{n} \mid f_{n}) \right]
-- \text{KL}\left[q(\Fu) \mid\mid p(\Fu \mid \mathbf{X}) \right].
+- \text{KL}\left[q(\uF) \mid\mid p(\uF \mid \mathbf{X}) \right].
 \end{align}
 #+END_EXPORT
 Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
-to preform stochastic gradient methods on $q(\Fu)$.
+to preform stochastic gradient methods on $q(\uF)$.
 
 
 **** Sparse Gaussian Processes :noexport:
@@ -1101,10 +1291,10 @@ Introducing a set of $M$ inducing points from the same GP prior can reduce the c
 if $M < N$.
 The inducing inputs are denoted $\bm\xi$ and outputs as
 $\hat{\mathbf{f}} = f(\bm\xi)$.
-The inducing outputs
+The inducing variables
 $\hat{\mathbf{f}}$ are jointly Gaussian with the latent function values $\mathbf{f}$.
 The GP predictive distribution can be approximated by conditioning on this
-smaller set of inducing points,
+smaller set of inducing variables,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-sparse-gp-prediction}
 p({f}_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &\approx
@@ -1113,11 +1303,11 @@ p(\hat{\mathbf{f}}) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mathbf{m}, \mathbf{S})
 \end{align}
 #+END_EXPORT
 The approximation becomes exact when the
-inducing points $\hat{\mathbf{f}}$ are a sufficient statistic
+inducing variables $\hat{\mathbf{f}}$ are a sufficient statistic
 for the latent function values $\mathbf{f}$ cite:Titsias2009.
-# The predicted latent function values are then mutually independent given the inducing points.
+# The predicted latent function values are then mutually independent given the inducing variables.
 # A central assumption is that given enough well
-# placed inducing points $\hat{\mathbf{f}}$ they are a
+# placed inducing variables $\hat{\mathbf{f}}$ they are a
 # sufficient statistic for the latent function values $\mathbf{f}$.
 
 ** Optimal Control
@@ -1259,7 +1449,7 @@ J &= \min \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf
 # the the feature space. This is always 1-dimensional and thus the approach scales
 # to highgher dimensional feature spaces.
 
-* Probabilistic Inference for Multimodal Dynamical Systems label:chap-dynamics
+* Probabilistic Inference for Learning Multimodal Dynamical Systems label:chap-dynamics
 ** Intro :ignore:
 \todo[inline]{This section could be broad (more than just GP-based gating networks) and the next section focus on gating networks specifically.}
 This chapter introduces the class of continuous-time multimodal dynamical systems
@@ -1281,30 +1471,51 @@ This work derives a novel variational lower bound based on sparse GPs that
 enables the model to be trained with stochastic gradient methods.
 
 ** Multimodal Dynamical Systems
-This section considers the transition dynamics in Equation ref:eq-unimodal-dynamics-cont
+# This section considers the transition dynamics in Equation ref:eq-unimodal-dynamics-cont
+# extended to multimodal systems, given by,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-cont}
+# \dot{\mathbf{x}}(t) &= \f(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon(t) \\
+# &= \fk(\mathbf{x}(t), \mathbf{u}(t)) + \mode{\epsilon}(t)
+# \quad \text{if} \quad \alpha(t)=\modeInd
+# %\quad \text{if} \quad \alpha(\mathbf{x}(t), \mathbf{u}(t))=k
+# \end{align}
+# #+END_EXPORT
+# with states $\state \in \R^D$ and controls $\control \in \R^F$.
+# One of $\ModeInd$ dynamics modes $\{\fk \}_{\modeInd=1}^\ModeInd$ and associated noise models
+# $\mode{\epsilon}(t) \sim \mathcal{N}\left(0, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)$
+# are selected by a switching (or gating) variable
+# $\alpha(t) \in \{1,\ldots,\ModeInd\}$.
+
+# The gating variable $\alpha$ is of particular interest in this work.
+
+** Problem Statement
+This chapter considers the transition dynamics in Equation ref:eq-unimodal-dynamics-cont
 extended to multimodal systems, given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-cont}
 \dot{\mathbf{x}}(t) &= \f(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon(t) \\
-&= \fk(\mathbf{x}(t), \mathbf{u}(t)) + \mode{\epsilon}(t) \nonumber
-\quad \text{if} \quad \alpha(t)=\modeInd
-%\quad \text{if} \quad \alpha(\mathbf{x}(t), \mathbf{u}(t))=k
+&= \fk(\mathbf{x}(t), \mathbf{u}(t)) + \mode{\epsilon}(t) \quad \text{if} \quad \alpha(t)=\modeInd
 \end{align}
 #+END_EXPORT
-with states $\state \in \R^D$ and controls $\control \in \R^F$.
+
+with states $\state \in \R^\StateDim$ and controls $\control \in \R^\ControlDim$.
 One of $\ModeInd$ dynamics modes $\{\fk \}_{\modeInd=1}^\ModeInd$ and associated noise models
 $\mode{\epsilon}(t) \sim \mathcal{N}\left(0, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)$
 are selected by a switching (or gating) variable
 $\alpha(t) \in \{1,\ldots,\ModeInd\}$.
 
-# The gating variable $\alpha$ is of particular interest in this work.
+The work in this chapter assumes access to historical data comprising state transitions
+from $\NumEpisodes$ trajectories (episodes) sampled with a fixed time step $\Delta t=t_*$ resulting in
+$\NumTimesteps$ time steps per episode.
+This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+We combine the independent episodes to get the data set
+$\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
+We abuse notation and consider the time indexing notation.
 
-** Model Definition
-The work in this section assumes access to historical data comprising state transitions
-from $E$ trajectories of length $N$ sampled with a fixed time step $\Delta t=t_*$.
-This gives a data set with $T = E N$ elements.
-We abuse notation and append independent trajectories along time to get the data set
-$\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$.
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
+# where we have abused the time indexing notation.
 
 This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
 #+BEGIN_EXPORT latex
@@ -1332,12 +1543,12 @@ The model is built upon GP priors on each of the transition dynamics functions $
 with independent GPs placed on each output (state) dimension $d$,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-prior-single-dim}
-p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDim{\mode{\mu}}(\allInput), \singleDim{\mode{k}}(\allInput, \allInput) \right)
+p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDimMode{\mu}(\allInput), \singleDimMode{k}(\allInput, \allInput) \right)
 \end{align}
 #+END_EXPORT
-where $\singleDim{\mode{\mu}}(\cdot)$ and $\singleDim{\mode{k}}(\cdot, \cdot)$ represent the mean and
+where $\singleDimMode{\mu}(\cdot)$ and $\singleDimMode{k}(\cdot, \cdot)$ represent the mean and
 covariance functions associated with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ dynamics mode respectively.
-Each mode's output dimensions are assumed independent and are given by,
+Each mode's output dimensions are assumed independent,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-prior}
 \pFk &= \prod_{\stateDim=1}^{\StateDim} \pFkd.
@@ -1385,7 +1596,7 @@ with independent GPs placed on each state dimension $d$,
 
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-experts-prior}
-p(\Fk \mid \allInput, \Fku) = \prod_{\numData = 1}^{\dataInd} p(\Fkn \mid \singleInput, \Fku)
+p(\Fk \mid \allInput, \uFk) = \prod_{\numData = 1}^{\dataInd} p(\Fkn \mid \singleInput, \uFk)
 \end{align}
 #+END_EXPORT
 #+BEGIN_EXPORT latex
@@ -1428,7 +1639,7 @@ with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode.
 # \normalsize
 # #+END_EXPORT
 
-# The dynamics modes given the inducing points,
+# The dynamics modes given the inducing variables,
 # #+BEGIN_EXPORT latex
 # \small
 # \begin{align*} \label{eq-dynamics-mode}
@@ -1546,10 +1757,10 @@ then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
       %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
       \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {$\hkn$};
 
-      \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\Fku$};
+      \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\uFk$};
       \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\Hku$};
-      \node[const, left=of uk, xshift=0.4cm] (zk) {$\Zfk$};
-      \node[const, right=of uh, xshift=-0.4cm] (zh) {$\Zhk$};
+      \node[const, left=of uk, xshift=0.4cm] (zk) {$\zFk$};
+      \node[const, right=of uh, xshift=-0.4cm] (zh) {$\zHk$};
 
       \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\expertParamsK$};
       \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\gatingParamsK$};
@@ -1656,12 +1867,12 @@ The marginal likelihood in Eq. ref:eq-marginal-likelihood is extremely expensive
 \todo{add marginal likelihood's correct complexity}
 and is also intractable due to the marginalisation of $\mathbf{h}$ in the gating network
 (except for the two expert case).
-For these reasons this work derives a variational approximation based on inducing points that provides scalability
+For these reasons this work derives a variational approximation based on inducing variables that provides scalability
 by utilising stochastic gradient-based optimisation.
 
 Following the approach by cite:titsiasVariational2009, the probability space is augmented
-with a set of $M$ inducing points for each GP.
-However, instead of collapsing these inducing points they are explicitly
+with a set of $M$ inducing variables for each GP.
+However, instead of collapsing these inducing variables they are explicitly
 represented as variational distributions and used to lower bound cite:hensmanGaussian2013
 and then further bound cite:hensmanScalable2015 the marginal likelihood.
 
@@ -1676,10 +1887,10 @@ i.e. without specifying a particular gating network. The marginal likelihood of 
 #+END_EXPORT
 Following the approach by cite:titsiasVariational2009 and cite:hensmanGaussian2013, which is
 detailed in Section ref:sec-sparse-gps Eqs. ref:eq-titsias-bound - ref:eq-hensman-bound,
-the probability space is first augmented with a set of $M$ inducing points from each GP prior,
+the probability space is first augmented with a set of $M$ inducing variables from each GP prior,
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-experts-inducing-dist}
-\pFuGivenX = \prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \Fku \mid \mode{\mu}(\Zfk), \mode{k}(\Zfk, \Zfk) \right).
+\pFuGivenX = \prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \uFk \mid \mode{\mu}(\zFk), \mode{k}(\zFk, \zFk) \right).
 \end{align*}
 #+END_EXPORT
 The augmented log marginal likelihood is then given by,
@@ -1690,9 +1901,9 @@ The augmented log marginal likelihood is then given by,
 \end{align*}
 #+END_EXPORT
 For notational conciseness the dependency on the inputs has been dropped.
-Note that we have assumed each expert's inducing points are independent and augmented each expert with
-the product over all experts inducing points.
-This will enable us to move the expectation over the inducing points outside the sum over the indicator variable.
+Note that we have assumed each expert's inducing variables are independent and augmented each expert with
+the product over all experts inducing variables.
+This will enable us to move the expectation over the inducing variables outside the sum over the indicator variable.
 
 We start by considering the augmented log marginal likelihood,
 #+BEGIN_EXPORT latex
@@ -1707,11 +1918,11 @@ and moving the integrals over the inducing variables outside of the sum over the
 \end{align}
 \todo{Don't think I need to mention Fubini-Tonelli theorem here}
 #+END_EXPORT
-Instead of collapsing the inducing points here cite:titsiasVariational2009
+Instead of collapsing the inducing variables here cite:titsiasVariational2009
 they can be explicitly represented as variational distributions cite:hensmanGaussian2013,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-var-experts-inducing-dist}
-\qFu = \prod_{k=1}^{K} \qFku = \prod_{k=1}^{K} \mathcal{N}\left(\Fku \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
+\qFu = \prod_{k=1}^{K} \qFku = \prod_{k=1}^{K} \mathcal{N}\left(\uFk \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
 \end{align}
 #+END_EXPORT
 These variational distributions can then be used to obtain a lower
@@ -1736,7 +1947,7 @@ However, the expectation over the inducing variables cannot be calculated in clo
 must be approximated. The joint distribution over the inducing variables $\qFku$ is $M$ dimensional and as
 a result the integral is $M$ dimensional.
 Following cite:hensmanScalable2015 this bound (Eq. ref:eq-expert-bound-2-fact) can be further bounded by
-moving the expectations over each expert's conditional of its latent function values given its inducing points
+moving the expectations over each expert's conditional of its latent function values given its inducing variables
 $\pFkGivenFku$
 outside the log, i.e. applying Jensen's inequality to the conditional probability $\pYkGivenFku$,
 #+BEGIN_EXPORT latex
@@ -1747,7 +1958,7 @@ outside the log, i.e. applying Jensen's inequality to the conditional probabilit
 \end{align}
 #+END_EXPORT
 Denoting the variational posterior
-$\qF := \prod_{k=1}^{K} \qFk = \prod_{k=1}^{K} \int \pFkGivenFku \qFku \text{d} \Fku$ enables us
+$\qF := \prod_{k=1}^{K} \qFk = \prod_{k=1}^{K} \int \pFkGivenFku \qFku \text{d} \uFk$ enables us
 to rewrite Eq. ref:eq-expert-bound-3 as,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-bound-4}
@@ -1785,7 +1996,7 @@ The inducing inputs $\{\Z\}_{\modeInd=1}^{\ModeInd}$, kernel hyperparameters and
 variational hyperparameters and are optimised using stochastic gradient desecnt alongside the variational
 parameters.
 Note that our augmented model captures the dependencies in the joint distribution of the data through the
-inducing points, but as $M \ll \NumData$ these have a much lower computational burden.
+inducing variables, but as $M \ll \NumData$ these have a much lower computational burden.
 This bound $\mathcal{L}_{\text{experts}}$ has complexity $\mathcal{O}\left( \NumData_{b} \ModeInd M^{3} \right)$
 
 
@@ -1832,7 +2043,6 @@ This is another bound I implemented,
 
 
 
-
 ** Results
 \todo{Add results for mcycle, quadcopter-sim and quadcopter and more??}
 The model was trained on data collected from the velocity-controlled quadcopter experiment.
@@ -1852,6 +2062,15 @@ it believes another mode is responsible, and zero where it is uncertain.
 The variance (right) has also clearly captured information regrading the
 epistemic uncertainty, i.e. where there are no observations.
 
+** Conclusion
+
+using a novel variational lower bound that
+principally handles uncertainty and provides scalability
+via stochastic gradient-based optimisation.
+
+The method is evaluated on a real-world quadcopter example
+that shows the transition dynamics model can successfully learn a factorised representation
+of the underlying dynamics modes.
 * Trajectory Optimisation in Desired Modes label:chap-traj-opt
 ** Intro :ignore:
 This chapter presents the second stage of a two-stage method to
@@ -1884,8 +2103,12 @@ It then details how this latent geodesic ODE is solved using direct collocation.
 Section ref:sec-results gives results of the method tested on a real-world
 velocity-controlled quadcopter example.
 
-
 ** Problem Statement label:sec-problem-statement
+The trajectory optimisation in this chapter aims to find trajectories that satisfy
+two goals,
+- Goal 1 :: remain in a preferred dynamics mode $k^*$ where possible, label:to-goal-mode
+- Goal 2 :: avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
+
 Formally, trajectory optimisation seeks to find the state and control trajectories
 for times $t \in [t_0, t_f]$ that minimise some cost function $g$ whilst satisfying constraints $c$
 and boundary conditions.
@@ -1898,37 +2121,22 @@ The trajectory optimisation problem is given by,
 &\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f
 \end{align}
 #+END_EXPORT
-
-The trajectory optimisation in this chapter aims to find trajectories that satisfy
-two goals,
-- Goal 1 :: remain in a preferred dynamics mode $k^*$ where possible, label:to-goal-mode
-- Goal 2 :: avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
-
-** Our Approach
 The standard approach to solving such a problem is to construct an objective function that encodes
 our two goals.
-We follow this approach and construct an objective function based on probabilistic Riemannian geometries.
+We follow this approach and construct an objective function based on probabilistic Riemannian geometry.
 However, instead of minimising this objective function subject to our systems transition dynamics,
 we exploit the observation detailed in Section ref:sec-riemannian-geometry Eq. ref:eq-length-objective.
 That is, trajectories that minimise our objective function are actually solutions
 to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode;
 an ODE whose solutions are geodesics (i.e. shortest paths) on the Riemannian manifold endowed with the metric
 $\mathbf{G}$.
-The trajectory optimisation is then projected onto this ODE (from our system's transition dynamics)
-and a simple objective function is used,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-traj-opt-geometric}
-\min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g_{\text{simple}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \nonumber \\
-\text{s.t. }&\text{Eq. \ref{eq-2ode}} \nonumber \\
-&c(\mathbf{x}(t)) \leq 0 \quad \forall t \nonumber \\
-&\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f.
-\end{align}
-\todo{need to mention how we projected from stochastic dynamics to an expected ODE...}
-#+END_EXPORT
-Our objective function is thus encoded into the Riemannian metric tensor $\mathbf{G}$ that
+With this observation we project the trajectory optimisation onto this ODE
+and deploy a simple objective function.
+Our goals are thus encoded into the Riemannian metric tensor $\mathbf{G}$ that
 appears in Eq ref:eq-2ode.
 Let us now provide an intuitive and thorough walk-through of the approach detailed above.
 
+** Objective Functions
 To help provide intuition let us first formulate an objective function with two terms,
 one to address each of our goals,
 #+BEGIN_EXPORT latex
@@ -1936,136 +2144,201 @@ one to address each of our goals,
 J&= \int_{t_0}^{t_f}  g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t)) + g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t,
 \end{align}
 #+END_EXPORT
-where the $g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t))$ term favours remaining in dynamics mode $k^*$
-and the $g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t))$ term favours trajectories that avoid regions of the
+where the $g_{\text{mode}}$ term favours remaining in dynamics mode $k^*$
+and the $g_{\text{epistemic}}$ term favours trajectories that avoid regions of the
 dynamics with high epistemic uncertainty.
-
-Eq. ref:eq-cost-trajectory can be instantiated using information learned by our transition dynamics model.
+We will now instantiate Eq. ref:eq-cost-trajectory following two different approaches that use
+information learned by our transition dynamics model.
 The first objective is simple to construct and is intuitively the "go to" objective function for our problem.
 The second objective is more involved and requires the concepts of Riemannian geometry
 from Section ref:sec-riemannian-geometry to be extended to probabilistic geometries.
 
-
 *** A Simple Cost Function
-\todo{only variance and not covariance?}
-Remembering that the gating network indicates the probability of being in a particular dynamics mode at a given
-time step and that the Bayesian formulation of the dynamics model lends itself to well-calibrated uncertainty estimates,
-the two terms can be instantiated as,
+Remember that the gating network indicates the probability of being in a particular dynamics mode at a given
+time step and that the Bayesian formulation of the dynamics model lends itself to well-calibrated uncertainty estimates.
+The objective function can therefore be instantiated as,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-cost-trajectory-learned}
-J &= \int_{t_0}^{t_f} - \Pr(\alpha(t)=k^*) + \lambda \V_{\text{epistemic}}\left[\gatingFunc(\mathbf{x}(t), \mathbf{u}(t))\right]  \text{d}t,
+J &= \int_{t_0}^{t_f} \underbrace{- \Pr(\alpha(t)=k^*)}_{g_{\text{mode}}}
++ \lambda \underbrace{\V_{\text{epistemic}}\left[\latentFunc(\mathbf{x}(t), \mathbf{u}(t))\right]}_{g_{\text{epistemic}}}  \text{d}t,
 \end{align}
 #+END_EXPORT
 where the variance term $\V_{\text{epistemic}}$ is due to the epistemic uncertainty arising from
 learning $f$ from observations and $\lambda$ is a user-tuneable parameter.
+This objective function is fairly intuitive,
+we want to maximise the probability of being in our desired mode and we want to minimise
+the amount of variance (due to epistemic uncertainty) introduced over the trajectory.
 
+\todo{should probably test this and comment on why we don't use it...}
 
 *** A Geometric Cost Function
 The geometry of the latent gating functions can also be used to formulate a cost term
 that favours trajectories remaining in a preferred dynamics mode.
-The cost function in Eq. ref:eq-cost-trajectory is difficult to pose, but
-the $g_{\text{mode}}$ term can be expressed as finding shortest
+The $g_{\text{mode}}$ term in Eq. ref:eq-cost-trajectory can be expressed as finding shortest
 paths on the desired mode's gating function.
+Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
+manifold given by the desired mode's gating function
+increases when it passes over the contours; analogous to climbing a hill.
+Given appropriate scaling of the gating function, shortest trajectories between two locations are
+those that attempt to follow the contours, i.e. remain in a single mode by not climbing up or down any hills.
 This formulation is given by,
-\todo[inline]{Add more intuition here, e.g. hill climbing}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-geodesic-objective}
 J = \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t,
 \end{align}
 #+END_EXPORT
-where $\mathbf{G}(\mathbf{x}(t))$ represents a metric tensor of a Riemannian manifold evaluated at $\mathbf{x}(t)$
-encoding the desired cost, i.e. the desired mode's gating function.
+where $\mathbf{G}(\mathbf{x}(t))$ represents a Riemannian metric tensor evaluated at $\mathbf{x}(t)$,
+encoding the desired cost, e.g. a Riemannian metric tensor associated with the desired
+mode's gating function.
+Given that $\mathbf{G}(\mathbf{x}(t))$ represents a Riemannian metric tensor then
+Eq. ref:eq-geodesic-objective is a method for calculating the length of a trajectory on the Riemannian
+manifold endowed with the metric $\mathbf{G}$.
+Formulating $\mathbf{G}$ as the Riemannian metric tensor for the manifold parameterised by the
+desired mode's gating function $\gatingFuncKs$ encodes the $g_{\text{mode}}$ term.
+However, the objective in Eq ref:eq-geodesic-objective has not addressed the
+$g_{\text{epistemic}}$ term in Eq. ref:eq-cost-trajectory.
 
-The cost term in Eq ref:eq-geodesic-objective can be combined with the
-$g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t))$ term from Eq. ref:eq-cost-trajectory-learned
-to obtain an objective function that appears to address our goals.
-However, closer inspection of the geometric cost term reveals that the
-Riemannian manifold in this work is actually probabilistic because its coordinate
-map is modelled as a GP.
-With this observation, we construct the Riemannian metric tensor $\mathbf{G}(\mathbf{x})$ such
-that it can be extended to probabilistic geometries; absorbing the role of the epistemic cost term.
+We can address this by first observing that our metric tensor is parameterised
+by the desired mode's gating function. This will induce
+a probability distribution over the metric tensor $\mathbf{G}$.
+This will become apparent in Section ref:sec-prob-geo when we detail how the metric tensor
+is calculated but let us assume it is the case for now.
+With this observation, the $g_{\text{epistemic}}$ term can be encoded into the cost in Eq. ref:eq-geodesic-objective,
+by extending it to probabilistic geometries, which we detail in the next section.
 
-**** Extension to Probabilistic Geometries
-The Riemannian manifold in this work is actually probabilistic because its coordinate
-map is modelled as a sparse variational GP.
-This work follows cite:tosiMetrics2014  and uses a metric tensor that captures the variance in the manifold
-by means of a probability distribution.
-In particular, the expected value of this metric tensor contains a covariance term which
-leads to lengths on the manifold increasing in areas of high covariance.
-This is a desirable behaviour because it encourages trajectories to
-avoid regions of the learned dynamics with high epistemic uncertainty -
-implementing the $g_{\text{epistemic}}$ cost term in Eq. ref:eq-cost-trajectory.
-
+**** Extension to Probabilistic Geometries label:sec-prob-geo
+With the observation that our metric tensor is probabilistic,
+the objective in Eq. ref:eq-geodesic-objective should be rewritten to consist of
+expectations over the metric tensor,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-geodesic-objective-expectation}
+J =  \int_{t_0}^{t_f} \E_{p\left(\mathbf{G}(\mathbf{x}(t))\right)} \left[
+\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \right]
+\mathrm{d}t.
+\end{align}
+#+END_EXPORT
+Let us now follow cite:tosiMetrics2014 and formulate a metric tensor that captures the variance in the manifold
+via a probability distribution.
 Motivated by obtaining a probability distribution over the metric tensor, they
 introduce the following Riemannian metric,
 #+BEGIN_EXPORT latex
-\begin{align}
-  \langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{J}^T \mathbf{J} \dot{\mathbf{x}}_b =
+\begin{align} \label{eq-metric-tensor}
+  \langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \Jac^T \Jac \dot{\mathbf{x}}_b =
   \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b
 \end{align}
 #+END_EXPORT
-where $\mathbf{J}=\frac{\partial h}{\partial \mathbf{x}}$ denotes the Jacobian of $h$.
-As the differential operator is linear, the derivative of a GP is also a GP.
-For a GP
-the Jacobian $\mathbf{J}_*$ of the function evaluated at a new input $\mathbf{x}_*$
-is jointly Gaussian with the function's associated inducing outputs.
-For the $k^{\text{th}}$ gating function it is given by,
+where $\Jac=\frac{\partial h}{\partial \mathbf{x}} \in \R^{P \times \StateDim}$ denotes the
+Jacobian of $h : \R^{\StateDim} \rightarrow \R^{P}$.
+Each gating function's output is one-dimensional in our case, i.e. $P=1$.
+The differential operator is linear so the derivative of a GP is also a GP.
+Consequently, the Jacobian $\testJac = \Jac(\testInput)$ of
+the function evaluated at a new input $\testInput$
+is jointly Gaussian with the function evaluated at the training inputs $\allInput$.
+For the desired mode's gating function the joint distribution takes the form,
 #+BEGIN_EXPORT latex
-\small
-\begin{align*} \label{eq-joint-jacobian-dist}
-p(\mathbf{J}^{(k)}_*, \hat{\mathbf{h}}^{(k)} &\mid \mathbf{x}_*, \bm\xi_h^{(k)}) = \\
-& \mathcal{N}\left(
+\begin{align} \label{eq-joint-jacobian-dist}
+p(\testJac, \HDes \mid \testInput, \allInput) &=
+ \mathcal{N}\left(
 \left[\begin{array}{c}
-        \mathbf{J}^{(k)}_* \\
-        \hat{\mathbf{h}}^{(k)}
+        \testJac \\
+        \HDes
       \end{array}\right] \mid
 \left[\begin{array}{c}
         \bm{0} \\
-        \bm{\mu}_h^{(k)}
+        \modeDes{\bm\mu}
       \end{array}\right], \left[\begin{array}{cc}
-                              \partial^2\mathbf{K}_{**}^{(k)} & \partial\mathbf{K}_{*h}^{(k)} \\
-                            \partial\mathbf{K}_{h*}^{(k)} & \mathbf{K}_{hh}^{(k)}
-                          \end{array}\right]\right),
-\end{align*}
+                              \ddK & \dK^{T} \\
+                              \dK & \K
+                          \end{array}\right]\right) \\
+\Kxx &= \modeDes{k}\left( \allInput, \allInput \right) \in \R^{\NumData \times \NumData} \\
+\dK &= \frac{\partial \modeDes{k}\left(\testInput, \allInput\right)}{\partial \testInput} \in \R^{\StateDim \times \NumData} \\
+\ddK &= \frac{\partial^2 \modeDes{k}\left(\testInput, \testInput \right)}{\partial \testInput \partial \testInput} \in \R^{\StateDim \times \StateDim}
+\end{align}
+\todo{state dim or state and control dim??}
+#+END_EXPORT
+where $\modeDes{k}$ is the covariance function associated with the desired mode's gating function.
+Note that we assume the derivative of the desired mode's mean function with respect to an input is zero,
+i.e. $\frac{\partial \modeDes{\mu}}{\partial \testInput} = 0$.
+As such, we can easily obtain the conditional distribution over $\testJac$ using
+the properties of multivariate normal distributions,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-predictive-jacobian-dist}
+p\left(\testJac | \HDes, \testInput, \allInput \right)
+&= \mathcal{N}\left(\testJac \mid \muJac, \covJac \right) \\
+&= \mathcal{N}\left(\testJac \mid \dK \iKxx \left( \HDes - \modeDes{\bm\mu} \right), \ddK - \dK \iKxx \dK^{T} \right)
+\end{align}
+#+END_EXPORT
+which is a $\StateDim$ -dimensional Gaussian distribution.
+Importantly, the metric tensor in Eq. ref:eq-metric-tensor is the outer product of two normally
+distributed random variables so the resulting random variable $\mathbf{G}$ follows
+a non-central Wishart distribution citep:andersonNonCentral1946,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-metric-dist}
+  p(\mathbf{G} \mid \testInput, \allInput)
+  =\mathcal{W}_{\StateDim}\left(P, \covJac, \mathbb{E}\left[\Jac^{T}\right] \mathbb{E}[\Jac]\right),
+\end{align}
+#+END_EXPORT
+where $P$ is the number of degrees of freedom (always one in our case).
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\subsubsection*{Sparse Gaussian Process Jacobian}
+Before detailing our approach to minimising Eq. \ref{eq-geodesic-objective-expectation}
+we note that the distribution over the Jacobian is different for GP models that
+exploit sparse approximations. We detail the extension here.
+
+Sparse approximations are based on hallucinated inducing variables that are samples from the same GP prior,
+\begin{equation}
+p\left(\uHDes \mid \zHDes \right) &=\mathcal{N}\left(\uHDes \mid \modeDes{\mu}(\zHDes), \modeDes{k}(\zHDes, \zHDes) \right).
+\end{equation}
+In the sparse approximation setting it is these inducing variables that are jointly
+Gaussian with the Jacobian at a new test location,
+\begin{align} \label{eq-joint-jacobian-dist-sparse}
+p(\testJac, \uHDes \mid \testInput, \zHDes) &=
+ \mathcal{N}\left(
+\left[\begin{array}{c}
+        \testJac \\
+        \uHDes
+      \end{array}\right] \mid
+\left[\begin{array}{c}
+        % {0} \\
+        \partial\modeDes{\hat{\bm\mu}} \\
+        \modeDes{\hat{\bm\mu}}
+      \end{array}\right], \left[\begin{array}{cc}
+                              \ddK & \dKz^{T} \\
+                              \dKz & \Kzz
+                          \end{array}\right]\right) \\
+\Kzz &= \modeDes{k}\left( \zHDes, \zHDes \right) \in \R^{\NumInd \times \NumInd} \\
+\dKz &= \frac{\partial \modeDes{k}\left(\testInput, \zHDes \right)}{\partial \testInput} \in \R^{\StateDim \times \NumInd},
+\end{align}
+In Section \ref{sec-inference} we adopted a variational approach
+and approximated the inducing variable's posterior with a variational distribution,
+\begin{equation} \label{eq-}
+p\left(\uHDes \mid \zHDes \right) \approx \qDes = \mathcal{N}(\uHDes \mid \mDes, \SDes),
+\end{equation}
+and treated $\mDes$ and $\SDes$ as variational parameters to learn.
+In order to maintain the positive-definiteness of $\SDes$, we actually utilised the Cholesky
+decomposition $\SDes = \mathbf{L}\mathbf{L}^T$ and optimised $\mathbf{L}$.
+To obtain the predictive distribution over the Jacobian at a new input location $\testInput$
+we must condition on the inducing variable $\uHDes$ and then integrate it out with $\qDes$,
+which is a GP,
+\begin{align} \label{eq-predictive-jacobian-dist-sparse}
+\small
+q&\left(\testJac \mid \testInput, \zHDes \right)
+=\int \qDes p\left(\testJac \mid \testInput, \uHDes, \zHDes \right)
+\text{d} \uHDes \\
+&= \mathcal{N}\left(\testJac \mid
+\dKz \Kzz^{-1} \left( \mDes - \modeDes{\hat{\bm\mu}} \right),
+\ddK - \dKz \iKzz \left( \Kzz - \SDes \right) \iKzz \dKz^{T} \right). \nonumber
 \normalsize
-#+END_EXPORT
-where $\K_{hh}^{(k)} = k^{(k)}\left(\bm\xi_h^{(k)}, \bm\xi_h^{(k)}\right) \in \R^{M \times M}$ is the
-$k^{\text{th}}$ gating function's covariance function evaluated between its inducing inputs,
-$\partial\K_{*h}^{(k)} = \frac{\partial k^{(k)}\left(\mathbf{x}_*, \bm\xi_h^{(k)}\right)}{\partial \mathbf{x}_*} \in \R^{D \times M}$ is
-its partial derivative w.r.t its first input (the new input $\mathbf{x}_*$), and
-$\partial^2\K_{**}^{(k)} = \frac{\partial^2 k^{(k)}\left(\mathbf{x}_*, \mathbf{x}_*\right)}{\partial \mathbf{x}_* \partial \mathbf{x}_*} \in \R^{D \times D}$
-is its derivative w.r.t both inputs (which are both the new input $\mathbf{x}_*$).
-Remembering that the inducing outputs are actually probabilistic and modelled as a Gaussian
-$q\left(\hat{\mathbf{h}}^{(k)}\right) = \mathcal{N}\left(\hat{\mathbf{h}}^{(k)} \mid \mathbf{m}_h^{(k)}, \mathbf{S}_h^{(k)}\right)$,
-the predictive distribution of the Jacobian given a new input $\mathbf{x}_*$
-is obtained by marginalising the inducing outputs,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-predictive-jacobian-dist}
-p\left(\mathbf{J}^{(k)}_* | \mathbf{x}_*, \bm\xi_h^{(k)}\right)
-&=\int q\left(\hat{\mathbf{h}}^{(k)}\right) p\left(\mathbf{J}^{(k)}_* \mid \mathbf{x}_*, \hat{\mathbf{h}}^{(k)}, \bm\xi_h^{(k)}\right) \text{d} \hat{\mathbf{h}}^{(k)} \\
-&= \mathcal{N}\left(\mathbf{J}^{(k)}_* \mid \bm\mu_J^{(k)}, \mathbf{\Sigma}_{J}^{(k)}\right). \numberthis
-\end{align*}
-#+END_EXPORT
-This induces a non-central Wishart distribution over the metric tensor $\mathbf{G}$,
-#+BEGIN_EXPORT latex
-\begin{align}
-  \mathbf{G}=\mathcal{W}_{D+F}\left(p, \boldsymbol{\Sigma}_{J}, \mathbb{E}\left[\mathbf{J}^{\top}\right] \mathbb{E}[\mathbf{J}]\right),
 \end{align}
+\todo{assumed that GP jacobian has zero mean}
+Note that when $\qDes=\pDes$ Eq. \ref{eq-predictive-jacobian-dist-sparse} reduces to the original marginal
+distribution $p(\testJac \mid \testInput)$.
+\end{myquote}
 #+END_EXPORT
-where $p$ is the number of degrees of freedom (always one in our case).
-The expected metric tensor is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expected-metric}
-  \E[\mathbf{G}] = \E[\mathbf{J}^T] \E[\mathbf{J}] + \mathbf{\Sigma}_J.
-\end{align}
-#+END_EXPORT
-This expected metric tensor includes a covariance term $\mathbf{\Sigma}_J$ which implies that the
-metric is larger when the covariance in the mapping is higher.
-As a result, trajectories minimising Eq. ref:eq-geodesic-objective endowed with this
-metric will attempt to avoid regions of the transition dynamics with high epistemic uncertainty.
 
 
-**** Old :ignore:
+**** Old :noexport:
 The trajectory optimisation is projected onto a continuous-time
 ODE whose solutions are geodesics on a probabilistic manifold, induced
 by one of the latent gating function GPs.
@@ -2093,9 +2366,112 @@ Solutions to this ODE are trajectories that remain in a single dynamics mode
 (where possible) and avoid regions of the dynamics that cannot be predicted confidently.
 This latent geodesic ODE is solved using a Hermite-Simpson collocation method cite:kellyIntroduction2017.
 
+** Implicit Optimisation
+In the previous section we formulated an objective function that encodes our two goals.
+As alluded to previously, we do not optimise this objective function in the usual way.
+Instead, we exploit the fact that trajectories minimising Eq. ref:eq-geodesic-objective-expectation
+are geodesics on $\mathcal{M}$
+and must satisfy the continuous-time second-order ODE,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-2ode-stochastic}
+ \ddot{\mathbf{x}}(t)
+&= f_G(t, \dot{\mathbf{x}}, \mathbf{x}) \\
+&=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{x}(t))]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right), \nonumber
+\end{align}
+#+END_EXPORT
+where $\operatorname{vec}[\mathbf{G}(\mathbf{x}(t)])$ stacks the columns of $\mathbf{G}(\mathbf{x}(t))$
+and $\otimes$ denotes the Kronecker product.
+This is a classic result of differential geometry cite:carmoRiemannian1992.
+Performing trajectory optimisation in Eq. ref:eq-2ode-stochastic
+is equivalent to solving the trajectory optimisation in Eq. ref:eq-traj-opt
+with the objective function in Eq. ref:eq-geodesic-objective-expectation
+subject to the same boundary conditions.
 
+However, the ODE in Eq. ref:eq-2ode-stochastic contains the metric tensor $\mathbf{G}$ which is a random
+variable. As a result, Eq. ref:eq-2ode-stochastic is actually a stochastic differential equation (SDE).
+Solving SDEs is notoriously hard so we instead exploit the observation that
+the expected metric tensor,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expected-metric}
+  \E[\mathbf{G}] = \E[\mathbf{J}^T] \E[\mathbf{J}] + \mathbf{\Sigma}_J,
+\end{align}
+#+END_EXPORT
+includes the covariance term $\mathbf{\Sigma}_J$.
+This implies that the expected
+metric is larger when the covariance in the mapping is higher.
+This will lead to lengths on the manifold increasing in areas of high covariance.
+This is a desirable behaviour because it encourages trajectories to
+avoid regions of the learned dynamics with high epistemic uncertainty -
+implementing the $g_{\text{epistemic}}$ cost term in Eq. ref:eq-cost-trajectory.
 
-** Trajectory Optimisation label:sec-traj-opt
+Instead of considering the SDE in Eq. ref:eq-2ode-stochastic we substitute the expected metric tensor
+in place of its associated random variable $\mathbf{G}$, to obtain a deterministic ODE,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-2ode-expected}
+ \ddot{\mathbf{x}}(t)
+&= f_G(t, \dot{\mathbf{x}}, \mathbf{x}) \\
+&=-\frac{1}{2} \E\left[\mathbf{G} \right]^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}\left[\E\left[\mathbf{G}(\mathbf{x}(t)) \right]\right]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right). \nonumber
+\end{align}
+#+END_EXPORT
+Solutions to this ODE implicitly minimise the objective in Eq. ref:eq-geodesic-objective endowed with this
+expected metric.
+
+*** Direct Collocation
+Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode-expected cannot
+be solved with simple forward or backward integration.
+Instead, we transcribe the problem using the approach of differential
+flatness cite:milamNew2000c,rossPseudospectral2004.
+A set of outputs $\mathbf{z}(t)$ are defined such that the
+states $\mathbf{x}(t)$ and controls $\mathbf{u}(t)$ can be
+expressed in terms of the flat output $\mathbf{z}(t)$ and a finite number of its derivatives,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\mathbf{x}(t) &= A(\mathbf{z}(t), \dot{\mathbf{z}}(t), \ldots) \\
+\mathbf{u}(t) &= B(\mathbf{z}(t), \dot{\mathbf{z}}(t), \ldots).
+\end{align}
+#+END_EXPORT
+In the velocity-controlled quadcopter example, the flat output is the
+state $\mathbf{z}(t) = \mathbf{x}(t)$
+and the control is simply the state derivative
+$\mathbf{u}(t) &= \dot{\mathbf{z}}(t)$.
+
+The original trajectory optimisation problem can then be converted to finding $\mathbf{z}(t)$
+for $t \in [t_0, t_f]$ subject to the boundary conditions and the dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-diff-flat-ode}
+\ddot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t)) &= f_G(t, \dot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t)), \mathbf{x}(\mathbf{z}(t), \dot{\mathbf{z}}(t))).
+\end{align}
+#+END_EXPORT
+Collocation methods are used to transcribe continuous-time trajectory optimisation problems into
+nonlinear programs, i.e. constrained parameter optimisation cite:kellyIntroduction2017,fahrooDirect2000  .
+The expected metric in Eq. ref:eq-expected-metric is substituted into
+Eq. ref:eq-diff-flat-ode and solved via direct collocation.
+This work implements a simple Hermite-Simpson collocation method
+that enforces the state derivative predicted by the polynomials to
+equal the geodesic ODE $f_G$ at a set of $I$ collocation points $\{\mathbf{z}_{i,c}\}_{i=1}^I$.
+This is achieved through the collocation defects,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-defect}
+\Delta_i &= \ddot{\mathbf{z}}_{i,c} - f_G(t_{i,c}, \dot{\mathbf{z}}_{i,c},\mathbf{z}_{i,c}) \numberthis
+\end{align*}
+#+END_EXPORT
+where $\ddot{\mathbf{z}}_{i,c}$ is the $2^{\text{nd}}$
+derivative w.r.t time at the $i^{\text{th}}$ collocation point predicted by the polynomials.
+Eq. ref:eq-defect defines a set of contraints ensuring trajectories are
+solutions to the geodesic ODE $f_G$.
+The nonlinear program that this work solves uses a dummy cost and is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\min_{\mathbf{z}(t), \dot{\mathbf{z}}(t)}& \int_{t_0}^{t_f} 1 \text{d}t \\
+&\text{s.t. }\text{Eqs. \ref{eq-diff-flat-ode} and \ref{eq-defect}}  \\
+\mathbf{x}&\left(\mathbf{z}(t_0), \dot{\mathbf{z}}(t_0) \right) = \mathbf{x}_0 \\
+\mathbf{x}&(\mathbf{z}(t_f),\dot{\mathbf{z}}(t_f)) = \mathbf{x}_f
+%c&(\mathbf{x}(\mathbf{z}(t), \dot{\mathbf{z}}(t)), \mathbf{u}(\mathbf{z}(t), \dot{\mathbf{z}}(t)) \leq 0 \quad \forall t
+\end{align}
+#+END_EXPORT
+This is solved using Sequential Least Squares Programming (SLSQP) in SciPy.
+
+** Trajectory Optimisation label:sec-traj-opt :noexport:
 This work seeks to solve the trajectory optimisation in Eq. ref:eq-objective, i.e.
 find trajectories from $\mathbf{x}_0$ to $\mathbf{x}_f$ that
 minimise the cost in Eq. ref:eq-cost-trajectory.
@@ -2167,7 +2543,7 @@ where $\mathbf{J}=\frac{\partial h}{\partial \mathbf{x}}$ denotes the Jacobian o
 As the differential operator is linear, the derivative of a GP is also a GP.
 For a sparse GP
 the Jacobian $\mathbf{J}_*$ of the function evaluated at a new input $\mathbf{x}_*$
-is jointly Gaussian with the function's associated inducing outputs.
+is jointly Gaussian with the function's associated inducing variables.
 For the $k^{\text{th}}$ gating function it is given by,
 #+BEGIN_EXPORT latex
 \small
@@ -2194,10 +2570,10 @@ $\partial\K_{*h}^{(k)} = \frac{\partial k^{(k)}\left(\mathbf{x}_*, \bm\xi_h^{(k)
 its partial derivative w.r.t its first input (the new input $\mathbf{x}_*$), and
 $\partial^2\K_{**}^{(k)} = \frac{\partial^2 k^{(k)}\left(\mathbf{x}_*, \mathbf{x}_*\right)}{\partial \mathbf{x}_* \partial \mathbf{x}_*} \in \R^{D \times D}$
 is its derivative w.r.t both inputs (which are both the new input $\mathbf{x}_*$).
-Remembering that the inducing outputs are actually probabilistic and modelled as a Gaussian
+Remembering that the inducing variables are actually probabilistic and modelled as a Gaussian
 $q\left(\hat{\mathbf{h}}^{(k)}\right) = \mathcal{N}\left(\hat{\mathbf{h}}^{(k)} \mid \mathbf{m}_h^{(k)}, \mathbf{S}_h^{(k)}\right)$,
 the predictive distribution of the Jacobian given a new input $\mathbf{x}_*$
-is obtained by marginalising the inducing outputs,
+is obtained by marginalising the inducing variables,
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-predictive-jacobian-dist}
 p\left(\mathbf{J}^{(k)}_* | \mathbf{x}_*, \bm\xi_h^{(k)}\right)
