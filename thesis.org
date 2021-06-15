@@ -1,8 +1,5 @@
-# #+TITLE: Probabilistic Inference for Control in Multimodal Dynamical Systems
-# #+latex_class: memoir
+* Config :ignore:
 #+latex_class: mimosis
-# #+latex_class_options: [a4paper,11pt,leqno,openbib,oldfontcommands]
-# #+latex_class_options: [a4paper,11pt,leqno,openbib,oldfontcommands,draft]
 #+begin_src emacs-lisp :exports none  :results none
 (unless (boundp 'org-latex-classes)
   (setq org-latex-classes nil))
@@ -34,8 +31,6 @@
                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 #+end_src
 # #+EXPORT_FILE_NAME: ./tmp/thesis.pdf
-
-* Config :ignore:
 ** Org Mode Export Options :noexport:
 #+EXCLUDE_TAGS: journal noexport
 #+OPTIONS: title:nil toc:nil date:nil author:nil H:6
@@ -54,9 +49,15 @@
 #+LATEX_HEADER: \usepackage{amsmath,amssymb,amsfonts}
 #+LATEX_HEADER: \usepackage{graphicx}
 #+LATEX_HEADER: \usepackage{todonotes}
+*** Font Awesome icons
+#+LATEX_HEADER: \usepackage{fontawesome}
+*** Footnotes
+#+LATEX_HEADER: \usepackage{footnote}
 *** Tensor indexing (pre subscripts)
 #+LATEX_HEADER: \usepackage{tensor}
 
+*** Epigraph (chapter quotes)
+#+LATEX_HEADER: \usepackage{epigraph}
 *** Grey box for block quotes
 #+LATEX_HEADER: \usepackage[most]{tcolorbox}
 #+LATEX_HEADER: \definecolor{block-gray}{gray}{0.85}
@@ -73,6 +74,8 @@
 
 *** Create a Definition theorem
 #+LATEX_HEADER: \newtheorem{definition}{Definition}[section]
+#+LATEX_HEADER: \newtheorem{theorem}{Theorem}[section]
+#+LATEX_HEADER: \newtheorem{lemma}{Lemma}[section]
 *** Floating images configuration
 
 By default,  if a figure consumes 60% of the page it will get its own float-page. To change that we have to adjust the value of the floatpagefraction derivative.
@@ -183,8 +186,9 @@ Fine tuning of spacing between paragraphs. See [[https://tex.stackexchange.com/q
 
 *** Table of Contents improvements
 
-TOC only the chapters, not their content.
-#+latex_header: \setcounter{tocdepth}{1}
+# TOC only the chapters, not their content.
+# #+latex_header: \setcounter{tocdepth}{1}
+#+latex_header: \setcounter{tocdepth}{2}
 
 *** Possible Equation improvements
 
@@ -209,14 +213,15 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \usepackage{marginnote}
 # #+LATEX_HEADER: \renewcommand*{\marginfont}{\footnotesize}
 ** Text Variables :noexport:
-  #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Control in Multimodal Dynamical Systems}}
-  #+latex_header: \newcommand{\ThesisSubTitle}{}
-  #+latex_header: \newcommand{\FormattedThesisDefenseDate}{\mbox{\formatdate{1}{1}{2100}}}
-  #+latex_header: \newcommand{\FormattedAuthorDateOfBirth}{\mbox{\formatdate{1}{1}{2000}}}
-  #+latex_header: \newcommand{\FormattedThesisDefenseTime}{\mbox{10:00}}
-  #+latex_header: \newcommand{\AuthorShortName}{\mbox{Aidan Scannell}}
-  #+latex_header: \newcommand{\AuthorFullName}{\mbox{Aidan J. Scannell}}
-  #+latex_header: \newcommand{\ThesisISBN}{\mbox{}}
+# #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Control in Multimodal Dynamical Systems}}
+#+latex_header: \newcommand{\ThesisTitle}{{Data Efficient Learning for Control in Multimodal Dynamical Systems}}
+#+latex_header: \newcommand{\ThesisSubTitle}{Synergising Bayesian Inference and Riemannian Geometry for Control}
+#+latex_header: \newcommand{\FormattedThesisDefenseDate}{\mbox{\formatdate{1}{1}{2100}}}
+#+latex_header: \newcommand{\FormattedAuthorDateOfBirth}{\mbox{\formatdate{1}{1}{2000}}}
+#+latex_header: \newcommand{\FormattedThesisDefenseTime}{\mbox{10:00}}
+#+latex_header: \newcommand{\AuthorShortName}{\mbox{Aidan Scannell}}
+#+latex_header: \newcommand{\AuthorFullName}{\mbox{Aidan J. Scannell}}
+#+latex_header: \newcommand{\ThesisISBN}{\mbox{}}
 
 ** Math Variables :noexport:
 #+LATEX_HEADER: \DeclareMathOperator{\R}{\mathbb{R}}
@@ -250,7 +255,6 @@ Make the equation numbers follow the chapter, not the whole thesis.
 # #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1}}
 # #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1_{1:\NumData}}}
 
-**** Old
 # Macros for data dimensions
 # #+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{#1_{\stateDim, \numData}}}
 #+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{_{\stateDim}#1_{\numData}}}
@@ -260,15 +264,15 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{\singleDimi{#1}{\stateDim}}}
 
 # Macros for mode k notation
-#+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{(\modeInd)}}}
+# #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{(\modeInd)}}}
 # #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{\modeInd}}}
 # #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{\tensor*[^{\modeInd}]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1_{\modeInd}}}
 #+LATEX_HEADER: \newcommand{\modeDes}[1]{\ensuremath{#1^{\modeDesInd}}}
 
 #+LATEX_HEADER: \newcommand{\singleDimiMode}[2]{\ensuremath{\tensor*[_#2^\modeInd]{#1}{}}}
 #+LATEX_HEADER: \newcommand{\singleDimMode}[1]{\ensuremath{\singleDimiMode{#1}{\stateDim}}}
 #+LATEX_HEADER: \newcommand{\singleDimModeData}[1]{\ensuremath{\tensor*[_\stateDim^\modeInd]{#1}{_\numData}}}
-
 
 *** Data set
 # Dataset/inputs/outputs
@@ -310,7 +314,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\modeVarn}{\ensuremath{\singleData{\modeVar}}}
 #+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\bm{\modeVar}}}
 # #+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\allData{\bm{\modeVar}}}}
-# #+LATEX_HEADER: \newcommand{\modeVarK}{\ensuremath{\modeVarn=\modeInd}}
+#+LATEX_HEADER: \newcommand{\modeVarK}{\ensuremath{\modeVarn=\modeInd}}
 # #+LATEX_HEADER: \newcommand{\ModeVarK}{\ensuremath{\mode{\bm{\modeVar}}}}
 #+LATEX_HEADER: \newcommand{\ModeVarK}{\ensuremath{\ModeVar_{\modeInd}}}
 
@@ -361,6 +365,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 *** Experts New
 # Function notation
 #+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
+#+LATEX_HEADER: \newcommand{\LatentFunc}{\ensuremath{\mathbf{\latentFunc}}}
 #+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\latentFunc_{\modeInd,\stateDim}}}
 #+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mathbf{\latentFunc}_{\modeInd}}}
 # #+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\latentFunc_{:,\modeInd}}}
@@ -389,6 +394,11 @@ Make the equation numbers follow the chapter, not the whole thesis.
 # All inputs set/vector/tensor notation
 # #+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\Fdk}}
 
+*** Params
+#+LATEX_HEADER: \newcommand{\gatingParams}{\ensuremath{\bm\phi}}
+#+LATEX_HEADER: \newcommand{\expertParams}{\ensuremath{\bm\theta}}
+#+LATEX_HEADER: \newcommand{\gatingParamsK}{\ensuremath{\mode{\bm\phi}}}
+#+LATEX_HEADER: \newcommand{\expertParamsK}{\ensuremath{\mode{\bm\theta}}}
 *** Sparse GPs
 **** Experts
 ***** Variables
@@ -398,23 +408,30 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\uF}{\ensuremath{\MakeUppercase{\mathbf{\uf}}}}
 
 ***** Inputs
-#+LATEX_HEADER: \newcommand{\zf}{\ensuremath{\bm{\zeta}}}
+# #+LATEX_HEADER: \newcommand{\zf}{\ensuremath{\bm{\zeta}}}
+# #+LATEX_HEADER: \newcommand{\zFkd}{\ensuremath{\Mkd{\zf}}}
+# #+LATEX_HEADER: \newcommand{\zFk}{\ensuremath{\MkD{\zf}}}
+# #+LATEX_HEADER: \newcommand{\zF}{\ensuremath{\MKD{\zf}}}
+#+LATEX_HEADER: \newcommand{\zf}{\ensuremath{\mathbf{Z}}}
 #+LATEX_HEADER: \newcommand{\zFkd}{\ensuremath{\Mkd{\zf}}}
 #+LATEX_HEADER: \newcommand{\zFk}{\ensuremath{\MkD{\zf}}}
 #+LATEX_HEADER: \newcommand{\zF}{\ensuremath{\MKD{\zf}}}
 
 **** Gating
 ***** Variables
-#+LATEX_HEADER: \newcommand{\uh}{\ensuremath{v}}
-#+LATEX_HEADER: \newcommand{\uHk}{\ensuremath{\Mk{\mathbf{\uh}}}}
-#+LATEX_HEADER: \newcommand{\uH}{\ensuremath{\MakeUppercase{\mathbf{\uh}}}}
+#+LATEX_HEADER: \newcommand{\uh}{\ensuremath{U}}
+#+LATEX_HEADER: \newcommand{\uHk}{\ensuremath{\Mk{\hat{\mathbf{\uh}}}}}
+#+LATEX_HEADER: \newcommand{\uH}{\ensuremath{\hat{\MakeUppercase{\mathbf{\uh}}}}}
 
 #+LATEX_HEADER: \newcommand{\hu}{\ensuremath{\uh}}
 #+LATEX_HEADER: \newcommand{\Hku}{\ensuremath{\uHk}}
 #+LATEX_HEADER: \newcommand{\Hu}{\ensuremath{\uH}}
 
 ***** Inputs
-#+LATEX_HEADER: \newcommand{\zh}{\ensuremath{\bm{\xi}}}
+# #+LATEX_HEADER: \newcommand{\zh}{\ensuremath{\bm{\xi}}}
+# #+LATEX_HEADER: \newcommand{\zHk}{\ensuremath{\Mk{\zh}}}
+# #+LATEX_HEADER: \newcommand{\zH}{\ensuremath{\MK{\zh}}}
+#+LATEX_HEADER: \newcommand{\zh}{\ensuremath{\hat{\mathbf{Z}}}}
 #+LATEX_HEADER: \newcommand{\zHk}{\ensuremath{\Mk{\zh}}}
 #+LATEX_HEADER: \newcommand{\zH}{\ensuremath{\MK{\zh}}}
 
@@ -451,12 +468,14 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\derivative{\state}}}
 # #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\dot{\mathbf{x}}}}
 
+*** Prob Dists New
+#+LATEX_HEADER: \newcommand{\pFkd}{\ensuremath{p\left(\Fkd \right)}}
 *** Prob Dists
 #+LATEX_HEADER: \newcommand{\pFkd}{\ensuremath{p\left(\Fkd \mid \allInput \right)}}
-#+LATEX_HEADER: \newcommand{\pFk}{\ensuremath{p\left(\Fk \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pFk}{\ensuremath{p\left(\Fk \mid \allInput, \expertParams\right)}}
 
-#+LATEX_HEADER: \newcommand{\pF}{\ensuremath{p\left(\F \mid \allInput\right)}}
-#+LATEX_HEADER: \newcommand{\pfk}{\ensuremath{p\left(\fk \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pF}{\ensuremath{p\left(\F \mid \allInput, \expertParams\right)}}
+#+LATEX_HEADER: \newcommand{\pfk}{\ensuremath{p\left(\fk \mid \allInput, \expertParamsK \right)}}
 #+LATEX_HEADER: \newcommand{\pfknd}{\ensuremath{p\left(\fknd \mid \allInput\right)}}
 
 #+LATEX_HEADER: \newcommand{\pFkGivenUk}{\ensuremath{p\left(\Fk \mid \uFk \right)}}
@@ -492,12 +511,15 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\pYkGivenX}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \allInput \right)}}
 #+LATEX_HEADER: \newcommand{\pYGivenX}{\ensuremath{p\left(\allOutput \mid \allInput \right)}}
 
+**** Gating network
 #+LATEX_HEADER: \newcommand{\PrA}{\ensuremath{\Pr\left(\ModeVarK \right)}}
 #+LATEX_HEADER: \newcommand{\Pra}{\ensuremath{\Pr\left(\modeVarK \right)}}
 #+LATEX_HEADER: \newcommand{\PaGivenhx}{\ensuremath{P\left(\modeVarn \mid \hn, \singleInput \right)}}
 #+LATEX_HEADER: \newcommand{\PraGivenx}{\ensuremath{\Pr\left(\modeVarn \mid \singleInput \right)}}
 #+LATEX_HEADER: \newcommand{\PraGivenhx}{\ensuremath{\Pr\left(\modeVarK \mid \hn, \singleInput \right)}}
 #+LATEX_HEADER: \newcommand{\PraGivenxNegH}{\ensuremath{\Pr\left(\modeVarK \mid \singleInput, \neg\Hall \right)}}
+#+LATEX_HEADER: \newcommand{\PrAGivenX}{\ensuremath{\Pr\left(\ModeVarK \mid \allInput \right)}}
+
 #+LATEX_HEADER: \newcommand{\pHGivenX}{\ensuremath{p\left(\Hall \mid \allInput\right)}}
 #+LATEX_HEADER: \newcommand{\pHkGivenX}{\ensuremath{p\left(\Hk \mid \allInput\right)}}
 
@@ -582,11 +604,6 @@ Make the equation numbers follow the chapter, not the whole thesis.
 
 #+LATEX_HEADER: \newcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
 #+LATEX_HEADER: \newcommand{\singleOutputK}{\ensuremath{\mode{\singleOutput}}}
-
-#+LATEX_HEADER: \newcommand{\gatingParams}{\ensuremath{\mode{\bm\phi}}}
-#+LATEX_HEADER: \newcommand{\expertParams}{\ensuremath{\mode{\bm\theta}}}
-#+LATEX_HEADER: \newcommand{\gatingParamsK}{\ensuremath{\mode{\bm\phi}}}
-#+LATEX_HEADER: \newcommand{\expertParamsK}{\ensuremath{\mode{\bm\theta}}}
 
 ** Acronyms :noexport:
 {{{glossaryentry(LaTeX,\LaTeX,A document preparation system,LaTeX)}}}
@@ -1310,6 +1327,502 @@ for the latent function values $\mathbf{f}$ cite:Titsias2009.
 # placed inducing variables $\hat{\mathbf{f}}$ they are a
 # sufficient statistic for the latent function values $\mathbf{f}$.
 
+*** Mixtures of Gaussian Process Experts
+Gaussian processes (GPs) are the state-of-the art approach for Bayesian nonparametric regression.
+However, they suffer from two important limitations.
+Firstly, the covariance function is commonly assumed to be stationary
+due to the challenge of parameterising them to be non-stationary.
+This limits their modelling flexibility.
+For example, if the function has a discontinuity due to different underlying lengthscales
+in different parts of the input space then a stationary covariance function will not be adequate.
+Similarly, if the observations are subject to different noise variances in different regions
+of the input space then conventional homoscedastic regression will not suffice.
+Secondly, GPs cannot model multimodal predictive distributions,
+i.e. where there are multiple
+regions of high probability mass with regions of smaller probability mass in between.
+GP regression with a Gaussian likelihood models a Gaussian predictive distribution
+that is not capable of modelling such multimodal distributions.
+Using any likelihood but a Gaussian requires approximate inference techniques which
+are usually accompanied by increased computational cost.
+# A motivating factor for adopting GP methods is their associated uncertainty quantification.
+# #+begin_export latex
+# \hl{Standard GP regression (with a Gaussian likelihood) models a Gaussian predictive distribution
+# that is not capable of modelling such multimodal distributions.
+# Using any likelihood but a Gaussian also results in inference no longer being
+# analytically tractable. These likelihoods require approximate inference techniques which
+# are usually accompanied by computational issues.}
+# #+end_export
+# We can think of the first limitation as fitting the predictive mean to the observations
+# and the second with correctly quantifying uncertainty in the predictive posterior.
+
+Mixture models have been proposed that
+for a set of input $\mathbf{x}$ and output $\mathbf{y}$ observations
+can model a multimodal distribution over the output
+$p(\mathbf{y} | \mathbf{x}) = \sum_{k=1}^K \pi_k\ p(\mathbf{y} | \alpha=k, \mathbf{x})$.
+The predictive distribution $p(\mathbf{y} | \mathbf{x})$ consists of
+$k$ mixture components $p(\mathbf{y} | \alpha=k, \mathbf{x})$ that are weighted according to
+the mixing coefficients $\pi_k$.
+The mixture components may take the form of any distribution, for
+example, Bernoulli or Gaussian.
+Mixture models assume that each observation belongs to one of the components and then try to infer the
+distribution of each component separately.
+The capability of these models can be further extended by allowing the mixing coefficients themselves
+to be a function of the input variable $x$.
+This was introduced by cite:Jacobs1991 in the mixture of experts (ME) model where the mixing coefficients
+are known as gating functions $\pi_k(\mathbf{x}) = p(\alpha=k | \mathbf{x})$
+(and collectively the gating network).
+The individual component densities $p(\mathbf{y} | \alpha=k, \mathbf{x})$ are then referred to as experts
+because at different regions in the input space different components are responsible for predicting.
+The gating network is governed by an expert indicator variable $\alpha_n \in \{1, ..., K\}$
+that assigns each observation to one of the $K$ experts.
+# are given by $\pi_k(\mathbf{x}) = p(\alpha=k | \mathbf{x})$ and
+# referred to as gating functions (or collectively the gating network).
+# This results in the predictive distribution
+# $p(\mathbf{y} | \mathbf{x}) = \sum_{k=1}^K \pi_k(\mathbf{x}) p(\mathbf{y} | \alpha=k, \mathbf{x})$.
+# The role of the gating network is to indicate which expert is most likely responsible for generating
+# the data in a given region of the input space.
+
+Modelling the experts as GPs gives rise to a class of powerful models known as
+mixture of GP experts (MoGPE).
+These models address both of the limitations that we discussed.
+They can model multimodal predictive distributions as they model a mixture of distributions
+over the outputs, usually a Gaussian mixture in the regression setting (cite:Tresp,Rasmussen2002).
+They are able to model non-stationary functions as
+each expert can learn different lengthscales, noise variances etc and the gating
+network can turn each one "on" and "off" in different regions of the input space.
+Many approaches to MoGPE have been proposed and in general the key differences between them are
+the formulation of the gating network
+and their inference algorithms (and associated approximations) cite:Yuksel2012.
+The original MoGPE work by cite:Tresp proposed a gating network as a softmax of $K$ GPs
+(bottom left plot in Figure [[ref:gating_network_comparison]]).
+An EM inference scheme is proposed, which assuming there are $N$ observations requires
+$\mathcal{O}(3KN^3)$ computations per iteration.
+# The original MoGPE work by cite:Tresp proposed a gating network resembling a
+# GP classification model (bottom left plot in Figure [[ref:gating_network_comparison]]).
+# An EM inference scheme is proposed, requiring $\mathcal{O}(3KN^3)$ computations per iteration,
+# assuming that there are $N$ observations.
+
+Although this gating function divides up the input space cite:Rasmussen2002 argue that
+data not assigned to a GP expert will lead to bias near the boundaries.
+Instead cite:Rasmussen2002 formulate the gating network in terms of conditional
+distributions on the expert indicator variable, on which they place an input-dependent
+Dirichlet process prior.
+cite:Meeds2005 proposed an alternative infinite MoGPE similar to cite:Rasmussen2002 except
+that they specify a full generative model over the input and output space $p(\mathbf{y}, \mathbf{x})$
+as opposed to just a
+conditional model $p(\mathbf{y} | \mathbf{x})$.
+Each experts inputs are now Gaussian distributed
+(middle top plot of Figure [[ref:gating_network_comparison]]) giving rise to the gating
+network in the middle bottom plot of Figure [[ref:gating_network_comparison]].
+This gating network is not capable of turning an expert "on" in multiple regions
+of the input space. It will instead generate a new cluster and assign it a new expert.
+These approaches reduce the computational burden by associating each expert with a
+subset of the observations but rely on Markov Chain Monte Carlo (MCMC) inference schemes.
+# #+NAME: gating_network_comparison
+# #+ATTR_LATEX: :width 0.7\textwidth :placement [h] :center t
+# #+caption: Comparison of different gating networks (one per column).
+# #+caption: The bottom plots show the expert mixing probabilities $p(\alpha=k|x)$
+# #+caption: and the top plots show any associated distributions over the inputs.
+# #+caption: The left and right regions (shaded green) are subsets of the domain where expert
+# #+caption: one has generated the observations (observations are not shown) and the middle region (shaded blue) where expert two has.
+# #+caption: The bottom left plot shows the mixing probabilities of a gating network based on GPs.
+# #+caption: The middle top plot shows three separate Gaussian pdfs representing clustering of the inputs
+# #+caption: (we have introduced a cluster indicator variable $z$).
+# #+caption: The middle bottom plot shows the associated expert mixing probabilities (assuming $z=\alpha$).
+# #+caption: In the right top plot we have assumed that there are only two experts (with $z\neq \alpha$) and
+# #+caption: marginalised the cluster indicator variable from the plot to the left - leading to
+# #+caption: a Gaussian mixture over the inputs.
+# #+caption: The plot below shows the resulting mixing probabilities.
+# [[file:images/gating-network-comparison-2by3-cropped.pdf]]
+cite:Yuan proposed a MoGPE with a variational inference scheme which is much
+faster than using MCMC.
+They assume that the expert indicators $\alpha$ are generated by a Dirichlet distribution and
+that given the expert indicator the inputs follow a Gaussian mixture model (GMM), i.e. they
+have introduced a cluster indicator variable $z$.
+This contrasts earlier approaches that let the expert indicator act as the input cluster
+indicator.
+This is illustrated in the right hand plots of Figure [[ref:gating_network_comparison]] which
+show two Gaussian mixtures over the inputs (one for each expert) and
+the resulting expert mixing probabilities.
+Introducing the separate cluster indicator variable has given rise to a
+gating network that can turn a single expert "on" in multiple regions of the input space.
+However, it does not provide a handle for encoding prior information like the GP based gating network.
+# This resembles two separate mixture models, one over the inputs and one over the outputs.
+
+We note that mixture models are inherently unidentifiable as
+different combinations of mixture components
+and mixing coefficients can generate the same predictive distributions.
+The gating network can be considered a handle for encoding prior knowledge that can be used to constrain
+the set of admissible functions.
+This can improve identifiability and lead to learned representations that reflect
+our understanding of the system. The simplest case being reordering the experts.
+Figure ref:gating_network_comparison provides a visual comparison of
+different gating network formulations,
+providing intuition for how they can differ in restricting the set of admissible functions.
+
+# Modelling the relationship between the  input space and the expert indicator variable (gating network)
+
+# with GPs enables
+# us to efficiently capture the dependencies through the choice of GP prior.
+# Modelling the gating network with GPs enables
+# us to efficiently capture the dependencies through the choice of mean and covariance functions.
+Modelling the gating network with GPs enables us
+to encode informative prior knowledge through the choice of mean and covariance functions.
+For example, adopting a squared exponential covariance function would encode prior belief that
+the mixing probabilities should vary smoothly across the input space.
+If modelling a dynamical system with oscillatory behaviour (e.g. an engine)
+a periodic kernel could be adopted.
+Prior knowledge of the mixing probability values can be encoded through
+the choice of mean function.
+We may also be interested in exploiting techniques from differential geometry
+e.g. finding probabilistic geodesics (cite:Tosi2014) on the gating network.
+Again, our choice of covariance function can be used to encode how differentiable
+the gating network should be.
+Learning better representations will also improve the models
+ability to extrapolate as it will be more true to the underlying system.
+# Again, our choice of covariance function can encode how differentiable
+# our gating network should be.
+
+# We may also be interested in harnessing the structure learnt by the gating network,
+# for example, finding probabilistic geodesics (cite:Tosi2014).
+# This would require a differential covariance function to be used.
+# Learning better representations will also improve the models
+# ability to extrapolate as it will be more true to the underlying system.
+# For example, if one wanted to exploit techniques from differential geometry (e.g. finding geodesics)
+# they could utilise a differentiable covariance function.
+# For example, if one wanted to exploit techniques from differential geometry (e.g. finding geodesics)
+# they could utilise a differentiable covariance function.
+
+# The extension from the middle plot of Figure ref:gating_network_comparison
+# to modelling a GMM over the inputs (bottom plot) leads to a
+# more powerful gating network from a modelling perspective - as it can turn a single expert "on"
+# Introducing the separate cluster indicator variable (middle plot of
+# Figure ref:gating_network_comparison to bottom plot) gives rise to a
+# gating network that can turn a single expert "on" in multiple regions of the input space.
+# However, it does not provide a handle for encoding prior information like a GP based gating network.
+# The formulation of the gating network is commonly motivated by improving
+# the computational complexity of the inference scheme.
+# As such, we consider our method (GP based gating network) as trading in the computational
+# benefits of gating networks based on GMMs
+# (bottom plots of Figure ref:gating_network_comparison)
+# for the ability to improve identifiability through informative gating network priors.
+# \todo{Insert reference to periodic gating function in results once it's added.}
+
+
+We can also consider the implications of the mentioned gating networks from an inference perspective.
+It is known that developing inference algorithms for propagating uncertain (Gaussian) inputs
+through GPs is itself a challenging problem (see cite:Ustyuzhaninov2019).
+Therefore, developing a scalable inference algorithm to propagate inputs that are distributed according to
+a Gaussian mixture will likely lead to valuable information loss.
+Theoretically the approaches by cite:Rasmussen2002,Meeds2005 are able to achieve very
+accurate results but their inference relies on MCMC sampling methods,
+which can be slow to converge.
+# Previous work that formulated a gating network based on GPs cite:Tresp used an EM inference scheme
+# which decouples the learning of the gating network and the experts.
+# The main contributions of this paper are twofold,
+# \todo{What is a true MoE model???}
+# 1. We re-formulate a gating network based on GPs to a) improve indentifiability and b) achieve a true mixture of experts model, i.e. not split the observations between experts,
+# 2. We derive a variational lower bound which improves the complexity issues associated with inference when adopting a GP based gating network.
+#    - Motivated by learning representations of dynamical systems with two regimes we instantiate
+#      the model with two experts as it is  a special case where the gating network can be calculated
+#      in closed form.
+#      We seek to learn an operatable mode with one expert and explain away the un-operatable mode
+#      with the other. With this representation the gating network indicates which regions of the
+#      input space correspond to the operatable mode and provides a convenient space for planning.
+# The GMM formulation of the gating network is motivated by improving
+# the computational complexity of the inference scheme.
+# We consider our approach as trading in the computational benefits of a GMM gating network
+# for the ability to improve identifiability by placing informative GP priors on the gating network.
+We consider our approach as trading in the computational benefits that can be obtained through
+the formulation of the gating network
+for the ability to improve identifiability with informative GP priors.
+The main contributions of this paper are twofold. Firstly, we re-formulate a gating network
+based on GPs to improve indentifiability.
+Secondly, we derive a variational lower bound
+which improves on the complexity issues associated with inference when adopting such a gating network.
+Motivated by learning representations of dynamical systems with two regimes we instantiate
+the model with two experts as it is  a special case where the gating network can be calculated
+in closed form.
+This is because we seek to learn an operatable mode with one expert and explain away the un-operatable mode
+with the other. This results
+in the gating network indicating which regions of the
+input space are operatable, providing a convenient space for planning.
+# This is because we seek to learn an operatable mode with one expert and explain away the un-operatable mode
+# with the other.
+# The gating network then indicates which regions of the
+# input space are operatable, providing a convenient space for planning.
+# with the other. With this representation the gating network indicates which regions of the
+# input space correspond to the operatable mode which provides a convenient space for planning.
+
+The remainder of the paper is organised as follows. We first introduce our model
+in Section ref:sec-modelling
+and then derive our variational lower
+bound in Section ref:sec-variational-approximation.
+In Section ref:sec-model-validation we test our method on an artificial data set where we show
+the benefits of adopting informative covariance functions in the gating network.
+We then test our model on the motorcycle data set and compare it to a sparse variational GP.
+# The remainder of the paper is organised as follows. First we introduce our generative model
+# in Section ref:sec-modelling where we compare our marginal likelihood to the literature.
+# We then derive our variational lower
+# bound in Section ref:sec-variational-approximation and detail how we optimise it and make
+# predictions.
+# In Section ref:sec-model-validation we test our model on an artificial data set where we show
+# the benefits of adopting informative covariance functions in the gating network GP.
+# We then test our model on the motorcycle data set and compare its performance
+# to a sparse variational GP.
+
+
+
+** Old                                                            :noexport:
+In cite:NhatAnhNguyen2018 they highlight that the previously mentioned approaches are limited as
+each expert is trained using only the local data
+assigned to it. This means that they do not take into account the global information, i.e. the
+correlations between clusters.
+The experts are therefore likely to overfit to their local training data.
+cite:NhatAnhNguyen2018 propose a model based on both global and local sparse GPs to overcome this
+and also employ stochastic optimisation providing greater scalability.
+They reduce the computational complexity in their bound through the variational
+approximation on the indicator variable as well as the sparse GP framework cite:Hensman2013.
+
+Our approach does not lead to over fitting as each GP is trained using all of the observations.
+However, each of our experts has a set of inducing inputs that are unique to the expert which
+greatly improves computational complexity (at training and prediction).
+These inducing inputs enable stochastic variational inference in our model which also significantly speeds
+up inference.
+
+In contrast, our main motivation is learning good representations of the underlying functions
+(both the experts and the gating network).
+Mixtures of GP experts models are inherently unidentifiable as
+different combinations of experts
+and gating networks can generate the same distributions over the observations.
+As such, we trade in the computational benefits of the gating networks used by much
+of the literature for the modelling advantages offered by a gating network based on GPs.
+This provides a handle for encoding prior knowledge that can be used to constrain
+the set of admissible functions that we wish to learn within.
+This in turn improves identifiability and results in learned representations that are more true
+to our understanding of the system.
+It is worth noting that we do derive a variational lower bound with competitive complexity.
+To the best of our knowledge the complexity of our variational lower bound is
+state of the art for \gls{mgp} models with GP based gating networks.
+
+
+
+
+Before comparing our work to the literature we first provide some intuition for the modelling
+assumptions behind different gating networks in Figure [[ref:gating_network_comparison]].
+We denote the inputs $x$, expert indicator variable $\alpha$ and the cluster indicator variable $z$.
+The expert mixing probabilities are given by $P(\alpha=k|x)$ and the distributions over the inputs
+are given by $p(x | \alpha=k, z=c)$.
+\todo{dist or density?}
+The top plot is a gating
+network based on GPs and importantly we can see that it has been able to turn expert 1 "on" in
+multiple regions of the domain and is not limited to a single local subset of the domain.
+Alternatively, many approaches utilise some notion of clustering the inputs locally and the middle right plot
+shows three Gaussian pdfs representing this.
+It is common to assign each cluster to a single expert,
+i.e. let the cluster indicator equal the expert indicator ($k=c$).
+This leads to improved computational complexity by dividing up the domain and decomposing the
+covariance matrix into a set of smaller matrices.
+However, this leads to fitting separate experts to the left and right regions (shaded green) which may be
+contrary to our knowledge of the generation of observations.
+We apply Bayes' rule to recover the expert mixing probabilities $P(\alpha=k |x)$ shown in the
+middle left plot (so that we can compare it to the GP based gating network above).
+
+One can maintain separate expert and cluster indicator variables (as seen in cite:Yuan) which
+leads to each experts inputs being modelled as a mixture of Gaussians. This is shown in the bottom
+right plot where all we have done is take the middle right plot and simply marginalising the
+cluster indicator variable.
+The distribution over the inputs associated with expert
+one $p(x | \alpha=1)$ (dashed green) has high *cluster* mixing
+probabilities for the clusters in the left and right (green) regions and a low *cluster* mixing
+probability in the middle (blue) region.
+This leads to a gating network that is also able to turn expert 1 "on" in multiple regions of the domain
+like the GP based gating network.
+
+This is good but we now consider the added modelling benefit of a GP based gating network.
+\todo[inline]{insert text/example about encoding prior info and making hyperparameters not trainable etc}
+
+We can also consider the implications from an inference perspective.
+It is known that developing inference algorithms for propagating uncertain (Gaussian) inputs
+through GPs is itself an unsolved problem (see cite:Ustyuzhaninov).
+Therefore developing an inference algorithm to propagate inputs that are distributed according to
+a Gaussian mixture model will likely lead to valuable information loss.
+This is a purely intuitive statement and we have not performed any experiments.
+
+# Stochastic variational inference enables GP models to scale to larger data sets so we would like
+# to develop such an algorithm.
+
+Hopefully this provides some intuition about the different assumptions that can be encoded (or not)
+by different gating network formulations.
+We now highlight XXX of the factors that might make a GP based gating network desirable.
+
+1. Handle for encoding prior information,
+   - Constrain the set of admissible functions.
+2. Information loss,
+   - Propagating Gaussian inputs through GPs is an active area of research cite:Ustyuzhaninov and we
+     argue that any approximations required to propagate inputs that are distributed according to
+     a Gaussian mixture model will likely lose valuable information.
+
+\todo[inline]{We can encode more info into a GP prior that into a GMM?}
+\todo[inline]{Can GMMs extrapolate away from data??}
+\todo[inline]{With GP gating function we can ensure it is a Riemannian manifold i.e. differentiable. Is this the case with GMMs?}
+
+
+\todo{Yuan uses VI and changed gating network structure}
+cite:Yuan proposed a mixture of GP experts with a variational inference scheme which is much
+faster than using MCMC.
+They assume that the expert indicators are generated by a Dirichlet distribution and
+that given the expert indicator the inputs follow a Gaussian mixture model, i.e. they
+have introduced a cluster indicator variable.
+This is in contrast to earlier approaches that let the expert indicator act as the input cluster
+indicator.
+Intuitively we think that this gives rise to a gating network similar
+to the bottom plot of Figure [[ref:gating_network_comparison]].
+However, the expert indicator does not depend on the inputs, rather the inputs depend on the cluster
+indicator which depends on the expert indicator.
+\todo{However, the "gating network" is no longer input dependent, unless a similar modification to cite:Rasmussen2002 is made to the DP.}
+
+In cite:NhatAnhNguyen2018 they highlight that these approaches are limited as
+each expert is trained using only the local data
+assigned to it. This means that they do not take into account the global information, i.e. the
+correlations between clusters.
+The experts are therefore likely to overfit to their local training data.
+cite:NhatAnhNguyen2018 propose a model based on both global and local sparse GPs to overcome this
+and also employ stochastic optimisation providing greater scalability.
+They reduce the computational complexity in their bound through the variational
+approximation on the indicator variable as well as the sparse GP framework cite:Hensman2013.
+Our approach does not lead to over fitting as each GP is trained using all of the observations.
+However, each of our experts has a set of inducing inputs that are unique to the expert which
+greatly improves computational complexity (at training and prediction).
+These inducing inputs enable stochastic variational inference in our model which also significantly speeds
+up inference.
+
+Our gating function only requires a single GP as we instantiate our model with only two experts.
+We exploit the probit link function (as opposed to the softmax function used by cite:Tresp)
+because it leads to analytic mixing probabilities
+and factorisation across the data given $M$ global inducing points.
+We do not introduce a variational distribution over the indicator variable as we are able
+to analytically marginalise it in our evidence lower bound without a significant computational burden.
+
+
+Our model is similar to cite:Tresp but overcomes the limitations highlighted
+by cite:Rasmussen2002.
+That is, we simultaneously improve the models computational complexity and
+the data assignment at prediction time.
+Each of our experts predicts on the basis of a set of inducing inputs that are unique to the expert.
+These inducing inputs enable stochastic variational inference in our model which significantly speeds
+up inference.
+
+
+** Ignore                                                         :noexport:
+
+The \glspl{mgp} literature commonly highlights two main issues that they
+seek to address.
+Firstly, \glspl{gp} cannot handle multi-modality, i.e. they assume that the observations
+were generated by a single underlying function.
+Secondly, they suffer from both time and memory complexity issues
+arising from the calculation and storage of the inverse covariance matrix.
+Given a data set with $N$ observations, training has time and memory complexity of $\mathcal{O}(N^3)$
+and $\mathcal{O}(N^2)$ respectively.
+Many approaches to a \gls{mgp} method have been proposed which attempt
+to address these issues cite:Tresp,Rasmussen2002,Meeds2005,Yuan,NhatAnhNguyen2018.
+However, most previous work appears to be motivated by addressing the complexity issues
+associated with \glspl{gp}.
+That is, they are interested in decomposing the $N \times N$ covariance matrix into a set of smaller
+matrices.
+In contrast, our main motivation is learning good representations of the underlying functions
+(both the experts and the gating network).
+Mixtures of GP experts models are inherently unidentifiable as
+different combinations of experts
+and gating networks can generate the same distributions over the observations.
+As such, we trade in the computational benefits of the gating networks used by much
+of the literature for the modelling advantages offered by a gating network based on GPs.
+This provides a handle for encoding prior knowledge that can be used to constrain
+the set of admissible functions that we wish to learn within.
+This in turn improves identifiability and results in learned representations that are more true
+to our understanding of the system.
+It is worth noting that we do derive a variational lower bound with competitive complexity.
+To the best of our knowledge the complexity of our variational lower bound is
+state of the art for \gls{mgp} models with GP based gating networks.
+
+In cite:NhatAnhNguyen2018 they exploit a global GP to coarsely model the
+entire data set as well as local GP experts to overcome this limitation.
+Our approach does not lead to over fitting as each GP is trained using all of the observations.
+We exploit the factorization achieved via the sparse variational GP framework to
+couple the learning of the gating network and the experts.
+Our bound achieves this with little extra computational burden.
+
+A significant amount of recent work builds on cite:Rasmussen2002 with the
+computational benefits as a key driving factor.
+However, we highlight that there is also a modelling assumption that distinguishes these approaches.
+The gating network of cite:Tresp is able to model spatial structure.
+That is, it is capable of turning each expert "on" and "off" in different regions of the input space
+i.e. expert $k$ can be turned on in multiple regions.
+This contrasts placing a GMM on the inputs and associating each expert with the observations
+associated with specific components.
+This approach improves the computational complexity but is not capable of capturing spatial structure.
+For example, if expert $k$ is responsible for generating the data in multiple areas of the
+input space then a GP based gating network will be capable of capturing this.
+
+\todo[inline]{what do we mean by spatial structure??? Essentially we have GP compared to GMM. Do Gaussian mixture models capture spatial structure??}
+
+
+We do not directly assign each observation to a single expert but instead assume that
+it is generated as a mixture of the experts.
+
+cite:Nguyen2014 also provide fast variational inference based on the sparse GP framework.
+Their model also "splits" the dataset such that each expert acts only on the
+observations assigned to it.
+Each observation is assigned to an expert based on its proximity to the experts centroids.
+
+
+A limitation of these approaches is that each expert is trained using only the local data
+assigned to it. This means that they do not take into account the global information, i.e. the
+correlations between clusters.
+The experts are therefore likely to overfit to their local training data.
+
+Our approach is similar to cite:Yuan in the sense that we break the dependency among the training
+outputs enabling variational inference.
+However, we achieve this through the sparse variational GP framework seen in cite:Hensman2013.
+We actually induce the necessary conditions for stochastic variational inference as
+we obtain factorisation over data points given a set of $M$ global inducing points.
+
+cite:NhatAnhNguyen2018 propose a model based on both global and local sparse GPs
+and also employ stochastic optimisation providing greater scalability.
+They reduce the computational complexity in their bound through the variational
+approximation on the indicator variable as well as the sparse GP framework cite:Hensman2013.
+We do not introduce a variational distribution over the indicator variable as we are able
+to analytically marginalise it in our evidence lower bound without a significant computational burden.
+\todo[inline]{Variational dists allow us to condider the unc in a variable and perform full Bayesian inference. What is the significance of what we have done? I think that ideally we would analytically marginalise all our latent variables so what we have done is very nice.}
+cite:NhatAnhNguyen2018 use a GMM gating network which and achieve complexity $\mathcal{O}(NM^2K)$.
+We want spatial structure so use GP based gating network which leads to $\mathcal{O}(NM^3K)$.
+
+
+The gating network enforces that each component of the GP mixture is localized.
+In cite:Lazaro-Gredilla2011 they formulate a mixture without the use of a gating function
+which enables a given
+location in the input space to be associated with multiple outputs. This could be used for modelling
+multiple objects in a tracking system and is known as the data association problem.
+We are not interested in the data association problem but instead wish to encode spatial structure
+through the use of a gating function.
+We introduce our model from a generative model perspective which provides insight
+into how we can easily switch between the data association setting and a mixture of GPs by
+simply marginalising the indicator variable.
+
+Our gating function only requires a single GP as we instantiate our model with only two experts.
+We exploit the probit link function (as opposed to the softmax function used by cite:Tresp)
+because it leads to analytic mixing probabilities
+and factorisation across the data given $M$ global inducing points.
+
+
+Our model is similar to cite:Tresp but overcomes the limitations highlighted
+by cite:Rasmussen2002.
+That is, we simultaneously improve the models computational complexity and
+the data assignment at prediction time.
+Each of our experts predicts on the basis of a set of inducing inputs that are unique to the expert.
+These inducing inputs enable stochastic variational inference in our model which significantly speeds
+up inference.
+
 ** Optimal Control
 Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
 over a time period $t \in [t_0, t_f]$ that optimises an objective function $\mathbf{J}_{\pi}(\x)$.
@@ -1449,9 +1962,11 @@ J &= \min \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf
 # the the feature space. This is always 1-dimensional and thus the approach scales
 # to highgher dimensional feature spaces.
 
-* Probabilistic Inference for Learning Multimodal Dynamical Systems label:chap-dynamics
+* Probabilistic Inference for Multimodal Dynamical Systems label:chap-dynamics
+#+begin_export latex
+\epigraph{All models are wrong, but some are useful.}{\textit{George Box}}
+#+end_export
 ** Intro :ignore:
-\todo[inline]{This section could be broad (more than just GP-based gating networks) and the next section focus on gating networks specifically.}
 This chapter introduces the class of continuous-time multimodal dynamical systems
 that this work considers and then details an approach to performing Bayesian inference in such models.
 Throughout this chapter it is assumed that pairs of input $\x$ and output $\y$ observations
@@ -1462,32 +1977,15 @@ and then formulates it as a probabilistic model based on GPs.
 This thesis is interested in multimodal systems where the dynamics modes vary over the
 input (state, control) domain, such that the mode switching can by modelled
 by input-dependent functions.
-The set of functions governing the mode switching is commonly referred to as a gating network.
+This set of functions governing the mode switching is commonly referred to as a gating network.
 This work is motivated by data-efficient learning and specifically focuses on gating networks
 where prior knowledge of the system can be encoded into the model via informative priors.
 As a result, the probabilistic model constructed in this chapter resembles a \acrfull{mogpe}
 with a \acrshort{gp}-based gating network.
 This work derives a novel variational lower bound based on sparse GPs that
 enables the model to be trained with stochastic gradient methods.
-
-** Multimodal Dynamical Systems
-# This section considers the transition dynamics in Equation ref:eq-unimodal-dynamics-cont
-# extended to multimodal systems, given by,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-multimodal-dynamics-cont}
-# \dot{\mathbf{x}}(t) &= \f(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon(t) \\
-# &= \fk(\mathbf{x}(t), \mathbf{u}(t)) + \mode{\epsilon}(t)
-# \quad \text{if} \quad \alpha(t)=\modeInd
-# %\quad \text{if} \quad \alpha(\mathbf{x}(t), \mathbf{u}(t))=k
-# \end{align}
-# #+END_EXPORT
-# with states $\state \in \R^D$ and controls $\control \in \R^F$.
-# One of $\ModeInd$ dynamics modes $\{\fk \}_{\modeInd=1}^\ModeInd$ and associated noise models
-# $\mode{\epsilon}(t) \sim \mathcal{N}\left(0, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)$
-# are selected by a switching (or gating) variable
-# $\alpha(t) \in \{1,\ldots,\ModeInd\}$.
-
-# The gating variable $\alpha$ is of particular interest in this work.
+The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub
+cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper[fn:1:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].].
 
 ** Problem Statement
 This chapter considers the transition dynamics in Equation ref:eq-unimodal-dynamics-cont
@@ -1538,7 +2036,511 @@ function $\fk$, evaluated at $\singleInput$,
 is denoted $\fknd = \fkd (\singleInput)$,
 for all dimensions as $\fkn$ and at all data points as $\Fk$.
 
-** Bayesian Model
+** Probabilistic Modelling
+#+BEGIN_EXPORT latex
+\renewcommand{\mode}[1]{\ensuremath{#1_{\modeInd}}}
+\renewcommand{\modei}[2]{\ensuremath{#1_{#2}}}
+\renewcommand{\singleOutput}{\ensuremath{\Delta x_{\numData}}}
+\renewcommand{\allOutput}{\ensuremath{\Delta\mathbf{\state}}}
+\newcommand{\singleModeVar}{\ensuremath{\singleData{\modeVar}}}
+\newcommand{\allModeVar}{\ensuremath{\bm{\modeVar}}}
+\newcommand{\singleModeVarK}{\ensuremath{\singleModeVar = \modeInd}}
+\newcommand{\allModeVarK}{\ensuremath{\{\singleModeVarK\}_{\numData=1}^\NumData}}
+
+\newcommand{\expertPrior}{\ensuremath{p\left(\mode{f}(\allInput) \right)}}
+\newcommand{\expertsPrior}{\ensuremath{p\left(\LatentFunc(\allInput) \right)}}
+\newcommand{\expertMeanFunc}{\ensuremath{\mode{\mu}}}
+\newcommand{\expertCovFunc}{\ensuremath{\mode{k}}}
+\newcommand{\expertLikelihood}{\ensuremath{p\left(\allOutput \mid \mode{f}(\allInput)\right)}}
+\newcommand{\singleExpertLikelihood}{\ensuremath{p(\singleOutput \mid \mode{f}(\singleInput))}}
+\newcommand{\expertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVarK, \allInput \right)}}
+\newcommand{\singleExpertPosterior}{\ensuremath{p\left(\singleOutput \mid \singleModeVarK, \allInput \right)}}
+% \newcommand{\expertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVarK \right)}}
+
+\newcommand{\gatingPrior}{\ensuremath{p\left(\GatingFunc(\allInput ) \right)}}
+\newcommand{\gatingMeanFunc}{\ensuremath{\mode{\hat{\mu}}}}
+\newcommand{\gatingCovFunc}{\ensuremath{\mode{\hat{k}}}}
+\newcommand{\singleGatingLikelihood}{\ensuremath{\Pr\left(\singleModeVarK \mid \GatingFunc(\singleInput) \right)}}
+\newcommand{\gatingLikelihood}{\ensuremath{P\left(\singleModeVar \mid \GatingFunc(\singleInput) \right)}}
+%\newcommand{\gatingPosterior}{\ensuremath{\Pr\left( \singleModeVar \mid \singleInput \right)}}
+\newcommand{\gatingPosterior}{\ensuremath{\Pr\left( \allModeVarK \mid \allInput \right)}}
+\newcommand{\singleGatingPosterior}{\ensuremath{\Pr\left( \singleModeVarK \mid \singleInput, \gatingParamsK \right)}}
+\newcommand{\evidence}{\ensuremath{p\left(\allOutput \mid \allInput \right)}}
+
+\newcommand{\moeExpertPosterior}{\ensuremath{p\left(\singleOutput \mid \singleModeVarK, \singleInput, \expertParamsK \right)}}
+\newcommand{\moeGatingPosterior}{\ensuremath{\Pr\left(\singleModeVarK \mid \singleInput, \gatingParams \right)}}
+\newcommand{\moeEvidence}{\ensuremath{p\left(\allOutput \mid \allInput, \expertParams, \gatingParams \right)}}
+\newcommand{\singleMoeEvidence}{\ensuremath{p\left(\singleOutput \mid \singleInput, \expertParams, \gatingParams \right)}}
+
+\newcommand{\npmoeExpertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVar, \allInput, \expertParams \right)}}
+\newcommand{\npmoeGatingPosterior}{\ensuremath{\Pr\left(\allModeVar \mid \allInput, \gatingParams \right)}}
+
+\newcommand{\moeLikelihood}{\ensuremath{p\left(\allOutput \mid \LatentFunc(\allInput), \GatingFunc (\allInput) \right)}}
+\newcommand{\singleMoeLikelihood}{\ensuremath{p\left(\singleOutput \mid \mode{\latentFunc}(\allInput), \GatingFunc (\allInput) \right)}}
+#+END_EXPORT
+*** Intro :ignore:
+In this section I will first introduce mixture models as they are a natural choice for modelling
+multimodal systems.
+After highlighting the inherent identifiability issues associated with mixture models, I will introduced the Mixture of
+Experts (MoE) model, an extension to mixture models where
+the mixture weight (aka mixing probability) depends on the input variable.
+I will then detail how it breaks down for nonparametric experts
+and introduce the infinite Mixture of Gaussian Process Experts (MoGPE) model from the literature,
+which is motivated by the computational issues associated with inference and prediction.
+Although our model suffers from the complexity issues highlighted by cite:rasmussenInfinite2001, our variational
+inference scheme significantly improves scalability of inference and prediction in our model, whilst providing
+attractive mechanisms for improving identifiablity.
+
+*Mixture Models* Given an input $\singleInput$ and an output $\singleOutput$, mixture models
+model a mixture of distributions over the output,
+\marginpar{mixture models}
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-mixture-model}
+\singleMoeEvidence = \sum_{\modeInd=1}^\ModeInd
+\underbrace{\Pr(\singleModeVarK \mid \gatingParams)}_{\text{mixing probability}}
+\underbrace{p(\singleOutput \mid \modeVarK, \singleInput, \expertParamsK)}_{\text{component } k}.
+\end{equation}
+#+END_EXPORT
+where $\gatingParams$ and $\expertParams$ represent model parameters
+and $\singleModeVar$ is a discrete indicator variable assigning observations to components.
+The predictive distribution $\singleMoeEvidence$ consists of
+$K$ mixture components ${p(\singleOutput \mid \modeVarK, \singleInput, \expertParamsK)}$ that are weighted according to
+the mixing probabilities $\Pr(\modeVarK \mid \gatingParams)$.
+Mixture models are inherently unidentifiable as different combinations of mixture components
+and mixing probabilities can generate the same distributions over the output.
+
+*Mixture of Experts (MoE)* cite:jacobsAdaptive1991 is an extension where the mixing probabilities
+depend on the input variable $\moeGatingPosterior$, and are
+collectively referred to as the *gating network*.
+The individual component densities $\moeExpertPosterior$ are then referred to as *experts*,
+as at different regions in the input space, different components are responsible for predicting.
+Given $\ModeInd$ experts $\moeExpertPosterior$, each with parameters $\expertParamsK$,
+the MoE marginal likelihood is given by,
+\marginpar{mixture of experts}
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mixture-marginal-likelihood}
+\moeEvidence = \prod_{\numData=1}^\NumData \sum_{\modeInd=1}^{\ModeInd}
+\underbrace{\moeGatingPosterior}_{\text{gating network}}
+\underbrace{\moeExpertPosterior}_{\text{expert } k},
+\end{align}
+#+END_EXPORT
+where $\singleModeVar$ is the expert indicator variable assigning observations to experts.
+The probability distribution over the expert indicator variable is referred to as the gating network and
+indicates which expert governs the model at a given input location.
+
+*Nonparametric Mixtures of Experts* As highlighted in cite:rasmussenInfinite2001,
+the traditional MoE marginal likelihood does not apply when the
+experts are nonparametric.
+This is because the model assumes that the observations are i.i.d. given the model parameters,
+which is contrary to GP models, which model the dependencies in the joint distribution, given the
+hyperparameters.
+cite:rasmussenInfinite2001 point out that there is a joint distribution corresponding to every possible
+combination of assignments (of observations to experts).
+The marginal likelihood is then a sum over exponentially many assignments,
+\marginpar{mixture of nonparametric experts}
+#+BEGIN_EXPORT latex
+\begin{align}  \label{eq-np-moe-marginal-likelihood-assign}
+\moeEvidence &= \sum_{\allModeVar} \npmoeGatingPosterior \npmoeExpertPosterior \\
+&= \sum_{\allModeVar} \npmoeGatingPosterior 
+\left[ \prod_{\modeInd=1}^\ModeInd p\left(\{\singleOutput : \singleModeVarK \} \mid \{\singleInput : \singleModeVarK \}, \expertParamsK \right) \right],  \nonumbedr
+\end{align}
+#+END_EXPORT
+where $\allModeVar = \{\modeVar_1, \ldots, \modeVar_\NumData \}$ represents a set of assignments for all observations.
+This distribution factors into the product over experts, where each expert models the joint Gaussian distribution
+over the observations assigned to it.
+
+Given a factorised likelihood for each expert (e.g. Gaussian),
+an alternative approach is to let each expert predict on the basis of all observations
+and leave the gating network to soft assign the observations.
+The marginal likelihood of this model is then given by,
+#+BEGIN_EXPORT latex
+\marginpar{marginal likelihood}
+\begin{align} \label{eq-np-moe-marginal-likelihood}
+\moeEvidence &=
+\prod_{\numData=1}^\NumData \sum_{\modeInd=1}^\ModeInd
+\underbrace{\Pr\left(\singleModeVarK \mid \singleInput, \gatingParams \right)}_{\text{gating network}}
+\underbrace{\E_{\expertPrior} \left[ \singleExpertLikelihood \right]}_{\text{expert } k},
+\end{align}
+#+END_EXPORT
+where each expert follows the standard Gaussian likelihood model,
+\marginpar{expert's Gaussian likelihood}
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-likelihood}
+\singleOutput &= \mode{f}(\singleInput) + \epsilon_{k}, \quad \epsilon_{k} \sim \mathcal{N}(0, \mode{\noiseVar}^2), \\
+\singleExpertLikelihood &= \mathcal{N}\left( \singleOutput \mid \mode{f}(\singleInput), \mode{\noiseVar}^2 \right),
+\end{align}
+#+END_EXPORT
+with $\mode{f}$ and $\mode{\noiseVar}^2$ representing the latent function and the noise variance associated
+with the $\modeInd$^{\text{th}} expert.
+Independent GP priors are placed on each of the expert's latent functions,
+\marginpar{expert's GP prior}
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-single-expert-prior}
+\expertPrior &= \mathcal{N}\left( \mode{f}(\allInput) \mid \expertMeanFunc(\allInput), \expertCovFunc(\allInput, \allInput) \right)
+\end{align}
+#+END_EXPORT
+where $\expertMeanFunc(\cdot)$ and $\expertCovFunc(\cdot, \cdot)$ represent the mean and
+covariance functions associated with the $\modeInd^{\text{th}}$ expert respectively.
+This leads to each expert resembling a standard GP regression model with a Gaussian likelihood.
+For notational conciseness the dependence on the inputs $\allInput$ and hyperparameters $\expertParamsK$
+is dropped for each GP prior,
+i.e. $\expertPrior = p\left( \mode{f}(\allInput) \mid \allInput, \expertParamsK \right)$.
+\todo{add reference to section number}
+Importantly, this model retains the uncertainty in the assignment of observations to experts
+and will lead to each expert not overfitting to the observations assigned to it.
+This approach can be see as trading in the computational benefits of assigning observations to experts
+(Equation ref:eq-np-moe-marginal-likelihood-assign) in favour
+of directly capturing the correlations between all observations.
+
+*** Identifiable Mixtures of Gaussian Processes for Control
+# The gating network models how the dynamics switch between modes over the input space and is of particular importance
+# in this work.
+# The gating network is of particular importance in this work as it models how the dynamics switch
+# between modes over the input space.
+The gating network models how the dynamics switch between modes over the input space.
+It can be seen as a handle for encoding prior knowledge that can be used to constrain the set of admissible functions.
+It is of particular interest in this work as it
+can improve identifiability and lead to learned representations that better reflect
+our understanding of the system. The simplest case being reordering the experts.
+
+As highlighted previously, the gating network can be formulated to hard assign observations to experts with the
+goal of improving the computational problems associated with inference and prediction in MoGPE models.
+This work chooses to sacrifice these computational benefits in favour of constructing a gating network that can,
+1) Improve *identifiability* in MoGPE models,
+   - Selecting informative mean and covariance functions for each gating function GP prior can ensure that each expert corresponds to the underlying dynamics mode that it was intended to model. For example, if the dynamics oscillate between modes over the input space then a periodic kernel could be selected. Learning representations that are more true to the underlying system will also enhance the models ability to extrapolate from training observations.
+2) Infer *informative geometric structure* that can be exploited for *control*,
+   - The goal of Chapter ref:chap-traj-opt is to construct a control technique that attempts to find trajectories that remain in a single dynamics mode and avoid regions of the dynamics that have not been observed so cannot be predicted confidently. The GP-based gating network infers informative geometric structure regarding how the dynamics switch between modes over the input space whilst providing a principled approach to modelling the epistemic uncertainty associated with the gating functions. This makes the gating network a convenient latent space to project the control problem onto.
+     \todo{Add more - why does this need to be GP and not just GMM??}
+
+With these motivations, this work adopts a GP-based gating network, as seen in the original
+MoGPE model cite:trespMixtures2000a.
+Our marginal likelihood is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-marginal-likelihood}
+\evidence &=
+\prod_{\numData=1}^\NumData \sum_{\modeInd=1}^\ModeInd
+\underbrace{\E_{\gatingPrior} \left[ \singleGatingLikelihood \right]}_{\text{gating network}}
+\underbrace{\E_{\expertPrior} \left[ \singleExpertLikelihood \right]}_{\text{expert } k}.
+\end{align}
+#+END_EXPORT
+where the gating network resembles a Gaussian process
+classification model, with a factorised classification likelihood $\singleGatingLikelihood$ dependent on
+input dependent functions
+$\GatingFunc = \{\mode{\gatingFunc} : \R^{\StateDim \times \ControlDim} \rightarrow \R \}_{\modeInd=1}^\ModeInd$,
+known as gating functions.
+
+The probability mass function over the expert indicator variable is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-prob-mass}
+\gatingLikelihood = \prod_{\modeInd=1}^\ModeInd \left(\singleGatingLikelihood\right)^{[\singleModeVarK]}
+\end{align}
+#+END_EXPORT
+where $[\singleModeVarK]$ denotes the Iverson bracket.
+The probabilities of this Categorical distribution $\singleGatingLikelihood$
+are governed by a classification likelihood (e.g. Bernoulli, Softmax).
+
+*Softmax ($\ModeInd>2$)* In the general case, that is, when there are more than two experts,
+$\ModeInd > 2$, the gating network's likelihood is defined as the Softmax function,
+\marginpar{softmax}
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-softmax}
+\singleGatingLikelihood = \text{softmax}_{\modeInd}\left(\GatingFunc(\singleInput)\right) = \frac{\text{exp}\left(\mode{\gatingFunc}(\singleInput)\right)}{\sum_{j=1}^{\ModeInd} \text{exp}\left(\gatingFunc_j(\singleInput) \right)}.
+\end{align}
+#+END_EXPORT
+Each gating function $\mode{\gatingFunc}(\cdot)$ describes how its corresponding mode's mixing
+probability varies over the input space.
+Modelling the gating network with input-dependent functions enables
+informative prior knowledge to be encoded through the placement of GP priors on each gating function.
+For example, if modelling a dynamical system with oscillatory behaviour (e.g. an engine)
+a periodic kernel could be adopted.
+Independent GP priors are placed on each gating function, giving the gating network prior,
+\marginpar{GP priors}
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gating-prior}
+\gatingPrior = \prod_{\modeInd=1}^\ModeInd \mathcal{N}\left( \mode{\gatingFunc}(\allInput) \mid \gatingMeanFunc(\allInput), \gatingCovFunc(\allInput, \allInput) \right)
+\end{align}
+#+END_EXPORT
+where $\gatingMeanFunc(\cdot)$ and $\gatingCovFunc(\cdot,\cdot)$ are the mean and covariance functions
+associated with the $\modeInd^\text{th}$ gating function.
+Each mode's mixing probability $\singleGatingPosterior$ is then obtained by marginalising
+*all* of the gating functions,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gating-posterior}
+\singleGatingPosterior
+&= \E_{\gatingPrior}\left[ \singleGatingLikelihood \right].
+\end{align}
+#+END_EXPORT
+In the general case where $\singleGatingLikelihood$ uses the softmax function
+(Eq. ref:eq-softmax) this integral is intractable, so we approximate it using Monte carlo quadrature.
+
+*Bernoulli ($\ModeInd=2$)* Instantiating the model with two experts, $\singleModeVar \in \{1, 2\}$, is a special case
+where only a single gating function is needed.
+\marginpar{two experts}
+This is because the output of a function $\gatingFunc(\singleInput)$ can be mapped through a sigmoid
+function $\text{sig} : \R \rightarrow [0, 1]$ and interpreted as a probability,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sigmoid}
+\Pr(\singleModeVar=1 \mid \modei{\gatingFunc}{1}(\singleInput)) = \text{sig}(\modei{\gatingFunc}{1}(\singleInput)).
+\end{align}
+#+END_EXPORT
+If this sigmoid function satisfies the point symmetry condition then
+we know that
+$\Pr(\singleModeVar=2 \mid \modei{\gatingFunc}{1}(\singleInput)) = 1 - \Pr(\singleModeVar=1 \mid \modei{\gatingFunc}{1}(\singleInput))$.
+This is neat because it only requires a single gating function and no normalisation term needs to be calculated.
+
+In the two expert case where $\singleGatingLikelihood$ uses a sigmoid function (Eq. ref:eq-sigmoid),
+the integral in Eq. ref:eq-gating-posterior becomes analytic if the sigmoid function is selected
+to be the Gaussian cumulative distribution function
+$\Phi(\gatingFunc(\cdot)) = \int^{\gatingFunc(\cdot)}_{-\infty} \mathcal{N}(\tau | 0, 1) \text{d} \tau$.
+The integral is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mixing-probabilities-analytic}
+\Pr(\modeVarn=1 \mid \singleInput, \gatingParams) &=
+ \int \Phi\left(\gatingFunc(\singleInput)\right) \mathcal{N}\left(\gatingFunc(\singleInput) \mid \mu_h, \sigma^2_h \right) \text{d} \gatingFunc(\singleInput) \\
+&= \Phi \left(\frac{\mu_{h}}{\sqrt{1 + \sigma^2_{h} }}\right).
+\end{align}
+#+END_EXPORT
+*** graphical model :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[const] (x) {$\singleInput$};
+      \node[latent, left=of x, yshift=-1.4cm] (f) {$\mode{\latentFunc}(\allInput)$};
+     % \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {$\hk$};
+
+
+      \node[const, left=of f, xshift=0.4cm] (thetak) {$\expertParamsK$};
+
+      \node[const, below=of f] (sigmak) {$\noiseVarK$};
+
+      \node[obs, right=of sigmak, yshift=0.cm] (y) {$\singleOutput$};
+      %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
+      \node[latent, right=of y, xshift=-0.4cm] (a) {$\modeVarn$};
+
+      \node[latent, right=of a, yshift=1.4cm, xshift=-0.4cm] (h) {$\mode{\gatingFunc}(\allInput)$};
+      \node[const, right=of h, xshift=-0.4cm] (phik) {$\gatingParamsK$};
+
+      %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
+
+      \factor[above=of a] {h-a} {left:Cat} {h} {a};
+
+      \draw[post] (a)--(y);
+      \draw[post] (x)-|(f);
+      %\draw[post] (f)--(yk);
+      \draw[post] (f)--(y);
+      %\draw[post] (yk)--(y);
+      %\draw[post] (h)--(a);
+      \draw[post] (x)-|(h);
+      \draw[post] (thetak)--(f);
+      \draw[post] (phik)--(h);
+      \draw[post] (sigmak)|-(y);
+
+      \plate {} {(x) (y) (a)} {$\NumData$};
+      %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
+      \plate {} {(f) (sigmak) (thetak)} {$\ModeInd$};
+      \plate {} {(h) (phik)} {$\ModeInd$};
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model of the transition dynamics where the state difference $\singleOutput$
+is generated by pushing the state and control $\singleInput$ through the latent process.}
+\label{fig-graphical-model}
+\end{figure}
+#+END_EXPORT
+
+
+# #+BEGIN_EXPORT latex
+# \begin{figure}[t]
+#   \centering
+#   \resizebox{0.8\columnwidth}{!}{
+#     \begin{tikzpicture}[
+#       pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+#       post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+#       ]
+#       \node[const] (x) {$\hat{\mathbf{x}}_{t-1}$};
+#       \node[latent, left=of x, yshift=-1.4cm] (f) {$\mathbf{f}^{(k)}_t$};
+#       %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
+#       \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {${h}^{(k)}_t$};
+
+#       \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\hat{\mathbf{f}}^{(k)}$};
+#       \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\hat{\mathbf{h}}^{(k)}$};
+#       \node[const, left=of uk, xshift=0.4cm] (zk) {$\bm\xi^{(k)}_f$};
+#       \node[const, right=of uh, xshift=-0.4cm] (zh) {$\bm\xi^{(k)}_h$};
+
+#       \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\bm\theta^{(k)}$};
+#       \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\bm\phi^{(k)}$};
+
+#       \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\sigma^{(k)}$};
+
+#       \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\Delta\mathbf{x}_t$};
+#       %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
+#       \node[latent, right=of y, xshift=-0.4cm] (a) {${\alpha}_t$};
+
+#       %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
+
+#       \factor[above=of a] {h-a} {left:Cat} {h} {a};
+
+#       \draw[post] (a)--(y);
+#       \draw[post] (x)-|(f);
+#       %\draw[post] (f)--(yk);
+#       \draw[post] (f)--(y);
+#       %\draw[post] (yk)--(y);
+#       %\draw[post] (h)--(a);
+#       \draw[post] (x)-|(h);
+#       \draw[post] (uk)--(f);
+#       \draw[post] (uh)--(h);
+#       \draw[post] (zk)--(uk);
+#       \draw[post] (zh)--(uh);
+#       \draw[post] (thetak)--(f);
+#       \draw[post] (phik)--(h);
+#       \draw[post] (sigmak)|-(y);
+
+#       \plate {} {(x) (y) (a) (f) (h)} {$T$};
+#       %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
+#       \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$K$};
+#       \plate {} {(zh) (uh) (h) (phik)} {$K$};
+#     \end{tikzpicture}
+#     }
+#   \caption{Graphical model of the transition dynamics
+# where the state difference $\Delta\mathbf{x}_{t}$
+# is generated by pushing the state and control $\hat{\mathbf{x}}_{t-1}$
+# through the latent process.}
+# %\label{fig:graphical_model}
+# \end{figure}
+# #+END_EXPORT
+
+*** Generative Model
+The marginal likelihood can be written to clearly show the factorised likelihood (mixture of Gaussians)
+and the expectation over the latent variables,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-marginal-likelihood}
+\evidence &=
+\E_{\gatingPrior \expertsPrior} \left[
+\prod_{\numData=1}^\NumData \sum_{\modeInd=1}^\ModeInd
+\singleGatingLikelihood \singleExpertLikelihood \right],
+\end{align*}
+#+END_EXPORT
+where $\expertsPrior = \prod_{\modeInd=1}^\ModeInd \expertPrior$ is the experts prior and
+$\gatingPrior$ is the gating network prior.
+Fig. [[ref:fig-graphical-model]]
+shows the graphical model where the $\ModeInd$ latent gating functions $\GatingFunc$
+are evaluated and normalised to obtain the mixing probabilities
+$\singleGatingLikelihood$.
+The mode indicator variable $\singleModeVar$ is then sampled from the Categorical distribution
+governed by these probabilities.
+The indicated mode's latent function $\mode{f}$ and process noise $\noiseVarK$ are
+then evaluated to generate the state difference $\singleOutput$.
+
+This model makes single-step probabilistic predictions,
+where the predictive distribution over the state difference $\Delta \mathbf{x}_{t}$ is
+given by a mixture of Gaussians.
+This provides the model flexibility to model multimodal transition dynamics $f$ as mixtures of $K$ experts.
+In the two expert case the marginal likelihood is given as an analytic mixture of two Gaussians
+and has complexity $\mathcal{O}(\ModeInd\NumData^4)$ to evaluate.
+The general case with more than two experts has complexity $\mathcal{O}(\ModeInd^2\NumData^4)$.
+
+For ease of notation and understanding only a single output dimension has been considred,
+although in most scenarios the state dimension will be greater than $1$.
+The extension to multiple output dimensions is fairly straight forward.
+\todo{Can I just say it's left out because trivial?}
+*** Gating Network :noexport:
+The gating network governs how the dynamics switch between modes.
+This work is interested in spatially varying modes so
+formulates an input dependent Categorical distribution over $\alpha_t$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-prob-mass}
+P\left(\alpha_t \mid \mathbf{h}_t\right) = \prod_{k=1}^K \left(\Pr(\alpha_t=k \mid \mathbf{h}_t)\right)^{[\alpha_t = k]},
+\end{align}
+#+END_EXPORT
+where $[\alpha_t=k]$ denotes the Iverson bracket.
+It should be noted that other gating networks have been proposed that provide computational benefits
+for inference. However, these gating networks often lack a handle for encoding domain knowledge
+that can be used to restrict the set of possible
+
+\todo[inline]{insert gating network references}
+The probabilities of this Categorical distribution $\Pr(\alpha_t=k \mid \mathbf{h}_t)$
+are obtained by evaluating $K$ latent
+gating functions $\{h^{(k)}\}_{k=1}^K$ and normalising their output.
+Each gating function evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
+as $h^{(k)}_t = h^{(k)}(\hat{\mathbf{x}}_{t-1})$
+and at all observations ${h}^{(k)}_{1:T}$.
+The set of all gating functions evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
+as $\mathbf{h}_t$ and at all observations as $\mathbf{h}_{1:T}$.
+Each gating function $h^{(k)}$ describes how its corresponding mode's mixing
+probability varies over the input space.
+
+
+This work is interested in finding trajectories that can avoid areas of the transition dynamics model
+that cannot be predicted confidently.
+Placing independent sparse GP priors on each gating function
+provides a principled approach to
+modelling the epistemic uncertainty associated with each gating function.
+The gating function's posterior covariance is a quantitative value that can be exploited by the
+trajectory optimisation.
+# GPs also provide data-efficient and interpretable learning through the selection of informative mean
+# and covariance functions.
+# For example, if the transition dynamics modes are subject to oscillatory mixing then a periodic
+# covariance function could be selected.
+
+Each gating function's inducing inputs are denoted
+$\bm\xi_h^{(k)}$ and outputs as $\hat{\mathbf{h}}^{(k)}$.
+For all gating functions, they are collected as $\bm\xi_h$ and $\hat{\mathbf{h}}$ respectively.
+The probability that the $t^{\text{th}}$ observation is generated by mode $k$
+given the inducing inputs is obtained by marginalising $\mathbf{h}_t$,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-indicator-mult}
+\Pr(\alpha=\modeInd \mid \mathbf{h}(\cdot) )
+&= \E_{p(\mathbf{h}(\cdot))} \left[ \Pr(\alpha_t=k \mid \mathbf{h}(\cdot)) \right],
+\end{align*}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-indicator-mult}
+\Pr(\alpha=\modeInd \mid \mathbf{h}(\cdot) )
+&= \E_{p(\mathbf{h}(\cdot))} \left[ \text{softmax}_k(\mathbf{h}(\cdot)) \right],
+\end{align*}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+% \small
+\begin{align*} \label{eq-indicator-mult}
+\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}} )
+&= \int \text{softmax}_k(\mathbf{h}_t) p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) \text{d} \mathbf{h}_t,
+\end{align*}
+#+END_EXPORT
+where $p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) = \prod_{k=1}^K p\left({h}^{(k)}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}^{(k)}\right)$
+is the $K$ independent sparse GP priors on the gating functions.
+
+**** Two Experts
+Instantiating the model with two experts is a special case where only a single gating function is needed.
+The output of a function can be mapped through a sigmoid
+function $\text{sig} : \R \rightarrow [0, 1]$ and interpreted as
+a probability $\Pr(\alpha=1 \mid \gatingFunc(\cdot))$.
+If this sigmoid function satisfies the point symmetry condition then
+we know that $\Pr(\alpha=2 \mid \gatingFunc(\cdot)) = 1 - \Pr(\alpha =1 \mid \gatingFunc(\cdot))$.
+
+The distribution over $\gatingFunc(\cdot)$
+
+We note that $p({h}_n^{(k)} \mid \mathbf{h}_{\neg n}, \mathbf{X})$
+is a GP conditional and denote its mean $\mu_h$ and variance $\sigma^2_h$.
+Choosing the sigmoid as the Gaussian cdf
+$\Phi(h_n) = \int^{h_n}_{-\infty} \mathcal{N}(\tau | 0, 1) \text{d} \tau$
+leads to,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mixing-probabilities-analytic}
+\Pr(\alpha_n=1 | \mathbf{X}) &=
+ \int \Phi({h}_n) \mathcal{N}(h_n \mid \mu_h, \sigma^2_h) \text{d} {h}_n
+= \Phi \left(\frac{\mu_{h}}{\sqrt{1 + \sigma^2_{h} }}\right).
+\end{align}
+#+END_EXPORT
+Given this gating network our marginal likelihood is now an analytic mixture of two Gaussians.
+
+can analytically marginalise.
+
+** Bayesian Model Old 2 :noexport:
+*** Intro :ignore:
 The model is built upon GP priors on each of the transition dynamics functions $\fk$
 with independent GPs placed on each output (state) dimension $d$,
 #+BEGIN_EXPORT latex
@@ -1548,14 +2550,14 @@ p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDimMode
 #+END_EXPORT
 where $\singleDimMode{\mu}(\cdot)$ and $\singleDimMode{k}(\cdot, \cdot)$ represent the mean and
 covariance functions associated with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ dynamics mode respectively.
-Each mode's output dimensions are assumed independent,
+Each mode's output dimensions are assumed independent and are given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-prior}
 \pFk &= \prod_{\stateDim=1}^{\StateDim} \pFkd.
 \end{align}
 #+END_EXPORT
 The process noise in each mode is assumed to be factorised across both observations and output (state) dimensions.
-It is modelled as,
+For each mode it is modelled as,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-likelihood}
 \pYkGivenFk
@@ -1564,31 +2566,373 @@ It is modelled as,
 \end{align}
 #+END_EXPORT
 where $\noiseVardK$ represents the noise variance associated with the $d$^{\text{th}} dimension of the $k$^{\text{th}} mode.
-
-Each expert is then given by marginalising its associated latent function values,
+Each mode is then obtained by marginalising its associated latent function values,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert}
-\pYkGivenX = \int  \pYkGivenFk \pFk \text{d} \Fk
+\pYkGivenX = \int  \pYkGivenFk \pFk \text{d} \Fk,
 \end{align}
 #+END_EXPORT
-
-
-Assume each dynamics mode $k$ is independent,
+akin to GP regression.
+Each dynamics mode $k$ is assumed to be independent,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-experts-prior}
-\pF &= \prod_{k=1}^{K} \pFk
+\pF &= \prod_{k=1}^{K} \pFk.
 \end{align}
 #+END_EXPORT
-
-The dynamics modes are combined via a distribution over the discrete mode indicator variable $\modeVar$.
-The resulting marginal likelihood is given by,
+At a given input location the mode governing the dynamics is indicated by the discrete mode indicator
+variable $\modeVar$.
+Following a mixture model formulation, we construct a discrete probability distribution over the mode
+indicator variable $\PrA$.
+The resulting marginal likelihood is then given by marginalising the mode indicator variable,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mixture-marginal-likelihood}
 \pYGivenX = \sum_{\modeInd=1}^{\ModeInd} \PrA \pYkGivenX.
 \end{align}
 #+END_EXPORT
-The distribution over the discrete mode indicator variable $\PrA$ is referred to as the gating network
-which will now be detailed.
+The distribution over the discrete mode indicator variable $\PrA$ is referred to as the gating network.
+It governs how the dynamics switch between modes.
+# This work is interested in spatially varying modes and formulates a
+# which will now be detailed.
+# formulates an input dependent Categorical distribution over $\alpha_t$,
+
+*** Gating Network
+Mixture models are inherently unidentifiable as different combinations of mixture components
+and mixing coefficients can generate the same predictive distributions.
+The gating network can be seen as a handle for encoding prior knowledge that can be used to constrain
+\marginpar{identifiability}
+the set of admissible functions.
+This can improve identifiability and lead to learned representations that better reflect
+our understanding of the system. The simplest case being reordering the experts.
+This motivates Mixtures of Experts models citep:jacobsAdaptive1991, where the distribution over the mode
+indicator variable is formulated to be input-dependent. It's probability mass function is then given by,
+#+BEGIN_EXPORT latex
+%\begin{align} \label{eq-prob-mass}
+%P\left(\modeVar \mid \x \right) = \prod_{k=1}^K \left(\Pr(\modeVar= \modeInd \mid \x) \right)^{[\modeVar=\modeInd]}
+%\end{align}
+\begin{align} \label{eq-prob-mass}
+P\left(\alpha \mid \mathbf{h}(\cdot) \right) = \prod_{k=1}^K \left(\Pr(\alpha=k \mid \mathbf{h}(\cdot))\right)^{[\alpha = \modeInd]}
+\end{align}
+#+END_EXPORT
+where $[\modeVar=\modeInd]$ denotes the Iverson bracket.
+The probabilities of this Categorical distribution $\Pr(\modeVar=\modeInd \mid \GatingFunc(\cdot))$
+are obtained by evaluating $K$ latent
+gating functions $\GatingFunc(\cdot)=\{\mode{\gatingFunc}(\cdot)\}_{\modeInd=1}^\ModeInd$ and normalising their output.
+Each gating function $\mode{\gatingFunc}(\cdot)$ describes how its corresponding mode's mixing
+probability varies over the input space.
+\marginpar{softmax}
+In the general case, the gating network is defined by the softmax function,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-softmax}
+\Pr\left(\modeVar=\modeInd \mid \GatingFunc(\cdot)\right) = \text{softmax}_{\modeInd}\left(\GatingFunc(\cdot)\right) = \frac{\text{exp}\left(\hk(\cdot)\right)}{\sum_{\modeInd=1}^{\ModeInd} \hk(\cdot)}.
+\end{align}
+#+END_EXPORT
+However, instantiating the model with two experts is a special case where only a single gating function is needed.
+\marginpar{two experts}
+The output of a function $\gatingFunc(\cdot)$ can be mapped through a sigmoid
+function $\text{sig} : \R \rightarrow [0, 1]$ and interpreted as
+a probability,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sigmoid}
+\Pr(\alpha=1 \mid \gatingFunc(\cdot)) = \text{sig}(\gatingFunc(\cdot)).
+\end{align}
+#+END_EXPORT
+If this sigmoid function satisfies the point symmetry condition then
+we know that $\Pr(\alpha=2 \mid \gatingFunc(\cdot)) = 1 - \Pr(\alpha =1 \mid \gatingFunc(\cdot))$.
+This is neat because it only requires a single gating function and no normalisation term needs to be calculated.
+
+Modelling the gating network with input-dependent functions enables
+informative prior knowledge to be encoded through the placement of GP priors.
+\marginpar{GP priors}
+For example, if modelling a dynamical system with oscillatory behaviour (e.g. an engine)
+a periodic kernel could be adopted.
+GPs also lend themselves to data-efficient learning whilst providing a principled
+approach to modelling the epistemic uncertainty associated with the gating functions.
+Learning better representations improves the models
+ability to extrapolate as it will be more true to the underlying system.
+
+We place independent GP priors on each gating function,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gating-prior}
+\Hk \sim \mathcal{N}\left( \mu_{h,k}(\allInput), k_{h,k}(\allInput, \allInput) \right)
+\end{align}
+#+END_EXPORT
+We place independent GP priors on each gating function, giving the distribution over all gating functions as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gating-prior}
+p\left(\GatingFunc(\allInput)\right) &= \prod_{\modeInd=1}^{\ModeInd} \pHkGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \mu_{h,k}(\allInput), k_{h,k}(\allInput, \allInput) \right)
+\end{align}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gating-prior}
+\pHGivenX &= \prod_{\modeInd=1}^{\ModeInd} \pHkGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \mu_{h,k}(\allInput), k_{h,k}(\allInput, \allInput) \right)
+\end{align}
+#+END_EXPORT
+where $\mu_{h,k}(\cdot)$ and $k_{h,k}(\cdot,\cdot)$ are the mean and covariance functions
+associated with the $k^\text{th}$ gating function.
+
+Each mode's mixing probability $\Pr(\modeVarK \mid \singleInput)$ is then obtained by marginalising
+*all* of the gating functions,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-indicator-mult}
+\Pr(\modeVarK \mid \singleInput )
+&= \E_{p(\mathbf{h}(\singleInput))} \left[ \Pr(\modeVarK \mid \mathbf{h}(\singleInput)) \right].
+\end{align*}
+#+END_EXPORT
+In the general case where $\Pr(\modeVar=\modeInd \mid \mathbf{h}(\cdot))$ uses the softmax function
+(Eq. ref:eq-softmax) this integral is intractable, so we approximate it using monte carlo
+quadrature.
+However, in the two expert case (Eq. ref:eq-sigmoid), selecting the sigmoid function to be the Gaussian cumulative distribution
+function
+$\Phi(\gatingFunc(\cdot)) = \int^{\gatingFunc(\cdot)}_{-\infty} \mathcal{N}(\tau | 0, 1) \text{d} \tau$
+leads to analytic integration,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mixing-probabilities-analytic}
+\Pr(\modeVarn=1 \mid \singleInput) &=
+ \int \Phi\left(\gatingFunc(\singleInput)\right) \mathcal{N}\left(\gatingFunc(\singleInput) \mid \mu_h, \sigma^2_h \right) \text{d} \gatingFunc(\singleInput) \\
+&= \Phi \left(\frac{\mu_{h}}{\sqrt{1 + \sigma^2_{h} }}\right).
+\end{align}
+#+END_EXPORT
+In the two expert case the marginal likelihood is given as an analytic mixture of two Gaussians.
+\marginpar{marginal likelihood}
+
+*** Generative Model
+This model makes single-step probabilistic predictions,
+where the predictive distribution over the state difference $\Delta \mathbf{x}_{t}$ is
+given by a mixture of Gaussians.
+This provides the model flexibility to model multimodal transition dynamics $f$ as mixtures of $K$ modes.
+With this formulation, the marginal likelihood can be rewritten as,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-marginal-likelihood}
+\pYGivenX &= \sum_{\modeInd=1}^\ModeInd \PrAGivenX \pYkGivenX \\
+&= \sum_{\modeInd=1}^\ModeInd \PraGivenx \pykGivenx \\
+\end{align*}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\small
+\begin{align*} \label{eq-marginal-likelihood}
+p(\Delta\mathbf{x}_{1:T} | \hat{\mathbf{x}}_{1:T}) =
+&\prod_{t=1}^T  \sum_{k=1}^K \Bigg(
+\underbrace{\left\langle \Pr\left(\alpha_t = k | \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}\right) \right\rangle_{p\left(\hat{\mathbf{h}} \mid \bm\xi_h\right)}}_{\text{Mixing Probability}}  \\
+&\underbrace{\left\langle p\left(\Delta\mathbf{x}_t | \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}\right) \right\rangle_{p\left(\hat{\mathbf{f}}^{(k)} \mid \bm\xi^{(k)}_f\right)}}_{\text{Dynamics mode } k} \Bigg), \numberthis
+\end{align*}
+\normalsize
+#+END_EXPORT
+where $\left\langle \cdot \right\rangle_{p(x)}$ denotes an expectation under $p(x)$.
+Fig. [[ref:fig-graphical-model]]
+shows the graphical model where the $K$ latent gating functions $h^{(k)}$
+are evaluated and normalised to obtain the mixing probabilities
+$\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1})$.
+The mode indicator variable $\alpha_t$ is then sampled from a Categorical distribution
+governed by these probabilities.
+The indicated mode's latent function $f^{(k)}$ and process noise $\sigma^{(k)}$ are
+then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
+
+*** graphical model :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[const] (x) {$\singleInput$};
+      \node[latent, left=of x, yshift=-1.4cm] (f) {$\Fk$};
+     % \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {$\hk$};
+
+
+      \node[const, left=of f, xshift=0.4cm] (thetak) {$\expertParamsK$};
+
+      \node[const, below=of f] (sigmak) {$\noiseVarK$};
+
+      \node[obs, right=of sigmak, yshift=0.cm] (y) {$\singleOutput$};
+      %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
+      \node[latent, right=of y, xshift=-0.4cm] (a) {$\modeVarn$};
+
+      \node[latent, right=of a, yshift=1.4cm, xshift=-0.4cm] (h) {$\Hk$};
+      \node[const, right=of h, xshift=-0.4cm] (phik) {$\gatingParamsK$};
+
+      %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
+
+      \factor[above=of a] {h-a} {left:Cat} {h} {a};
+
+      \draw[post] (a)--(y);
+      \draw[post] (x)-|(f);
+      %\draw[post] (f)--(yk);
+      \draw[post] (f)--(y);
+      %\draw[post] (yk)--(y);
+      %\draw[post] (h)--(a);
+      \draw[post] (x)-|(h);
+      \draw[post] (thetak)--(f);
+      \draw[post] (phik)--(h);
+      \draw[post] (sigmak)|-(y);
+
+      \plate {} {(x) (y) (a)} {$\NumData$};
+      %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
+      \plate {} {(f) (sigmak) (thetak)} {$\ModeInd$};
+      \plate {} {(h) (phik)} {$\ModeInd$};
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model of the transition dynamics where the state difference $\singleOutput$
+is generated by pushing the state and control $\singleInput$ through the latent process.}
+\label{fig-graphical-model}
+\end{figure}
+#+END_EXPORT
+
+
+# #+BEGIN_EXPORT latex
+# \begin{figure}[t]
+#   \centering
+#   \resizebox{0.8\columnwidth}{!}{
+#     \begin{tikzpicture}[
+#       pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+#       post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+#       ]
+#       \node[const] (x) {$\hat{\mathbf{x}}_{t-1}$};
+#       \node[latent, left=of x, yshift=-1.4cm] (f) {$\mathbf{f}^{(k)}_t$};
+#       %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
+#       \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {${h}^{(k)}_t$};
+
+#       \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\hat{\mathbf{f}}^{(k)}$};
+#       \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\hat{\mathbf{h}}^{(k)}$};
+#       \node[const, left=of uk, xshift=0.4cm] (zk) {$\bm\xi^{(k)}_f$};
+#       \node[const, right=of uh, xshift=-0.4cm] (zh) {$\bm\xi^{(k)}_h$};
+
+#       \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\bm\theta^{(k)}$};
+#       \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\bm\phi^{(k)}$};
+
+#       \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\sigma^{(k)}$};
+
+#       \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\Delta\mathbf{x}_t$};
+#       %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
+#       \node[latent, right=of y, xshift=-0.4cm] (a) {${\alpha}_t$};
+
+#       %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
+
+#       \factor[above=of a] {h-a} {left:Cat} {h} {a};
+
+#       \draw[post] (a)--(y);
+#       \draw[post] (x)-|(f);
+#       %\draw[post] (f)--(yk);
+#       \draw[post] (f)--(y);
+#       %\draw[post] (yk)--(y);
+#       %\draw[post] (h)--(a);
+#       \draw[post] (x)-|(h);
+#       \draw[post] (uk)--(f);
+#       \draw[post] (uh)--(h);
+#       \draw[post] (zk)--(uk);
+#       \draw[post] (zh)--(uh);
+#       \draw[post] (thetak)--(f);
+#       \draw[post] (phik)--(h);
+#       \draw[post] (sigmak)|-(y);
+
+#       \plate {} {(x) (y) (a) (f) (h)} {$T$};
+#       %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
+#       \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$K$};
+#       \plate {} {(zh) (uh) (h) (phik)} {$K$};
+#     \end{tikzpicture}
+#     }
+#   \caption{Graphical model of the transition dynamics
+# where the state difference $\Delta\mathbf{x}_{t}$
+# is generated by pushing the state and control $\hat{\mathbf{x}}_{t-1}$
+# through the latent process.}
+# %\label{fig:graphical_model}
+# \end{figure}
+# #+END_EXPORT
+
+
+
+*** Gating Network :noexport:
+The gating network governs how the dynamics switch between modes.
+This work is interested in spatially varying modes so
+formulates an input dependent Categorical distribution over $\alpha_t$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-prob-mass}
+P\left(\alpha_t \mid \mathbf{h}_t\right) = \prod_{k=1}^K \left(\Pr(\alpha_t=k \mid \mathbf{h}_t)\right)^{[\alpha_t = k]},
+\end{align}
+#+END_EXPORT
+where $[\alpha_t=k]$ denotes the Iverson bracket.
+It should be noted that other gating networks have been proposed that provide computational benefits
+for inference. However, these gating networks often lack a handle for encoding domain knowledge
+that can be used to restrict the set of possible
+
+\todo[inline]{insert gating network references}
+The probabilities of this Categorical distribution $\Pr(\alpha_t=k \mid \mathbf{h}_t)$
+are obtained by evaluating $K$ latent
+gating functions $\{h^{(k)}\}_{k=1}^K$ and normalising their output.
+Each gating function evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
+as $h^{(k)}_t = h^{(k)}(\hat{\mathbf{x}}_{t-1})$
+and at all observations ${h}^{(k)}_{1:T}$.
+The set of all gating functions evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
+as $\mathbf{h}_t$ and at all observations as $\mathbf{h}_{1:T}$.
+Each gating function $h^{(k)}$ describes how its corresponding mode's mixing
+probability varies over the input space.
+
+
+This work is interested in finding trajectories that can avoid areas of the transition dynamics model
+that cannot be predicted confidently.
+Placing independent sparse GP priors on each gating function
+provides a principled approach to
+modelling the epistemic uncertainty associated with each gating function.
+The gating function's posterior covariance is a quantitative value that can be exploited by the
+trajectory optimisation.
+# GPs also provide data-efficient and interpretable learning through the selection of informative mean
+# and covariance functions.
+# For example, if the transition dynamics modes are subject to oscillatory mixing then a periodic
+# covariance function could be selected.
+
+Each gating function's inducing inputs are denoted
+$\bm\xi_h^{(k)}$ and outputs as $\hat{\mathbf{h}}^{(k)}$.
+For all gating functions, they are collected as $\bm\xi_h$ and $\hat{\mathbf{h}}$ respectively.
+The probability that the $t^{\text{th}}$ observation is generated by mode $k$
+given the inducing inputs is obtained by marginalising $\mathbf{h}_t$,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-indicator-mult}
+\Pr(\alpha=\modeInd \mid \mathbf{h}(\cdot) )
+&= \E_{p(\mathbf{h}(\cdot))} \left[ \Pr(\alpha_t=k \mid \mathbf{h}(\cdot)) \right],
+\end{align*}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-indicator-mult}
+\Pr(\alpha=\modeInd \mid \mathbf{h}(\cdot) )
+&= \E_{p(\mathbf{h}(\cdot))} \left[ \text{softmax}_k(\mathbf{h}(\cdot)) \right],
+\end{align*}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+% \small
+\begin{align*} \label{eq-indicator-mult}
+\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}} )
+&= \int \text{softmax}_k(\mathbf{h}_t) p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) \text{d} \mathbf{h}_t,
+\end{align*}
+#+END_EXPORT
+where $p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) = \prod_{k=1}^K p\left({h}^{(k)}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}^{(k)}\right)$
+is the $K$ independent sparse GP priors on the gating functions.
+
+**** Two Experts
+Instantiating the model with two experts is a special case where only a single gating function is needed.
+The output of a function can be mapped through a sigmoid
+function $\text{sig} : \R \rightarrow [0, 1]$ and interpreted as
+a probability $\Pr(\alpha=1 \mid \gatingFunc(\cdot))$.
+If this sigmoid function satisfies the point symmetry condition then
+we know that $\Pr(\alpha=2 \mid \gatingFunc(\cdot)) = 1 - \Pr(\alpha =1 \mid \gatingFunc(\cdot))$.
+
+The distribution over $\gatingFunc(\cdot)$
+
+We note that $p({h}_n^{(k)} \mid \mathbf{h}_{\neg n}, \mathbf{X})$
+is a GP conditional and denote its mean $\mu_h$ and variance $\sigma^2_h$.
+Choosing the sigmoid as the Gaussian cdf
+$\Phi(h_n) = \int^{h_n}_{-\infty} \mathcal{N}(\tau | 0, 1) \text{d} \tau$
+leads to,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mixing-probabilities-analytic}
+\Pr(\alpha_n=1 | \mathbf{X}) &=
+ \int \Phi({h}_n) \mathcal{N}(h_n \mid \mu_h, \sigma^2_h) \text{d} {h}_n
+= \Phi \left(\frac{\mu_{h}}{\sqrt{1 + \sigma^2_{h} }}\right).
+\end{align}
+#+END_EXPORT
+Given this gating network our marginal likelihood is now an analytic mixture of two Gaussians.
+
+can analytically marginalise.
 
 ** Bayesian Model Old :noexport:
 The model is built upon sparse GP priors on each of the transition dynamics functions $f^{(k)}$
@@ -1667,83 +3011,157 @@ with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode.
 # \normalsize
 # #+END_EXPORT
 
-** Gating Network
-The gating network governs how the dynamics switch between modes.
-This work is interested in spatially varying modes so
-formulates an input dependent Categorical distribution over $\alpha_t$,
+** Inference [[label:sec-inference]]
+#+begin_export latex
+\epigraph{Nature laughs at the difficulties of integration.}{\textit{Pierre-Simon Laplace}}
+#+end_export
+The marginal likelihood in Eq. ref:eq-marginal-likelihood is extremely expensive to evaluate $\mathcal{O}(K^2N^{4})$
+\todo{add marginal likelihood's correct complexity}
+and is also intractable due to the marginalisation of $\mathbf{h}$ in the gating network
+(except for the two expert case).
+For these reasons this work derives a variational approximation based on inducing variables that provides scalability
+by utilising stochastic gradient-based optimisation.
+
+Following the approach by cite:titsiasVariational2009, the probability space is augmented
+with a set of $M$ inducing variables for each GP.
+However, instead of collapsing these inducing variables they are explicitly
+represented as variational distributions and used to lower bound citep:hensmanGaussian2013
+and then further bound citep:hensmanScalable2015 the marginal likelihood.
+
+
+
+Let us first consider lower bounding the MoGPE model for the general gating network case
+i.e. without specifying a particular gating network. The marginal likelihood of this model is given by,
 #+BEGIN_EXPORT latex
-\small
-\begin{align} \label{eq-prob-mass}
-P\left(\alpha_t \mid \mathbf{h}_t\right) = \prod_{k=1}^K \left(\Pr(\alpha_t=k \mid \mathbf{h}_t)\right)^{[\alpha_t = k]}
-= \text{softmax}(\mathbf{h}_t),
+\begin{align*} \label{eq-general-moe-marginal-likelihood}
+\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFk} \left[ \pYkGivenFk \right],
+\end{align*}
+#+END_EXPORT
+Following the approach by cite:titsiasVariational2009 and cite:hensmanGaussian2013, which is
+detailed in Section ref:sec-sparse-gps Eqs. ref:eq-titsias-bound - ref:eq-hensman-bound,
+the probability space is first augmented with a set of $M$ inducing variables from each GP prior,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-experts-inducing-dist}
+\pFuGivenX = \prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \uFk \mid \mode{\mu}(\zFk), \mode{k}(\zFk, \zFk) \right).
+\end{align*}
+#+END_EXPORT
+The augmented log marginal likelihood is then given by,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-general-moe-marginal-likelihood}
+\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX} \left[ \E_{\pFkGivenFku} \left[ \pYkGivenFk \right] \right] .
+%\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \prod_{\modeInd=1}^{\ModeInd} \pYkGivenFk \pFkGivenFku \pFkuGivenX.
+\end{align*}
+#+END_EXPORT
+For notational conciseness the dependency on the inputs has been dropped.
+Note that we have assumed each expert's inducing variables are independent and augmented each expert with
+the product over all experts inducing variables.
+This will enable us to move the expectation over the inducing variables outside the sum over the indicator variable.
+\todo[inline]{no need to say this...}
+
+We start by considering the augmented log marginal likelihood,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-marginal-likelihood}
+\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \pFku} \left[ \pYkGivenFku \right].
 \end{align}
-\normalsize
 #+END_EXPORT
-where $[\alpha_t=k]$ denotes the Iverson bracket.
-The probabilities of this Categorical distribution $\Pr(\alpha_t=k \mid \mathbf{h}_t)$
-are obtained by evaluating $K$ latent
-gating functions $\{h^{(k)}\}_{k=1}^K$ and normalising their output.
-Each gating function evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
-as $h^{(k)}_t = h^{(k)}(\hat{\mathbf{x}}_{t-1})$
-and at all observations ${h}^{(k)}_{1:T}$.
-The set of all gating functions evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
-as $\mathbf{h}_t$ and at all observations as $\mathbf{h}_{1:T}$.
-Each gating function $h^{(k)}$ describes how its corresponding mode's mixing
-probability varies over the input space.
-
-This work is interested in finding trajectories that can avoid areas of the transition dynamics model
-that cannot be predicted confidently.
-Placing independent sparse GP priors on each gating function
-provides a principled approach to
-modelling the epistemic uncertainty associated with each gating function.
-The gating function's posterior covariance is a quantitative value that can be exploited by the
-trajectory optimisation.
-# GPs also provide data-efficient and interpretable learning through the selection of informative mean
-# and covariance functions.
-# For example, if the transition dynamics modes are subject to oscillatory mixing then a periodic
-# covariance function could be selected.
-
-Each gating function's inducing inputs are denoted
-$\bm\xi_h^{(k)}$ and outputs as $\hat{\mathbf{h}}^{(k)}$.
-For all gating functions, they are collected as $\bm\xi_h$ and $\hat{\mathbf{h}}$ respectively.
-The probability that the $t^{\text{th}}$ observation is generated by mode $k$
-given the inducing inputs is obtained by marginalising $\mathbf{h}_t$,
+and moving the integrals over the inducing variables outside of the sum over the indicator variable,
 #+BEGIN_EXPORT latex
-% \small
-\begin{align*} \label{eq-indicator-mult}
-\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}} )
-&= \int \text{softmax}_k(\mathbf{h}_t) p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) \text{d} \mathbf{h}_t,
-\end{align*}
+\begin{align} \label{eq-expert-marginal-likelihood-fact}
+\text{log} \pYGivenX = \text{log} \E_{\prod_{\modeInd=1}^{\ModeInd} \pFku} \left[ \sum_{k=1}^{K} \PrA  \pYkGivenFku \right],
+\end{align}
+\todo{Don't think I need to mention Fubini-Tonelli theorem here}
 #+END_EXPORT
-where $p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) = \prod_{k=1}^K p\left({h}^{(k)}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}^{(k)}\right)$
-is the $K$ independent sparse GP priors on the gating functions.
-
-** Generative Model
-This model makes single-step probabilistic predictions,
-where the predictive distribution over the state difference $\Delta \mathbf{x}_{t}$ is
-given by a mixture of Gaussians.
-This provides the model flexibility to model multimodal transition dynamics $f$ as mixtures of $K$ modes.
-With this formulation, the marginal likelihood can be rewritten as,
+Instead of collapsing the inducing variables here citep:titsiasVariational2009
+they can be explicitly represented as variational distributions citep:hensmanGaussian2013,
 #+BEGIN_EXPORT latex
-\small
-\begin{align*} \label{eq-marginal-likelihood}
-p(\Delta\mathbf{x}_{1:T} | \hat{\mathbf{x}}_{1:T}) =
-&\prod_{t=1}^T  \sum_{k=1}^K \Bigg(
-\underbrace{\left\langle \Pr\left(\alpha_t = k | \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}\right) \right\rangle_{p\left(\hat{\mathbf{h}} \mid \bm\xi_h\right)}}_{\text{Mixing Probability}}  \\
-&\underbrace{\left\langle p\left(\Delta\mathbf{x}_t | \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}\right) \right\rangle_{p\left(\hat{\mathbf{f}}^{(k)} \mid \bm\xi^{(k)}_f\right)}}_{\text{Dynamics mode } k} \Bigg), \numberthis
-\end{align*}
-\normalsize
+\begin{align} \label{eq-var-experts-inducing-dist}
+\qFu = \prod_{k=1}^{K} \qFku = \prod_{k=1}^{K} \mathcal{N}\left(\uFk \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
+\end{align}
 #+END_EXPORT
-where $\left\langle \cdot \right\rangle_{p(x)}$ denotes an expectation under $p(x)$.
-Fig. [[ref:fig-graphical-model]]
-shows the graphical model where the $K$ latent gating functions $h^{(k)}$
-are evaluated and normalised to obtain the mixing probabilities
-$\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1})$.
-The mode indicator variable $\alpha_t$ is then sampled from a Categorical distribution
-governed by these probabilities.
-The indicated mode's latent function $f^{(k)}$ and process noise $\sigma^{(k)}$ are
-then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
+These variational distributions can then be used to obtain a lower
+bound on Eq. ref:eq-expert-marginal-likelihood-fact,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-2}
+\text{log} \pYGivenX
+\geq &\E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \PrA  \pYkGivenFku \right] \nonumber \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] := \mathcal{L}_{1}.
+\end{align}
+#+END_EXPORT
+This bound meets the necessary conditions to perform stochastic gradient methods on $\qFu$ as the first term
+can be written as a sum over input-output pairs,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-2-fact}
+\mathcal{L}_{1} =
+&\sum_{\numData=1}^{\NumData} \E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \Pra  \pykGivenFku \right] \nonumber \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right].
+\end{align}
+#+END_EXPORT
+However, the expectation over the inducing variables cannot be calculated in closed form and
+must be approximated. The joint distribution over the inducing variables for each GP $\qFku$ is $M$ dimensional and as
+a result the integral is $M$ dimensional.
+Following cite:hensmanScalable2015 this bound (Eq. ref:eq-expert-bound-2-fact) can be further bounded by
+moving the expectations over each expert's conditional of its latent function values given its inducing variables
+$\pFkGivenFku$
+outside the log, i.e. applying Jensen's inequality to the conditional probability $\pYkGivenFku$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-3}
+\mathcal{L}_{1}
+\geq &\E_{\prod_{k=1}^{K}\qFku} \left[ \E_{\pFkGivenFku} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] \right] \nonumber \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] := \mathcal{L}_{\text{experts}},
+\end{align}
+#+END_EXPORT
+Denoting the variational posterior
+$\qF := \prod_{k=1}^{K} \qFk = \prod_{k=1}^{K} \int \pFkGivenFku \qFku \text{d} \uFk$ enables us
+to rewrite Eq. ref:eq-expert-bound-3 as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-4}
+\mathcal{L}_{\text{experts}}
+&= \E_{\qF} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right]
+\end{align}
+#+END_EXPORT
+As each experts inducing variables distribution $\qFku$ is Gaussian the functional form of the variational posterior is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-var-dist}
+\qF = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \Fk \mid \mode{\mathbf{A}} \mode{\mathbf{m}}, \mode{\K}_{\numData \numData } + (\mode{\mathbf{S}} - \mode{\K}_{mm}) \left(\mode{\mathbf{A}}\right)^{T} \right),
+\end{align}
+#+END_EXPORT
+where $\mode{\mathbf{A}} = \mode{\K}_{\numData m}\left(\mode{\K}_{mm}\right)^{-1}$.
+The model's likelihood is a mixture of Gaussians and factorizes
+across data as $\prod_{\numData=1}^{\NumData} \Pra \pykGivenfk$. $\mathcal{L}_{\text{experts}}$ can thus be
+written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-experts-bound-4-fact}
+\mathcal{L}_{\text{experts}} =
+&\sum_{\numData=1}^{\NumData}\E_{\qfn} \left[ \text{log} \sum_{k=1}^{K} \Pra \pykGivenfk \right] \nonumber \\
+&- \sum_{\modeInd=1}^{\ModeInd} \text{KL}\left[\qFku \mid\mid \pFku\right].
+\end{align}
+#+END_EXPORT
+Importantly, the variational posterior $\qfn$ analytically marginalises each $\qFku$
+(with Gaussian convolutions) removing the undesirable approximate $M$ dimensional integrals from
+Eq. ref:eq-expert-bound-2-fact. The expectation in Eq. ref:eq-experts-bound-4-fact still requires approximation
+but now only requires one dimensional integrals of the log-likelihood to be approximated.
+We approximate the integrals with Gibbs sampling and
+in practice only use single samples because the added stochasticity helps the optimisation.
 
+The bound in Eq. ref:eq-experts-bound-4-fact meets the necessary conditions to perform stochastic
+gradient methods on $\qFu$ as the sum of $\NumData$ terms corresponds to input-output pairs.
+The inducing inputs $\{\Z\}_{\modeInd=1}^{\ModeInd}$, kernel hyperparameters and noise variances are treated as
+variational hyperparameters and are optimised using stochastic gradient descent alongside the variational
+parameters.
+Note that our augmented model captures the dependencies in the joint distribution of the data through the
+inducing variables, but as $M \ll \NumData$ these have a much lower computational burden.
+Given a batch of $\NumData_b$ observations this bound has complexity
+$\mathcal{O}\left( \NumData_{b} \ModeInd M^{3} \right)$ to evaluate.
+It is worth noting that in contrast to other MoGPE models, our model does not partition the data set,
+i.e. each of our expert depends on **all** of the training inputs.
+However, after augmenting each expert with inducing points,
+the augmented model has the flexibility to /partition/ our inducing points.
+As such, when selecting the number of inducing points $\NumInducing$ for each GP, one could partition $\NumData$
+and select the number of inducing points based off of the number of data points believed to be
+associated with each expert.
+\todo{citation for selecting number of inducing points}
+
+**** sparse graphical model :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}[t]
   \centering
@@ -1798,206 +3216,9 @@ then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
     }
   \caption{Graphical model of the transition dynamics where the state difference $\singleOutput$
 is generated by pushing the state and control $\singleInput$ through the latent process.}
-\label{fig-graphical-model}
+\label{fig-graphical-model-sparse}
 \end{figure}
 #+END_EXPORT
-
-# #+BEGIN_EXPORT latex
-# \begin{figure}[t]
-#   \centering
-#   \resizebox{0.8\columnwidth}{!}{
-#     \begin{tikzpicture}[
-#       pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-#       post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-#       ]
-#       \node[const] (x) {$\hat{\mathbf{x}}_{t-1}$};
-#       \node[latent, left=of x, yshift=-1.4cm] (f) {$\mathbf{f}^{(k)}_t$};
-#       %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
-#       \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {${h}^{(k)}_t$};
-
-#       \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\hat{\mathbf{f}}^{(k)}$};
-#       \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\hat{\mathbf{h}}^{(k)}$};
-#       \node[const, left=of uk, xshift=0.4cm] (zk) {$\bm\xi^{(k)}_f$};
-#       \node[const, right=of uh, xshift=-0.4cm] (zh) {$\bm\xi^{(k)}_h$};
-
-#       \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\bm\theta^{(k)}$};
-#       \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\bm\phi^{(k)}$};
-
-#       \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\sigma^{(k)}$};
-
-#       \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\Delta\mathbf{x}_t$};
-#       %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
-#       \node[latent, right=of y, xshift=-0.4cm] (a) {${\alpha}_t$};
-
-#       %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
-
-#       \factor[above=of a] {h-a} {left:Cat} {h} {a};
-
-#       \draw[post] (a)--(y);
-#       \draw[post] (x)-|(f);
-#       %\draw[post] (f)--(yk);
-#       \draw[post] (f)--(y);
-#       %\draw[post] (yk)--(y);
-#       %\draw[post] (h)--(a);
-#       \draw[post] (x)-|(h);
-#       \draw[post] (uk)--(f);
-#       \draw[post] (uh)--(h);
-#       \draw[post] (zk)--(uk);
-#       \draw[post] (zh)--(uh);
-#       \draw[post] (thetak)--(f);
-#       \draw[post] (phik)--(h);
-#       \draw[post] (sigmak)|-(y);
-
-#       \plate {} {(x) (y) (a) (f) (h)} {$T$};
-#       %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
-#       \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$K$};
-#       \plate {} {(zh) (uh) (h) (phik)} {$K$};
-#     \end{tikzpicture}
-#     }
-#   \caption{Graphical model of the transition dynamics
-# where the state difference $\Delta\mathbf{x}_{t}$
-# is generated by pushing the state and control $\hat{\mathbf{x}}_{t-1}$
-# through the latent process.}
-# %\label{fig:graphical_model}
-# \end{figure}
-# #+END_EXPORT
-
-** Inference 3.0 [[label:sec-inference]]
-The marginal likelihood in Eq. ref:eq-marginal-likelihood is extremely expensive to evaluate ($\mathcal{O}(KN^{4})$)
-\todo{add marginal likelihood's correct complexity}
-and is also intractable due to the marginalisation of $\mathbf{h}$ in the gating network
-(except for the two expert case).
-For these reasons this work derives a variational approximation based on inducing variables that provides scalability
-by utilising stochastic gradient-based optimisation.
-
-Following the approach by cite:titsiasVariational2009, the probability space is augmented
-with a set of $M$ inducing variables for each GP.
-However, instead of collapsing these inducing variables they are explicitly
-represented as variational distributions and used to lower bound cite:hensmanGaussian2013
-and then further bound cite:hensmanScalable2015 the marginal likelihood.
-
-
-
-Let us first consider lower bounding the MoGPE model for the general gating network case
-i.e. without specifying a particular gating network. The marginal likelihood of this model is given by,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-general-moe-marginal-likelihood}
-\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFk} \left[ \pYkGivenFk \right],
-\end{align*}
-#+END_EXPORT
-Following the approach by cite:titsiasVariational2009 and cite:hensmanGaussian2013, which is
-detailed in Section ref:sec-sparse-gps Eqs. ref:eq-titsias-bound - ref:eq-hensman-bound,
-the probability space is first augmented with a set of $M$ inducing variables from each GP prior,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-experts-inducing-dist}
-\pFuGivenX = \prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \uFk \mid \mode{\mu}(\zFk), \mode{k}(\zFk, \zFk) \right).
-\end{align*}
-#+END_EXPORT
-The augmented log marginal likelihood is then given by,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-general-moe-marginal-likelihood}
-\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX} \left[ \E_{\pFkGivenFku} \left[ \pYkGivenFk \right] \right] .
-%\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \prod_{\modeInd=1}^{\ModeInd} \pYkGivenFk \pFkGivenFku \pFkuGivenX.
-\end{align*}
-#+END_EXPORT
-For notational conciseness the dependency on the inputs has been dropped.
-Note that we have assumed each expert's inducing variables are independent and augmented each expert with
-the product over all experts inducing variables.
-This will enable us to move the expectation over the inducing variables outside the sum over the indicator variable.
-
-We start by considering the augmented log marginal likelihood,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-marginal-likelihood}
-\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \pFku} \left[ \pYkGivenFku \right].
-\end{align}
-#+END_EXPORT
-and moving the integrals over the inducing variables outside of the sum over the indicator variable,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-marginal-likelihood-fact}
-\text{log} \pYGivenX = \text{log} \E_{\prod_{\modeInd=1}^{\ModeInd} \pFku} \left[ \sum_{k=1}^{K} \PrA  \pYkGivenFku \right],
-\end{align}
-\todo{Don't think I need to mention Fubini-Tonelli theorem here}
-#+END_EXPORT
-Instead of collapsing the inducing variables here cite:titsiasVariational2009
-they can be explicitly represented as variational distributions cite:hensmanGaussian2013,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-var-experts-inducing-dist}
-\qFu = \prod_{k=1}^{K} \qFku = \prod_{k=1}^{K} \mathcal{N}\left(\uFk \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
-\end{align}
-#+END_EXPORT
-These variational distributions can then be used to obtain a lower
-bound on Eq. ref:eq-expert-marginal-likelihood-fact,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-2}
-\text{log} \pYGivenX
-\geq &\E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \PrA  \pYkGivenFku \right] \nonumber \\
-&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] := \mathcal{L}_{1}.
-\end{align}
-#+END_EXPORT
-This bound meets the necessary conditions to perform stochastic gradient methods on $\qFu$ as the first term
-can be written as a sum over input-output pairs,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-2-fact}
-\mathcal{L}_{1} =
-&\sum_{\numData=1}^{\NumData} \E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \Pra  \pykGivenFku \right] \nonumber \\
-&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right].
-\end{align}
-#+END_EXPORT
-However, the expectation over the inducing variables cannot be calculated in closed form and
-must be approximated. The joint distribution over the inducing variables $\qFku$ is $M$ dimensional and as
-a result the integral is $M$ dimensional.
-Following cite:hensmanScalable2015 this bound (Eq. ref:eq-expert-bound-2-fact) can be further bounded by
-moving the expectations over each expert's conditional of its latent function values given its inducing variables
-$\pFkGivenFku$
-outside the log, i.e. applying Jensen's inequality to the conditional probability $\pYkGivenFku$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-3}
-\mathcal{L}_{1}
-\geq &\E_{\prod_{k=1}^{K}\qFku} \left[ \E_{\pFkGivenFku} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] \right] \nonumber \\
-&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] := \mathcal{L}_{\text{experts}},
-\end{align}
-#+END_EXPORT
-Denoting the variational posterior
-$\qF := \prod_{k=1}^{K} \qFk = \prod_{k=1}^{K} \int \pFkGivenFku \qFku \text{d} \uFk$ enables us
-to rewrite Eq. ref:eq-expert-bound-3 as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-4}
-\mathcal{L}_{\text{experts}}
-&= \E_{\qF} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right]
-\end{align}
-#+END_EXPORT
-As each $\qFku$ is Gaussian in our case the functional form of the variational posterior is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-var-dist}
-\qF = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \Fk \mid \mode{\mathbf{A}} \mode{\mathbf{m}}, \mode{\K}_{\numData \numData } + (\mode{\mathbf{S}} - \mode{\K}_{mm}) \left(\mode{\mathbf{A}}\right)^{T} \right),
-\end{align}
-#+END_EXPORT
-where $\mode{\mathbf{A}} = \mode{\K}_{\numData m}\left(\mode{\K}_{mm}\right)^{-1}$.
-The model's likelihood is a mixture of Gaussians and factorizes
-across data as $\prod_{\numData=1}^{\NumData} \Pra \pykGivenfk$. $\mathcal{L}_{\text{experts}}$ can thus be
-written as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-bound-4-fact}
-\mathcal{L}_{\text{experts}} =
-&\sum_{\numData=1}^{\NumData}\E_{\qfn} \left[ \text{log} \sum_{k=1}^{K} \Pra \pykGivenfk \right] \nonumber \\
-&- \sum_{\modeInd=1}^{\ModeInd} \text{KL}\left[\qFku \mid\mid \pFku\right].
-\end{align}
-#+END_EXPORT
-Importantly, the variational posterior $\qfn$ analytically marginalises each $\qFku$
-(with Gaussian convolutions) removing the undesirable approximate $M$ dimensional integrals from
-Eq. ref:eq-expert-bound-2-fact. The expectation in Eq. ref:eq-experts-bound-4-fact still requires approximation
-but now only requires one dimensional integrals of the log-likelihood to be approximated.
-We approximate the integrals with Gibbs sampling and
-in practice only use single samples because the added stochasticity helps the optimisation.
-
-The bound in Eq. ref:eq-experts-bound-4-fact meets the necessary conditions to perform stochastic
-gradient methods on $\qFu$ as the sum of $\NumData$ terms corresponds to input-output pairs.
-The inducing inputs $\{\Z\}_{\modeInd=1}^{\ModeInd}$, kernel hyperparameters and noise variances are treated as
-variational hyperparameters and are optimised using stochastic gradient desecnt alongside the variational
-parameters.
-Note that our augmented model captures the dependencies in the joint distribution of the data through the
-inducing variables, but as $M \ll \NumData$ these have a much lower computational burden.
-This bound $\mathcal{L}_{\text{experts}}$ has complexity $\mathcal{O}\left( \NumData_{b} \ModeInd M^{3} \right)$
 
 
 
@@ -2039,7 +3260,15 @@ This is another bound I implemented,
 
 \todo[inline]{Need to extend bound for the gating network}
 
-
+** Gating Bound
+$\PrAGivenX
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-2-fact}
+\mathcal{L}_{1} =
+&\sum_{\numData=1}^{\NumData} \E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \Pra  \pykGivenFku \right] \nonumber \\
+&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right].
+\end{align}
+#+END_EXPORT
 
 
 
@@ -2104,6 +3333,11 @@ Section ref:sec-results gives results of the method tested on a real-world
 velocity-controlled quadcopter example.
 
 ** Problem Statement label:sec-problem-statement
+
+If one believes that the modes only vary across a subset of the inputs,
+for example, if the modes vary spatially and do not depend on the controls,
+then it can easily be modified to model this.
+
 The trajectory optimisation in this chapter aims to find trajectories that satisfy
 two goals,
 - Goal 1 :: remain in a preferred dynamics mode $k^*$ where possible, label:to-goal-mode
@@ -2136,7 +3370,7 @@ Our goals are thus encoded into the Riemannian metric tensor $\mathbf{G}$ that
 appears in Eq ref:eq-2ode.
 Let us now provide an intuitive and thorough walk-through of the approach detailed above.
 
-** Objective Functions
+** Geometric Objective Function
 To help provide intuition let us first formulate an objective function with two terms,
 one to address each of our goals,
 #+BEGIN_EXPORT latex
@@ -2366,7 +3600,7 @@ Solutions to this ODE are trajectories that remain in a single dynamics mode
 (where possible) and avoid regions of the dynamics that cannot be predicted confidently.
 This latent geodesic ODE is solved using a Hermite-Simpson collocation method cite:kellyIntroduction2017.
 
-** Implicit Optimisation
+** Implicit Trajectory Optimisation
 In the previous section we formulated an objective function that encodes our two goals.
 As alluded to previously, we do not optimise this objective function in the usual way.
 Instead, we exploit the fact that trajectories minimising Eq. ref:eq-geodesic-objective-expectation
@@ -2823,6 +4057,77 @@ Given a start and end state, the trajectory optimisation can be tuned to find tr
 prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
 dynamics model with high epistemic uncertainty.
 
+* TODO Iterative Learning
+** Intro :ignore:
+** Problem Statement
+Open loop system
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-}
+\state_{t+1} = f(\state_t, \control_t)
+\end{equation}
+#+END_EXPORT
+Policy
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-}
+\control_t = \pi_{\theta}(\state_t)
+\end{equation}
+#+END_EXPORT
+Closed loop system
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-}
+\state_{t+1} = f(\state_t, \pi_\theta(\state_t))
+\end{equation}
+#+END_EXPORT
+
+BO acquisition function
+#+BEGIN_EXPORT latex
+\newcommand{\traj}{\ensuremath{\bar{\state}}}
+\begin{align} \label{eq-}
+\traj^* &= \text{arg} \max \alpha(\traj)
+\end{align}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\alpha(\traj) = \frac{\text{Length}_{\mathcal{X}}(\traj)}{\text{Length}_{\mathcal{M}}(\traj)}
+\end{align}
+#+END_EXPORT
+
+Constraints
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \gatingFunc(\state) > 0 \} \\
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \E\left[ \gatingFunc(\state) > 0 \right] \} \\
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \Pr\left[ \modeInd = k \right] \} \\
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \V\left[ \gatingFunc(\state) < 0.1 \right] \}
+\end{align}
+#+END_EXPORT
+Use RKHS to get something like -
+#+BEGIN_EXPORT latex
+\begin{lemma}
+Assume that $h$ has bounded RKHS norm $|| h' ||_k \leq B$ and that measurements are corrupted by
+$\sigma$-sub-Gaussian noise. If $\beta_n^{1/2} = B + 4 \sigma \sqrt{I(y_n ; h) + 1 + \text{ln}(1/\delta)}$, then for all
+$a \in \mathcal{A}$ and $n>0$ it holds jointly with probability at least $1-\delta$ that
+$|h'(a) - \mu_n(a)| \leq \beta_n^{1/2} \simga_n(a)$.
+\end{lemma}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{theorem}
+For any $\delta \in (0,1)$, we have with probability at least $1 - \delta$ that $\gatingFunc(\state) > 0$.
+\end{theorem}
+#+END_EXPORT
+
+
+#+BEGIN_EXPORT latex
+\newcommand{\utraj}{\ensuremath{\bar{\control}}}
+\begin{align} \label{eq-}
+\traj, \utraj &= \\
+\text{s.t.} \quad &\state_{t+1} = f(\state_t, \control_t) \\
+&\{ \gatingFunc(\state_t, \control_t) > 0 \}
+\end{align}
+#+END_EXPORT
+** Results
+** Conclusion
+* Conclusion
 * Back Matter :ignore:
 ** Bibliography :ignore:
 
