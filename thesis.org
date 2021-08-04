@@ -4711,6 +4711,8 @@ prioritise remaining in a desired dynamics mode or prioritise avoiding regions o
 dynamics model with high epistemic uncertainty.
 
 * Trajectory Optimisation in Desired Modes as Probabilistic Inference label:chap-control
+cite:schreiterSafe2015 use a GP classifier to identify safe and unsafe regions when learning GP dynamics models
+in an active learning setting.
 ** Intro :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\timeInd}{\ensuremath{t}}
@@ -4875,6 +4877,228 @@ $\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw, \d
 
 $\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
 $\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
+
+\newpage
+** 2D Quadrotor Dynamics
+#+BEGIN_EXPORT latex
+\newcommand{\roll}{\ensuremath{\phi}}
+\newcommand{\pitch}{\ensuremath{\theta}}
+\newcommand{\yaw}{\ensuremath{\psi}}
+
+\newcommand{\world}{\ensuremath{w}}
+\newcommand{\body}{\ensuremath{b}}
+\newcommand{\intermediate}{\ensuremath{c}}
+\renewcommand{\frame}{\ensuremath{F}}
+\newcommand{\worldFrame}{\ensuremath{\frame_\world}}
+\newcommand{\bodyFrame}{\ensuremath{\frame_\body}}
+\newcommand{\intermediateFrame}{\ensuremath{\frame_\intermediate}}
+
+\newcommand{\inertiaMatrix}{\ensuremath{J}}
+\newcommand{\inertiaZ}{\ensuremath{I_{zz}}}
+\newcommand{\zw}{\ensuremath{\mathbf{z}_\world}}
+
+\newcommand{\positions}{\ensuremath{\mathbf{h}}}
+\newcommand{\velocity}{\ensuremath{v}}
+\newcommand{\velocityx}{\ensuremath{\dot{x}}}
+\newcommand{\velocityy}{\ensuremath{\dot{y}}}
+\newcommand{\Velocity}{\ensuremath{\mathbf{\velocity}}}
+
+\newcommand{\rotationMatrix}{\ensuremath{\mathbf{R}}}
+\newcommand{\angularVelocity}{\ensuremath{\bm\omega}}
+\newcommand{\angularVelocityMatrix}{\ensuremath{\bm\Omega}}
+
+\renewcommand{\thrust}{\ensuremath{f_{x}}}
+\renewcommand{\Thrust}{\ensuremath{\mathbf{f_{x}}}}
+\renewcommand{\torque}{\ensuremath{\tau_z}}
+
+\newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
+#+END_EXPORT
+The quadrotor frames and Euler angles (roll $\roll$, pitch $\pitch$ and yaw $\yaw$) are shown
+in Figure ref:fig-quadcopter-frames.
+The subscripts $\world$, $\body$ and $\intermediate$ are used to denote the world
+$\worldFrame$, body $\bodyFrame$ and intermediate $\intermediateFrame$ (after yaw angle rotation) frames respectively.
+The the 3D nonlinear quadrotor dynamics are described with the quadcopter model from cite:wangSafe2018,zhouVector2014.
+
+The 2D nonlinear quadrotor dynamics are based on the
+state vector is given by $\state = [x, y, \velocityx, \velocityy, \yaw]$
+where $\positions = [x, y]$ is the Euclidean coordinates relative to the world frame $\worldFrame$,
+$\Velocity = [\velocityx, \velocityy]$ is the velocity in the world frame $\worldFrame$ and
+$\yaw$ is the yaw angle, i.e. the angle around the $z$ axis.
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state} &= \quadrotorDynamics(\state, \control)
+\end{align}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\rotationMatrix_{\body,\world} =
+\begin{bmatrix}
+\cos{\yaw} & -\sin(\yaw) \\
+\sin{\yaw} & \cos(\yaw)
+\end{bmatrix}
+\end{align}
+#+END_EXPORT
+where,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state}_{1:2} &= \dot{\positions} = \state_{3:4} \\
+\dot{\state}_{3:4} &= \dot{\Velocity} = \frac{1}{m} \rotationMatrix \Thrust \\
+\dot{\state}_{5} &= \dot{\yaw} = \frac{1}{\inertiaZ} \torque
+\end{align}
+#+END_EXPORT
+where $\Thrust = [\thrust, 0]^T$ is the total thrust force in the quadrotors from the rotors and $\torque$ is the torque on the quadrotor
+around the $z$ axis of the world frame $\worldFrame$.
+The thrust and torque are realistic controls for a 2D quadrotor system and gives the
+control vector \control = [\thrust, \torque].
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\Velocity} &= g \zw + \frac{1}{m} \thrust \rotationMatrix \zw \\
+\dot{\rotationMatrix} &= \rotationMatrix \angularVelocityMatrix \\
+\dot{\angularVelocity} &= \inertiaMatrix^{-1} \torque - \inertiaMatrix^{-1} \angularVelocityMatrix \inertiaMatrix \angularVelocity \\
+\dot{\positions} &= \velocity
+\end{align}
+#+END_EXPORT
+where $g=9.81ms^{-2}$ is the acceleration due to gravity, $m$ is the mass, $\zw=[0,0,1]^T$,
+$\positions=[x, y, z]^T$ is the position of the quadrotor in the world frame $\worldFrame$,
+$\Velocity=[\velocity_x, \velocity_y, \velocity_z]^T$ is the
+and velocity of the quadrotor in the world frame $\worldFrame$ respectively.
+The angular velocity of the quadrotor in the body frame $\bodyFrame$ is denoted $\angularVelocity=[p, q ,r]^T$
+and in tensor form $\angularVelocityMatrix=[[0,-p,q];[r,0,-p];[-q,p,0]]$
+
+$\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]$
+
+$\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
+$\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
+
+\newpage
+** Point Mass 2D Dynamics
+#+BEGIN_EXPORT latex
+\newcommand{\roll}{\ensuremath{\phi}}
+\newcommand{\pitch}{\ensuremath{\theta}}
+\newcommand{\yaw}{\ensuremath{\psi}}
+
+\newcommand{\world}{\ensuremath{w}}
+\newcommand{\body}{\ensuremath{b}}
+\newcommand{\intermediate}{\ensuremath{c}}
+\renewcommand{\frame}{\ensuremath{F}}
+\newcommand{\worldFrame}{\ensuremath{\frame_\world}}
+\newcommand{\bodyFrame}{\ensuremath{\frame_\body}}
+\newcommand{\intermediateFrame}{\ensuremath{\frame_\intermediate}}
+
+\newcommand{\inertiaMatrix}{\ensuremath{J}}
+\newcommand{\inertiaZ}{\ensuremath{I_{zz}}}
+\newcommand{\zw}{\ensuremath{\mathbf{z}_\world}}
+
+\newcommand{\positions}{\ensuremath{\mathbf{h}}}
+\newcommand{\velocity}{\ensuremath{v}}
+\newcommand{\velocityx}{\ensuremath{\dot{x}}}
+\newcommand{\velocityy}{\ensuremath{\dot{y}}}
+\newcommand{\Velocity}{\ensuremath{\mathbf{\velocity}}}
+
+\newcommand{\rotationMatrix}{\ensuremath{\mathbf{R}}}
+\newcommand{\angularVelocity}{\ensuremath{\bm\omega}}
+\newcommand{\angularVelocityMatrix}{\ensuremath{\bm\Omega}}
+
+\renewcommand{\thrust}{\ensuremath{f_{x}}}
+\renewcommand{\Thrust}{\ensuremath{\mathbf{f_{x}}}}
+\renewcommand{\torque}{\ensuremath{\tau_z}}
+
+\newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
+#+END_EXPORT
+The dynamics of a point mass in 2D can represented with the
+state vector $\state = [x, y, \velocityx, \velocityy, \yaw]$,
+where $\positions = [x, y]$ denotes the 2D Euclidean coordinates relative to the world frame $\worldFrame$,
+$\Velocity = [\velocityx, \velocityy]$ is the velocity in the world frame $\worldFrame$ and
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{tikzpicture}
+% body frame
+\draw[thick,->] (0,0) -- (1.5,1.5) node[anchor=south] {$x$};
+\draw[thick,->] (0,0) -- (1.5,-1.5) node[anchor=north] {$y$};
+
+% world frame
+\draw[thick,->] (-3,-3) -- (3,-3) node[anchor=north west] {$x$};
+\draw[thick,->] (-3,-3) -- (-3,3) node[anchor=south east] {$y$};
+\foreach \x in {-3, -2, -1, 0,1,2,3}
+   \draw (\x cm,-3) -- (\x cm,-3) node[anchor=north] {$\x$};
+\foreach \y in {-3, -2, -1, 0,1,2,3}
+    \draw (-3,\y cm) -- (-3,\y cm) node[anchor=east] {$\y$};
+\end{tikzpicture}
+\end{figure}
+#+END_EXPORT
+
+
+The point mass can apply a force along its $x$ axis (known as the thrust vector), which is denoted
+$\Thrust = [\thrust, 0]^T$.
+It can also rotate itself by applying a torque $\torque$ around its $z$ axis.
+The resulting control vector for the 2D point mass is given by $\control = [\thrust, \torque]$.
+The nonlinear dynamics of the system are given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state} &=
+\begin{bmatrix}
+    \dot{\state}_{1} \\
+    \dot{\state}_{2} \\
+    \dot{\state}_{3} \\
+    \dot{\state}_{4} \\
+    \dot{\state}_{5}
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \state_{3} \\
+    \state_{4} \\
+    \frac{1}{m} \thrust \cos{(\yaw)} \\
+    \frac{1}{m} \thrust \sin{(\yaw)} \\
+    \frac{1}{\inertiaZ} \torque
+\end{bmatrix}
+\end{align}
+#+END_EXPORT
+where $m$ is the mass and $\inertiaZ$ is the moment of inertia around the vertical $z$ axis.
+Defining the rotation matrix from the body frame $\bodyFrame$ to the world frame $\worldFrame$ as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\rotationMatrix_{\body,\world} =
+\begin{bmatrix}
+\cos{\yaw} & -\sin(\yaw) \\
+\sin{\yaw} & \cos(\yaw)
+\end{bmatrix}
+\end{align}
+#+END_EXPORT
+the dynamics can be calculated as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state}_{1:2} &= \dot{\positions} = \state_{3:4} \\
+\dot{\state}_{3:4} &= \dot{\Velocity} = \frac{1}{m} \rotationMatrix \Thrust \\
+\dot{\state}_{5} &= \dot{\yaw} = \frac{1}{\inertiaZ} \torque
+\end{align}
+#+END_EXPORT
+
+The unknown dynamics can be modelled by placing GP priors on the accelerations ($\dot{\dot{x}}, \dot{\dot{y}}$) and
+the angular (yaw) velocity $\dot{\yaw}$,
+#+BEGIN_EXPORT latex
+\renewcommand{\input}{\ensuremath{\hat{\state}}}
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state} &=
+\begin{bmatrix}
+    \dot{\state}_{1} \\
+    \dot{\state}_{2} \\
+    \dot{\state}_{3} \\
+    \dot{\state}_{4} \\
+    \dot{\state}_{5}
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \state_{3} \\
+    \state_{4} \\
+    \frac{1}{m} \thrust \cos{(\yaw)} + \mathcal{N} \left( \mu_3(\input),  k_3(\input, \input) \right) \\
+    \frac{1}{m} \thrust \sin{(\yaw)} + \mathcal{N} \left( \mu_4(\input),  k_4(\input, \input) \right) \\
+    \frac{1}{\inertiaZ} \torque + \mathcal{N} \left( \mu_5(\input),  k_5(\input, \input) \right)
+\end{bmatrix}
+\end{align}
+#+END_EXPORT
+
 
 \newpage
 ** Optimal Control as Probabilistic Inference
@@ -5586,8 +5810,27 @@ p(\mathbf{J}(\state_{\timeInd})) =
 \end{align}
 #+END_EXPORT
 
+** Active Learning
+Utilising mutual information for active learning has been well motivated by, for example,
+cite:krauseNearOptimal2008.
+They highlight that mutual information may lead to a more accurate model than differential entropy.
+It has also been shown that minimising the mutual information  is the same as minimising the expected posterior
+uncertainty (conditional entropy) in the model cite:ertinMaximum2003.
+
+Given two sets of random variables $\mathbf{X}$ and $\mathbf{F}$ with joint density $p(\mathbf{X}, \mathbf{F})$ the
+mutual information is given by cite:coverElements2006,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mutual-information}
+I(\mathbf{X};\mathbf{F}) = \int p(\mathbf{X},\mathbf{F}) \text{log}\frac{p(\mathbf{X},\mathbf{F})}{p(\mathbf{X})p(\mathbf{F})}
+\text{d}\mathb{X} \text{d}\mathb{F}
+\end{align}
+#+END_EXPORT
 ** Results
 ** Conclusion
+* Applications
+** 2D Point Mass Simulation
+** 3D Quadcopter Simulation
+** 2D Quadcopter Real-World
 * Conclusion
 * Appendix
 ** Multivariate Normals
