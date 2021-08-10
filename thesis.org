@@ -693,11 +693,17 @@ Make the equation numbers follow the chapter, not the whole thesis.
 %help alleviate the dependence on domain exerts for system identification and controller design.
 This dissertation is concerned with \textbf{learning} and \textbf{control}
 in unknown, (or partially unknown), multimodal dynamical systems.
-It is motivated by controlling a dynamical system from an initial state (in a desired dynamics mode),
+It is motivated by driving a dynamical system from an initial state (in a desired dynamics mode),
 to a target state, whilst remaining in the desired dynamics mode.
-It is motivated by controlling quadrotors with unoperatable dynamics modes that are
-induced via spatially varying turbulence i.e. the goal is to fly the quadrotor from an initial state in the desired (operatable) dynamics mode,
-to a target state, whilst remaining in the desired dynamics mode.
+For example, consider controlling a quadrotor in an environment subject to two dynamics modes: 1) a turbulent
+dynamics mode in front of a fan, and 2) a non turbulent dyanmics mode everywhere else.
+The goal in this scenario is to fly the quadrotor to a target location,
+whilst remaining in the operatable (non turbulent) dynamics mode.
+%In this scenario the dynamics modes vary spatially (over the state space).
+
+%For example, controlling a quadrotor subject to unoperatable dynamics modes that are
+%induced via spatially varying turbulence
+%i.e. fly a quadrotor to a target location, whilst remaining in the operatable (non turbulent) dynamics mode.
 
 %This dissertation is concerned with \textbf{learning} and \textbf{control}
 %in unknown, (or partially unknown), multimodal dynamical systems.
@@ -708,20 +714,65 @@ to a target state, whilst remaining in the desired dynamics mode.
 %The goal is to fly the quadrotor from an initial state in the desired (operatable) dynamics mode,
 %to a target state, whilst remaining in the desired dynamics mode.
 
-This work first considers learning a representation of the transition dynamics assuming
+This work first considers learning representations of multimodal dynamical systems, assuming
 access to a historial data set of state transitions.
-In particular, it seeks to synergise model learning and control, by
-inferring latent structure (in the model learning) that can be exploited by control algorithms.
-
-
-This work constructs a discrete-time representation of the multimodal transition dynamics
-as a probabilistic model based on Gaussian processes.
 The model resembles the Mixture of Gaussian Process Experts model with a gating network based on Gaussian processes.
-Motivated by data efficient learning and well calibarated uncertainty estimates, learning in the model
-is performed via Bayesian inference.
-A novel variational lower bound based on sparse approximations provides scalability
-via stochastic gradient methods.
+Motivated by synergising model learning and control,
+this model infers latent \textit{geometric} structure in the gating network,
+that is later exploited by a geometry inspired control algorithm.
+Well-calibrated uncertainty estimates and scalability are obtained via a
+stochastic variational inference.
+%variational lower bound based on sparse approximations, that can be optimised with
+%stochastic gradient methods.
+%A novel variational lower bound based on sparse approximations, that can be optimised with
+%stochastic gradient methods, is derived.
+%It provides scalability as well as well-calibrated uncertainty estimates.
 
+%Secondly, this work considers trajectory optimisation algorithms,
+%that exploit the learned dynamics model to achieve the aformentioned goal.
+%In a \textbf{risk-averse setting}, it is also desirable to avoid entering regions of a learned dynamics model with
+%high \textit{epistemic uncertainty}.
+%This is because the state-control trajectory cannot be predicted confidently, and thus,
+%constraints may be violated i.e. the system may enter unoperatable dynamics modes.
+%Still assuming access to a historical data set, the first approach presented in this dissertation
+%exploits concepts of Riemannian geometry (extended to probabilistic geometries) to encode the trajectory optimisation
+%goals into an objective function.
+%A second, alternative approach, formulates the control problem as probabilistic inference
+%in a graphical model by conditioning on a mode assignment variable.
+%Both methods are evaluated via experiments on a simulated quadrotor, as well as a data set of a
+%DJI Tello quadrotor flying in the Bristol Robotics Laboratory.
+
+In a \textbf{risk-averse setting}, it is desirable to avoid entering regions of a learned dynamics model with
+high \textit{epistemic uncertainty}, as well as remining in the desired dynamics mode.
+This is because the trajectory cannot be predicted confidently, and may leave the operatable dynamics mode.
+
+Given the learned dynamics model, this dissertation develops two such trajectory optimisation algorithms.
+The first approach
+exploits concepts of Riemannian geometry (extended to probabilistic geometries) to encode both of the goals
+into a geometric objective function.
+The second approach formulates the control problem as probabilistic inference
+in a graphical model, and encodes the goals by conditioning on a mode assignment variable.
+Both methods are evaluated via experiments on a simulated quadrotor, as well as a data set collected onboard
+a DJI Tello quadrotor.
+%A second, alternative approach is also presented.
+%Instead of exploiting the geometry of the learned model, it formulates the control problem as probabilistic inference
+%in a graphical model by conditioning on a mode assignment variable.
+
+Finally, this dissertaion considers the active learning setting, where it does
+not assume access to a historical data set.
+To achieve this goal, a constrained exploration algorithm is introduced.
+The algorithm exploits the \textit{epistemic uncertainty} associated with the learned model to guide
+exploration into regions of the dynamics that have not previously been observed.
+This experience can then be used to update the model and reduce the associated \textit{epistemic uncertainty}.
+Exploration is subject to chance constraints that prevent the system from leaving the desired dynamics
+mode, resulting in an overconstrained problem.
+Loosening the chance constraints enables the algorithm to incrementally explore the environment,
+becoming more confident in the dynamics,
+until it can find a trajectory to the target state that does not violate the chance constraints.
+
+
+
+\newpage
 
 When controlling a real world system, it is desirable
 to perform decision-making under uncertainty; both the uncertainty assocaited with our belief of the system,
