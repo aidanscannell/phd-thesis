@@ -146,7 +146,7 @@ Improvements provided with the Mimosis class.
 
 # And fix the andothers to show et al in English as well:
 # #+latex_header: \DefineBibliographyStrings{english}{andothers={\textit{et\, al\adddot}}} 
-# #+latex_header:\DefineBibliographyStrings{english}{and={\textit{and}}}} 
+# #+latex_header:\DefineBibliographyStrings{english}{and={\textit{and}}}
 
 
 Remove ISSN, DOI and URL to shorten the bibliography.
@@ -615,11 +615,11 @@ Make the equation numbers follow the chapter, not the whole thesis.
 {{{acronym(gp,GP,Gaussian process)}}}
 {{{acronym(mdp,MDP,Markov decision process)}}}
 {{{glossaryentry(Real Numbers,$\real$,The set of Real numbers,Real Numbers)}}}
-* Frontmatter :ignore:noexport:
+* Frontmatter :ignore:
 #+BEGIN_EXPORT latex
 \frontmatter
 #+END_EXPORT
-** Title Page :ignore:
+** Title Page :ignore:noexport:
 
   #+BEGIN_EXPORT latex
   \begin{titlepage}
@@ -683,11 +683,207 @@ Make the equation numbers follow the chapter, not the whole thesis.
 :END:
 #+BEGIN_EXPORT latex
 \begin{SingleSpace}
-\initial{H}ere goes the abstract
+%\initial{R}einforcement learning and data-driven control have seen significant advances over the last decade,
+%especially in simulated environments.
+%Real world systems are often highly nonlinear, exhibit stochasticity and multimodalities,
+%are expensive to run (slow, energy intensive, subject to wear and tear) and
+%must be controlled subject to constraints (for safety, efficiency, etc).
+
+%From robotics, to industrial processing, to finanace, learning-based approaches to control
+%help alleviate the dependence on domain exerts for system identification and controller design.
+This dissertation is concerned with \textbf{learning} and \textbf{control}
+in unknown, (or partially unknown), multimodal dynamical systems.
+It is motivated by controlling a dynamical system from an initial state (in a desired dynamics mode),
+to a target state, whilst remaining in the desired dynamics mode.
+It is motivated by controlling quadrotors with unoperatable dynamics modes that are
+induced via spatially varying turbulence i.e. the goal is to fly the quadrotor from an initial state in the desired (operatable) dynamics mode,
+to a target state, whilst remaining in the desired dynamics mode.
+
+%This dissertation is concerned with \textbf{learning} and \textbf{control}
+%in unknown, (or partially unknown), multimodal dynamical systems.
+%It is motivated by controlling a quadrotor with unoperatable dynamics modes that are
+%induced via spatially varying turbulence.
+%The operatable mode corresponds to regions of the state space subject to \textbf{low turbulence}, and the
+%unoperatable mode(s) corresponds to regions subject to \textbf{high turbulence}.
+%The goal is to fly the quadrotor from an initial state in the desired (operatable) dynamics mode,
+%to a target state, whilst remaining in the desired dynamics mode.
+
+This work first considers learning a representation of the transition dynamics assuming
+access to a historial data set of state transitions.
+In particular, it seeks to synergise model learning and control, by
+inferring latent structure (in the model learning) that can be exploited by control algorithms.
+
+
+This work constructs a discrete-time representation of the multimodal transition dynamics
+as a probabilistic model based on Gaussian processes.
+The model resembles the Mixture of Gaussian Process Experts model with a gating network based on Gaussian processes.
+Motivated by data efficient learning and well calibarated uncertainty estimates, learning in the model
+is performed via Bayesian inference.
+A novel variational lower bound based on sparse approximations provides scalability
+via stochastic gradient methods.
+
+
+When controlling a real world system, it is desirable
+to perform decision-making under uncertainty; both the uncertainty assocaited with our belief of the system,
+and the uncertainty inherent in the system (stochasticity).
+In a risk-averse setting, it is desirable to avoid entering regions of a dynamics model with high \textit{epistemic
+uncertainty}, or high \textit{aleatoric uncertainty}.
+This is because the state-control trajectory cannot be predicted confidently, and thus,
+constraints may be violated.
+Conversely, in an explorative setting,
+if the \textit{epistemic uncertainty} has been quantified, then it can be used to guide exploration into
+regions of the dynamics that have not previously been observed.
+This experience can then be used to update the model and reduce the associated \textit{epistemic uncertainty}.
+
+Probabilistic modelling and Bayesian inference are a promosing
+avenue for learning dynamics models to be used for controlling real world systems.
+They provide a principled approach to modelling both the \textit{epistemic uncertainty} assocaited with the model,
+and the \textit{aleatoric uncertainty} inherent to the system.
+
+
+
+This work is interested in techniques for driving an unknown system from an initial state
+in a desired dynamics mode, to a target state, whilst remaining in a desired dynamics mode
+(which is believed to be operatable).
+
+
+
+Modelling a multimodal parameter as unimodal, or incorrectly specifying how a multimodal
+parameter switches between modes, will have a detrimental impact on controller performance.
+In some cases, it may even lead to catastrophic system failure.
+
+
+
+
+(e.g. stability, poor performance, efficiency)
+
+Traditional control techniques rely on dynamics models derived from first-principles based on physics,
+which are often subject to model misspecification e.g. incorrectly specified parameters or
+models (modelling a nonlinear system to be linear, or a multimodal system to be unimodal).
+
+Real world systems are often highly nonlinear, exhibit stochasticity and multimodalities,
+are expensive to run (slow, energy intensive, subject to wear and tear) and
+must be controlled subject to constraints (for safety, efficiency, etc).
+
+Dynamical systems are also subject to \textit{aleatoric uncertainty},
+the type of uncertainty that is inherent to the system and cannot be reduced,
+for example stochasticity (i.e. process noise) and observation noise.
+
+
+This constitues a type of uncertainty known as \textit{epistemic uncertainty}, which can be reduced in the limit
+of infinite data.
+Dynamical systems are also subject to \textit{aleatoric uncertainty},
+the type of uncertainty that is inherent to the system and cannot be reduced,
+for example stochasticity (i.e. process noise) and observation noise.
+
+
+This dissertation is motivated by controlling multimodal dynamical systems, which are
+either unknown, or partially unknown.
+Traditional control techniques rely on dynamics models derived from first-principles based on physics,
+which are often subject to model misspecification (e.g. incorrectly specified parameters).
+This constitues a type of uncertainty known as \textit{epistemic uncertainty}, which can be reduced in the limit
+of infinite data.
+Dynamical systems are also subject to \textit{aleatoric uncertainty},
+the type of uncertainty that is inherent to the system and cannot be reduced,
+for example stochasticity (i.e. process noise) and observation noise.
+
+Modelling a multimodal parameter as unimodal, or incorrectly specifying how a multimodal
+parameter switches between modes, will have a detrimental impact on controller performance.
+In some cases, it may even lead to catastrophic system failure.
+
+Learning dynamics models via probabilistic modelling and Bayesian inference is a promosing
+avenue for controlling real world systems.
+It provides a principled approach to modelling both \textit{epistemic uncertainty}, and \textit{aleatoric uncertainty}
+(uncertainty inherent in the system that cannot be reduced).
+
+Correctly quantified uncertainty is crucial for intelligent decision-making.
+
+When synthesising controllers, it is desirable to account for epistemic uncertainty.
+In a risk-averse setting, it is desirable to avoid entering regions of a learned dynamics model with high \textit{epistemic
+uncertainty}.
+This is because the state-control trajectory cannot be predict confidently, and thus,
+constraints may be violated.
+Conversely, in an explorative setting,
+if the \textit{epistemic uncertainty} has been quantified, then it can be used to guide exploration into
+regions of the dynamics that have not previously been observed.
+This experience can then be used to update the model and reduce the associated \textit{epistemic uncertainty}.
+
+% Traditional control techniques rely on dynamics models derived from first-principles, which
+% are often subject to model misspecification (e.g. incorrectly specified parameters).
+% This is a type of uncertainty known as \textit{epistemic uncertainty}.
+% It is desirable to account for epistemic uncertainty,
+% as well as the uncertainty inherent in the system, known as \textit{aleatoric uncertainty}
+% (arising from the inherent stochasticity of the system) when synthesising controllers.
+
+Traditional control techniques rely on dynamics models derived from first-principles, which
+are often subject to model misspecification (e.g. incorrectly specified parameters).
+This is a type of uncertainty known as \textit{epistemic uncertainty}.
+When synthesising controllers, it is desirable to account for epistemic uncertainty.
+In a risk-averse setting, it is desirable to avoid entering regions of a learned dynamics model with high \textit{epistemic
+uncertainty}.
+This is because the state-control trajectory cannot be predict confidently, and thus,
+constraints may be violated.
+Conversely, in an explorative setting,
+if the \textit{epistemic uncertainty} has been quantified, then it can be used to guide exploration into
+regions of the dynamics that have not previously been observed.
+This experience can then be used to update the model and reduce the associated \textit{epistemic uncertainty}.
+
+Learning dynamics models via probabilistic modelling and Bayesian inference is a promosing
+approach for controlling real world systems;
+as it provides a principled approach to modelling both epistemic and aleatoric uncertainty.
+Correctly quantified uncertainty is crucial for intelligent decision-making.
+
+This dissertation is motivated by controlling dynamical systems that exhibit multimodalities, which are
+either unknown, or partially unknown.
+Incorrectly specifying a multimodal parameter as unimodal, or incorrectly specifying how a multimodal
+parameter switches between modes will have a detrimental impact on controller performance.
+In some cases, it may even lead to catastrophic failure.
+
+% Learning dynamics models for control (in either the model-based reinforcement learning or model-based planning settings)
+
+
+Model-based approaches offer a principled approach for handling constraints
+
+Model-based approaches offer a principled approach for modelling both
+
+
+This may be
+where some of the dynamics modes
+
+stochasticity of
+and design controllers to account for
+model misspecifications, stochasticity of
+
+
+
+uncertainty in model parameters
+
+
+Constraints
+data-efficiency
+target exploration
+uncertainty
+stochasticity
+
+
+
+dynamics model learning
+integration of learned dynamics models planning
+
+
+unknown or partially unknown transition dynamics
+The promise of learning-based control  address model misspecification
+
+When leveraging learned dynamics models for control
+
+
+
+which must be correctly accounted
+for when learning from observations
 \end{SingleSpace}
 #+END_EXPORT
 
-** Declaration 
+** Declaration :noexport:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -703,7 +899,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 \end{SingleSpace}
 #+END_EXPORT
 
-** Acknowledgements
+** Acknowledgements :noexport:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -1033,11 +1229,8 @@ This experience can then be used to update the model and reduce its associated /
 
 This dissertation is interested in safe learning-based control in multimodal dynamical systems with /unknown/, or
 /partially unknown/, transition dynamics, where safety is governed by the underlying dynamics modes.
-It is assumed that knowledge of how the transition dynamics switch between modes is also /not known a priori/.
-In essence, the safety constraints are /not known a priori/ and should be .
-
-and thus,
-neither are the safety constraints.
+It is assumed that complete knowledge of how the transition dynamics switch between modes is also /not known a priori/.
+In essence, the safety constraints are /not known a priori/ and should be learned from observations.
 Therefore, this dissertation is interested in jointly inferring the /constraints/ alongside the underlying dynamics modes,
 through repeated interactions with the system.
 
@@ -5006,6 +5199,17 @@ $\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
 
 \newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
 #+END_EXPORT
+cite:williamsAdvancing
+cite:watsonStochastic2020
+cite:watsonAdvancing2021
+
+cite:levineVariational2013
+
+
+cite:bhardwajDifferentiable2020
+
+cite:mukadamContinuoustime2018
+
 The dynamics of a point mass in 2D can represented with the
 state vector $\state = [x, y, \velocityx, \velocityy, \yaw]$,
 where $\positions = [x, y]$ denotes the 2D Euclidean coordinates relative to the world frame $\worldFrame$,
@@ -5103,6 +5307,9 @@ the angular (yaw) velocity $\dot{\yaw}$,
 \newpage
 ** Optimal Control as Probabilistic Inference
 #+BEGIN_EXPORT latex
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+
 \newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
 \newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
 \newcommand{\stateControlTraj}{\ensuremath{\bm\tau}}
@@ -5141,11 +5348,28 @@ Bernoulli distribution can be formulated by mapping the negative cost through a 
 function $\monotonicFunc$,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-}
-\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
+\optimalProb &\propto \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
 \end{align}
 #+END_EXPORT
 We will return to the choice of $\monotonicFunc$ in Section \todo{insert ref to section}
 as it leads to our algorithm resembling different well-known algorithms.
+
+this is from cite:watsonStochastic2021
+Control-as-inference techniques use a belief in optimality
+to perform optimal control [1], a binary random variable
+O ∈ {0, 1}, for which 1 indicates optimality. A convenient
+approach for this likelihood is an exponential transform of
+the cost [48]. The resulting Boltzmann distribution introduces
+inverse ‘temperature’ α to scale the cost,
+p(O=1|x,u) ∝ exp(−αC(x,u)). (10)
+As a result, the negative log-likelihood is an affine transform
+of the cost, which preserves convexity. In this work, we
+consider when the distribution in (10) is the multivariate
+Normal distribution, for which C is a Mahalanobis distance
+from a target state z
+∗
+is space z ∈ R
+dz via transform h,
 
 *** graphical model :ignore:
 #+BEGIN_EXPORT latex
@@ -5822,7 +6046,115 @@ mutual information is given by cite:coverElements2006,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mutual-information}
 I(\mathbf{X};\mathbf{F}) = \int p(\mathbf{X},\mathbf{F}) \text{log}\frac{p(\mathbf{X},\mathbf{F})}{p(\mathbf{X})p(\mathbf{F})}
-\text{d}\mathb{X} \text{d}\mathb{F}
+\text{d}\mathb{X} \text{d}\mathb{F},
+\end{align}
+#+END_EXPORT
+and its well known relationship differential entropy $H(\cdot)$ is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mutual-information-entropy}
+I(\mathbf{X};\mathbf{F}) =  H(\mathbf{X}) - H(\mathbf{X} \mid \mathbf{F}).
+\end{align}
+#+END_EXPORT
+
+The goal here is to pick the most informative control trajectory $\controlTraj$ whilst observing $\stateTraj$.
+
+cite:caponeLocalized2020,buisson-fenetActively2020
+Active learning can be used to
+
+An approximated mutual information exploration criterion is used
+
+entropy
+#+BEGIN_EXPORT latex
+\newcommand{\gatingOutput}{\ensuremath{h(\singleInput)}}
+\newcommand{\gatingTransition}{\ensuremath{p(\gatingOutput \mid \state_\timeInd, \control_\timeInd)}}
+\begin{align} \label{eq-mutual-information}
+\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} H(\stateTraj, \controlTraj) &=
+\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
+&= \underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
+\text{log} \gatingTransition \text{d} \gatingOutput
+\end{align}
+#+END_EXPORT
+In dynamical systems an arbitrary state $\state$ cannot be sampled, so instead, the dynamics must be steered
+to $\state$ through the unknown dynamics $\dynamicsFunc$ through a sequence of controls $\control$.
+As highlighted by cite:buisson-fenetActively2020, information gain in dynamical systems is therefore
+fundamentally different to the static problem addressed by cite:krauseNearOptimal2008.
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mutual-information}
+\underset{\control \in \controlDomain}{\text{argmax}} H(\stateTraj, \controlTraj) &=
+\underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
+&= \underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
+\text{log} \gatingTransition \text{d} \gatingOutput \\
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mutual-information}
+\underset{\control \in \controlDomain}{\text{argmax}} H(\gatingFunc(\stateTraj, \controlTraj) \mid \controlTraj) &=
+\underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \control_\timeInd)
+\end{align}
+#+END_EXPORT
+where
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mutual-information}
+p(\gatingFunc(\state_{1:\TimeInd}, \control_{1:\TimeInd}) \mid \control_{1:\TimeInd})&=
+p(\state_0) \prod_{\timeInd=1}^{\TimeInd-1}
+\int p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd} \mid \state_{\timeInd}, \control_{\timeInd})
+p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_{\timeInd}) \text{d}\state_\timeInd
+\end{align}
+#+END_EXPORT
+
+cite:houlsbyBayesian2011 formulate Bayesian active learning for Gaussian process binary classification with a
+Bernoulli likelihood.
+The objective is to seek the input $\control$ that maximises the decrease in expected posterior entropy,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expected-posterior-entropy}
+\text{arg}\underset{\control}{\max}
+H(\bm\theta \mid \mathcal{D})
+- \E_{\alpha \sim p(\alpha \mid \control, \mathcal{D})} \left[ H(\bm\theta \mid \alpha, \control, \mathcal{D}) \right].
+\end{align}
+#+END_EXPORT
+The expectation requires the unseen output $\alpha$ and many works have
+
+cite:houlsbyBayesian2011 highlight that the objective in Eq. ref:eq-expected-posterior-entropy is equivalent to
+the mutual information between the unknown output and the parameters.
+The objective in Eq. ref:eq-expected-posterior-entropy can then be written to compute entropies in the $\alpha$
+space.
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq--entropy-alpha-space}
+\text{arg}\underset{\control}{\max}
+H(\alpha \mid \control, \mathcal{D})
+- \E_{\bm\theta \sim p(\bm\theta \mid\mathcal{D})} \left[ H(\alpha \mid \control, \bm\theta) \right].
+\end{align}
+#+END_EXPORT
+Entropies are now calculated in a low dimensional output (latent) space.
+In the binary classification setting Eq. ref:eq--entropy-alpha-space simply involves entropies of Bernoulli
+random variables.
+Intuitively, the first term $H(\alpha \mid \control, \mathcal{D})$) seeks to
+find the input $\control$ where the model is marginally most uncertain about
+its corresponding output $\alpha$.
+The second term
+
+
+The entropy of a Bernoulli random variable is given by,
+#+BEGIN_EXPORT latex
+\newcommand{\gatingFunc}{\ensuremath{g}}
+\begin{align} \label{eq--entropy-bernoulli}
+H(\alpha \mid \control, \gatingFunc) &= h(\Phi(\gatingFunc(\control))) \\
+h(p) &= -p \text{log}p - (1-p) \text{log}(1-p)
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq--entropy--data}
+H(\alpha \mid \control, \mathcal{D}) &\approx h \left(\int \Phi(\gatingFunc(\state, \control)) \mathcal{N}(\alpha \mid \mu_\alpha, \sigma^2_\alpha) \text{d} \alpha \right) \\
+&= h \left( \Phi \left( \frac{\mu_\alpha}{\sqrt{\sigma^2_\alpha + 1}} \right) \right)
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq--entropy-model}
+\E_{\gatingFunc \sim p(\gatingFunc \mid \mathcal{D})} \left[ H(\alpha \mid \control, \gatingFunc) \right]
+&\approx \int h \left( \Phi(\gatingFunc(\state, \control)) \mathcal{N}(\gatingFunc(\state, \control) \mid \mu_\gatingFunc, \sigma^2_\gatingFunc) \text{d} \gatingFunc(\state, \control)
 \end{align}
 #+END_EXPORT
 ** Results
