@@ -691,7 +691,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 
 %From robotics, to industrial processing, to finanace, learning-based approaches to control
 %help alleviate the dependence on domain exerts for system identification and controller design.
-This dissertation is concerned with \textbf{learning} and \textbf{control}
+This dissertation is concerned with \textit{learning} and \textit{control}
 in unknown, (or partially unknown), multimodal dynamical systems.
 It is motivated by driving a dynamical system from an initial state (in a desired dynamics mode),
 to a target state, whilst remaining in the desired dynamics mode.
@@ -720,7 +720,7 @@ The model resembles the Mixture of Gaussian Process Experts model with a gating 
 Motivated by synergising model learning and control,
 this model infers latent \textit{geometric} structure in the gating network,
 that is later exploited by a geometry inspired control algorithm.
-Well-calibrated uncertainty estimates and scalability are obtained via a
+Well-calibrated uncertainty estimates and scalability are obtained via
 stochastic variational inference.
 %variational lower bound based on sparse approximations, that can be optimised with
 %stochastic gradient methods.
@@ -746,7 +746,10 @@ In a \textbf{risk-averse setting}, it is desirable to avoid entering regions of 
 high \textit{epistemic uncertainty}, as well as remining in the desired dynamics mode.
 This is because the trajectory cannot be predicted confidently, and may leave the operatable dynamics mode.
 
-Given the learned dynamics model, this dissertation develops two such trajectory optimisation algorithms.
+%Based on these two goals, this dissertation develops two trajectory optimisation algorithms that exploit
+%the learned dyanmics to achieve them.
+Given a partially learned dynamics model, this dissertation develops two trajectory optimisation algorithms
+aimed at solving this risk-averse setting.
 The first approach
 exploits concepts of Riemannian geometry (extended to probabilistic geometries) to encode both of the goals
 into a geometric objective function.
@@ -761,7 +764,7 @@ a DJI Tello quadrotor.
 Finally, this dissertaion considers the active learning setting, where it does
 not assume access to a historical data set.
 To achieve this goal, a constrained exploration algorithm is introduced.
-The algorithm exploits the \textit{epistemic uncertainty} associated with the learned model to guide
+The algorithm exploits the \textit{epistemic uncertainty} associated with the learned model, to guide
 exploration into regions of the dynamics that have not previously been observed.
 This experience can then be used to update the model and reduce the associated \textit{epistemic uncertainty}.
 Exploration is subject to chance constraints that prevent the system from leaving the desired dynamics
@@ -772,165 +775,7 @@ until it can find a trajectory to the target state that does not violate the cha
 
 
 
-\newpage
 
-When controlling a real world system, it is desirable
-to perform decision-making under uncertainty; both the uncertainty assocaited with our belief of the system,
-and the uncertainty inherent in the system (stochasticity).
-In a risk-averse setting, it is desirable to avoid entering regions of a dynamics model with high \textit{epistemic
-uncertainty}, or high \textit{aleatoric uncertainty}.
-This is because the state-control trajectory cannot be predicted confidently, and thus,
-constraints may be violated.
-Conversely, in an explorative setting,
-if the \textit{epistemic uncertainty} has been quantified, then it can be used to guide exploration into
-regions of the dynamics that have not previously been observed.
-This experience can then be used to update the model and reduce the associated \textit{epistemic uncertainty}.
-
-Probabilistic modelling and Bayesian inference are a promosing
-avenue for learning dynamics models to be used for controlling real world systems.
-They provide a principled approach to modelling both the \textit{epistemic uncertainty} assocaited with the model,
-and the \textit{aleatoric uncertainty} inherent to the system.
-
-
-
-This work is interested in techniques for driving an unknown system from an initial state
-in a desired dynamics mode, to a target state, whilst remaining in a desired dynamics mode
-(which is believed to be operatable).
-
-
-
-Modelling a multimodal parameter as unimodal, or incorrectly specifying how a multimodal
-parameter switches between modes, will have a detrimental impact on controller performance.
-In some cases, it may even lead to catastrophic system failure.
-
-
-
-
-(e.g. stability, poor performance, efficiency)
-
-Traditional control techniques rely on dynamics models derived from first-principles based on physics,
-which are often subject to model misspecification e.g. incorrectly specified parameters or
-models (modelling a nonlinear system to be linear, or a multimodal system to be unimodal).
-
-Real world systems are often highly nonlinear, exhibit stochasticity and multimodalities,
-are expensive to run (slow, energy intensive, subject to wear and tear) and
-must be controlled subject to constraints (for safety, efficiency, etc).
-
-Dynamical systems are also subject to \textit{aleatoric uncertainty},
-the type of uncertainty that is inherent to the system and cannot be reduced,
-for example stochasticity (i.e. process noise) and observation noise.
-
-
-This constitues a type of uncertainty known as \textit{epistemic uncertainty}, which can be reduced in the limit
-of infinite data.
-Dynamical systems are also subject to \textit{aleatoric uncertainty},
-the type of uncertainty that is inherent to the system and cannot be reduced,
-for example stochasticity (i.e. process noise) and observation noise.
-
-
-This dissertation is motivated by controlling multimodal dynamical systems, which are
-either unknown, or partially unknown.
-Traditional control techniques rely on dynamics models derived from first-principles based on physics,
-which are often subject to model misspecification (e.g. incorrectly specified parameters).
-This constitues a type of uncertainty known as \textit{epistemic uncertainty}, which can be reduced in the limit
-of infinite data.
-Dynamical systems are also subject to \textit{aleatoric uncertainty},
-the type of uncertainty that is inherent to the system and cannot be reduced,
-for example stochasticity (i.e. process noise) and observation noise.
-
-Modelling a multimodal parameter as unimodal, or incorrectly specifying how a multimodal
-parameter switches between modes, will have a detrimental impact on controller performance.
-In some cases, it may even lead to catastrophic system failure.
-
-Learning dynamics models via probabilistic modelling and Bayesian inference is a promosing
-avenue for controlling real world systems.
-It provides a principled approach to modelling both \textit{epistemic uncertainty}, and \textit{aleatoric uncertainty}
-(uncertainty inherent in the system that cannot be reduced).
-
-Correctly quantified uncertainty is crucial for intelligent decision-making.
-
-When synthesising controllers, it is desirable to account for epistemic uncertainty.
-In a risk-averse setting, it is desirable to avoid entering regions of a learned dynamics model with high \textit{epistemic
-uncertainty}.
-This is because the state-control trajectory cannot be predict confidently, and thus,
-constraints may be violated.
-Conversely, in an explorative setting,
-if the \textit{epistemic uncertainty} has been quantified, then it can be used to guide exploration into
-regions of the dynamics that have not previously been observed.
-This experience can then be used to update the model and reduce the associated \textit{epistemic uncertainty}.
-
-% Traditional control techniques rely on dynamics models derived from first-principles, which
-% are often subject to model misspecification (e.g. incorrectly specified parameters).
-% This is a type of uncertainty known as \textit{epistemic uncertainty}.
-% It is desirable to account for epistemic uncertainty,
-% as well as the uncertainty inherent in the system, known as \textit{aleatoric uncertainty}
-% (arising from the inherent stochasticity of the system) when synthesising controllers.
-
-Traditional control techniques rely on dynamics models derived from first-principles, which
-are often subject to model misspecification (e.g. incorrectly specified parameters).
-This is a type of uncertainty known as \textit{epistemic uncertainty}.
-When synthesising controllers, it is desirable to account for epistemic uncertainty.
-In a risk-averse setting, it is desirable to avoid entering regions of a learned dynamics model with high \textit{epistemic
-uncertainty}.
-This is because the state-control trajectory cannot be predict confidently, and thus,
-constraints may be violated.
-Conversely, in an explorative setting,
-if the \textit{epistemic uncertainty} has been quantified, then it can be used to guide exploration into
-regions of the dynamics that have not previously been observed.
-This experience can then be used to update the model and reduce the associated \textit{epistemic uncertainty}.
-
-Learning dynamics models via probabilistic modelling and Bayesian inference is a promosing
-approach for controlling real world systems;
-as it provides a principled approach to modelling both epistemic and aleatoric uncertainty.
-Correctly quantified uncertainty is crucial for intelligent decision-making.
-
-This dissertation is motivated by controlling dynamical systems that exhibit multimodalities, which are
-either unknown, or partially unknown.
-Incorrectly specifying a multimodal parameter as unimodal, or incorrectly specifying how a multimodal
-parameter switches between modes will have a detrimental impact on controller performance.
-In some cases, it may even lead to catastrophic failure.
-
-% Learning dynamics models for control (in either the model-based reinforcement learning or model-based planning settings)
-
-
-Model-based approaches offer a principled approach for handling constraints
-
-Model-based approaches offer a principled approach for modelling both
-
-
-This may be
-where some of the dynamics modes
-
-stochasticity of
-and design controllers to account for
-model misspecifications, stochasticity of
-
-
-
-uncertainty in model parameters
-
-
-Constraints
-data-efficiency
-target exploration
-uncertainty
-stochasticity
-
-
-
-dynamics model learning
-integration of learned dynamics models planning
-
-
-unknown or partially unknown transition dynamics
-The promise of learning-based control  address model misspecification
-
-When leveraging learned dynamics models for control
-
-
-
-which must be correctly accounted
-for when learning from observations
 \end{SingleSpace}
 #+END_EXPORT
 
@@ -1155,7 +1000,7 @@ $\pykGivenxNegF$ contains a GP conditional with complexity
 ** Inference
 
 * Introduction
-** intro :ignore:
+** Intro :ignore:
 # *Dynamical Systems*
 # The modern world is pervaded with dynamical systems that we seek to control to achieve a desired behaviour.
 # Examples include autonomous vehicles, aircraft, robotic manipulators, financial markets and energy management systems.
@@ -1192,43 +1037,52 @@ $\pykGivenxNegF$ contains a GP conditional with complexity
 # cite:sutton2018reinforcement and control theory \todo{cite control theory book?} communities),
 
 
-In the last decade, learning-based control citep:hewingLearningBased2020,sutton2018reinforcement has become
-a popular paradigm for controlling dynamical systems.
+
+The modern world is pervaded with dynamical systems that we seek to control to achieve a desired behaviour.
+Examples include autonomous vehicles, aircraft, robotic manipulators, financial markets and energy management systems.
+In the last decade, reinforcement learning, and learning-based
+control in general, have become
+popular paradigms for controlling dynamical systems citep:hewingLearningBased2020,sutton2018reinforcement.
 This can be accounted to significant improvements in sensing and computational capabilities, as well as
 recent successes in machine learning.
-This growing interest in learning and data-driven control
+# From robotics, to industrial processing, to finance, learning-based control
+# offers promise of solving problems that could not previously be solved with purely control
+# theoretic approaches.
+
+This growing interest in learning-based control
+\parmarginnote{real-world systems}
 has emphasised the importance for real-world considerations.
-In contrast to simulation, the control of physical systems has real-world consequences.
-For example,
+Real world systems are often highly /nonlinear/, exhibit /stochasticity/ and /multimodalities/,
+are expensive to run (energy intensive, subject to wear and tear) and
+must be controlled subject to /constraints/ (for safety, efficiency, and so on).
+In contrast to simulation, the control of physical systems also has real-world consequences:
 components may get damaged, the system may damage its environment, or the system may catastrophically fail.
 As such, any control strategy deployed in the real-world should ensure the safety of itself and
 its surrounding environment.
+# Therefore, any control strategy deployed in the real-world should ensure the safety of itself and
+# its surrounding environment.
 
-\parmarginnote{multimodal systems}
 Many dynamical systems exhibit multimodalities (in their transition dynamics), where some of the dynamics modes
-may be /unsafe/.
+\parmarginnote{multimodal systems}
+are believed to be /unoperatable/ or /unsafe/.
 These multimodalities may be due to spatially varying model parameters, for example,
-process noise terms modelling aircraft turbulence, or friction coefficients.
-In these systems, it is desirable to remain in a specific dynamics mode that is known to be operatable.
-Perhaps the other modes are hard to control due to stability, or the controlling the mode switch itself is hard.
-In this setting, safety can be viewed as remaining in the desired dynamics mode.
-It may also be desirable to remain in a desired mode for /efficiency/ or /performance/ reasons,
-however, this dissertation is motivated through the lens of safety.
-# modelling the interaction between ground vehicle's tyres and different surface types.
+process noise terms modelling aircraft turbulence, or friction coefficients modelling
+surface-tyre interactions for ground vehicles over different terrain.
+In these systems, it is desirable to remain in a specific dynamics mode that is known to be /operatable/.
+Perhaps the other modes are hard to control due to stability, or the mode switch itself is hard to control.
+Or perhaps it is desirable to remain in a desired mode for /efficiency/ or /performance/ reasons.
+Given these motivations, this dissertation is interested in control techniques for
+driving dynamical systems from an initial state,
+to a target state, whilst remaining in a desired dynamics mode.
 
-Safe control in systems where the environment is /known a priori/ has been well studied by the control and formal
-methods communities.
-However, safe control when the environment is /not known a priori/ has been less well studied.
-Recent work by cite:berkenkampSafe2019 attempts to address safe learning-based control in the
-reinforcement learning setting, where the environment is /not known a priori/.
-It is important to note that the definition of safety varies,
-and should be defined on a system by system basis;
-cite:berkenkampSafe2019 define safety in terms of closed-loop
-stability but it is also common to define safety in terms of constraint satisfaction (on the states and controls).
-# They define safety in terms of stability and exploit Lyapanov functions to construct a safe RL framework.
-# Other approaches
+# In particular, it is primarily interested in controlling a quadrotor in an environment
+# subject to two dynamics modes: 1) a turbulent
+# dynamics mode in front of a fan, and 2) a non turbulent dynamics mode everywhere else.
+# The objective in this environment is to control the quadrotor, whilst navigating to a target location,
+# and remaining in the operatable (non turbulent) dynamics mode.
 
-Model-based control comprises a powerful set of techniques for finding controls of constrained dynamical
+Model-based control comprises a powerful set of techniques for finding controls of /constrained/ dynamical
+\parmarginnote{model-based control}
 systems, given a transition dynamics model describing the evolution of the controlled system.
 It is commonly used for controlling aircraft, robotic manipulators, and walking
 robots cite:vonstrykDirect1992,bettsSurvey1998,gargUnified2010.
@@ -1236,8 +1090,10 @@ One caveat is that it requires a relatively accurate mathematical model of the s
 Traditionally, these mathematical models are built using first principles based on physics.
 However, accurately modelling the underlying transition dynamics can be challenging and
 lead to the introduction of model errors.
+For example, incorrectly specifying model parameters, or
+models themselves (modelling a nonlinear system to be linear, or a multimodal system to be unimodal).
 Incorrectly specifying these model parameters (and their associated uncertainty)
-can have a detrimental impact on controller performance
+can have a detrimental impact on controller performance,
 and is an active area of research in the robust
 and stochastic optimal control communities cite:freemanRobust1996,stengelStochastic1986.
 # For example, model parameters might be,
@@ -1247,129 +1103,128 @@ and stochastic optimal control communities cite:freemanRobust1996,stengelStochas
 # 3) assumed constant when in reality they vary with time, e.g. mass reducing due to fuel consumption.
 
 The difficulties associated with constructing mathematical representations of dynamical systems
+\parmarginnote{learning dynamics models}
 can be overcome by learning from observations cite:ljungSystem1999.
+Learning dynamics models has the added benefit that it
+alleviates the dependence on domain experts for specifying accurate models, in turn making it easier to
+deploy more general techniques.
 However, learning dynamics models for control introduces other difficulties.
 For example, it is important to know
 where the model cannot predict confidently due to a lack of training observations.
 This concept is known as /epistemic uncertainty/ and is reduced in the limit of infinite data.
-In a risk-averse setting, it is desirable to avoid entering regions of a learned dynamics model with high /epistemic
+Correctly quantifying uncertainty is crucial for intelligent decision-making.
+
+In a *risk-averse setting*, it is desirable to avoid entering regions of a learned dynamics model with high /epistemic
 uncertainty/.
-This is because it cannot predict the state-control trajectory confidently, and thus, if the safety
-constraints are satisfied.
-Conversely, in an explorative setting,
+\parmarginnote{decision-making under uncertainty}
+This is because it cannot predict the trajectory confidently, and thus, if any safety
+constraints have been violated.
+In our case, it does not know if the trajectory will remain in the desired dynamics mode.
+Conversely, in an *explorative setting*,
 if the /epistemic uncertainty/ has been quantified, then it can be used to guide exploration into
 regions of the dynamics that have not previously been observed.
 This experience can then be used to update the model and reduce its associated /epistemic uncertainty/.
-# it is
-# desirable to enter regions of the dynamics that have not previously been observed as this experience can be used
-# reduce the epistemic uncertainty in the learned dynamics.
-# in order to collect data.
-# The quantified epistemic uncertainty can be used to guide exploration, and
-# in turn, reduce the epistemic uncertainty.
 
-# It is also important to accurately model /aleatoric uncertainty/ (unknowns that differ each time
-# an experiment is run).
-# For example, uncertainty arising from our observations of the system (observation noise) and uncertainty associated
-# with the stochasticity of the transition dynamics (process noise).
-# In the field of machine learning, these challenges are often solved using probabilistic models.
-# In the probabilistic framework, understanding is achieved by separating signal from noise and removing redundancies in
-# complex and noisy data.
-# Probabilistic models provide a principled approach to modelling and disentangling these different sources
-# of uncertainty when learning from observations.
-
-
-This dissertation is interested in safe learning-based control in multimodal dynamical systems with /unknown/, or
-/partially unknown/, transition dynamics, where safety is governed by the underlying dynamics modes.
-It is assumed that complete knowledge of how the transition dynamics switch between modes is also /not known a priori/.
-In essence, the safety constraints are /not known a priori/ and should be learned from observations.
-Therefore, this dissertation is interested in jointly inferring the /constraints/ alongside the underlying dynamics modes,
+These two settings are the main concepts explored in this dissertation.
+If the dynamics are not fully /known a priori/, an agent will not be able to confidently plan a
+risk-averse trajectory to the target state.
+How can the agent explore its environment, in turn reducing the /epistemic uncertainty/
+associated with its dynamics model?
+It is assumed that complete knowledge of the transition dynamics and how they
+switch between modes is /not known a priori/.
+Therefore, it is interested in jointly inferring the mode /constraints/ alongside the underlying dynamics modes,
 through repeated interactions with the system.
+Once the agent has explored enough, how can the learned model be exploited to plan risk-averse trajectories
+that attempt to remain in a desired dynamics mode, and in regions of the learned
+dynamics with low /epistemic uncertainty/?
 
-This dissertation first addresses learning representations of multimodal dynamical systems that learn structure
+More generally, this dissertation is interested in learning and control in multimodal dynamical systems.
+In Chapter ref:chap-dynamics, it starts by formulating learning as approximate Bayesian inference in
+a probabilistic representation of the transition dynamics.
+Assuming access to a historical data set of state transitions from the entire domain, Chapter ref:chap-traj-opt
+develops two risk-averse trajectory optimisation algorithms.
+Given the dynamics model from Chapter ref:chap-dynamics, trained on these observations,
+these algorithms are capable of finding trajectories that remain in the desired dynamics mode, whilst avoiding
+regions of the learned dynamics with high /epistemic uncertainty/.
+Finally, Chapter ref:chap-active-learning addresses the question of active learning, i.e. incrementally
+learning the dynamics model through repeated interactions with the environment.
 
-The chapters in this dissertation break the problem down into smaller and more manageable pieces of work.
-In Chapter ref:chap-dynamics access to a historical data set of state transitions is assumed.
-This alleviates
+# It assumes that complete knowledge of the transition dynamics and how they
+# switch between modes is /not known a priori/.
+# In essence, the system /constraints/ on the mode are /not known a priori/ and need to be inferred from observations.
+# Therefore, it is interested in jointly inferring the /constraints/ alongside the underlying dynamics modes,
+# through repeated interactions with the system.
 
+# certain enough in its dynamics, it will be able to plan a risk-averse trajectory
+# Once the agent is certain enough in its dynamics, it will be able to plan a risk-averse trajectory
+# to the target state.
 
-** ignore
-
-cite:deisenrothPILCO2011,schneiderExploiting1996.
-
-For example, cite:deisenrothPILCO2011,cutlerEfficient2015,panProbabilistic2014 use Gaussian processes (GPs) to learn
-transition dynamics from observations.
-
-GPs lend themselves to data-efficient learning through the selection of informative priors, and
-when used in a Bayesian setting offer well calibrated uncertainty estimates.
-Methods for learning probabilistic multimodal transition dynamics have also been proposed:
-cite:Mckinnon used a mixture of GP experts method,
-cite:Moerland studied the used of deep generative models and
-cite:Kaiser2020a proposed a Bayesian model that learns independent
-dynamics modes whilst maintaining a
-probabilistic belief over which mode is responsible for predicting at a given input location.
-
-
-In some systems it is desirable to remain in a dynamics mode that is known to be safe whilst avoiding
-regions of the dynamics where specific parameters
-Each mode in a dynamics
-
-*Real World* Controlling systems in the real-world (especially physical systems)
-can have /real/ and /undesirable/ consequences.
-- Safety
-  - /do not know/ the environment /a priori/
-  - model bias
-  - cannot reason about safety of control
-- Data-efficiency
+# Collectively, these two settings are known as the exploration-exploitation trade-off,
+# which is well-known in the reinforcement learning and optimal control communities.
 
 
-Model errors - epistemic/aleatoric uncertainty
+# As a result, it is interested in learning dynamics models incrementally, without violating some notion
+# of constraint on the dynamics modes.
 
 
 
+# This dissertation is interested in learning dynamics models for multimodal dynamical systems with /unknown/, or
+# /partially unknown/, transition dynamics, where safety is governed by the underlying dynamics modes.
+# It is assumed that complete knowledge of how the transition dynamics switch between modes is also /not known a priori/.
+# In essence, the safety constraints are /not known a priori/ and should be learned from observations.
+# Therefore, this dissertation is interested in jointly inferring the /constraints/ alongside the underlying dynamics modes,
+# through repeated interactions with the system.
 
-Remain in a desired dynamics mode/regime.
 
-*Motivation* For example, consider controlling an autonomous vehicle to navigate
-to a desired location in an environment subject to different road surfaces (asphalt, loose gravel, grass)
-operating in an
-environment subject to spatially friction coefficients
+# Safe control in systems where the environment is /known a priori/
+# has been well studied by the control and formal methods communities.
+# However, safe control when the environment is /not known a priori/ has been less well studied.
+# Recent work by cite:berkenkampSafe2019 attempts to address safe learning-based control in the
+# reinforcement learning setting, where the environment is /not known a priori/.
+# In cite:schreiterSafe2015 the authors address active learning in Gaussian process dynamics models, by
+# deploying a binary GP classification model that indicates safe and unsafe regions.
+# # Although this dissertation is not directly interested in safe control,
+# # their work on constrained exploration is particularly relevant.
 
-*Motivation* For example, consider controlling an autonomous air vehicle operating in an
-environment subject to regions of high turbulence, i.e. spatially varying  process noise.
-Process noise and observation noise are the constituent sources of aleatoric uncertainty; uncertainties that are inherent in a system and cannot be reduced.
-They pose a significant issue for controlling such systems as we cannot model turbulence and thus account
-for it in control algorithms.
-# Unlike epistemic uncertainty that can be reduced by collecting more data.
+
+# It is important to note that the definition of safety varies,
+# and should be defined on a system by system basis;
+# cite:berkenkampSafe2019 define safety in terms of closed-loop
+# stability but it is also common to define safety in terms of constraint satisfaction (on the states and controls).
+# They define safety in terms of stability and exploit Lyapanov functions to construct a safe RL framework.
+# Other approaches
+
+
+# This dissertation is motivated by controlling dynamical systems that exhibit multimodalities, which are
+# either unknown, or partially unknown.
+# Incorrectly specifying a multimodal parameter as unimodal, or incorrectly specifying how a multimodal
+# parameter switches between modes will have a detrimental impact on controller performance.
+# In some cases, it may even lead to catastrophic failure.
 
 ** Contributions
-This dissertation explores learning
+This dissertation explores mode constrained control in multimodal dynamical systems that explicitly reasons
+about uncertainties during learning and control.
+The risk-averse trajectory optimisation algorithms /know what they do not know/, and only evaluate regions that
+they are confident in.
+Conversely, the exploratory trajectory optimisation algorithm exploits this information to guide
+the system into regions that it has not previously observed.
+The primary contributions of this dissertation are as follows:
 - Chapter ref:chap-dynamics: details an approach to learning the underlying dynamics modes (and
   how they're separated) in multimodal dynamical systems.
   The approach formulates a probabilistic representation of the transition dynamics resembling a Mixture of
   Gaussian Process Experts model. It then performs approximate Bayesian inference via a novel variational lower
   bound that principally handles uncertainty and provides scalability via stochastic gradient methods.
   The method is tested on a real-world quadcopter data set and two data sets obtained from simulated environments ...
-- Chapter ref:chap-traj-opt: introduces a trajectory optimisation technique that finds trajectories that attempt
+- Chapter ref:chap-traj-opt: introduces two trajectory optimisation techniques that find trajectories that attempt
   to remain in a desired dynamics mode, and in regions of the learned dynamics that have been observed, so can be
-  predicted confidently. It exploits the latent geometry and well-calibrated (epistemic) uncertainty estimates
+  predicted confidently. It exploits the latent /geometry/ and well-calibrated /epistemic uncertainty/ estimates
   inferred by the probabilistic model from Chapter ref:chap-dynamics.
-- Chapter ref:chap-control:
+- Chapter ref:chap-active-learning:
 
 ** Associated Publications
 fullcite:scannellTrajectory2021
 
 ** Motivation
-This paper is interested in controlling a DJI Tello quadcopter in an environment
-with spatially varying turbulence induced by a fan at the side of the room, shown
-in Fig. ref:fig-problem-statement.
-It is hard to know the exact transition dynamics due to complex and uncertain
-interactions between the quadcopter and the fan.
-The system's transition dynamics resemble a mixture of two modes: a turbulent mode in front of
-the fan and a non-turbulent mode everywhere else.
-When planning a trajectory from start state $\mathbf{x}_0$ to desired state $\mathbf{x}_f$
-it is preferred to avoid entering the turbulent mode, as it
-results in poor performance and sometimes even system failure.
-
 #+BEGIN_EXPORT latex
 \begin{figure}[!t]
 \centering
@@ -1378,16 +1233,38 @@ results in poor performance and sometimes even system failure.
 This work seeks to velocity control a DJI Tello quadcopter in an indoor environment
 subject to two modes of operation characterised by process noise (turbulence).
 A high turbulence mode is induced by placing a desktop fan at the right side of the room.
-Data from four trajectories following a single 2D $\mathbf{x}=(x,y)$ target trajectory captures the variability
-(process noise) in the dynamics.
-Our goal is to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
+The goal is to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
 remaining in the non-turbulent mode or prioritise avoiding regions of the learned dynamics
 with high epistemic uncertainty due to lack of training observations.}
 \label{fig-problem-statement}
 \end{figure}
 #+END_EXPORT
+This dissertation is interested in controlling a DJI Tello quadcopter with partially unknown dynamics,
+in an environment
+subject to spatially varying turbulence induced by a fan at the side of the room, shown
+in Fig. ref:fig-problem-statement.
+It is hard to know the exact transition dynamics due to complex and uncertain
+interactions between the quadcopter and the fan.
+The system's transition dynamics can be represented by two dynamics modes,
+1) a turbulent mode in front of the fan, and,
+2) a non-turbulent mode everywhere else.
+When planning a trajectory from an intial state $\mathbf{x}_0$ in the desired mode (mode 2),
+to a target state $\mathbf{x}_f$,
+it is preferred to avoid entering the turbulent mode (mode 1), as it
+results in poor performance and sometimes even system failure.
 
-** Introduction traj opt paper
+# *Motivation* For example, consider controlling an autonomous vehicle to navigate
+# to a desired location in an environment subject to different road surfaces (asphalt, loose gravel, grass)
+# operating in an
+# environment subject to spatially friction coefficients
+
+# *Motivation* For example, consider controlling an autonomous air vehicle operating in an
+# environment subject to regions of high turbulence, i.e. spatially varying  process noise.
+# Process noise and observation noise are the constituent sources of aleatoric uncertainty; uncertainties that are inherent in a system and cannot be reduced.
+# They pose a significant issue for controlling such systems as we cannot model turbulence and thus account
+# for it in control algorithms.
+
+** Introduction traj opt paper :noexport:
 Many physical systems operate under switching dynamics modes due to
 changing environmental or internal conditions.
 Examples include: robotic grasping where objects with different
@@ -1467,6 +1344,24 @@ remain in a single dynamics mode
 whilst avoiding regions of the transition dynamics that cannot be predicted confidently.
 To the best of our knowledge, there is no previous work addressing such trajectory optimisation
 in transition dynamics models.
+
+Probabilistic modelling and Bayesian inference are a promising
+avenue for learning dynamics models to be used for controlling real world systems.
+\parmarginnote{probabilistic modelling}
+The Bayesian framework provides a principled approach to modelling both the
+/epistemic uncertainty/ associated with the model,
+and the /aleatoric uncertainty/ inherent to the system (e.g. process noise).
+For example, cite:deisenrothPILCO2011,cutlerEfficient2015,panProbabilistic2014
+use Gaussian processes (GPs) to learn
+transition dynamics from observations.
+GPs lend themselves to data-efficient learning through the selection of informative priors, and
+when used in a Bayesian setting offer well calibrated uncertainty estimates.
+Methods for learning probabilistic multimodal transition dynamics have also been proposed:
+cite:mckinnonLearning2017 use a Mixture of GP Experts method,
+cite:moerlandLearning2017 study the use of deep generative models and
+cite:kaiserBayesian2020 propose a Bayesian model that learns independent
+dynamics modes whilst maintaining a
+probabilistic belief over which mode is responsible for predicting at a given input location.
 
 * Background and Related Work
 ** intro :ignore:
@@ -2090,7 +1985,7 @@ We then test our model on the motorcycle data set and compare it to a sparse var
 
 
 
-** Old                                                            :noexport:
+** Old :noexport:
 In cite:NhatAnhNguyen2018 they highlight that the previously mentioned approaches are limited as
 each expert is trained using only the local data
 assigned to it. This means that they do not take into account the global information, i.e. the
@@ -2231,7 +2126,7 @@ These inducing inputs enable stochastic variational inference in our model which
 up inference.
 
 
-** Ignore                                                         :noexport:
+** Ignore :noexport:
 
 The \glspl{mgp} literature commonly highlights two main issues that they
 seek to address.
@@ -2676,7 +2571,7 @@ This approach can be see as trading in the computational benefits of assigning o
 (Equation ref:eq-np-moe-marginal-likelihood-assign) in favour
 of directly capturing the correlations between all observations.
 
-*** Identifiable Mixtures of Gaussian Processes for Control
+*** Identifiable Mixtures of Gaussian Process Experts for Control
 # The gating network models how the dynamics switch between modes over the input space and is of particular importance
 # in this work.
 # The gating network is of particular importance in this work as it models how the dynamics switch
@@ -3495,7 +3390,7 @@ with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode.
 # \normalsize
 # #+END_EXPORT
 
-** Inference [[label:sec-inference]]
+** Approximate Inference [[label:sec-inference]]
 #+begin_export latex
 \epigraph{Nature laughs at the difficulties of integration.}{\textit{Pierre-Simon Laplace}}
 #+end_export
@@ -3911,7 +3806,7 @@ This is another bound I implemented,
 
 \todo[inline]{Need to extend bound for the gating network}
 
-** Inference_old [[label:sec-inference]]
+** Inference_old [[label:sec-inference]] :noexport:
 #+begin_export latex
 \epigraph{Nature laughs at the difficulties of integration.}{\textit{Pierre-Simon Laplace}}
 #+end_export
@@ -4954,7 +4849,7 @@ Given a start and end state, the trajectory optimisation can be tuned to find tr
 prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
 dynamics model with high epistemic uncertainty.
 
-* Trajectory Optimisation in Desired Modes as Probabilistic Inference label:chap-control
+* Trajectory Optimisation in Desired Modes as Probabilistic Inference label:chap-active-learning
 cite:schreiterSafe2015 use a GP classifier to identify safe and unsafe regions when learning GP dynamics models
 in an active learning setting.
 ** Intro :ignore:
@@ -6229,3 +6124,7 @@ H(\alpha \mid \control, \mathcal{D}) &\approx h \left(\int \Phi(\gatingFunc(\sta
 \printbibliography
 % \endgroup
 #+END_EXPORT
+
+* citations to include
+
+cite:schneiderExploiting1996
