@@ -6365,6 +6365,8 @@ p(\mathbf{J}(\state_{\timeInd})) =
 
 \newcommand{\outputGivenInputParams}{\ensuremath{p(\output \mid \input, \params)}}
 \newcommand{\outputGivenInputData}{\ensuremath{p(\output \mid \input, \mathcal{D})}}
+
+\newcommand{\gatingFunc}{\ensuremath{g}}
 #+END_EXPORT
 This chapter is concerned with exploration in mulitmodal dynamical systems
 where the transition dynamics are /not fully known a priori/.
@@ -6396,12 +6398,18 @@ when learning GP dynamics models in an active learning setting.
 However, they assume that they can directly observe whether a particular
 data point environment belongs to either the safe or unsafe regions.
 
+Utilising mutual information for active learning has been well motivated by, for example,
+cite:krauseNearOptimal2008.
+They highlight that mutual information may lead to a more accurate model than differential entropy.
+It has also been shown that minimising the mutual information  is the same as minimising the expected posterior
+uncertainty (conditional entropy) in the model cite:ertinMaximum2003.
+
 ** Bayesian Information Theoretic Active Learning
 Following cite:houlsbyBayesian2011 this section introduces Bayesian
 information theoretic active learning.
 The Bayesian framework assumes that there are some latent parameters $\params$,
 that control the dependence between the inputs $\input \in \inputDomain$
-and the outputs $\output \in \outputDomain$.
+and the outputs $p(\output \mid \input, \params)$.
 Given observations of the system
 $\mathcal{D} = \{(\input_\timeInd, \output_\timeInd)\}_{\timeInd=1}^\TimeInd$,
 it is assumed that the posterior over the parameters given the data
@@ -6410,18 +6418,32 @@ has been inferred.
 The goal of information theoretic active learning is to reduce the number of
 possible hypothesis as fast as possible, i.e. minimise the uncertainty associated
 with the parameters using Shannon's entropy cite:coverElements2006.
+#+BEGIN_EXPORT latex
+\newcommand{\crv}{\ensuremath{X}}
+\newcommand{\density}{\ensuremath{p(\crv)}}
+\begin{myquote}
+\textbf{Differential Entropy}
+Let $\crv$ be a continuos random variable, with a probability density
+$\density$,
+whose support is a set $\mathcal{X}$.
+The differential entropy $H(\crv)$ is then defined as,
+\begin{align} \label{eq-differential-entropy}
+H(\crv) = - \int_{\mathcal{X}} \density \text{log} \density \text{d} \crv.
+\end{align}
+\end{myquote}
+#+END_EXPORT
 Data points $\dataset^*$ should thus be selected according to,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq--posterior-entropy}
+\begin{align} \label{eq-posterior-entropy}
 \text{arg}\underset{\dataset^*}{\min}
 H(\params \mid \dataset^*)
 = \text{arg}\underset{\dataset^*}{\min}
 - \int p(\params \mid \dataset^*) \text{log} p(\params \mid \dataset^*) \text{d} \params.
 \end{align}
 #+END_EXPORT
-However, in general, solving this problem is NP-hard,
+In general, solving this problem is NP-hard,
 so it is common to approximate it with a myopic greedy approximation.
-cite:krauseNearOptimal2008 show that a myopic policy can perform near-optimally.
+cite:krauseNearOptimal2008,dasguptaAnalysis2005 show that a myopic policy can perform near-optimally.
 The objective is then to seek the input $\input$ that maximises the decrease in
 expected posterior entropy,
 #+BEGIN_EXPORT latex
@@ -6436,6 +6458,23 @@ H(\params \mid \dataset)
 An important insight is that minimising Eq. ref:eq-expected-decrease-entropy
 is equivalent to minimising the conditional mutual information between
 the output and the parameters $I(\output, \params \mid \input, \dataset$.
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Mutual Information}
+Given two sets of random variables, $\mathbf{X}$ and $\mathbf{F}$, with joint density $p(\mathbf{X}, \mathbf{F})$ the
+mutual information \cite{coverElements2006} is given by,
+\begin{align} \label{eq-mutual-information}
+I(\mathbf{X};\mathbf{F}) = \int p(\mathbf{X},\mathbf{F}) \text{log}\frac{p(\mathbf{X},\mathbf{F})}{p(\mathbf{X})p(\mathbf{F})}
+\text{d}\mathb{X} \text{d}\mathb{F},
+\end{align}
+#+END_EXPORT
+and its well known relationship to differential entropy $H(\cdot)$ is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mutual-information-entropy}
+I(\mathbf{X};\mathbf{F}) =  H(\mathbf{X}) - H(\mathbf{X} \mid \mathbf{F}).
+\end{align}
+\end{myquote}
+#+END_EXPORT
 An equivalent objective function can therefore be formulated in the output $\output$
 space as,
 #+BEGIN_EXPORT latex
@@ -6445,38 +6484,161 @@ H(\output \mid \input, \dataset)
 - \E_{\params \sim p(\params \mid\dataset)} \left[ H(\output \mid \input, \params) \right].
 \end{align}
 #+END_EXPORT
-The entropy terms in Eq. ref:eq--output-space-entropy are now calculated
+The entropy terms in Eq. ref:eq-output-space-entropy are now calculated
 in a (usually) low dimensional output space.
 In the binary classification setting, Eq. ref:eq-output-space-entropy simply
 involves calculating the entropy of Bernoulli random variables.
-Intuitively, the first term $H(\output \mid \input, \dataset)$) seeks to
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Entropy of Bernoulli Variable}
+Consider a Bernoulli random varialbe $\output$ with probability $p$.
+The entropy of such a Bernoulli random variable is given by,
+\begin{align} \label{eq-entropy-bernoulli}
+H(\alpha) &= h_{\text{Bern}}(p) \\
+h_{\text{Bern}}(p) &= -p \text{log}p - (1-p) \text{log}(1-p),
+\end{align}
+\end{myquote}
+#+END_EXPORT
+Intuitively, the first term in Eq. ref:eq-output-space-entropy
+($H(\output \mid \input, \dataset)$) seeks to
 find the input $\input$ where the model is marginally most uncertain about
 its corresponding output $\output$, whilst the
 second term
-$- \E_{\params \sim p(\params \mid\dataset)} \left[ H(\output \mid \input, \params) \right]$
+$(- \E_{\params \sim p(\params \mid\dataset)} \left[ H(\output \mid \input, \params) \right])$
 prefers inputs whose parameter settings are confident.
 As highlighted by cite:houlsbyBayesian2011, this can be interpreted as finding the
 input $\input$ for which the parameters under the posterior, disagree about
 the output $\output$ the most.
 
-cite:houlsbyBayesian2011 formulate Bayesian active learning for Gaussian process
-binary classification with a Bernoulli likelihood.
-Their approach approximates Eq. ref:eq-output-space-entropy in the context of
-GP classification.
-
-
-*Bimodal Systems*
-The entropy of a Bernoulli random variable is given by,
+*** Active Learning for GP Classification
+cite:houlsbyBayesian2011 formulate Bayesian active learning in the GP
+binary classification model,
 #+BEGIN_EXPORT latex
-\newcommand{\gatingFunc}{\ensuremath{g}}
-\begin{align} \label{eq--entropy-bernoulli}
-H(\alpha \mid \control, \gatingFunc) &= h(\Phi(\gatingFunc(\control))) \\
-h(p) &= -p \text{log}p - (1-p) \text{log}(1-p)
+\begin{align} \label{eq-binary-gp-classification}
+\gatingFunc &\sim \mathcal{GP}(\mu(\cdot), k(\cdot,\cdot)) \\
+\output \mid \gatingFunc, \input &\sim \text{Bernoulli}(\Phi(\gatingFunc(\input)))
+\end{align}
+#+END_EXPORT
+where $\Phi$ represents the Gaussian CDF and $\Phi(\gatingFunc(\input))$ is
+the probability of the (Bernoulli) output variable
+$\alpha$ cite:nickischApproximations2008.
+Their approach introduces approximations to the two terms in
+Eq. ref:eq-output-space-entropy.
+They assume that the posterior over the latent function $\gatingFunc$
+is approximated to be Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-classification-posterior}
+\gatingFunc \mid \input, \mathcal{D} &\sim \mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset}).
+%\mu_{\input,\dataset} &= k(\input, \allInput) k(\allInput, \allInput)^{-1} \bm\alpha \\
+%\sigma^2_{\input,\dataset}) &= k(\input, \input)
+%- k(\input, \allInput) k(\allInput, \allInput)^{-1} k(\allInput, \input)
+\end{align}
+#+END_EXPORT
+The $\overset{1}{\approx}$ symbol will be used to indicate when such an approximation
+has been exploited.
+The first term in Eq. ref:eq-output-space-entropy is approximated as follows,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-entropy--data}
+H(\output \mid \input, \dataset) &\overset{1}{\approx}
+h_{\text{Bern}} \left(\int \Phi(\gatingFunc(\input)) \mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset}) \text{d} \gatingFunc(\input) \right) \\
+&= h_{\text{Bern}} \left( \Phi \left( \frac{\mu_{\input,\dataset}}{\sqrt{\sigma^2_{\input,\dataset} + 1}} \right) \right).
+\end{align}
+#+END_EXPORT
+The second term is approximated as follows,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-entropy-expected-term}
+\E_{\gatingFunc \sim p(\gatingFunc \mid \dataset)}
+\left[H(\output \mid \input, \gatingFunc) \right]
+&\overset{1}{\approx} \int h_{\text{Bern}}(\Phi(\gatingFunc(\input)))
+\mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset})
+\text{d} \gatingFunc(\input) \\
+&\overset{2}{\approx}
+\int \text{exp}\left( -\frac{\gatingFunc(\input)^2}{\pi \text{ln}2} \right)
+\mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset})
+\text{d} \gatingFunc(\input) \\
+&= \frac{C}{\sqrt{\sigma_{\input,\dataset}^2 + C^2}}
+\text{exp}\left( -\frac{\mu_{\input,\dataset}^2}{2\left( \sigma_{\input,\dataset}^2 + C^2 \right)} \right) \label{eq-entropy-expected-term-last}
+\end{align}
+#+END_EXPORT
+where $C = \sqrt{\frac{\pi \text{ln}2}{2}}$.
+This approximation exploits a Taylor expansion of $\text{ln} h_{\text{Bern}}(\Phi(\gatingFunc(\input)))$
+(see supplementary material of cite:houlsbyBayesian2011)
+allowing it to be represented up to $\mathcal{O}(\gatingFunc(\input)^4)$ by a squared
+exponential curve ($\text{exp}(-\gatingFunc(\input)^2/\pi\text{ln}2)$).
+This approximation is referred to as $\overset{2}{\approx}$.
+A simple Gaussian convolution then gives the closed form expression in Eq.
+ref:eq-entropy-expected-term-last.
+The objective in Eq. ref:eq-output-space-entropy can then be approximated as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-approximate-output-space-entropy}
+h_{\text{Bern}} \left( \Phi \left( \frac{\mu_{\input,\dataset}}{\sqrt{\sigma^2_{\input,\dataset} + 1}} \right) \right)
++ \frac{C}{\sqrt{\sigma_{\input,\dataset}^2 + C^2}}
+\text{exp}\left( -\frac{\mu_{\input,\dataset}^2}{2\left( \sigma_{\input,\dataset}^2 + C^2 \right)} \right)
 \end{align}
 #+END_EXPORT
 
+
+# #+BEGIN_EXPORT latex
+# \begin{myquote}
+# \textbf{Entropy of Bernoulli Variable}
+# Consider the probit case, where the value of the output $\output$,
+# given latent gating function $\gatingFunc(\input)$, takes a Bernoulli
+# distribution with probability $\Phi(\gatingFunc(\input))$,
+# where $\Phi$ represents the Gaussian CDF.
+# The entropy of such a Bernoulli random variable is given by,
+# \begin{align} \label{eq-entropy-bernoulli}
+# H(\alpha \mid \control, \gatingFunc) &= H_{\mathcal{Bern}}(\Phi(\gatingFunc(\control))) \\
+# H_{\mathcal{Bern}}(p) &= -p \text{log}p - (1-p) \text{log}(1-p),
+# \end{align}
+# where the probability $\Phi(\gatingFunc(\input))$ has been denoted $p$.
+# \end{myquote}
+# #+END_EXPORT
+
 ** Bayesian Information Theoretic Exploration Strategy
-The exploration strategy introduced here is a selective
+# The /static/ active learning problem addressed previously is fundamentally different
+# to the problem in dynamical systems.
+# In the /static/ problem, it is possible to query any point in the input domain.
+# As such, it is open to a clean information-theoretic treatment.
+# In the /dynamic/ problem, the system must be steered through the
+# unknown dynamics $\dynamics$ by a sequence of controls $\controlTraj$.
+In dynamical systems an arbitrary state $\state$ cannot be sampled, so instead, the dynamics must be steered
+to $\state$ through the unknown dynamics $\dynamicsFunc$ through a sequence of controls $\control$.
+Thus, there is information gain along the trajectory which must also be
+considered.
+As highlighted by cite:buisson-fenetActively2020, information gain in dynamical systems is therefore
+fundamentally different to the /static/ problem addressed by cite:krauseNearOptimal2008
+and cite:houlsbyBayesian2011.
+The goal here is to pick the most informative control trajectory $\controlTraj$ whilst observing $\stateTraj$.
+Recent work has addressed active learning in (unimodal) GP dynamics models
+citep:buisson-fenetActively2020 and (unimodal)
+GP state-space models citep:caponeLocalized2020.
+
+#+BEGIN_EXPORT latex
+\newcommand{\gatingOutput}{\ensuremath{h(\singleInput)}}
+\newcommand{\gatingTransition}{\ensuremath{p(\gatingOutput \mid \state_\timeInd, \control_\timeInd)}}
+\begin{align} \label{eq-mutual-information}
+\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} H(\stateTraj, \controlTraj) &=
+\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
+&= \underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
+\text{log} \gatingTransition \text{d} \gatingOutput
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mutual-information}
+\underset{\control \in \controlDomain}{\text{argmax}} H(\stateTraj, \controlTraj) &=
+\underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
+&= \underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
+\text{log} \gatingTransition \text{d} \gatingOutput \\
+\end{align}
+#+END_EXPORT
+
+
+The exploration strategy introduced in this chapter builds on the approximate
+entropy objective in Eq. ref:eq-approximate-output-space-entropy.
+
+
+is a selective
 sampling approach based on the differential entropy of the GP posterior
 over the desired modes gating function.
 The
@@ -6496,12 +6658,6 @@ We consider a fully discriminative model where the goal of active learning is to
 
 
 
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq--entropy--data}
-H(\alpha \mid \control, \mathcal{D}) &\approx h \left(\int \Phi(\gatingFunc(\state, \control)) \mathcal{N}(\alpha \mid \mu_\alpha, \sigma^2_\alpha) \text{d} \alpha \right) \\
-&= h \left( \Phi \left( \frac{\mu_\alpha}{\sqrt{\sigma^2_\alpha + 1}} \right) \right)
-\end{align}
-#+END_EXPORT
 
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq--entropy-model}
@@ -6510,7 +6666,6 @@ H(\alpha \mid \control, \mathcal{D}) &\approx h \left(\int \Phi(\gatingFunc(\sta
 \end{align}
 #+END_EXPORT
 
-*Multimodal Systems*
 
 ** Mode Constraints
 In order to ensure that the exploration strategy remains in the desired dynamics
@@ -6520,59 +6675,10 @@ function when it gets close to the decision boundary  w
 ** The Algorithm
 This section introduces the entropy based active learning framework extended by
 
-
 ** Content
-Utilising mutual information for active learning has been well motivated by, for example,
-cite:krauseNearOptimal2008.
-They highlight that mutual information may lead to a more accurate model than differential entropy.
-It has also been shown that minimising the mutual information  is the same as minimising the expected posterior
-uncertainty (conditional entropy) in the model cite:ertinMaximum2003.
-
-Given two sets of random variables $\mathbf{X}$ and $\mathbf{F}$ with joint density $p(\mathbf{X}, \mathbf{F})$ the
-mutual information is given by cite:coverElements2006,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mutual-information}
-I(\mathbf{X};\mathbf{F}) = \int p(\mathbf{X},\mathbf{F}) \text{log}\frac{p(\mathbf{X},\mathbf{F})}{p(\mathbf{X})p(\mathbf{F})}
-\text{d}\mathb{X} \text{d}\mathb{F},
-\end{align}
-#+END_EXPORT
-and its well known relationship differential entropy $H(\cdot)$ is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mutual-information-entropy}
-I(\mathbf{X};\mathbf{F}) =  H(\mathbf{X}) - H(\mathbf{X} \mid \mathbf{F}).
-\end{align}
-#+END_EXPORT
-
-The goal here is to pick the most informative control trajectory $\controlTraj$ whilst observing $\stateTraj$.
-
-cite:caponeLocalized2020,buisson-fenetActively2020
-Active learning can be used to
-
 An approximated mutual information exploration criterion is used
 
 entropy
-#+BEGIN_EXPORT latex
-\newcommand{\gatingOutput}{\ensuremath{h(\singleInput)}}
-\newcommand{\gatingTransition}{\ensuremath{p(\gatingOutput \mid \state_\timeInd, \control_\timeInd)}}
-\begin{align} \label{eq-mutual-information}
-\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} H(\stateTraj, \controlTraj) &=
-\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
-&= \underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
-\text{log} \gatingTransition \text{d} \gatingOutput
-\end{align}
-#+END_EXPORT
-In dynamical systems an arbitrary state $\state$ cannot be sampled, so instead, the dynamics must be steered
-to $\state$ through the unknown dynamics $\dynamicsFunc$ through a sequence of controls $\control$.
-As highlighted by cite:buisson-fenetActively2020, information gain in dynamical systems is therefore
-fundamentally different to the static problem addressed by cite:krauseNearOptimal2008.
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mutual-information}
-\underset{\control \in \controlDomain}{\text{argmax}} H(\stateTraj, \controlTraj) &=
-\underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
-&= \underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
-\text{log} \gatingTransition \text{d} \gatingOutput \\
-\end{align}
-#+END_EXPORT
 
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mutual-information}
@@ -6589,8 +6695,6 @@ p(\state_0) \prod_{\timeInd=1}^{\TimeInd-1}
 p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_{\timeInd}) \text{d}\state_\timeInd
 \end{align}
 #+END_EXPORT
-
-
 
 * Applications
 ** 2D Point Mass Simulation
