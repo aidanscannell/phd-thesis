@@ -217,8 +217,8 @@ Make the equation numbers follow the chapter, not the whole thesis.
 # #+LATEX_HEADER: \newcommand{\parmarginnote}[1]{\hspace{\z@}\marginnote{#1}\ignorespaces}
 #+LATEX_HEADER: \newcommand{\parmarginnote}[1]{\marginnote{#1}}
 ** Text Variables :noexport:
-# #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Control in Multimodal Dynamical Systems}}
-#+latex_header: \newcommand{\ThesisTitle}{{Data Efficient Learning for Control in Multimodal Dynamical Systems}}
+#+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Learning and Control in Multimodal Dynamical Systems}}
+# #+latex_header: \newcommand{\ThesisTitle}{{Data Efficient Learning for Control in Multimodal Dynamical Systems}}
 #+latex_header: \newcommand{\ThesisSubTitle}{Synergising Bayesian Inference and Riemannian Geometry for Control}
 #+latex_header: \newcommand{\FormattedThesisDefenseDate}{\mbox{\formatdate{1}{1}{2100}}}
 #+latex_header: \newcommand{\FormattedAuthorDateOfBirth}{\mbox{\formatdate{1}{1}{2000}}}
@@ -693,13 +693,9 @@ Make the equation numbers follow the chapter, not the whole thesis.
 %help alleviate the dependence on domain exerts for system identification and controller design.
 This dissertation is concerned with \textit{learning} and \textit{control}
 in unknown, (or partially unknown), multimodal dynamical systems.
-It is motivated by driving a dynamical system from an initial state (in a desired dynamics mode),
-to a target state, whilst remaining in the desired dynamics mode.
-For example, consider controlling a quadrotor in an environment subject to two dynamics modes: 1) a turbulent
-dynamics mode in front of a fan, and 2) a non turbulent dyanmics mode everywhere else.
-The goal in this scenario is to fly the quadrotor to a target location,
-whilst remaining in the operatable (non turbulent) dynamics mode.
-%In this scenario the dynamics modes vary spatially (over the state space).
+It is motivated by controlling robotic systems in uncertain environments,
+where both the underlying dynamics modes,
+and how the dyanmics switches between them, are \textit{not fully known a priori}.
 
 %For example, controlling a quadrotor subject to unoperatable dynamics modes that are
 %induced via spatially varying turbulence
@@ -742,6 +738,12 @@ stochastic variational inference.
 %Both methods are evaluated via experiments on a simulated quadrotor, as well as a data set of a
 %DJI Tello quadrotor flying in the Bristol Robotics Laboratory.
 
+Secondly, this dissertation considers driving a dynamical system from an initial state (in a desired dynamics mode),
+to a target state, whilst remaining in the desired dynamics mode.
+For example, consider controlling a quadrotor in an environment subject to two dynamics modes: 1) a turbulent
+dynamics mode in front of a fan, and 2) a non turbulent dyanmics mode everywhere else.
+The goal in this scenario is to fly the quadrotor to a target location,
+whilst remaining in the operatable (non turbulent) dynamics mode,
 In a \textbf{risk-averse setting}, it is desirable to avoid entering regions of a learned dynamics model with
 high \textit{epistemic uncertainty}, as well as remining in the desired dynamics mode.
 This is because the trajectory cannot be predicted confidently, and may leave the operatable dynamics mode.
@@ -752,7 +754,7 @@ Given a partially learned dynamics model, this dissertation develops two traject
 aimed at solving this risk-averse setting.
 The first approach
 exploits concepts of Riemannian geometry (extended to probabilistic geometries) to encode both of the goals
-into a geometric objective function.
+into a geometry inspired objective function.
 The second approach formulates the control problem as probabilistic inference
 in a graphical model, and encodes the goals by conditioning on a mode assignment variable.
 Both methods are evaluated via experiments on a simulated quadrotor, as well as a data set collected onboard
@@ -772,7 +774,6 @@ mode, resulting in an overconstrained problem.
 Loosening the chance constraints enables the algorithm to incrementally explore the environment,
 becoming more confident in the dynamics,
 until it can find a trajectory to the target state that does not violate the chance constraints.
-
 
 
 
@@ -1217,41 +1218,100 @@ The primary contributions of this dissertation are as follows:
   The method is tested on a real-world quadcopter data set and two data sets obtained from simulated environments ...
 - Chapter ref:chap-traj-opt: introduces two trajectory optimisation techniques that find trajectories that attempt
   to remain in a desired dynamics mode, and in regions of the learned dynamics that have been observed, so can be
-  predicted confidently. It exploits the latent /geometry/ and well-calibrated /epistemic uncertainty/ estimates
+  predicted confidently. The first approach (published in cite:scannellTrajectory2021)
+  exploits the latent /geometry/ and well-calibrated /epistemic uncertainty/ estimates
   inferred by the probabilistic model from Chapter ref:chap-dynamics.
+  The second approach formulates trajectory optimisation as probabilistic inference in a graphical model,
+  and achieves the desired behaviour by conditioning on a mode indicator variable.
 - Chapter ref:chap-active-learning:
 
 ** Associated Publications
-fullcite:scannellTrajectory2021
+# The probabilistic model and variational inference scheme presented in Chapter ref:chap-dynamics is used to learn
+# the transition dynamics of a DJI Tello quadcopter in cite:scannellTrajectory2021.
+The first trajectory optimisation algorithm presented in Chapter ref:chap-traj-opt, as well as the approach
+to learning multimodal dynamical systems in Chapter ref:chap-dynamics are published in:
 
-** Motivation
 #+BEGIN_EXPORT latex
-\begin{figure}[!t]
-\centering
-  \includegraphics[width=0.9\columnwidth]{images/quadcopter_bimodal_domain.pdf}
-  \caption{
-This work seeks to velocity control a DJI Tello quadcopter in an indoor environment
-subject to two modes of operation characterised by process noise (turbulence).
-A high turbulence mode is induced by placing a desktop fan at the right side of the room.
-The goal is to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
-remaining in the non-turbulent mode or prioritise avoiding regions of the learned dynamics
-with high epistemic uncertainty due to lack of training observations.}
-\label{fig-problem-statement}
-\end{figure}
+{\color{BrickRed}\fullcite{scannellTrajectory2021}}
 #+END_EXPORT
-This dissertation is interested in controlling a DJI Tello quadcopter with partially unknown dynamics,
-in an environment
-subject to spatially varying turbulence induced by a fan at the side of the room, shown
-in Fig. ref:fig-problem-statement.
+
+** Illustrative Example
+The methods developed throughout this dissertation are evaluated on an illustrative 2D quadcotper example.
+The example considers a quadcopter operating in an environment subject to spatially varying turbulence (induced by a fan).
 It is hard to know the exact transition dynamics due to complex and uncertain
 interactions between the quadcopter and the fan.
 The system's transition dynamics can be represented by two dynamics modes,
-1) a turbulent mode in front of the fan, and,
-2) a non-turbulent mode everywhere else.
-When planning a trajectory from an intial state $\mathbf{x}_0$ in the desired mode (mode 2),
-to a target state $\mathbf{x}_f$,
-it is preferred to avoid entering the turbulent mode (mode 1), as it
-results in poor performance and sometimes even system failure.
+- Mode 1 :: a /turbulent/ mode in front of the fan,
+- Mode 2 :: a /non-turbulent/ mode everywhere else.
+However, the underlying dynamics modes, and how the dynamics switches between them, are \textit{not fully known a priori}.
+Fig. ref:fig-problem-statement shows a graphical representation of this environment.
+#+BEGIN_EXPORT latex
+\begin{figure}[!h]
+\centering
+  \includegraphics[width=0.6\columnwidth]{images/quadcopter_bimodal_domain.pdf}
+  \caption{
+  Diagram showing a top down view of the environment for the 2D quadcopter example.
+  The quadcopter is subject to two dynamics modes: 1) a \textit{turbulent}
+  dynamics mode induced by a fan (blue), and, 2) a \texit{non-turbulent} dynamics mode everywhere else (red).}
+%The goal is learn a factorised representation of the underlying dynamics modes to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
+%remaining in the non-turbulent mode or prioritise avoiding regions of the learned dynamics
+%with high epistemic uncertainty due to lack of training observations.}
+\label{fig-problem-statement}
+\end{figure}
+#+END_EXPORT
+
+This work first considers having prior access to the environment, where it can perform prior flight
+trials and observe state transitions over the domain, i.e. collect a data set of state transitions $\mathcal{D}$.
+Given such a data set, Chapter ref:chap-dynamics investigates learning a factorised representation of the transition
+dynamics.
+# In particular, it represents the multimodal transition dynamics as a probabilistic model, and formulates
+# the learning problem as performing (approximate) Bayesian inference in the model (given the data set $\mathcal{D}$).
+
+Secondly, this dissertation considers the problem of flying the quadcopter from an initial state $\state_0$,
+to a target state $\state_{f}$, whilst attempting to avoid the /turbulent/ dynamics mode.
+Given that the underlying dynamics modes, and how the dynamics switches between them, are \textit{not fully known a priori},
+these control techniques should /air on the side of caution/.
+That is, if the learned dynamics model cannot confidently predict which mode governs the dynamics at a particular region
+(because it has not been observed), then the control techniques should find trajectories that avoid entering these regions,
+as well as avoiding the /turbulent/ dynamics mode.
+Chapter ref:chap-traj-opt investigates trajectory optimisation algorithms that
+exploit the probabilistic model from Chapter ref:chap-dynamics (after performing Bayesian inference
+with the historical data set $\mathcal{D}$), in order to achieve these goals.
+
+# This work develops model-based control techniques (trajectory optimisation algorithms) that
+# exploit the probabilistic model from Chapter ref:chap-dynamics (after performing Bayesian inference
+# with the historical data set $\mathcal{D}$).
+
+Finally, this dissertation considers the more realistic scenario of not having prior access to the environment.
+As such, the quadcopter does not have access to a historical data set to train the model from Chapter ref:chap-dynamics with.
+Instead, it must actively explore its environment to collect data, whilst simultaneously attempting to avoid the /turbulent/
+dynamics mode.
+
+
+# It is motivated by driving a dynamical system from an initial state (in a desired dynamics mode),
+# to a target state, whilst remaining in the desired dynamics mode.
+# For example, consider controlling a quadrotor in an environment subject to two dynamics modes: 1) a turbulent
+# dynamics mode in front of a fan, and 2) a non turbulent dyanmics mode everywhere else.
+# The goal in this scenario is to fly the quadrotor to a target location,
+# whilst remaining in the operatable (non turbulent) dynamics mode,
+# with the added difficulty that the dynamics modes,
+# and how the dyanmics switches between the modes, are \textit{not fully known a priori}.
+
+
+# This dissertation is interested in controlling a
+# DJI Tello quadcopter with partially unknown dynamics,
+# in an environment
+# subject to spatially varying turbulence induced by a fan at the side of the room, shown
+# in Fig. ref:fig-problem-statement.
+# It is hard to know the exact transition dynamics due to complex and uncertain
+# interactions between the quadcopter and the fan.
+# The system's transition dynamics can be represented by two dynamics modes,
+# 1) a turbulent mode in front of the fan, and,
+# 2) a non-turbulent mode everywhere else.
+# When planning a trajectory from an intial state $\mathbf{x}_0$ in the desired mode (mode 2),
+# to a target state $\mathbf{x}_f$,
+# it is preferred to avoid entering the turbulent mode (mode 1), as it
+# results in poor performance and sometimes even system failure.
 
 # *Motivation* For example, consider controlling an autonomous vehicle to navigate
 # to a desired location in an environment subject to different road surfaces (asphalt, loose gravel, grass)
@@ -1363,11 +1423,13 @@ cite:kaiserBayesian2020 propose a Bayesian model that learns independent
 dynamics modes whilst maintaining a
 probabilistic belief over which mode is responsible for predicting at a given input location.
 
-* Background and Related Work
+* Literature Review
+# * Background and Related Work
 ** intro :ignore:
 This chapter provides an overview of learning-based control and details the relevant background information
 for the remainder of the dissertation.
-** Dynamical Systems
+** Dynamical Systems :noexport:
+*** intro :ignore:
 Dynamical systems describe the behaviour of a system over time $t$ and
 are a key component of both control theory and reinforcement learning.
 At any given time a dynamical system has a state, which is
@@ -1400,24 +1462,42 @@ The policy can be time-dependent and can also depend on all past information up 
 In the time-independent case the policy is denoted $\pi(\mathbf{x}(t))$ and
 the resulting closed-loop system is denoted $f_{\pi}(\mathbf{x}) = f(\mathbf{x},\pi(\mathbf{x}))$.
 
+** Model-Based Control
+*** Dynamical Systems
+**** intro :ignore:
+Dynamical systems describe the behaviour of a system over time $t$ and
+are a key component of both control theory and reinforcement learning.
+At any given time a dynamical system has a state, which is
+represented as a vector of real numbers $\mathbf{x}(t) \in \R^D$.
+For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
+and an orientation would be represented as $\mathbf{x}(t) = [x(t), y(t), \theta(t)]^{T}$.
+The system can be controlled by applying control actions $\mathbf{u}(t) \in \R^F$ at any given time $t$.
+This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-unimodal-dynamics-cont}
+\stateDerivative(t) &= f(\state(t), \control(t)) + \epsilon(t) \quad \forall t
+\end{align}
+#+END_EXPORT
+where $f : \R^D \times \R^{F} \rightarrow \R^{D}$ represents the transition dynamics function and $\epsilon(t)$
+is an i.i.d process noise term with $\E[\epsilon(t)] = 0$.
+The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
+For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
+for in the process noise term.
+Throughout this thesis it is assumed that the state $\mathbf{x}$ is observed directly and is not subject to
+observation noise.
+This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+in the reinforcement learning literature.
+\todo[inline]{Slightly weird referring to MDP literature on continuous time setting}
 
-*** Multimodal Modelling
-products of experts
+\todo[inline]{Should I make a bigger point out of the observation noise assumption}
 
-**** Mixtures of Gaussian Process Experts
-Tresp
+The system is controlled via a policy $\mathbf{u}(t) = \pi(\mathbf{x}(t), t)$, which given the state $\mathbf{x}(t)$
+and time step $t$ decides which control action $\mathbf{u}(t)$ to apply to the system.
+The policy can be time-dependent and can also depend on all past information up to time step $t$.
+In the time-independent case the policy is denoted $\pi(\mathbf{x}(t))$ and
+the resulting closed-loop system is denoted $f_{\pi}(\mathbf{x}) = f(\mathbf{x},\pi(\mathbf{x}))$.
 
-infinite mixtures
-
-DAGP
-
-pros and cons of different gating networks
-
-**** Our Motivations
-Motivated by obtaining well-calibrated variance's throughout the model
-placing priors on the gating network
-** Optimal Control
-*** intro :ignore:
+*** Optimal Control :ignore:
 Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
 over a time period $t \in [t_0, t_f]$ that optimises an objective function $\mathbf{J}_{\pi}(\x)$.
 The objective function might be formulated to solve a particular task or to make the dynamical
@@ -1433,6 +1513,8 @@ which consists of two terms:
 1. a terminal cost term $\phi : \R^{D} \times \R \rightarrow \R$,
 2. an integral cost term (or Lagrangian) $L : \R^{D} \times \R^{F} \times \R \rightarrow \R$.
 
+Model-based control ...
+
 *** Trajectory Optimisation
 Trajectory optimisation seeks to find the state and control trajectories
 for times $t \in [t_0, t_f]$ that
@@ -1447,9 +1529,10 @@ The trajectory optimisation problem is given by,
 &\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f \numberthis
 \end{align*}
 #+END_EXPORT
-*** Model Predictive Control
-*** Reinforcement Learning
-** Probabilistic Modelling
+*** Model-Based Control in Uncertain Systems
+- robust optimal control
+- stochastic optimal control
+** Learning in Dynamical Systems
 *** Epistemic Uncertainty
 
 If we have used observations of a system to train a predictive model then we can only be confident in predictions near our observations.
@@ -1472,7 +1555,6 @@ As mentioned previously, aleatoric uncertainty consists of process noise and obs
 Figure [[ref:bimodal-dataset]] shows an artificial 1D dataset that demonstrates the concept of aleatoric uncertainty.
 In our work we generally assume that there is no observation noise and therefore the aleatoric uncertainty only consists of process noise.
 
-*** Variational Inference
 *** Bayesian Inference
 
 Suppose we have some observations $\mathbf{Y}$ generated from a family of models $p(\mathbf{Y}, \mathbf{\Theta})$, where $\mathbf{\Theta}$ represents the unknown random variables that the model depends on.
@@ -1739,7 +1821,21 @@ for the latent function values $\mathbf{f}$ cite:Titsias2009.
 # placed inducing variables $\hat{\mathbf{f}}$ they are a
 # sufficient statistic for the latent function values $\mathbf{f}$.
 
-*** Mixtures of Gaussian Process Experts
+*** Learning in Multimodal Dynamical Systems
+products of experts
+**** Mixtures of Gaussian Process Experts
+Tresp
+
+infinite mixtures
+
+DAGP
+
+pros and cons of different gating networks
+
+**** Our Motivations
+Motivated by obtaining well-calibrated variance's throughout the model
+placing priors on the gating network
+**** Mixtures of Gaussian Process Experts
 Gaussian processes (GPs) are the state-of-the art approach for Bayesian nonparametric regression.
 However, they suffer from two important limitations.
 Firstly, the covariance function is commonly assumed to be stationary
@@ -1983,6 +2079,11 @@ We then test our model on the motorcycle data set and compare it to a sparse var
 # We then test our model on the motorcycle data set and compare its performance
 # to a sparse variational GP.
 
+** Exploration in Dynamical Systems
+*** Information Theoretic Active Learning with Gaussian Processe
+cite:krauseNonmyopic2007,houlsbyBayesian2011
+*** Active Learning in Dynamical Systems
+cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively2020
 
 
 ** Old :noexport:
@@ -2235,116 +2336,20 @@ Each of our experts predicts on the basis of a set of inducing inputs that are u
 These inducing inputs enable stochastic variational inference in our model which significantly speeds
 up inference.
 
-** Concepts of Riemannian Geometry label:sec-riemannian-geometry
-This section introduces the concepts of Riemannian geometry that are used to formulate
-a \textit{geometric} objective function for
-the trajectory optimisation presented in Chapter ref:chap-traj-opt.
-The aim of the \textit{geometric} objective function is to find shortest trajectories
-(known as geodesics) on a Riemannian manifold.
-This section starts by defining Riemannian manifolds and then details how lengths can
-be calculated on these manifolds.
-
-The Euclidean norm provides an intuitive notion for the length of a vector in the Euclidean space.
-Just as the dot product is the inner product of the Euclidean space it is possible to
-define inner products for Riemannian spaces (also known as Riemannian manifolds).
-Remembering that a norm can be expressed for any space endowed with an inner product
-provides us with the tools to for calculating lengths on manifolds.
-
-*** Riemannian Manifolds
-Intuitively Riemannian manifolds are smoothly curved spaces with an inner product.
-Formally, cite:carmoRiemannian1992 define them as smooth manifolds equipped with a Riemannian metric.
-#+BEGIN_EXPORT latex
-\begin{definition}[Riemannian Metric]
-A Riemannian metric $\mathbf{G}$ on a
-manifold $\mathcal{M}$ is a symmetric and positive definite matrix which defines
-a smoothly varying inner product
-$\langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b$
-in the tangent space $T_{\mathbf{x}}\mathcal{M}$, for each point $\mathbf{x} \in \mathcal{M}$ and
-$\dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \in T_{\mathbf{x}}\mathcal{M}$.
-\end{definition}
-\todo{comment on how I have assumed tangent space is velocity etc}
-#+END_EXPORT
-Riemannian manifolds are often represented as charts; a parameter space for the
-curved surface. An example of a chart is the spherical coordinate system that is
-used to describe a sphere.
-The chart is often a flat space and the curvature of the manifold arises
-through smooth changes in the metric.
-Measurements on the surface can thus be computed in the chart locally and
-integrated to give global measures.
-On a Riemannian manifold $\mathcal{M}$ the length of a trajectory (curve) $\bar{\mathbf{x}}$
-is given by the norm of the tangent vector along the trajectory,
-#+BEGIN_EXPORT latex
-\todo{define $\bar{\mathbf{x}}$}
-\begin{align} \label{eq-manifold-length}
-\text{Length}(\bar{\mathbf{x}})
-&=\int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t \\
-&=\int_{t_0}^{t_f}\sqrt{\dot{\mathbf{x}}(t)^T \mathbf{G}(\mathbf{x}(t)) \dot{\mathbf{x}}(t) } \mathrm{d} t,
-\end{align}
-#+END_EXPORT
-where $\mathbf{G}(\mathbf{x}(t))$ is the metric tensor at $\mathbf{x}(t)$.
-Throughout this thesis we use Newton's notation to denote differentiation with respect to time.
-\todo{Make this point about Newton's notation at earliest use of it.}
-
-*** Lengths on Riemannian Manifolds
-With this method for calculating lengths on Riemannian manifolds
-let us now turn to the definition of geodesics, i.e. the notion of shortest paths on Riemannian manifolds.
-Formally, a geodesic is defined as follows.
-#+BEGIN_EXPORT latex
-\begin{definition}[Geodesic]
-Given two points $\mathbf{x}_0, \mathbf{x}_f \in
-\mathcal{M}$, a Geodesic is a length minimising trajectory (curve)
-$\bar{\mathbf{x}}_g$ connecting the points such that,
-\begin{align} \label{eq-geodesic-conds}
-  \bar{\mathbf{x}}_{g}=\arg \min_{\bar{\mathbf{x}}} \operatorname{Length}(\bar{\mathbf{x}}), \quad \bar{\mathbf{x}}(t_0)=\mathbf{x}_{0}, \bar{\mathbf{x}}(t_f)=\mathbf{x}_{f}.
-\end{align}
-\end{definition}
-#+END_EXPORT
-An important observation from cite:carmoRiemannian1992 that we exploit in
-Chapter ref:chap-traj-opt, is that geodesics satisfy a continuous-time $2^{\text{nd}}$ order ODE,
-#+BEGIN_EXPORT latex
-\small
-\begin{align} \label{eq-2ode}
- \ddot{\mathbf{x}}(t)
-&= y(t, \mathbf{x}, \dot{\mathbf{x}}) \\
-&=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{x}(t))]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right),
-\end{align}
-\normalsize
-#+END_EXPORT
-where $\operatorname{vec}[\mathbf{G}(\mathbf{x}(t)])$ stacks the columns of $\mathbf{G}(\mathbf{x}(t))$
-and $\otimes$ denotes the Kronecker product.
-The implication of Eqs. ref:eq-geodesic-conds and ref:eq-2ode is that trajectories that are solutions
-to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode implicitly minimise the objective,
-#+BEGIN_EXPORT latex
-\todo{define $\bar{\mathbf{x}}$}
-\begin{align} \label{eq-length-objective}
-J &= \min \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t
-\end{align}
-#+END_EXPORT
-
-
-# Computing geodesics involves finding a solution to Eq. ref:eq-2ode
-# with $\mathbf{x}(t_0) = \mathbf{x}_1$ and $\mathbf{x}(t_f) = \mathbf{x}_2$.
-# This is a boundary value problem with a smooth solution so it can be solved
-# using any direct trajectory optimisation framework and can therefore
-# incorporate state and action constraints.
-# #+BEGIN_EXPORT latex
-# \todo[inline]{Hmm, not sure this is true, read up - It only involves discretizing the geodesic curve and not
-# the feature space and as this is always 1-dimensional the approach scales
-# to higher dimensional feature spaces.}
-# #+END_EXPORT
-
-
-# We can formulate this as an initial value problem and use techniques such as the
-# shooting method to determine the correct inintial velocity and from this the
-# geodesic path.
-# This is advantageous as it only involves discretizing the geodesic curve and not
-# the the feature space. This is always 1-dimensional and thus the approach scales
-# to highgher dimensional feature spaces.
-
 * Probabilistic Inference for Multimodal Dynamical Systems label:chap-dynamics
 #+begin_export latex
 \epigraph{All models are wrong, but some are useful.}{\textit{George Box}}
 #+end_export
+** Maths Symbols :ignore:
+*** Domains :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+\newcommand{\inputDomain}{\ensuremath{\hat{\stateDomain}}}
+\newcommand{\outputDomain}{\ensuremath{\controlDomain}}
+\newcommand{\modeDomain}{\ensuremath{\mathcal{A}}}
+#+END_EXPORT
+
 ** Intro :ignore:
 This chapter introduces the class of continuous-time multimodal dynamical systems
 that this work considers and then details an approach to performing Bayesian inference in such models.
@@ -2372,15 +2377,16 @@ extended to multimodal systems, given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-cont}
 \dot{\mathbf{x}}(t) &= \f(\mathbf{x}(t), \mathbf{u}(t)) + \epsilon(t) \\
-&= \fk(\mathbf{x}(t), \mathbf{u}(t)) + \mode{\epsilon}(t) \quad \text{if} \quad \alpha(t)=\modeInd
+&= \fk(\mathbf{x}(t), \mathbf{u}(t)) + \mode{\epsilon}(t) \quad \text{if} \quad \alpha(t)=\modeInd,
 \end{align}
 #+END_EXPORT
 
-with states $\state \in \R^\StateDim$ and controls $\control \in \R^\ControlDim$.
+with states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+$\control \in \controlDomain \subseteq \R^\ControlDim$.
 One of $\ModeInd$ dynamics modes $\{\fk \}_{\modeInd=1}^\ModeInd$ and associated noise models
 $\mode{\epsilon}(t) \sim \mathcal{N}\left(0, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)$
-are selected by a switching (or gating) variable
-$\alpha(t) \in \{1,\ldots,\ModeInd\}$.
+are selected by a discrete mode indicator variable
+$\alpha(t) \in \modeDomain = \{1,\ldots,\ModeInd\}$.
 
 The work in this chapter assumes access to historical data comprising state transitions
 from $\NumEpisodes$ trajectories (episodes) sampled with a fixed time step $\Delta t=t_*$ resulting in
@@ -2388,7 +2394,8 @@ $\NumTimesteps$ time steps per episode.
 This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
 We combine the independent episodes to get the data set
 $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
-We abuse notation and consider the time indexing notation.
+We abuse notation (considering time indexing) and denote the data set
+$\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
 
 # We combine the independent episodes to get the data set
 # $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
@@ -2402,12 +2409,14 @@ This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamic
 \end{align}
 #+END_EXPORT
 where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
-at time $t$ respectively, and $\alpha_t \in \{1, \dotsc, \ModeInd\}$ is a mode indicator variable that
-indicates one of $\ModeInd$ dynamics modes at time $t$.
+at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
+indicates one of $\ModeInd$ dynamics modes) at time $t$.
 
 A time series of observations from time $a$ to time $b$ (inclusive)
 is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-A single input is denoted as
+The concatenation of the state and control domains is
+denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+A single state-control input is denoted as
 $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
 $\allInput$, and the set of all outputs as $\allOutput$.
 The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
@@ -2458,12 +2467,12 @@ for all dimensions as $\fkn$ and at all data points as $\Fk$.
 \newcommand{\singleMoeLikelihood}{\ensuremath{p\left(\singleOutput \mid \mode{\latentFunc}(\allInput), \GatingFunc (\allInput) \right)}}
 #+END_EXPORT
 *** Intro :ignore:
-In this section I will first introduce mixture models as they are a natural choice for modelling
+This section first introduces mixture models as they are a natural choice for modelling
 multimodal systems.
-After highlighting the inherent identifiability issues associated with mixture models, I will introduced the Mixture of
+After highlighting the inherent identifiability issues associated with mixture models, it will introduce the Mixture of
 Experts (MoE) model, an extension to mixture models where
 the mixture weight (aka mixing probability) depends on the input variable.
-I will then detail how it breaks down for nonparametric experts
+It will then detail how it breaks down for nonparametric experts
 and introduce the infinite Mixture of Gaussian Process Experts (MoGPE) model from the literature,
 which is motivated by the computational issues associated with inference and prediction.
 Although our model suffers from the complexity issues highlighted by cite:rasmussenInfinite2001, our variational
@@ -3394,7 +3403,11 @@ with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode.
 #+begin_export latex
 \epigraph{Nature laughs at the difficulties of integration.}{\textit{Pierre-Simon Laplace}}
 #+end_export
+*** math commands :ignore:
 #+BEGIN_EXPORT latex
+\renewcommand{\input}{\ensuremath{\hat{\state}}}
+\renewcommand{\output}{\ensuremath{\Delta \state}}
+
 \newcommand{\kernel}{\ensuremath{k}}
 \newcommand{\expertKernel}{\ensuremath{\mode{\kernel}}}
 \newcommand{\gatingKernel}{\ensuremath{\mode{\hat{\kernel}}}}
@@ -3591,8 +3604,6 @@ is generated by pushing the state and control $\singleInput$ through the latent 
 \end{figure}
 #+END_EXPORT
 
-
-
 *** Lower bound 1 :ignore:
 \newline
 
@@ -3689,6 +3700,7 @@ but now only requires one dimensional integrals of the log-likelihood to be appr
 We approximate the integrals with Gibbs sampling and
 in practice only use single samples because the added stochasticity helps the optimisation.
 
+*** Optimisation
 The bound in Eq. ref:eq-experts-bound-4-fact meets the necessary conditions to perform stochastic
 gradient methods on $\qFu$ as the sum of $\NumData$ terms corresponds to input-output pairs.
 The inducing inputs $\{\Z\}_{\modeInd=1}^{\ModeInd}$, kernel hyperparameters and noise variances are treated as
@@ -3706,6 +3718,68 @@ As such, when selecting the number of inducing points $\NumInducing$ for each GP
 and select the number of inducing points based off of the number of data points believed to be
 associated with each expert.
 \todo{citation for selecting number of inducing points}
+
+Optimised with Adam
+\todo{cite adam optimiser}
+
+*** Predictions
+For a given test input $\input_*$, this model makes probabilistic predictions following
+a mixture of $\ModeInd$ independent Gaussains.
+Making predictions with this model involves calculating a density over the output for each expert, and combining
+them using the probabilities obtained from the gating network.
+The distribution over the output is obtained by marginalising the expert indicator variable,
+#+BEGIN_EXPORT latex
+\newcommand{\predictivePosterior}{\ensuremath{q(\output_* \mid \input_*, \mathcal{D}, \expertParams, \gatingParams)}}
+\newcommand{\predictiveProb}{\ensuremath{q(\modeVar_*=\modeInd \mid \input_*, \mathcal{D}, \gatingParams)}}
+\newcommand{\predictiveExpert}{\ensuremath{q(\output_* \mid \input_*, \modeVar_*=\modeInd, \mathcal{D}, \expertParamsK)}}
+\begin{align} \label{eq-predictive-posterior}
+\predictivePosterior &= \sum_{\modeInd=1}^\ModeInd \predictiveProb \predictiveExpert.
+\end{align}
+#+END_EXPORT
+*Experts* Each expert's predictive posterior $\predictiveExpert$ is given by a convolution of Gaussians,
+#+BEGIN_EXPORT latex
+\newcommand{\predictiveExpertLikelihood}{\ensuremath{q(\output_* \mid \mode{f}(\input_*), \modeVarK, \expertParamsK)}}
+\newcommand{\predictiveExpertPrior}{\ensuremath{q(\mode{f}(\input_*) \mid \input_*, \modeVar_*=\modeInd, \mathcal{D}, \expertParamsK)}}
+\begin{align} \label{eq-predictive-expert}
+\predictiveExpert &= \int \predictiveExpertLikelihood \predictiveExpertPrior \text{d}\mode{f}(\input_*)
+\end{align}
+#+END_EXPORT
+where the predictive posterior associated with each expert's latent function $\predictiveExpertPrior$
+is given by a sparse GP conditional (see Eq. ref:eq--variational-posteriors-functional).
+
+*Gating Network* The mixing probabilities associated with the gating network are obtained
+#+BEGIN_EXPORT latex
+\newcommand{\predictiveGatingLikelihood}{\ensuremath{\Phi(\gatingFunc(\input_*))}}
+\newcommand{\predictiveGatingPrior}{\ensuremath{q(\gatingFunc(\input_*) \mid \input_*, \mathcal{D}, \gatingParams))}}
+\begin{align} \label{eq-predictive-gating}
+\predictiveProb &= \int \predictiveGatingLikelihood \predictiveGatingPrior \text{d} \gatingFunc(\input_*)
+\end{align}
+#+END_EXPORT
+
+and $\Pr(\alpha_* = 2 \mid \mathbf{x}_*, \mathcal{D}, \bm\phi) = 1 - \Pr(\alpha_* = 1 \mid \mathbf{x}_*, \mathcal{D}, \bm\phi)$.
+These serve as a probabilistic decision boundary that is dependent on both the mean and
+the variance of the GP over $h$.
+As such, we have lost a degree of freedom which makes it difficult to
+interpret the meaning of $\Pr(\alpha_*=k \mid \mathbf{x}_*, \mathcal{D}, \bm\phi)= 0.5$.
+It could mean that it is confident that the observations were generated by a 50:50 mixture of the two experts.
+Alternatively, the variance of $p(h_*  \mid  \mathbf{x}_*, \mathcal{D}, \bm\phi)$
+may be high indicating that the model can not be confident making a  prediction at $\mathbf{x}_*$.
+It could also indicate that the model is confident that neither expert explains the data well
+and so the optimisation has set the mixing probability to $0.5$ to prevent either experts
+"fit" degrading.
+For example, if the model needs a third expert.
+
+# These serve as a probabilistic decision boundary that is dependent on both the mean and
+# the variance of the GP over $h$.
+It is worth noting that the model has lost a degree of freedom which makes it difficult to
+interpret the meaning of $\Pr(\alpha_*=k \mid \mathbf{x}_*, \mathcal{D}, \bm\phi)= 0.5$.
+It could mean that it is confident that the observations were generated by a 50:50 mixture of the two experts
+i.e. the gating function value is equal to zero and the posterior variance is low.
+Alternatively, the variance of the gating function GP posterior could be high.
+# It could also indicate that the model is confident that neither expert explains the data well
+# and so the optimisation has set the mixing probability to $0.5$ to prevent either experts
+# "fit" degrading.
+# For example, if the model needs a third expert.
 
 *** sparse graphical model old :ignore:noexport:
 #+BEGIN_EXPORT latex
@@ -4065,24 +4139,418 @@ This is another bound I implemented,
 \todo[inline]{Need to extend bound for the gating network}
 
 ** Results
-\todo{Add results for mcycle, quadcopter-sim and quadcopter and more??}
-The model was trained on data collected from the velocity-controlled quadcopter experiment.
-The controls were kept constant during data collection to reduce the dynamics model to
-$\Delta\mathbf{x}_t = f(\mathbf{x}_{t-1})$.
-The trajectory optimisation then exploits differential flatness cite:rossPseudospectral2004 to
-recover the velocity controls.
-The model was trained with $K=2$ dynamics modes,
-and a subset of the observations were withheld during training to test the model's ability to model
-epistemic uncertainty.
-Fig. ref:fig-problem-statement shows mode 1's mixing probability over the domain
-which has clearly learned two dynamics modes characterised by process noise.
-Fig. ref:fig-svgp_2d_traj shows the predictive mean (left) and variance (right) of the gating
-function associated with dynamics mode 1 ($h^{(1)}$).
-The mean is high where the model believes mode 1 is responsible for predicting, low where
-it believes another mode is responsible, and zero where it is uncertain.
-The variance (right) has also clearly captured information regrading the
-epistemic uncertainty, i.e. where there are no observations.
+*** Intro :ignore:
+The model and approximate inference scheme introduced in this chapter are now evaluated on three different data sets.
+Following other MoGPE work, they are first tested on the motorcycle data set.
+They are then tested on a data set collected onboard a DJI Tello quadcopter flying in the Bristol Robotics
+Laboratory, and finally, a data set collected from a simulator of a 2D point mass.
 
+\todo{Add results for mcycle, quadcopter-sim and quadcopter and more??}
+
+- test num inducing points?
+- test batch size?
+- compare both bounds?
+- compare to other MoGPE models?
+- example showing why we want GP based gating network?
+
+*** Evaluation on Motorcycle Data Set
+The motorcycle data set
+(discussed in cite:Silverman1985) contains 133 data points
+($\allInput \in \inputDomain \subseteq \R^{133 \times 1}$ and
+$\allOutput \in \outputDomain \subseteq \R^{133 \times 1}$)
+and input dependent noise.
+The data set represents motorcycle impact data - time (ms) vs acceleration (g).
+Although it does not represent state transitions from a dynamical system,
+it does contain non-stationary points and heterogeneous noise, which makes it an interesting data set
+to study from the MoGPE perspective.
+With this in mind, the model and inference are evaluated by instantiating the model with both two and three experts.
+An evaluation on the effect of the number of inducing points, batch size, and the different ELBO's is then
+detailed.
+
+**** Two Experts
+Figure ref:mototcycle-dataset shows the model (instantiated with two experts) after ????? iterations
+of optimising
+The results after training the model with two experts
+are shown in Figure ref:mototcycle-dataset.
+The method is compared to a Sparse Variational Gaussian Process (SVGP) trained on the same data set.
+The right plot shows the samples from the predictive posterior of the MoGPE model (sampled blue dots) as well
+plus or minus two standard deviations of the SVGP's posterior variance (shown by the red lines).
+It is clear that the SVGP has explained the observations by increasing its single
+noise variance term. The MoGPE model has been able to learn two noise variances and these
+reflect the noise in the observations much better.
+The left plot illustrates that MoGPE method is capable of modelling the non-stationarity
+at $x \approx -0.7$ better than the sparse variational Gaussian process (SVGP).
+At this non-stationary point there are clearly two modes in the predictive distribution of the MoGPE model
+(right plot).
+Expert one is responsible for the horizontal line ($-2$ to $-1$) and expert two is responsible
+for the shorter lengthscale function ($-0.5$ to $1.2$).
+The lengthscale of the gating network kernel governs how fast the model can shift responsibility from
+expert one to expert two.
+At $x \geq 1.5$ the gating network tends to a uniform distribution (max entropy)
+even though it has been trained with observations up to $x=2.5$. This is evidence that there are multiple
+factors influencing the mixing probability as discussed in Section ref:sec-opt.
+
+***** Two experts figure :ignore:
+#+NAME: mototcycle-dataset
+#+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
+#+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
+[[file:images/mcycle_svgp_comparison.pdf]]
+
+***** Training :ignore:
+\newline
+*Model Training*
+Table ref:tab-params-quadcopter contains the initial values for all of the trainable parameters in the model.
+
+#+begin_table
+#+LATEX: \caption{Initial parameter settings before training on motorcycle data set with two experts.}
+#+LATEX: \label{tab-params-quadcopter}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center nil
+|                 | Description                | Symbol                    | Value                                                                                   |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Num data                   | $\NumData$                | $133$                                                                                   |
+|                 | Batch size                 | $\NumData_b$              | $30$                                                                                    |
+| Optimiser       | Epochs                     | N/A                       | $8000$                                                                                  |
+|                 | Num samples                | $S$                       | $1$                                                                                     |
+|                 | Learning rate              | N/A                       | $0.001$                                                                                 |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $0.1$                                                                                   |
+|                 | Kernel Lengthscales        | $l$                       | $10$                                                                                    |
+|                 | Likelihood Variance        | $\sigma_n$                | $0.0011$                                                                                |
+| Expert 1        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $20$                                                                                    |
+|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
+|                 | Likelihood Variance        | $\sigma_n$                | $0.9$                                                                                   |
+| Expert 2        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $3$                                                                                     |
+|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
+| Gating Function | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                    |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+#+LATEX: }
+#+end_table
+
+**** Three Expets
+Figure ref:mototcycle-dataset shows the model (instantiated with two experts) after ????? iterations
+of optimising
+The results after training the model with two experts
+are shown in Figure ref:mototcycle-dataset.
+***** Two experts figure :ignore:
+#+NAME: mototcycle-dataset
+#+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
+#+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
+[[file:images/mcycle_svgp_comparison.pdf]]
+
+
+***** Training :ignore:
+\newline
+*Model Training*
+Table ref:tab-params-quadcopter contains the initial values for all of the trainable parameters in the model.
+
+#+begin_table
+#+LATEX: \caption{Initial parameter settings before training on motorcycle data set with two experts.}
+#+LATEX: \label{tab-params-quadcopter}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center nil
+|                 | Description                | Symbol                    | Value                                                                                   |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Num data                   | $\NumData$                | $133$                                                                                   |
+|                 | Batch size                 | $\NumData_b$              | $30$                                                                                    |
+| Optimiser       | Epochs                     | N/A                       | $8000$                                                                                  |
+|                 | Num samples                | $S$                       | $1$                                                                                     |
+|                 | Learning rate              | N/A                       | $0.001$                                                                                 |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $0.1$                                                                                   |
+|                 | Kernel Lengthscales        | $l$                       | $10$                                                                                    |
+|                 | Likelihood Variance        | $\sigma_n$                | $0.0011$                                                                                |
+| Expert 1        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $20$                                                                                    |
+|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
+|                 | Likelihood Variance        | $\sigma_n$                | $0.9$                                                                                   |
+| Expert 2        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $3$                                                                                     |
+|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
+| Gating Function | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                    |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+#+LATEX: }
+#+end_table
+
+**** End :ignore:
+\newpage
+
+*** Evaluation on Velocity Controlled Quadcopter
+**** intro :ignore:
+# The goal of this dissertation is to control a DJI Tello quadcopter in an indoor environment
+# subject to two modes of operation characterised by turbulence.
+In order to verify that the methods in this dissertation work on real world systems,
+a data set was collected (at the Bristol Robotics Laboratory) using
+a velocity controlled DJI Tello quadcopter and a Vicon tracking system.
+A high turbulence dynamics mode was induced by placing a desktop fan at the right side of a room
+(see Figure ref:quadcopter-environment for a diagram of the environment).
+
+#+NAME: quadcopter-environment
+#+ATTR_LATEX: :width .6\textwidth :placement [h] :center t
+#+caption: Diagram showing the layout of the environment as top down view of the room in the Bristol Robotics Laboratory.
+[[file:./images/quadcopter_bimodal_domain.pdf]]
+\todo{add better diagram of environment}
+
+*Environment* The environment was simplified to two dimensions
+(the $x$ and $y$ coordinates), which is a realistic assumption,
+as altitude control can easily be achieved with a separate controller.
+The state space was then the 2D coordinates $\state = [x, y]$ and the control was simply the velocity
+$\control = [\dot{x}, \dot{y}]$.
+
+*Data Collection* The Vicon system provided access to the true position of the quadcopter at all times, which
+enabled pre-planned trajectories to be flown using a simple PID controller (with
+feedback from the Vicon system).
+To simplify data collection,
+nine trajectories from $y=2$ to $y=-3$ (with different initial $x$ locations),
+were used as target trajectories to be tracked by the PID controller.
+Each trajectory was repeated 7 times to capture the variability (process noise) in the dynamics.
+# To simplify data collection and visualisation, the controls were kept constant during data
+# collection, reducing the dynamics to
+# ${\Delta \state_\numData= f(\state_{\numData-1}; \control=\control_{\text{fixed}}) + \epsilon}$.
+
+# To simplify data collection and visualisation, the controls were kept constant during data
+# collection, reducing the dynamics to
+# ${\Delta \state_\numData= f(\state_{\numData-1}; \control=\control_{\text{fixed}}) + \epsilon}$.
+# Data from multiple trajectories following the same target trajectory were collected to
+# capture the variability (process noise) in the dynamics.
+
+# Nine trajectories (with different starting states but the same target velocity) were used as
+# target trajectories
+# and repeated
+# multiple times
+# from multiple trajectories following the same target trajectory were collected to
+# capture the variability (process noise) in the dynamics.
+
+*Data Processing* The Vicon stream recorded data at 100Hz, which was then processed to
+give a time step $\Delta t$ of $0.1s$.
+This reduced the size of the data set and left reasonable lengthscales.
+The data set consists of $T=1282$ state transitions.
+\todo{update data set size}
+Figure ref:fig-quiver is a quiver plot showing the resulting data set.
+
+**** Data Set Quiver Plot Code :ignore:
+#+BEGIN_SRC python :eval never-export :exports none :results file
+import matplotlib.pyplot as plt
+import numpy as np
+
+step = 10
+direction = "up"
+
+params = {
+    "axes.labelsize": 30,
+    "font.size": 30,
+    "xtick.labelsize": 30,
+    "ytick.labelsize": 30,
+    "text.usetex": True,
+}
+plt.rcParams.update(params)
+
+npz_dataset_filename = "./data/quadcopter/quadcopter_data_step_" + str(step) + "_direction_" + str(direction) + ".npz"
+data = np.load(npz_dataset_filename)
+X = data["x"]
+Y = data["y"]
+
+fig = plt.figure(figsize=(12, 12))
+plt.quiver(
+    X[:, 0],
+    X[:, 1],
+    Y[:, 0],
+    Y[:, 1],
+    angles="xy",
+    scale_units="xy",
+    width=0.001,
+    scale=1,
+    zorder=10,
+)
+plt.xlabel("$x$")
+plt.ylabel("$y$")
+save_name = (
+    "./images/quiver_step_"
+    + str(step)
+    + "_direction_"
+    + str(direction)
+    + ".png"
+)
+plt.savefig(save_name, transparent=True, bbox_inches="tight")
+return save_name
+#+end_src
+
+#+NAME: fig-quiver
+#+ATTR_LATEX: :width .6\textwidth :placement [h] :center t
+#+caption: Quiver plot showing the state transitions data set $\mathcal{D}$ made up from four trajectories.
+[[file:./images/quiver_step_20_direction_down.png]]
+
+**** Training :ignore:
+
+*Model Training*
+Table ref:tab-params-quadcopter contains the initial values for all of the trainable parameters in the model.
+
+#+begin_table
+#+LATEX: \caption{Initial parameter settings before training on DJI Tello quadcopter data set.}
+#+LATEX: \label{tab-params-quadcopter}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center nil
+|                 | Description                | Symbol                    | Value                                                                                   |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Num data                   | $\NumData$                | $1282$                                                                                  |
+|                 | Batch size                 | $\NumData_b$              | $300$                                                                                   |
+| Optimiser       | Epochs                     | N/A                       | $15000$                                                                                 |
+|                 | Num samples                | $S$                       | $1$                                                                                     |
+|                 | Learning rate              | N/A                       | $0.001$                                                                                 |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $0.1$                                                                                   |
+|                 | Kernel Lengthscales        | $l$                       | $[10, 10]$                                                                              |
+|                 | Likelihood Variance        | $\sigma_n$                | $[0.0011, 0.0011]$                                                                      |
+| Expert 1        | Num inducing points        | $\NumInducing$            | $150$                                                                                   |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $20$                                                                                    |
+|                 | Kernel Lengthscales        | $l$                       | $[0.5, 0.5]$                                                                            |
+|                 | Likelihood Variance        | $\sigma_n$                | $[1.9, 1.9]$                                                                            |
+| Expert 2        | Num inducing points        | $\NumInducing$            | $150$                                                                                   |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $3$                                                                                     |
+|                 | Kernel Lengthscales        | $l$                       | $[0.5, 0.5]$                                                                            |
+|                 | Likelihood Variance        | $\sigma_n$                | $[3, 3]$                                                                                |
+| Gating Function | Num inducing points        | $\NumInducing$            | $150$                                                                                   |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                    |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+#+LATEX: }
+#+end_table
+
+**** Results :ignore:
+*Results*
+
+*Results* The method learns each mode's mixing probability over the domain;
+the contours show how the probability of dynamics mode 1 ($\alpha=1$) varies.
+Our method finds trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
+remaining in the non-turbulent mode (green) or prioritise avoiding regions of the learned dynamics
+with high epistemic uncertainty due to lack of training observations (magenta).}
+
+*** Evaluation on Simulated Quadcopter Data Set
+#+BEGIN_EXPORT latex
+\newcommand{\roll}{\ensuremath{\phi}}
+\newcommand{\pitch}{\ensuremath{\theta}}
+\newcommand{\yaw}{\ensuremath{\psi}}
+
+\newcommand{\world}{\ensuremath{w}}
+\newcommand{\body}{\ensuremath{b}}
+\newcommand{\intermediate}{\ensuremath{c}}
+\renewcommand{\frame}{\ensuremath{F}}
+\newcommand{\worldFrame}{\ensuremath{\frame_\world}}
+\newcommand{\bodyFrame}{\ensuremath{\frame_\body}}
+\newcommand{\intermediateFrame}{\ensuremath{\frame_\intermediate}}
+
+\newcommand{\inertiaMatrix}{\ensuremath{J}}
+\newcommand{\inertiaZ}{\ensuremath{I_{zz}}}
+\newcommand{\zw}{\ensuremath{\mathbf{z}_\world}}
+
+\newcommand{\positions}{\ensuremath{\mathbf{h}}}
+\newcommand{\velocity}{\ensuremath{v}}
+\newcommand{\velocityx}{\ensuremath{\dot{x}}}
+\newcommand{\velocityy}{\ensuremath{\dot{y}}}
+\newcommand{\Velocity}{\ensuremath{\mathbf{\velocity}}}
+
+\newcommand{\rotationMatrix}{\ensuremath{\mathbf{R}}}
+\newcommand{\angularVelocity}{\ensuremath{\bm\omega}}
+\newcommand{\angularVelocityMatrix}{\ensuremath{\bm\Omega}}
+
+\renewcommand{\thrust}{\ensuremath{f_{x}}}
+\renewcommand{\Thrust}{\ensuremath{\mathbf{f_{x}}}}
+\renewcommand{\torque}{\ensuremath{\tau_z}}
+
+\newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
+#+END_EXPORT
+The quadrotor frames and Euler angles (roll $\roll$, pitch $\pitch$ and yaw $\yaw$) are shown
+in Figure ref:fig-quadcopter-frames.
+The subscripts $\world$, $\body$ and $\intermediate$ are used to denote the world
+$\worldFrame$, body $\bodyFrame$ and intermediate $\intermediateFrame$ (after yaw angle rotation) frames respectively.
+The the 3D nonlinear quadrotor dynamics are described with the quadcopter model from cite:wangSafe2018,zhouVector2014.
+
+The 2D nonlinear quadrotor dynamics are based on the
+state vector is given by $\state = [x, y, \velocityx, \velocityy, \yaw]$
+where $\positions = [x, y]$ is the Euclidean coordinates relative to the world frame $\worldFrame$,
+$\Velocity = [\velocityx, \velocityy]$ is the velocity in the world frame $\worldFrame$ and
+$\yaw$ is the yaw angle, i.e. the angle around the $z$ axis.
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state} &= \quadrotorDynamics(\state, \control)
+\end{align}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\rotationMatrix_{\body,\world} =
+\begin{bmatrix}
+\cos{\yaw} & -\sin(\yaw) \\
+\sin{\yaw} & \cos(\yaw)
+\end{bmatrix}
+\end{align}
+#+END_EXPORT
+where,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state}_{1:2} &= \dot{\positions} = \state_{3:4} \\
+\dot{\state}_{3:4} &= \dot{\Velocity} = \frac{1}{m} \rotationMatrix \Thrust \\
+\dot{\state}_{5} &= \dot{\yaw} = \frac{1}{\inertiaZ} \torque
+\end{align}
+#+END_EXPORT
+where $\Thrust = [\thrust, 0]^T$ is the total thrust force in the quadrotors from the rotors and $\torque$ is the torque on the quadrotor
+around the $z$ axis of the world frame $\worldFrame$.
+The thrust and torque are realistic controls for a 2D quadrotor system and gives the
+control vector \control = [\thrust, \torque].
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\Velocity} &= g \zw + \frac{1}{m} \thrust \rotationMatrix \zw \\
+\dot{\rotationMatrix} &= \rotationMatrix \angularVelocityMatrix \\
+\dot{\angularVelocity} &= \inertiaMatrix^{-1} \torque - \inertiaMatrix^{-1} \angularVelocityMatrix \inertiaMatrix \angularVelocity \\
+\dot{\positions} &= \velocity
+\end{align}
+#+END_EXPORT
+where $g=9.81ms^{-2}$ is the acceleration due to gravity, $m$ is the mass, $\zw=[0,0,1]^T$,
+$\positions=[x, y, z]^T$ is the position of the quadrotor in the world frame $\worldFrame$,
+$\Velocity=[\velocity_x, \velocity_y, \velocity_z]^T$ is the
+and velocity of the quadrotor in the world frame $\worldFrame$ respectively.
+The angular velocity of the quadrotor in the body frame $\bodyFrame$ is denoted $\angularVelocity=[p, q ,r]^T$
+and in tensor form $\angularVelocityMatrix=[[0,-p,q];[r,0,-p];[-q,p,0]]$
+
+$\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]$
+
+$\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
+$\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
+
+\newpage
 ** Conclusion
 
 using a novel variational lower bound that
@@ -4152,6 +4620,112 @@ and deploy a simple objective function.
 Our goals are thus encoded into the Riemannian metric tensor $\mathbf{G}$ that
 appears in Eq ref:eq-2ode.
 Let us now provide an intuitive and thorough walk-through of the approach detailed above.
+
+*** Concepts of Riemannian Geometry label:sec-riemannian-geometry
+This section introduces the concepts of Riemannian geometry that are used to formulate
+a \textit{geometric} objective function for
+the trajectory optimisation presented in Chapter ref:chap-traj-opt.
+The aim of the \textit{geometric} objective function is to find shortest trajectories
+(known as geodesics) on a Riemannian manifold.
+This section starts by defining Riemannian manifolds and then details how lengths can
+be calculated on these manifolds.
+
+The Euclidean norm provides an intuitive notion for the length of a vector in the Euclidean space.
+Just as the dot product is the inner product of the Euclidean space it is possible to
+define inner products for Riemannian spaces (also known as Riemannian manifolds).
+Remembering that a norm can be expressed for any space endowed with an inner product
+provides us with the tools to for calculating lengths on manifolds.
+
+**** Riemannian Manifolds
+Intuitively Riemannian manifolds are smoothly curved spaces with an inner product.
+Formally, cite:carmoRiemannian1992 define them as smooth manifolds equipped with a Riemannian metric.
+#+BEGIN_EXPORT latex
+\begin{definition}[Riemannian Metric]
+A Riemannian metric $\mathbf{G}$ on a
+manifold $\mathcal{M}$ is a symmetric and positive definite matrix which defines
+a smoothly varying inner product
+$\langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b$
+in the tangent space $T_{\mathbf{x}}\mathcal{M}$, for each point $\mathbf{x} \in \mathcal{M}$ and
+$\dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \in T_{\mathbf{x}}\mathcal{M}$.
+\end{definition}
+\todo{comment on how I have assumed tangent space is velocity etc}
+#+END_EXPORT
+Riemannian manifolds are often represented as charts; a parameter space for the
+curved surface. An example of a chart is the spherical coordinate system that is
+used to describe a sphere.
+The chart is often a flat space and the curvature of the manifold arises
+through smooth changes in the metric.
+Measurements on the surface can thus be computed in the chart locally and
+integrated to give global measures.
+On a Riemannian manifold $\mathcal{M}$ the length of a trajectory (curve) $\bar{\mathbf{x}}$
+is given by the norm of the tangent vector along the trajectory,
+#+BEGIN_EXPORT latex
+\todo{define $\bar{\mathbf{x}}$}
+\begin{align} \label{eq-manifold-length}
+\text{Length}(\bar{\mathbf{x}})
+&=\int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t \\
+&=\int_{t_0}^{t_f}\sqrt{\dot{\mathbf{x}}(t)^T \mathbf{G}(\mathbf{x}(t)) \dot{\mathbf{x}}(t) } \mathrm{d} t,
+\end{align}
+#+END_EXPORT
+where $\mathbf{G}(\mathbf{x}(t))$ is the metric tensor at $\mathbf{x}(t)$.
+Throughout this thesis we use Newton's notation to denote differentiation with respect to time.
+\todo{Make this point about Newton's notation at earliest use of it.}
+
+**** Lengths on Riemannian Manifolds
+With this method for calculating lengths on Riemannian manifolds
+let us now turn to the definition of geodesics, i.e. the notion of shortest paths on Riemannian manifolds.
+Formally, a geodesic is defined as follows.
+#+BEGIN_EXPORT latex
+\begin{definition}[Geodesic]
+Given two points $\mathbf{x}_0, \mathbf{x}_f \in
+\mathcal{M}$, a Geodesic is a length minimising trajectory (curve)
+$\bar{\mathbf{x}}_g$ connecting the points such that,
+\begin{align} \label{eq-geodesic-conds}
+  \bar{\mathbf{x}}_{g}=\arg \min_{\bar{\mathbf{x}}} \operatorname{Length}(\bar{\mathbf{x}}), \quad \bar{\mathbf{x}}(t_0)=\mathbf{x}_{0}, \bar{\mathbf{x}}(t_f)=\mathbf{x}_{f}.
+\end{align}
+\end{definition}
+#+END_EXPORT
+An important observation from cite:carmoRiemannian1992 that we exploit in
+Chapter ref:chap-traj-opt, is that geodesics satisfy a continuous-time $2^{\text{nd}}$ order ODE,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-2ode}
+ \ddot{\mathbf{x}}(t)
+&= y(t, \mathbf{x}, \dot{\mathbf{x}}) \\
+&=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{x}(t))]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right),
+\end{align}
+\normalsize
+#+END_EXPORT
+where $\operatorname{vec}[\mathbf{G}(\mathbf{x}(t)])$ stacks the columns of $\mathbf{G}(\mathbf{x}(t))$
+and $\otimes$ denotes the Kronecker product.
+The implication of Eqs. ref:eq-geodesic-conds and ref:eq-2ode is that trajectories that are solutions
+to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode implicitly minimise the objective,
+#+BEGIN_EXPORT latex
+\todo{define $\bar{\mathbf{x}}$}
+\begin{align} \label{eq-length-objective}
+J &= \min \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t
+\end{align}
+#+END_EXPORT
+
+
+# Computing geodesics involves finding a solution to Eq. ref:eq-2ode
+# with $\mathbf{x}(t_0) = \mathbf{x}_1$ and $\mathbf{x}(t_f) = \mathbf{x}_2$.
+# This is a boundary value problem with a smooth solution so it can be solved
+# using any direct trajectory optimisation framework and can therefore
+# incorporate state and action constraints.
+# #+BEGIN_EXPORT latex
+# \todo[inline]{Hmm, not sure this is true, read up - It only involves discretizing the geodesic curve and not
+# the feature space and as this is always 1-dimensional the approach scales
+# to higher dimensional feature spaces.}
+# #+END_EXPORT
+
+
+# We can formulate this as an initial value problem and use techniques such as the
+# shooting method to determine the correct inintial velocity and from this the
+# geodesic path.
+# This is advantageous as it only involves discretizing the geodesic curve and not
+# the the feature space. This is always 1-dimensional and thus the approach scales
+# to highgher dimensional feature spaces.
 
 *** Geometric Objective Function
 To help provide intuition let us first formulate an objective function with two terms,
@@ -5375,99 +5949,6 @@ $\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
 $\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
 
 \newpage
-** 2D Quadrotor Dynamics
-#+BEGIN_EXPORT latex
-\newcommand{\roll}{\ensuremath{\phi}}
-\newcommand{\pitch}{\ensuremath{\theta}}
-\newcommand{\yaw}{\ensuremath{\psi}}
-
-\newcommand{\world}{\ensuremath{w}}
-\newcommand{\body}{\ensuremath{b}}
-\newcommand{\intermediate}{\ensuremath{c}}
-\renewcommand{\frame}{\ensuremath{F}}
-\newcommand{\worldFrame}{\ensuremath{\frame_\world}}
-\newcommand{\bodyFrame}{\ensuremath{\frame_\body}}
-\newcommand{\intermediateFrame}{\ensuremath{\frame_\intermediate}}
-
-\newcommand{\inertiaMatrix}{\ensuremath{J}}
-\newcommand{\inertiaZ}{\ensuremath{I_{zz}}}
-\newcommand{\zw}{\ensuremath{\mathbf{z}_\world}}
-
-\newcommand{\positions}{\ensuremath{\mathbf{h}}}
-\newcommand{\velocity}{\ensuremath{v}}
-\newcommand{\velocityx}{\ensuremath{\dot{x}}}
-\newcommand{\velocityy}{\ensuremath{\dot{y}}}
-\newcommand{\Velocity}{\ensuremath{\mathbf{\velocity}}}
-
-\newcommand{\rotationMatrix}{\ensuremath{\mathbf{R}}}
-\newcommand{\angularVelocity}{\ensuremath{\bm\omega}}
-\newcommand{\angularVelocityMatrix}{\ensuremath{\bm\Omega}}
-
-\renewcommand{\thrust}{\ensuremath{f_{x}}}
-\renewcommand{\Thrust}{\ensuremath{\mathbf{f_{x}}}}
-\renewcommand{\torque}{\ensuremath{\tau_z}}
-
-\newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
-#+END_EXPORT
-The quadrotor frames and Euler angles (roll $\roll$, pitch $\pitch$ and yaw $\yaw$) are shown
-in Figure ref:fig-quadcopter-frames.
-The subscripts $\world$, $\body$ and $\intermediate$ are used to denote the world
-$\worldFrame$, body $\bodyFrame$ and intermediate $\intermediateFrame$ (after yaw angle rotation) frames respectively.
-The the 3D nonlinear quadrotor dynamics are described with the quadcopter model from cite:wangSafe2018,zhouVector2014.
-
-The 2D nonlinear quadrotor dynamics are based on the
-state vector is given by $\state = [x, y, \velocityx, \velocityy, \yaw]$
-where $\positions = [x, y]$ is the Euclidean coordinates relative to the world frame $\worldFrame$,
-$\Velocity = [\velocityx, \velocityy]$ is the velocity in the world frame $\worldFrame$ and
-$\yaw$ is the yaw angle, i.e. the angle around the $z$ axis.
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\dot{\state} &= \quadrotorDynamics(\state, \control)
-\end{align}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\rotationMatrix_{\body,\world} =
-\begin{bmatrix}
-\cos{\yaw} & -\sin(\yaw) \\
-\sin{\yaw} & \cos(\yaw)
-\end{bmatrix}
-\end{align}
-#+END_EXPORT
-where,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\dot{\state}_{1:2} &= \dot{\positions} = \state_{3:4} \\
-\dot{\state}_{3:4} &= \dot{\Velocity} = \frac{1}{m} \rotationMatrix \Thrust \\
-\dot{\state}_{5} &= \dot{\yaw} = \frac{1}{\inertiaZ} \torque
-\end{align}
-#+END_EXPORT
-where $\Thrust = [\thrust, 0]^T$ is the total thrust force in the quadrotors from the rotors and $\torque$ is the torque on the quadrotor
-around the $z$ axis of the world frame $\worldFrame$.
-The thrust and torque are realistic controls for a 2D quadrotor system and gives the
-control vector \control = [\thrust, \torque].
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\dot{\Velocity} &= g \zw + \frac{1}{m} \thrust \rotationMatrix \zw \\
-\dot{\rotationMatrix} &= \rotationMatrix \angularVelocityMatrix \\
-\dot{\angularVelocity} &= \inertiaMatrix^{-1} \torque - \inertiaMatrix^{-1} \angularVelocityMatrix \inertiaMatrix \angularVelocity \\
-\dot{\positions} &= \velocity
-\end{align}
-#+END_EXPORT
-where $g=9.81ms^{-2}$ is the acceleration due to gravity, $m$ is the mass, $\zw=[0,0,1]^T$,
-$\positions=[x, y, z]^T$ is the position of the quadrotor in the world frame $\worldFrame$,
-$\Velocity=[\velocity_x, \velocity_y, \velocity_z]^T$ is the
-and velocity of the quadrotor in the world frame $\worldFrame$ respectively.
-The angular velocity of the quadrotor in the body frame $\bodyFrame$ is denoted $\angularVelocity=[p, q ,r]^T$
-and in tensor form $\angularVelocityMatrix=[[0,-p,q];[r,0,-p];[-q,p,0]]$
-
-$\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]$
-
-$\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
-$\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
-
-\newpage
 ** Point Mass 2D Dynamics
 #+BEGIN_EXPORT latex
 \newcommand{\roll}{\ensuremath{\phi}}
@@ -5610,8 +6091,6 @@ the angular (yaw) velocity $\dot{\yaw}$,
 \newpage
 ** Optimal Control as Probabilistic Inference
 #+BEGIN_EXPORT latex
-\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
-\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
 
 \newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
 \newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
@@ -6353,12 +6832,10 @@ p(\mathbf{J}(\state_{\timeInd})) =
 \newcommand{\policies}{\ensuremath{\Pi}}
 \newcommand{\policy}{\ensuremath{\pi_{\theta}}}
 
-\newcommand{\modeDomain}{\ensuremath{\mathcal{A}}}
-\newcommand{\inputDomain}{\ensuremath{\hat{\mathcal{X}}}}
 
 \renewcommand{\dataset}{\ensuremath{\mathcal{D}}}
 \renewcommand{\params}{\ensuremath{\bm\theta}}
-\renewcommand{\input}{\ensuremath{\control}}
+\renewcommand{\input}{\ensuremath{\hat{\state}}}
 \renewcommand{\output}{\ensuremath{\modeVar}}
 \renewcommand{\inputDomain}{\ensuremath{\controlDomain}}
 \renewcommand{\outputDomain}{\ensuremath{\mathcal{A}}}
@@ -6396,7 +6873,9 @@ a single dynamics mode in multimodal dynamical systems.
 cite:schreiterSafe2015 use a GP classifier to identify safe and unsafe regions
 when learning GP dynamics models in an active learning setting.
 However, they assume that they can directly observe whether a particular
-data point environment belongs to either the safe or unsafe regions.
+data point from the environment belongs to either the safe or unsafe regions.
+In contrast, this chapter is concerned with scenarios where the mode cannot be directly observed from the
+environment, but instead, is inferred by a probabilistic dynamics model.
 
 Utilising mutual information for active learning has been well motivated by, for example,
 cite:krauseNearOptimal2008.
@@ -6522,8 +7001,16 @@ binary classification model,
 where $\Phi$ represents the Gaussian CDF and $\Phi(\gatingFunc(\input))$ is
 the probability of the (Bernoulli) output variable
 $\alpha$ cite:nickischApproximations2008.
+In this context,  Eq. ref:eq-output-space-entropy can be re-written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-output-space-entropy-gp-classification}
+\text{arg}\underset{\input}{\max}
+H(\output \mid \input, \dataset)
+- \E_{\gatingFunc \sim p(\gatingFunc \mid\dataset)} \left[ H(\output \mid \input, \gatingFunc) \right].
+\end{align}
+#+END_EXPORT
 Their approach introduces approximations to the two terms in
-Eq. ref:eq-output-space-entropy.
+Eq. ref:eq-output-space-entropy-gp-classification.
 They assume that the posterior over the latent function $\gatingFunc$
 is approximated to be Gaussian,
 #+BEGIN_EXPORT latex
@@ -6536,7 +7023,7 @@ is approximated to be Gaussian,
 #+END_EXPORT
 The $\overset{1}{\approx}$ symbol will be used to indicate when such an approximation
 has been exploited.
-The first term in Eq. ref:eq-output-space-entropy is approximated as follows,
+The first term in Eq. ref:eq-output-space-entropy-gp-classification is approximated as follows,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-entropy--data}
 H(\output \mid \input, \dataset) &\overset{1}{\approx}
@@ -6568,14 +7055,26 @@ exponential curve ($\text{exp}(-\gatingFunc(\input)^2/\pi\text{ln}2)$).
 This approximation is referred to as $\overset{2}{\approx}$.
 A simple Gaussian convolution then gives the closed form expression in Eq.
 ref:eq-entropy-expected-term-last.
-The objective in Eq. ref:eq-output-space-entropy can then be approximated as,
+The objective in Eq. ref:eq-output-space-entropy-gp-classification can then be approximated as,
+#+BEGIN_EXPORT latex
+\newcommand{\approxEntropy}{\ensuremath{\hat{H}}}
+\begin{align} \label{eq-approximate-output-space-entropy-obj}
+\text{arg}\max_{\input}
+\approxEntropy(\output)
+\end{align}
+#+END_EXPORT
+where,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-approximate-output-space-entropy}
+\approxEntropy(\output)
+\coloneqq
 h_{\text{Bern}} \left( \Phi \left( \frac{\mu_{\input,\dataset}}{\sqrt{\sigma^2_{\input,\dataset} + 1}} \right) \right)
 + \frac{C}{\sqrt{\sigma_{\input,\dataset}^2 + C^2}}
 \text{exp}\left( -\frac{\mu_{\input,\dataset}^2}{2\left( \sigma_{\input,\dataset}^2 + C^2 \right)} \right)
 \end{align}
 #+END_EXPORT
+The objective is smooth and differentiable for most practically relevant kernels of $\input$, so
+gradient-based optimisation can be used to find the maximally informative $\input$.
 
 
 # #+BEGIN_EXPORT latex
@@ -6595,6 +7094,10 @@ h_{\text{Bern}} \left( \Phi \left( \frac{\mu_{\input,\dataset}}{\sqrt{\sigma^2_{
 # #+END_EXPORT
 
 ** Bayesian Information Theoretic Exploration Strategy
+#+BEGIN_EXPORT latex
+\newcommand{\posterior}{\ensuremath{p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \control_{\timeInd})}}
+#+END_EXPORT
+
 # The /static/ active learning problem addressed previously is fundamentally different
 # to the problem in dynamical systems.
 # In the /static/ problem, it is possible to query any point in the input domain.
@@ -6609,15 +7112,62 @@ As highlighted by cite:buisson-fenetActively2020, information gain in dynamical 
 fundamentally different to the /static/ problem addressed by cite:krauseNearOptimal2008
 and cite:houlsbyBayesian2011.
 The goal here is to pick the most informative control trajectory $\controlTraj$ whilst observing $\stateTraj$.
+
 Recent work has addressed active learning in (unimodal) GP dynamics models
 citep:buisson-fenetActively2020 and (unimodal)
 GP state-space models citep:caponeLocalized2020.
+cite:schreiterSafe2015 consider safe exploration for active learning where they distinguish safe and unsafe regions
+with a binary GP classifier, which is learned separately to the dynamics model. Their exploration strategy considers
+the differential entropy of the posterior GP associated with the dynamics model and they use the GP classifier to
+define a set of constraints.
+In contrast, this chapter exploits the coupled learning of the dynamics modes and the gating network (i.e. the classifier)
+and projects the exploration strategy onto the posterior GP(s) associated with the gating network.
+The coupled learning provides well-calibrated uncertainty estimates in the gating network, making it a
+good choice for information-based exploration.
+
+In order to calculate the approximate entropy objective in the output space $\approxEntropy(\output_{\timeInd})$
+(Eq. ref:eq-approximate-output-space-entropy-obj)
+at a given time step $\timeInd$, the posterior $\posterior$ over the gating function is required.
+After the first time step this distribution is calculated as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-posterior-0}
+p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \control_{\timeInd})&=
+p(\state_0)
+\int p(\gatingFunc(\state_{1}, \control_{1}) \mid \state_{0}, \control_{0})
+p(\state_{1} \mid \state_{0}, \control_{0}) p(\control_{0}) \text{d}\state_0
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mutual-information}
+p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \control_{\timeInd})&=
+p(\state_0) \prod_{\timeInd=1}^{\timeInd}
+\int p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \state_{\timeInd}, \control_{\timeInd})
+p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_{\timeInd}) \text{d}\state_\timeInd
+\end{align}
+#+END_EXPORT
+
 
 #+BEGIN_EXPORT latex
 \newcommand{\gatingOutput}{\ensuremath{h(\singleInput)}}
 \newcommand{\gatingTransition}{\ensuremath{p(\gatingOutput \mid \state_\timeInd, \control_\timeInd)}}
 \begin{align} \label{eq-mutual-information}
-\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} H(\stateTraj, \controlTraj) &=
+\underset{\stateTraj \in \stateDomain^\TimeInd, \controlTraj \in \controlDomain^\TimeInd}{\text{argmax}} \approxEntropy(\stateTraj, \controlTraj) &=
+\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd \approxEntropy_{\timeInd}(\state_{\timeInd}, \control_{\timeInd})
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-classification-posterior}
+\gatingFunc \mid \input, \mathcal{D} &\sim \mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset}).
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\newcommand{\gatingOutput}{\ensuremath{h(\singleInput)}}
+\newcommand{\gatingTransition}{\ensuremath{p(\gatingOutput \mid \state_\timeInd, \control_\timeInd)}}
+\begin{align} \label{eq-mutual-information}
+\underset{\stateTraj \in \stateDomain^\TimeInd, \controlTraj \in \controlDomain^\TimeInd}{\text{argmax}} H(\stateTraj, \controlTraj) &=
 \underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
 &= \underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
 \text{log} \gatingTransition \text{d} \gatingOutput
@@ -6665,7 +7215,6 @@ We consider a fully discriminative model where the goal of active learning is to
 &\approx \int h \left( \Phi(\gatingFunc(\state, \control)) \mathcal{N}(\gatingFunc(\state, \control) \mid \mu_\gatingFunc, \sigma^2_\gatingFunc) \text{d} \gatingFunc(\state, \control)
 \end{align}
 #+END_EXPORT
-
 
 ** Mode Constraints
 In order to ensure that the exploration strategy remains in the desired dynamics
