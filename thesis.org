@@ -15,8 +15,10 @@
                ("\\section{%s}" . "\\section*{%s}")
                ("\\subsection{%s}" . "\\subsection*{%s}")
                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-               ("\\mboxparagraph{%s}" . "\\mboxparagraph*{%s}")
-               ("\\mboxsubparagraph{%s}" . "\\mboxsubparagraph*{%s}")))
+               ("\\paragraph{%s}" . "\\paragraph*{%s}")
+               ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+               ;; ("\\mboxparagraph{%s}" . "\\mboxparagraph*{%s}")
+               ;; ("\\mboxsubparagraph{%s}" . "\\mboxsubparagraph*{%s}")))
 (add-to-list 'org-latex-classes
              '("mimosis"
                "\\documentclass{mimosis-class/mimosis}
@@ -246,8 +248,10 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\testInd}{\ensuremath{*}}
 #+LATEX_HEADER: \newcommand{\NumData}{\ensuremath{\MakeUppercase{\numData}}}
 #+LATEX_HEADER: \newcommand{\NumInd}{\ensuremath{\MakeUppercase{\numInd}}}
-#+LATEX_HEADER: \newcommand{\StateDim}{\ensuremath{\MakeUppercase{\stateDim}}}
-#+LATEX_HEADER: \newcommand{\ControlDim}{\ensuremath{\MakeUppercase{\controlDim}}}
+# #+LATEX_HEADER: \newcommand{\StateDim}{\ensuremath{\MakeUppercase{\stateDim}}}
+# #+LATEX_HEADER: \newcommand{\ControlDim}{\ensuremath{\MakeUppercase{\controlDim}}}
+#+LATEX_HEADER: \newcommand{\StateDim}{\ensuremath{{D_x}}}
+#+LATEX_HEADER: \newcommand{\ControlDim}{\ensuremath{{D_u}}}
 #+LATEX_HEADER: \newcommand{\ModeInd}{\ensuremath{\MakeUppercase{\modeInd}}}
 #+LATEX_HEADER: \newcommand{\NumEpisodes}{\MakeUppercase{\numEpisodes}}
 #+LATEX_HEADER: \newcommand{\NumTimesteps}{\MakeUppercase{\numTimesteps}}
@@ -710,8 +714,9 @@ and how the dyanmics switches between them, are \textit{not fully known a priori
 %The goal is to fly the quadrotor from an initial state in the desired (operatable) dynamics mode,
 %to a target state, whilst remaining in the desired dynamics mode.
 
-This work first considers learning representations of multimodal dynamical systems, assuming
+This dissertation first considers learning representations of multimodal dynamical systems, assuming
 access to a historial data set of state transitions.
+\todo{add comment about MoGPE vs SVGP}
 The model resembles the Mixture of Gaussian Process Experts model with a gating network based on Gaussian processes.
 Motivated by synergising model learning and control,
 this model infers latent \textit{geometric} structure in the gating network,
@@ -741,15 +746,13 @@ stochastic variational inference.
 Secondly, this dissertation considers driving a dynamical system from an initial state (in a desired dynamics mode),
 to a target state, whilst remaining in the desired dynamics mode.
 For example, consider controlling a quadrotor in an environment subject to two dynamics modes: 1) a turbulent
-dynamics mode in front of a fan, and 2) a non turbulent dyanmics mode everywhere else.
+dynamics mode in front of a fan, and 2) a non turbulent dynamics mode everywhere else.
 The goal in this scenario is to fly the quadrotor to a target location,
-whilst remaining in the operatable (non turbulent) dynamics mode,
-In a \textbf{risk-averse setting}, it is desirable to avoid entering regions of a learned dynamics model with
-high \textit{epistemic uncertainty}, as well as remining in the desired dynamics mode.
-This is because the trajectory cannot be predicted confidently, and may leave the operatable dynamics mode.
+whilst remaining in the operatable (non turbulent) dynamics mode.
 
-%Based on these two goals, this dissertation develops two trajectory optimisation algorithms that exploit
-%the learned dyanmics to achieve them.
+In a \textbf{risk-averse setting}, it is desirable to avoid entering regions of a learned dynamics model with
+high \textit{epistemic uncertainty}, as well as remaining in the desired dynamics mode.
+This is because the trajectory cannot be predicted confidently, and may leave the operatable dynamics mode.
 Given a partially learned dynamics model, this dissertation develops two trajectory optimisation algorithms
 aimed at solving this risk-averse setting.
 The first approach
@@ -762,8 +765,10 @@ a DJI Tello quadrotor.
 %A second, alternative approach is also presented.
 %Instead of exploiting the geometry of the learned model, it formulates the control problem as probabilistic inference
 %in a graphical model by conditioning on a mode assignment variable.
+%Based on these two goals, this dissertation develops two trajectory optimisation algorithms that exploit
+%the learned dyanmics to achieve them.
 
-Finally, this dissertaion considers the active learning setting, where it does
+Finally, this dissertation considers the active learning setting, where it does
 not assume access to a historical data set.
 To achieve this goal, a constrained exploration algorithm is introduced.
 The algorithm exploits the \textit{epistemic uncertainty} associated with the learned model, to guide
@@ -1058,23 +1063,25 @@ are expensive to run (energy intensive, subject to wear and tear) and
 must be controlled subject to /constraints/ (for safety, efficiency, and so on).
 In contrast to simulation, the control of physical systems also has real-world consequences:
 components may get damaged, the system may damage its environment, or the system may catastrophically fail.
-As such, any control strategy deployed in the real-world should ensure the safety of itself and
-its surrounding environment.
+As such, any learning-based control strategy deployed in the real-world, should handle both the uncertainty inherent
+to the environment, as well as the uncertainty introduced by learning from observations.
+# As such, any control strategy deployed in the real-world should ensure the safety of itself and
+# its surrounding environment.
 # Therefore, any control strategy deployed in the real-world should ensure the safety of itself and
 # its surrounding environment.
 
 Many dynamical systems exhibit multimodalities (in their transition dynamics), where some of the dynamics modes
 \parmarginnote{multimodal systems}
-are believed to be /unoperatable/ or /unsafe/.
+are believed to be /unoperatable/ or /undesirable/.
 These multimodalities may be due to spatially varying model parameters, for example,
 process noise terms modelling aircraft turbulence, or friction coefficients modelling
 surface-tyre interactions for ground vehicles over different terrain.
-In these systems, it is desirable to remain in a specific dynamics mode that is known to be /operatable/.
-Perhaps the other modes are hard to control due to stability, or the mode switch itself is hard to control.
-Or perhaps it is desirable to remain in a desired mode for /efficiency/ or /performance/ reasons.
+In these systems, it is desirable to avoid entering specific dynamics mode that are believed to be /unoperatable/.
+Perhaps they are hard to control due to stability, or the mode switch itself is hard to control.
+Or perhaps it is desirable to avoid specific modes for /efficiency/ or /performance/ reasons.
 Given these motivations, this dissertation is interested in control techniques for
 driving dynamical systems from an initial state,
-to a target state, whilst remaining in a desired dynamics mode.
+to a target state, whilst avoiding specific dynamics modes.
 
 # In particular, it is primarily interested in controlling a quadrotor in an environment
 # subject to two dynamics modes: 1) a turbulent
@@ -1115,12 +1122,12 @@ where the model cannot predict confidently due to a lack of training observation
 This concept is known as /epistemic uncertainty/ and is reduced in the limit of infinite data.
 Correctly quantifying uncertainty is crucial for intelligent decision-making.
 
-In a *risk-averse setting*, it is desirable to avoid entering regions of a learned dynamics model with high /epistemic
-uncertainty/.
+In a *risk-averse setting*, it is desirable for control strategies
+to avoid entering regions of a learned dynamics model with high /epistemic uncertainty/.
 \parmarginnote{decision-making under uncertainty}
-This is because it cannot predict the trajectory confidently, and thus, if any safety
-constraints have been violated.
-In our case, it does not know if the trajectory will remain in the desired dynamics mode.
+This is because the trajectory cannot be predicted confidently, and thus, if any
+/constraints/ have been violated, i.e.
+if the trajectory will avoid the undesired dynamics mode.
 Conversely, in an *explorative setting*,
 if the /epistemic uncertainty/ has been quantified, then it can be used to guide exploration into
 regions of the dynamics that have not previously been observed.
@@ -1248,11 +1255,25 @@ Fig. ref:fig-problem-statement shows a graphical representation of this environm
 #+BEGIN_EXPORT latex
 \begin{figure}[!h]
 \centering
-  \includegraphics[width=0.6\columnwidth]{images/quadcopter_bimodal_domain.pdf}
+  %\includegraphics[width=0.6\columnwidth]{images/quadcopter_bimodal_domain.pdf}
+  \includegraphics[width=0.9\columnwidth]{images/Figure_1.png}
   \caption{
   Diagram showing a top down view of the environment for the 2D quadcopter example.
   The quadcopter is subject to two dynamics modes: 1) a \textit{turbulent}
-  dynamics mode induced by a fan (blue), and, 2) a \texit{non-turbulent} dynamics mode everywhere else (red).}
+  dynamics mode induced by a fan (green), and, 2) a \texit{non-turbulent} dynamics mode everywhere else (blue).}
+\label{fig-problem-statement}
+\end{figure}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{figure}[!h]
+\centering
+  %\includegraphics[width=0.6\columnwidth]{images/quadcopter_bimodal_domain.pdf}
+  \includegraphics[width=0.9\columnwidth]{images/quadcopter-domain-ppt.png}
+  \caption{
+  Diagram showing a top down view of the environment for the 2D quadcopter example.
+  The quadcopter is subject to two dynamics modes: 1) a \textit{turbulent}
+  dynamics mode induced by a fan (green), and, 2) a \texit{non-turbulent} dynamics mode everywhere else (blue).}
 %The goal is learn a factorised representation of the underlying dynamics modes to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
 %remaining in the non-turbulent mode or prioritise avoiding regions of the learned dynamics
 %with high epistemic uncertainty due to lack of training observations.}
@@ -1346,7 +1367,8 @@ results in poor performance and sometimes even system failure.
 #+BEGIN_EXPORT latex
 \begin{figure}[!t]
 \centering
-  \includegraphics[width=0.9\columnwidth]{images/quadcopter_bimodal_domain.pdf}
+  %\includegraphics[width=0.9\columnwidth]{images/quadcopter_bimodal_domain.pdf}
+  \includegraphics[width=0.9\columnwidth]{images/quadcopter-domain-ppt.png}
   \caption{
 This work seeks to velocity control a DJI Tello quadcopter in an indoor environment
 subject to two modes of operation characterised by process noise (turbulence).
@@ -1425,6 +1447,11 @@ probabilistic belief over which mode is responsible for predicting at a given in
 
 * Literature Review
 # * Background and Related Work
+** maths :ignore:
+#+begin_export latex
+\newcommand{\inputDomain}{\ensuremath{\hat{\stateDomain}}}
+\newcommand{\outputDomain}{\ensuremath{\controlDomain}}
+#+end_export
 ** intro :ignore:
 This chapter provides an overview of learning-based control and details the relevant background information
 for the remainder of the dissertation.
@@ -1462,28 +1489,40 @@ The policy can be time-dependent and can also depend on all past information up 
 In the time-independent case the policy is denoted $\pi(\mathbf{x}(t))$ and
 the resulting closed-loop system is denoted $f_{\pi}(\mathbf{x}) = f(\mathbf{x},\pi(\mathbf{x}))$.
 
-** Model-Based Control
-*** Dynamical Systems
-**** intro :ignore:
-Dynamical systems describe the behaviour of a system over time $t$ and
+** Dynamical Systems and Uncertainty Quantification :ignore:
+** Dynamical Systems :noexport:
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
+
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+
+\newcommand{\dynamicsFunc}{\ensuremath{f}}
+#+END_EXPORT
+
+*** intro :ignore:
+Dynamical systems describe the behaviour of a system over time, $t$, and
 are a key component of both control theory and reinforcement learning.
-At any given time a dynamical system has a state, which is
-represented as a vector of real numbers $\mathbf{x}(t) \in \R^D$.
+At any given time, $t$, a dynamical system has a state, which is
+represented as a vector of real numbers $\state(t) \in \stateDomain \subseteq \R^D$.
 For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
-and an orientation would be represented as $\mathbf{x}(t) = [x(t), y(t), \theta(t)]^{T}$.
-The system can be controlled by applying control actions $\mathbf{u}(t) \in \R^F$ at any given time $t$.
+and an orientation would be represented as $\state(t) = [x(t), y(t), \theta(t)]^{T}$.
+The system can be controlled by applying control actions $\mathbf{u}(t) \in \controlDomain \subseteq \R^F$ at any given
+time, $t$.
 This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-unimodal-dynamics-cont}
-\stateDerivative(t) &= f(\state(t), \control(t)) + \epsilon(t) \quad \forall t
+\stateDerivative(t) &= \dynamicsFunc(\state(t), \control(t)) + \epsilon(t) \quad \forall t
 \end{align}
 #+END_EXPORT
-where $f : \R^D \times \R^{F} \rightarrow \R^{D}$ represents the transition dynamics function and $\epsilon(t)$
+where $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ represents the transition dynamics function and $\epsilon(t)$
 is an i.i.d process noise term with $\E[\epsilon(t)] = 0$.
 The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
 For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
 for in the process noise term.
-Throughout this thesis it is assumed that the state $\mathbf{x}$ is observed directly and is not subject to
+Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
 observation noise.
 This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
 in the reinforcement learning literature.
@@ -1491,50 +1530,13 @@ in the reinforcement learning literature.
 
 \todo[inline]{Should I make a bigger point out of the observation noise assumption}
 
-The system is controlled via a policy $\mathbf{u}(t) = \pi(\mathbf{x}(t), t)$, which given the state $\mathbf{x}(t)$
-and time step $t$ decides which control action $\mathbf{u}(t)$ to apply to the system.
+The system is controlled via a policy $\control(t) = \pi(\state(t), t)$, which given the state $\state(t)$
+and time step $t$ decides which control action $\control(t)$ to apply to the system.
 The policy can be time-dependent and can also depend on all past information up to time step $t$.
-In the time-independent case the policy is denoted $\pi(\mathbf{x}(t))$ and
-the resulting closed-loop system is denoted $f_{\pi}(\mathbf{x}) = f(\mathbf{x},\pi(\mathbf{x}))$.
-
-*** Optimal Control :ignore:
-Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
-over a time period $t \in [t_0, t_f]$ that optimises an objective function $\mathbf{J}_{\pi}(\x)$.
-The objective function might be formulated to solve a particular task or to make the dynamical
-system behave in a certain way.
-
-Typically this objective function is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-objective}
-\mathbf{J} \defeq \phi(\x(t_{f}), t_{f}) + \int^{t_{f}}_{t_{0}} L(\mathbf{x}(t), \mathbf{u}(t), t) \text{d}t,
-\end{align}
-#+END_EXPORT
-which consists of two terms:
-1. a terminal cost term $\phi : \R^{D} \times \R \rightarrow \R$,
-2. an integral cost term (or Lagrangian) $L : \R^{D} \times \R^{F} \times \R \rightarrow \R$.
-
-Model-based control ...
-
-*** Trajectory Optimisation
-Trajectory optimisation seeks to find the state and control trajectories
-for times $t \in [t_0, t_f]$ that
-minimise some cost function $g$ whilst satisfying constraints $c$
-and boundary conditions.
-The trajectory optimisation problem is given by,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-objective}
-\min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \\
-\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}} \\
-&c(\mathbf{x}(t)) \leq 0 \quad \forall t \\
-&\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f \numberthis
-\end{align*}
-#+END_EXPORT
-*** Model-Based Control in Uncertain Systems
-- robust optimal control
-- stochastic optimal control
-** Learning in Dynamical Systems
-*** Epistemic Uncertainty
-
+In the time-independent case the policy is denoted $\pi(\state(t))$ and
+the resulting closed-loop system is denoted $f_{\pi}(\state) = \dynamicsFunc(\state,\pi(\state))$.
+*** Sources of Uncertainty
+\parmarginnote{epistemic uncertainty}
 If we have used observations of a system to train a predictive model then we can only be confident in predictions near our observations.
 As we extrapolate away from the observations we can no longer be certain and this is known as
 epistemic uncertainty.
@@ -1545,8 +1547,8 @@ This is shown in Figure [[ref:epistemic]].
 # #+caption: Plot demonstrating the concept of epistemic uncertainty. We can be confident in the learnt function close to our observations but as we exptrapolate away from them we become uncertain what the function should look like. If we have a notion of epistemic uncertainty in a MBRL algorithm we can use it to encourage the agent to visit these areas and collect data, which in turn will reduce the epistemic uncertainty.
 # [[file:images/limited_data.pdf]]
 
-*** Aleatoric Uncertainty
 
+\parmarginnote{aleatoric uncertainty}
 As mentioned previously, aleatoric uncertainty consists of process noise and observation noise; uncertainties that are inherent in a system and cannot be reduced.
 # #+NAME: bimodal-dataset
 # #+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
@@ -1554,6 +1556,133 @@ As mentioned previously, aleatoric uncertainty consists of process noise and obs
 # [[file:images/dataset.pdf]]
 Figure [[ref:bimodal-dataset]] shows an artificial 1D dataset that demonstrates the concept of aleatoric uncertainty.
 In our work we generally assume that there is no observation noise and therefore the aleatoric uncertainty only consists of process noise.
+
+** Learning in Dynamical Systems
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
+
+\newcommand{\stateDomain}{\ensuremath{{\mathcal{X}}}}
+\newcommand{\controlDomain}{\ensuremath{{\mathcal{U}}}}
+
+\newcommand{\dynamicsFunc}{\ensuremath{f}}
+
+\renewcommand{\allInput}{\ensuremath{\hat{\state}_{1:\TimeInd}}}
+\renewcommand{\allOutput}{\ensuremath{{\Delta\state}_{1:\TimeInd}}}
+#+END_EXPORT
+
+*** intro :ignore:
+Dynamical systems describe the behaviour of a system over time, $t$, and
+are a key component of both control theory and reinforcement learning.
+At any given time, $t$, a dynamical system has a state, which is
+represented as a vector of real numbers $\state(t) \in \stateDomain \subseteq \R^D$.
+For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
+and an orientation would be represented as $\state(t) = [x(t), y(t), \theta(t)]^{T}$.
+The system can be controlled by applying control actions $\mathbf{u}(t) \in \controlDomain \subseteq \R^F$ at any given
+time, $t$.
+This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-unimodal-dynamics-cont}
+\stateDerivative(t) &= \dynamicsFunc(\state(t), \control(t)) + \epsilon(t) \quad \forall t
+\end{align}
+#+END_EXPORT
+where $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ represents the transition dynamics function and $\epsilon(t)$
+is an i.i.d process noise term with $\E[\epsilon(t)] = 0$.
+The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
+For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
+for in the process noise term.
+Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
+observation noise.
+This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+in the reinforcement learning literature.
+\todo[inline]{Slightly weird referring to MDP literature on continuous time setting}
+
+\todo[inline]{Should I make a bigger point out of the observation noise assumption}
+
+# The system is controlled via a policy $\control(t) = \pi(\state(t), t)$, which given the state $\state(t)$
+# and time step $t$ decides which control action $\control(t)$ to apply to the system.
+# The policy can be time-dependent and can also depend on all past information up to time step $t$.
+# In the time-independent case the policy is denoted $\pi(\state(t))$ and
+# the resulting closed-loop system is denoted $f_{\pi}(\state) = \dynamicsFunc(\state,\pi(\state))$.
+
+*** Probabilistic Modelling
+/Mathematical models/ are compact representations (sets of assumptions) that attempt to capture key features of the
+phenomenon of interest, in a precise mathematical form.
+Probabilistic modelling provides the capability of constructing /mathematical models/
+that can represent and manipulate uncertainty in data, models, decisions and predictions.
+
+Dynamical systems give rise to data arriving sequentially $\state_{1:\TimeInd} = \{\state_1, \ldots, \state_\TimeInd\}$.
+\parmarginnote{measurement noise}
+These measurements are often corrupted by (observation) noise due to imperfections in the measurement process.
+Even when it is known that there is uncertainty in the measurement process, there still remains uncertainty about its
+form.
+
+Given our current understanding of the real-world, many dynamical systems also appear to be
+\parmarginnote{process noise}
+inherently stochastic, due to lack of mathematical tools for model certain phenomena
+e.g. turbulence.
+Observation and process noise are the constituent sources of /aleatoric uncertainty/;
+uncertainties that are inherent in a system and cannot be reduced.
+
+The structure of models can also be uncertain and there may be unobserved (aka latent) variables present.
+The introduction of latent variables in probabilistic models is one of the key components providing
+them with interesting and powerful capabilities.
+A further form of uncertainty in models arises from unknown model parameters, $\theta$.
+\parmarginnote{epistemic uncertainty}
+It is worth considering the implications of all these types of uncertainty.
+If a predictive dynamics model is learned from observations then the model
+can only be confident predicting near the training observations.
+As one extrapolates away from the training observations, one can no longer be certain in the prediction;
+this is known as epistemic uncertainty and can be reduced by collecting more data and retraining a model.
+
+Probability theory enables this uncertainty to be represented and manipulated;
+It provide a systematic way to combine observations with existing knowledge,
+via a /mathematical model/.
+
+
+
+# If we have used observations of a system to train a predictive model then we can only be confident in predictions near our observations.
+# As we extrapolate away from the observations we can no longer be certain and this is known as
+# epistemic uncertainty.
+# It can be reduced by collecting more data and retraining a model.
+# This is shown in Figure [[ref:epistemic]].
+# #+NAME: epistemic
+# #+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
+# #+caption: Plot demonstrating the concept of epistemic uncertainty. We can be confident in the learnt function close to our observations but as we exptrapolate away from them we become uncertain what the function should look like. If we have a notion of epistemic uncertainty in a MBRL algorithm we can use it to encourage the agent to visit these areas and collect data, which in turn will reduce the epistemic uncertainty.
+# [[file:images/limited_data.pdf]]
+
+
+# #+NAME: bimodal-dataset
+# #+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
+# #+caption: An artificial 1D dataset with two levels of process noise.
+# [[file:images/dataset.pdf]]
+# Figure [[ref:bimodal-dataset]] shows an artificial 1D dataset that demonstrates the concept of aleatoric uncertainty.
+# In our work we generally assume that there is no observation noise and therefore the aleatoric uncertainty only consists of process noise.
+
+state-space models
+dynamics models
+
+
+
+*** Discrete-Time Dynamical Systems
+When learning dynamical systems it is common that observations of the system
+are sampled from the underlying system at a fixed time step, $\Delta \timeInd=t_*$.
+The state and control observations at time, $t$, are denoted
+$\state_t \in \stateDomain \subseteq \R^\StateDim$ and
+$\control_t \in \controlDomain \subseteq \R^\ControlDim$ respectively.
+The concatenation of the state and control domains is
+denoted as $\inputDomain \coloneqq \stateDomain \times \controlDomain$ and
+a single state-control input is denoted as $\singleInput = (\state_{t-1}, \control_{t-1})$.
+A time series of observations from time $a$ to time $b$ (inclusive)
+is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+Given a data set of state transitions $\mathcal{D} = \{\allInput, \allOutput\}$,
+it is natural to consider the discrete-time representation of the dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-unimodal-dynamics-disc}
+\singleOutput = \dynamicsFunc (\singleState, &\singleControl ; \Delta t = t_*) + \epsilon_{t-1}
+\end{align}
+#+END_EXPORT
 
 *** Bayesian Inference
 
@@ -2079,12 +2208,959 @@ We then test our model on the motorcycle data set and compare it to a sparse var
 # We then test our model on the motorcycle data set and compare its performance
 # to a sparse variational GP.
 
+** Optimal Control
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
+\newcommand{\integralCostFunc}{\ensuremath{C}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+
+\newcommand{\policySpace}{\ensuremath{\Pi}}
+\newcommand{\policy}{\ensuremath{\pi}}
+#+END_EXPORT
+
+*** intro :ignore:
+The problem of (deterministic) optimal control can be summarised as follows:
+#+BEGIN_EXPORT latex
+\begin{myquote}
+Given a dynamical system (Eq. \ref{eq-unimodal-dynamics-cont}) with
+states, $\state (t) \in \stateDomain \subseteq \R^{\StateDim}$, and
+controls, $\control(t) \in \controlDomain \subseteq \R^{\ControlDim}$,
+find a set of controls, $\controlTraj$,
+over a time period, $t \in [t_0, t_f]$, that optimises an objective function $J$.
+The objective function might be formulated to solve a particular task, or to make the dynamical
+system behave in a certain way.
+Typically this objective function is given by,
+\begin{align} \label{eq-objective}
+J \defeq \terminalCostFunc(\state(t_{f}), t_{f})
++ \int^{t_{f}}_{t_{0}}
+\integralCostFunc(\state(t), \control(t), t) \text{d}t,
+\end{align}
+which consists of two terms:
+\begin{itemize}
+\item a terminal cost $\terminalCostFunc : \stateDomain \times \R \rightarrow \R$,
+\item an integral cost (or Lagrangian) $\integralCostFunc : \stateDomain \times \controlDomain \times \R \rightarrow \R$.
+\end{itemize}
+\end{myquote}
+#+END_EXPORT
+In practice, the system is often corrupted by process noise, or is not completely known, so the resulting
+dynamical system is actually stochastic.
+As such, the definition above must be adapted for stochastic systems.
+In stochastic systems, a control sequence is not associated with a specific
+trajectory, but rather a distribution over trajectories.
+The resulting problem is known as stochastic optimal control (SOC).
+
+This section reviews the relevant background on SOC,
+in particular, trajectory optimisation algorithms for controlling
+stochastic systems that have been learned from observations.
+
+*** Stochastic Optimal Control
+Let us formalise the stochastic optimal control problem here.
+Given a stochastic, fully-observed, nonlinear system,
+with transition dynamics,
+${\dynamicsFunc: \stateDomain \times \controlDomain \rightarrow \stateDomain}$,
+SOC seeks to find the control sequence (trajectory), $\controlTraj$, over a horizon,
+$\TimeInd$, that minimises a cost
+function, ${\integralCostFunc: \stateDomain \times \controlDomain \rightarrow \R}$,
+in expectation over the stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-soc-problem-statement}
+\min_{\controlTraj} &\E_{\state(\cdot), \control(\cdot) \mid \state(0), \policy}\left[ \terminalCostFunc(\state(T))
++ \int_{t_0}^{T} \integralCostFunc(\state(t), \control(t), t) \right] \\
+\text{s.t.} \quad &\state(t) = \dynamicsFunc(\state(t), \control(t)) \text{d}t + \epsilon_\modeInd,
+\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon})
+\end{align}
+#+END_EXPORT
+*Policy Space* The policy space, $\policySpace$, defines the set of policies which optimisation is performed over,
+i.e. it is the optimisation domain.
+In this dissertation, a policy, $\policy$, shall be a conditional distribution over $\controlDomain$.
+In (deterministic) optimal control the policy space is usually given by open loop policies, i.e.
+only conditioned on time $\policy(\control \mid t)$.
+In contrast, SOC (and RL) are mainly interested in feedback policies, where the controls are conditioned on both time and
+state, i.e. $\policy(\control(t) \mid t, \state(t))$
+\footnote{for notational conciseness dependency on time is assumed from here on, i.e.
+$\policy(\control(t) \mid t, \state(t) = \policy(\control(t) \mid \state(t))$}.
+A special case are deterministic policies, given by $\policy(\control \mid \state) = \delta_{\control=f(\state)}$,
+where $\delta$ is the dirac delta distribution and $f$ is a function.
+
+*** Overview
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}
+  %[scale=.7,auto=center,every node/.style={fill=blue!20}] % here, node/.style is the style pre-defined, that will be the default layout of all the nodes. You can also create different forms for different nodes.
+  %\tikzstyle{highlight}  = [fill=red!20, color=red!60]
+  [
+    every node/.style={rectangle, fill=blue!20, very thick, minimum size=7mm},
+    highlight/.style={rectangle, draw=red!60, fill=red!5, very thick, minimum size=5mm},
+    discretegeneration/.style={rectangle, draw=red!60, fill=blude!20, very thick, minimum size=7mm},
+  ]
+
+  \node (oc) at (1,2) {Optimal Control};
+  \node[highlight, below=of oc, xshift=-4.8cm] (ol) {Open Loop};
+  \node[highlight, below=of oc, xshift=4.8cm] (cl) {Closed Loop};
+
+  \node[highlight, below=of oc] (mpc) {MPC};
+
+  \node[highlight, below=of ol, xshift=-2.6cm] (i) {Indirect Methods};
+  \node[highlight, below=of ol, xshift=2.6cm] (d) {Direct Methods};
+
+  \node[highlight, below=of d] (gd) {GD};
+
+  \node[highlight, below=of cl, xshift=-2.6cm] (dp) {Dynamic Programming};
+  \node[below=of cl, xshift=2.6cm] (hjb) {HJB/HJI};
+
+  \node[discretegeneration, below=of dp] (ilqr) {iLQR};
+  \node[left=of ilqr] (lqr) {LQR};
+  \node[right=of ilqr] (ddp) {DDP};
+
+  \draw[->] (oc) -- (cl);
+  \draw[->] (oc) -- (ol);
+  \draw[->] (ol) -- (i);
+  \draw[->] (ol) -- (d);
+  \draw[->] (cl) -- (dp);
+  \draw[->] (cl) -- (hjb);
+  \draw[->] (ol) -- (mpc);
+  \draw[->] (mpc) -- (cl);
+  \draw[->] (dp) -- (ilqr);
+  \draw[->] (dp) -- (lqr);
+  \draw[->] (dp) -- (ddp);
+\end{tikzpicture}
+}
+\caption{Roadmap of optimal control where red indicates applicability in discrete-time setting.}
+\label{fig-optimal-control-roadmap}
+\end{figure}
+#+END_EXPORT
+
+
+*** Problem Statement :noexport:
+Let us formalise the stochastic optimal control problem here.
+Given a stochastic, discrete-time, fully-observed, nonlinear system,
+with transition dynamics,
+${\dynamicsFunc: \stateDomain \times \controlDomain \rightarrow \stateDomain}$,
+SOC seeks to find the control sequence (trajectory), $\controlTraj$, over a horizon,
+$\TimeInd$, that minimises a cost
+function, ${\integralCostFunc: \stateDomain \times \controlDomain \rightarrow \R}$,
+in expectation over the stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-soc-problem-statement}
+\min_{\controlTraj} &\E_{\state(\cdot), \control(\cdot) \mid \state(0), \policy}\left[ \terminalCostFunc(\state_\TimeInd)
++ \sum_{\timeInd=1}^{\TimeInd-1} \integralCostFunc(\state_\timeInd, \control_\timeInd) \right] \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon_\modeInd,
+\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon})
+\end{align}
+#+END_EXPORT
+
+
+*** Dynamic Programming
+*** Model-based Control
+- robust optimal control
+- stochastic optimal control
+*** Trajectory Optimisation
+**** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
+
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+
+\newcommand{\dynamicsFunc}{\ensuremath{f}}
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+#+END_EXPORT
+
+**** intro :ignore:
+Formally, trajectory optimisation seeks to find the state and
+control trajectories,
+$\stateTraj = \{\state(\timeInd) \in \stateDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
+and
+$\controlTraj = \{\control(\timeInd) \in \controlDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
+respectively,
+that minimise some cost function $\costFunc$, whilst satisfying constraints $\constraintsFunc$,
+and boundary conditions.
+The trajectory optimisation problem is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt}
+\min_{\state(t), \control(t)} &\int_{t_0}^{t_f} \costFunc(\state(t), \control(t)) \text{d}t \quad \forall t \\
+\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}}  \\
+&\constraintsFunc(\mathbf{x}(t)) \leq 0 \quad \forall t \\
+&\state(t_0) = \state_0  \quad \state(t_f) = \state_f
+\end{align}
+#+END_EXPORT
+Solving this problem is often computationally expensive and
+is an active area of research.
+Many (approximate) solutions have been introduced in the literature,
+that seek to balance the computational complexity
+(for real-time control) and accuracy trade-off differently
+cite:bettsSurvey1998.
+This section briefly reviews several approaches to trajectory
+optimisation that can be used with learned dynamics models.
+It then provides an in-depth review of the control-as-inference
+framework, which is used in Chapter ref:chap-traj-opt.
+
+*Iterative Linear Quadratic Regulator (iLQR)*
+can be used to generate trajectories for non-linear systems by
+iteratively approximating
+the dynamics to be linear around a nominal trajectory and optimising for the controls.
+iLQR works well for quadratic cost functions but can be used with any cost function by approximating the cost
+function with a second order Taylor expansion. However, in this case iLQR is susceptible to converging
+to terrible (local) optima if the true cost function is highly non-convex.
+cite:boedeckerApproximate2014 present a real-time iLQR controller
+based on sparse GPs.
+cite:rohrProbabilistic2021 propose a novel LQR
+controller synthesis for
+linearised GP dynamics that yields robust controllers with
+respect to a probabilistic stability margin.
+In cite:marcoAutomatic2016 they parameterise the weight matrices
+$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
+and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
+
+*Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
+iLQR to a stochastic setting, where the process
+noise is assumed to be Guassian.
+cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
+
+*Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
+the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
+cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
+over the entire control sequence.
+Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
+and the quadratic model is inaccurate.
+\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
+DDP solutions provides greater accuracy than iLQG/iLQR but
+at the cost
+of increased computational time cite:tassaSynthesis2012.
+The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
+DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
+
+cite:panProbabilistic2014 present a probabilistic trajectory optimisation
+framework for systems with unknown dynamics called probabilistic
+differential dynamic programming (PDDP).
+It extends DDP to explicitly account
+for uncertainty in dynamics modelled using gaussian processes.
+In contrast to typical gradient based policy search methods, PDDP does not
+require a policy parameterisation as it learns a locally optimal,
+time-varying control policy.
+Based on the second-order local approximation of the value function,
+PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
+
+*Path Integral*  control is a method for developing optimal controls based on stochastic
+sampling of trajectories cite:theodorouGeneralized2010.
+This work was originally limited to control affine systems cite:williamsModel2017
+but has since been extended to general nonlinear
+dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
+
+**** Collocation
+**** Trajectory Optimisation as Probabilistic Inference
+***** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
+\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
+\newcommand{\controlDist}{\ensuremath{p(\control_\timeInd \mid \state_\timeInd)}}
+
+\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
+\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
+
+\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
+\newcommand{\monotonicFunc}{\ensuremath{f_{\text{mon}}}}
+
+\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
+
+\newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
+
+\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
+\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+
+\newcommand{\temperature}{\ensuremath{\gamma}}
+#+END_EXPORT
+***** intro :ignore:
+The second trajectory algorihtm optimisation in Chapter ref:chap-traj-opt
+builds on top of the control-as-inference framework
+citep:toussaintProbabilistic2006,kappenOptimal2013,
+which frames optimal control as probabilistic inference.
+Translating optimal control to inference can be viewed as a subset of probabilistic numerics
+citep:hennigProbabilistic2015, where statistical methods are used to solve numerical problems,
+providing uncertainty quantification, regularisation and faster convergence.
+
+Control-as-inference has been considered since the beginning of modern optimal control due to
+the concurrent development of LQR, Kalman filtering and LQG citep:kalmanNew1960,hoBayesian1964.
+Recent work on control-as-inference stems from path integral cite:kappenOptimal2013,williamsModel2017
+
+cite:rawlikStochastic2013
+
+cite:toussaintRobot2009 formulate trajectory optimisation as
+approximate inference and derive a local approximation
+where the maximum likelihood solution returns the deterministic optimal trajectory, and the local Gaussian belief
+approximation is equivalent to the LQG perturbation model around the optimal trajectory.
+cite:levineReinforcement2018 followed a similar approach formulating RL as probabilistic inference
+and showing how different approximate inference algorithms instantiated different popular RL algorithms.
+
+
+Recent work by cite:watsonStochastic2021 has formulated
+stochastic optimal control as input estimation
+
+***** Cost Functions as Likelihoods
+\newline
+To formulate optimal control as probabilistic inference
+it is first embedded into a graphical model (see Figure ref:fig-basic-control-graphical-model).
+The joint probability model (over a trajectory) is augmented with an
+additional variable to encode the notion of cost (or reward)
+over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
+The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
+time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
+The likelihood distribution can then be formulated
+by mapping the negative
+cost through a monotonically increasing function $\monotonicFunc$,
+giving the likelihood,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-monotonicOptimalityLikelihood}
+\optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+A common (and convenient) approach is to formulate
+the likelihood using an exponential transform of
+the cost. This results in a Boltzmann distribution where the
+inverse temperature, $\temperature$, is used to scale the cost,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-exponentialOptimalityLikelihood}
+\optimalProb &\propto \exp ( -\temperature\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+The resulting negative log-likelihood is an affine transformation of the cost, which preserves convexity.
+#+BEGIN_EXPORT latex
+\todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
+\begin{myquote}
+As shown in \cite{okadaVariational2020}, the choice of monotonic function,
+$\monotonicFunc$,
+leads to the inference algorithm resembling different well-known algorithms.
+For example, selecting $\monotonicFunc$ to be the exponential function,
+\begin{align} \label{eq-}
+\optimalProb &\propto \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
+\end{align}
+leads to the algorithm resembling Model Predictive Path Integral (MPPI)
+\cite{williamsModel2017,williamsInformation2017}, whilst
+selecting $\monotonicFunc$ to as,
+\begin{align} \label{eq-}
+\optimalProb &\propto \mathbb{I}\left[( \costFunc(\state_\timeInd, \control_\timeInd)) \leq \costFunc_{\text{thd}} \right]
+\end{align}
+recovers an algorihtm resembling the Cross Entropy Method (CEM).
+\end{myquote}
+#+END_EXPORT
+
+***** Joint Probability Model
+\newline
+Given the "cost" likelihood
+(Eq. ref:eq-monotonicOptimalityLikelihood)
+the joint probability for an optimal trajectory (i.e.
+for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$), is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt-joint-dist}
+\jointDist =
+& \startStateDist \underbrace{\terminalCostDist}_{\text{Terminal Cost}}  \\
+&\prod_{\timeInd=1}^{\TimeInd-1}
+\underbrace{\optimalProb}_{\text{Cost}}
+\underbrace{\transitionDist}_{\text{Dynamics}}
+\underbrace{\controlDist}_{\text{Controller}} \nonumber
+\end{align}
+#+END_EXPORT
+where $\controlDist$ denotes the controller or policy.
+In the case of RL the policy is parameterised with parameters, $\theta$,
+whereas the control setting is usually interested in
+optimising the states and controls directly.
+The object of interest in this model is the distribution over the control, $\control_\timeInd$,
+conditioned on the state, $\state_\timeInd$, and all future time steps being optimal,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1) =
+\frac{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)
+\controlDist p(\state_\timeInd)}{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)
+p(\state_\timeInd)}.
+\end{align}
+#+END_EXPORT
+The distributions $p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)$
+and
+$p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)$,
+can be obtained via recursive message passing,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)
+&= p(\state_\timeInd)
+\prod_{\timeInd}^{\TimeInd-1}
+\int \int
+\optimalProb p(\state_{\timeInd+1} \mid \state_{\timeInd}, \control_{\timeInd}) \controlDist
+\text{d}\state_{\timeInd+1} \text{d}\control_{\timeInd+1} \nonumber \\
+p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd)
+&=
+\int p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)
+p(\control_\timeInd \mid \state_\timeInd)
+\text{d}\control_{\timeInd}.
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\todo[inline]{Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
+\begin{align} \label{eq-}
+p(\optimalVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})
+= \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \optimalDist
+p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\state_\timeInd) \mid \state_\timeInd, \control_\timeInd)
+\controlDist
+\end{align}
+\begin{align} \label{eq-}
+\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \dynamicsFunc(\state_{\timeInd-1}), \control_\timeInd)) \\
+\end{align}
+}
+#+END_EXPORT
+
+***** graphical model :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{.45\textwidth}
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model with states and controls.}
+\label{fig-basic-control-graphical-model}
+\end{subfigure}
+\begin{subfigure}{.45\textwidth}
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
+      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
+      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+
+      \draw[->] (u1)--(o1);
+      \draw[->] (x1) to [out=100,in=240] (o1);
+      \draw[->] (u2)--(o2);
+      \draw[->] (x2) to [out=100,in=240] (o2);
+      \draw[->] (u3)--(o3);
+      \draw[->] (x3) to [out=100,in=240] (o3);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model with optimality variable.}
+\label{fig-augmented-control-graphical-model}
+\end{subfigure}
+\caption{Graphical models of control formulated as inference.}
+\label{fig-control-graphical-model}
+\end{figure}
+#+END_EXPORT
+
+***** Variational Inference
+In variational inference the distribution over the latent variables
+$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
+is approximated with another, potentially simpler
+(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
+In this case, the aim is to approximate the distribution over the optimal policy,
+$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd}=1)$.
+Introducing the variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood
+&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
+&= \text{log} \E_\trajectoryVarDist \left[
+\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
+\right] \\
+&\geq \E_\trajectoryVarDist \left[
+\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
+\frac{\controlVarDist}{\controlDist} \right] \\
+&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
+- \text{log}\controlVarDist\right]
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood &\geq
+ \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
+- \text{log}\controlVarDist\right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
+- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\end{align}
+#+END_EXPORT
+
+** Model-Based Control :noexport:
+*** Dynamical Systems :noexport:
+**** intro :ignore:
+Dynamical systems describe the behaviour of a system over time, $t$, and
+are a key component of both control theory and reinforcement learning.
+At any given time a dynamical system has a state, which is
+represented as a vector of real numbers $\state(t) \in \stateDomain \subseteq \R^D$.
+For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
+and an orientation would be represented as $\state(t) = [x(t), y(t), \theta(t)]^{T}$.
+The system can be controlled by applying control actions $\mathbf{u}(t) \in \controlDomain \subseteq \R^F$ at any given time $t$.
+This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-unimodal-dynamics-cont}
+\stateDerivative(t) &= \dynamicsFunc(\state(t), \control(t)) + \epsilon(t) \quad \forall t
+\end{align}
+#+END_EXPORT
+where $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ represents the transition dynamics function and $\epsilon(t)$
+is an i.i.d process noise term with $\E[\epsilon(t)] = 0$.
+The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
+For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
+for in the process noise term.
+Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
+observation noise.
+This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+in the reinforcement learning literature.
+\todo[inline]{Slightly weird referring to MDP literature on continuous time setting}
+
+\todo[inline]{Should I make a bigger point out of the observation noise assumption}
+
+The system is controlled via a policy $\control(t) = \pi(\state(t), t)$, which given the state $\state(t)$
+and time step $t$ decides which control action $\control(t)$ to apply to the system.
+The policy can be time-dependent and can also depend on all past information up to time step $t$.
+In the time-independent case the policy is denoted $\pi(\state(t))$ and
+the resulting closed-loop system is denoted $f_{\pi}(\state) = \dynamicsFunc(\state,\pi(\state))$.
+
+*** Optimal Control :ignore:
+Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
+over a time period $t \in [t_0, t_f]$ that optimises an objective function $\mathbf{J}_{\pi}(\x)$.
+The objective function might be formulated to solve a particular task or to make the dynamical
+system behave in a certain way.
+
+Typically this objective function is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-objective}
+\mathbf{J} \defeq \phi(\x(t_{f}), t_{f}) + \int^{t_{f}}_{t_{0}} L(\mathbf{x}(t), \mathbf{u}(t), t) \text{d}t,
+\end{align}
+#+END_EXPORT
+which consists of two terms:
+1. a terminal cost term $\phi : \R^{D} \times \R \rightarrow \R$,
+2. an integral cost term (or Lagrangian) $L : \R^{D} \times \R^{F} \times \R \rightarrow \R$.
+
+Model-based control ...
+
+*** Trajectory Optimisation
+**** intro :ignore:
+Formally, trajectory optimisation seeks to find the state and
+control trajectories,
+$\stateTraj = \{\state(\timeInd) \in \stateDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
+and
+$\controlTraj = \{\control(\timeInd) \in \controlDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
+respectively,
+that minimise some cost function $\costFunc$, whilst satisfying constraints $\constraintsFunc$,
+and boundary conditions.
+The trajectory optimisation problem is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt}
+\min_{\state(t), \control(t)} &\int_{t_0}^{t_f} \costFunc(\state(t), \control(t)) \text{d}t \quad \forall t \\
+\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}}  \\
+&\constraintsFunc(\mathbf{x}(t)) \leq 0 \quad \forall t \\
+&\state(t_0) = \state_0  \quad \state(t_f) = \state_f
+\end{align}
+#+END_EXPORT
+**** Collocation
+**** Trajectory Optimisation as Probabilistic Inference
+***** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
+\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
+\newcommand{\controlDist}{\ensuremath{p(\control_\timeInd \mid \state_\timeInd)}}
+
+\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
+\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
+
+\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
+\newcommand{\monotonicFunc}{\ensuremath{f_{\text{mon}}}}
+
+\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
+
+\newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
+
+\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
+\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+
+\newcommand{\temperature}{\ensuremath{\gamma}}
+#+END_EXPORT
+***** intro :ignore:
+The second trajectory algorihtm optimisation in Chapter ref:chap-traj-opt
+builds on top of the control-as-inference framework
+citep:toussaintProbabilistic2006,kappenOptimal2013,
+which frames optimal control as probabilistic inference.
+Translating optimal control to inference can be viewed as a subset of probabilistic numerics
+citep:hennigProbabilistic2015, where statistical methods are used to solve numerical problems,
+providing uncertainty quantification, regularisation and faster convergence.
+
+Control-as-inference has been considered since the beginning of modern optimal control due to
+the concurrent development of LQR, Kalman filtering and LQG cite:kalmanNew1960,hoBayesian1964.
+Recent work on control-as-inference stems from path integral cite:kappenOptimal2013,williamsModel2017
+
+cite:rawlikStochastic2013
+
+cite:toussaintRobot2009 formulate trajectory optimisation as
+approximate inference and derive a local approximation
+where the maximum likelihood solution returns the deterministic optimal trajectory, and the local Gaussian belief
+approximation is equivalent to the LQG perturbation model around the optimal trajectory.
+cite:levineReinforcement2018 followed a similar approach formulating RL as probabilistic inference
+and showing how different approximate inference algorithms instantiated different popular RL algorithms.
+
+
+Recent work by cite:watsonStochastic2021 has formulated
+stochastic optimal control as input estimation
+
+***** Cost Functions as Likelihoods
+To formulate optimal control as probabilistic inference
+it is first embedded into a graphical model (see Figure ref:fig-basic-control-graphical-model).
+The joint probability model (over a trajectory) is augmented with an
+additional variable to encode the notion of cost (or reward)
+over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
+The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
+time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
+The likelihood distribution can then be formulated
+by mapping the negative
+cost through a monotonically increasing function $\monotonicFunc$,
+giving the likelihood,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-monotonicOptimalityLikelihood}
+\optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+A common (and convenient) approach is to formulate
+the likelihood using an exponential transform of
+the cost. This results in a Boltzmann distribution where the
+inverse temperature, $\temperature$, is used to scale the cost,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-exponentialOptimalityLikelihood}
+\optimalProb &\propto \exp ( -\temperature\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+The resulting negative log-likelihood is an affine transformation of the cost, which preserves convexity.
+#+BEGIN_EXPORT latex
+\todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
+\begin{myquote}
+As shown in \cite{okadaVariational2020}, the choice of monotonic function,
+$\monotonicFunc$,
+leads to the inference algorithm resembling different well-known algorithms.
+For example, selecting $\monotonicFunc$ to be the exponential function,
+\begin{align} \label{eq-}
+\optimalProb &\propto \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
+\end{align}
+leads to the algorithm resembling Model Predictive Path Integral (MPPI)
+\cite{williamsModel2017,williamsInformation2017}, whilst
+selecting $\monotonicFunc$ to as,
+\begin{align} \label{eq-}
+\optimalProb &\propto \mathbb{I}\left[( \costFunc(\state_\timeInd, \control_\timeInd)) \leq \costFunc_{\text{thd}} \right]
+\end{align}
+recovers an algorihtm resembling the Cross Entropy Method (CEM).
+\end{myquote}
+#+END_EXPORT
+
+***** Joint Probability Model
+Given the "cost" likelihood
+(Eq. ref:eq-monotonicOptimalityLikelihood)
+the joint probability for an optimal trajectory (i.e.
+for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$), is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt-joint-dist}
+\jointDist =
+& \startStateDist \underbrace{\terminalCostDist}_{\text{Terminal Cost}} \\
+&\prod_{\timeInd=1}^{\TimeInd-1}
+\underbrace{\optimalProb}_{\text{Cost}}
+\underbrace{\transitionDist}_{\text{Dynamics}}
+\underbrace{\controlDist}_{\text{Controller}}
+\end{align}
+#+END_EXPORT
+where $\controlDist$ denotes the policy.
+In the case of RL the policy is parameterised with parameters, $\theta$, but in control we are usually interested in
+optimising the states and controls directly.
+The object of interest in this model is the distribution over the control, $\control_\timeInd$,
+conditioned on the state, $\state_\timeInd$, and all future time steps being optimal,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1) =
+\frac{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)
+\controlDist p(\state_\timeInd)}{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)
+p(\state_\timeInd)}.
+\end{align}
+#+END_EXPORT
+The distributions $p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)$,
+$p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd)$,
+$p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd, \control_\timeInd)$ and
+$p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd)$
+can be obtained via recursive message passing,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd) =
+\prod_{\timeInd+1}^{\TimeInd-1}
+\int \int \optimalProb p(\state_\timeInd \mid \state_{\timeInd-1}, \control_{\timeInd-1}) \controlDist \text{d}\state_{\timeInd} \text{d}\control_{\timeInd}.
+\end{align}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\todo[inline]{Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
+\begin{align} \label{eq-}
+p(\optimalVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})
+= \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \optimalDist
+p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\state_\timeInd) \mid \state_\timeInd, \control_\timeInd)
+\controlDist
+\end{align}
+\begin{align} \label{eq-}
+\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \dynamicsFunc(\state_{\timeInd-1}), \control_\timeInd)) \\
+\end{align}
+}
+#+END_EXPORT
+
+***** graphical model :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{.45\textwidth}
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model with states and controls.}
+\label{fig-basic-control-graphical-model}
+\end{subfigure}
+\begin{subfigure}{.45\textwidth}
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
+      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
+      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+
+      \draw[->] (u1)--(o1);
+      \draw[->] (x1) to [out=100,in=240] (o1);
+      \draw[->] (u2)--(o2);
+      \draw[->] (x2) to [out=100,in=240] (o2);
+      \draw[->] (u3)--(o3);
+      \draw[->] (x3) to [out=100,in=240] (o3);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model with optimality variable.}
+\label{fig-augmented-control-graphical-model}
+\end{subfigure}
+\caption{Graphical models of control formulated as inference.}
+\label{fig-control-graphical-model}
+\end{figure}
+#+END_EXPORT
+
+***** Variational Inference
+In variational inference the distribution over the latent variables
+$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
+is approximated with another, potentially simpler
+(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
+In this case, the aim is to approximate the distribution over the optimal policy,
+$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd}=1)$.
+Introducing the variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood
+&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
+&= \text{log} \E_\trajectoryVarDist \left[
+\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
+\right] \\
+&\geq \E_\trajectoryVarDist \left[
+\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
+\frac{\controlVarDist}{\controlDist} \right] \\
+&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
+- \text{log}\controlVarDist\right]
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood &\geq
+ \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
+- \text{log}\controlVarDist\right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
+- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\end{align}
+#+END_EXPORT
+
+*** Model-Based Control in Uncertain Systems
+- robust optimal control
+- stochastic optimal control
+*** Literature Review (iLQR/iLQG/DDP/MPPI for Trajectory Generation)
+*Iterative LQR/LQG* can be used to generate trajectories for non-linear systems by iteratively approximating
+the dynamics to be linear around a nominal trajectory and optimising for the controls.
+iLQR works well for quadratic cost functions and can be used with any cost function by approximating the cost
+function with a second order Taylor expansion. However, in this case iLQR is susceptible to converging
+to terrible (local) optima if the true cost function is highly non-convex.
+
+cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
+
+cite:boedeckerApproximate2014 present a real-time iLQR based on sparse GPs.
+
+cite:rohrProbabilistic2021 propose a novel controller synthesis for
+linearised GP dynamics that yields robust controllers with
+respect to a probabilistic stability margin.
+
+In cite:marcoAutomatic2016 they parameterise the weight matrices
+$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
+and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification
+by adapting the parameters.
+
+*Differential Dynamic Programming* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
+the main difference being that only a /first-order/ approximation of the dynamics is used, instead of /second-order/.
+cite:liaoAdvantages1992 show that DDP is comparable to a full Newton step for the entire control
+sequence. Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
+and the quadratic model is inaccurate.
+\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
+
+The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
+
+DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
+
+
+cite:panProbabilistic2014 present a probabilistic trajectory optimisation
+framework for systems with unknown dynamics called probabilistic
+differential dynamic programming (PDDP).
+It extends differential dynamic programming to explicitly account
+for uncertainty in the learned dynamics modelled using gaussian processes.
+In contrast to typical gradient based policy search methods, PDDP does not
+require a policy parameterisation as it learns a locally optimal,
+time-varying control policy.
+Based on the second-order local approximation of the value function,
+PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
+
+*Path Integral*  control is a method for developing optimal controls based on stochastic
+sampling of trajectories cite:theodorouGeneralized2010.
+This work was originally limited to control affine systems cite:williamsModel2017
+but has since been extended to general nonlinear
+dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
+
 ** Exploration in Dynamical Systems
+*** Bandits and Bayesian Optimisation
 *** Information Theoretic Active Learning with Gaussian Processe
 cite:krauseNonmyopic2007,houlsbyBayesian2011
 *** Active Learning in Dynamical Systems
 cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively2020
-
 
 ** Old :noexport:
 In cite:NhatAnhNguyen2018 they highlight that the previously mentioned approaches are limited as
@@ -2226,7 +3302,6 @@ Each of our experts predicts on the basis of a set of inducing inputs that are u
 These inducing inputs enable stochastic variational inference in our model which significantly speeds
 up inference.
 
-
 ** Ignore :noexport:
 
 The \glspl{mgp} literature commonly highlights two main issues that they
@@ -2343,10 +3418,8 @@ up inference.
 ** Maths Symbols :ignore:
 *** Domains :ignore:
 #+BEGIN_EXPORT latex
-\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
-\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
-\newcommand{\inputDomain}{\ensuremath{\hat{\stateDomain}}}
-\newcommand{\outputDomain}{\ensuremath{\controlDomain}}
+%\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+%\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
 \newcommand{\modeDomain}{\ensuremath{\mathcal{A}}}
 #+END_EXPORT
 
@@ -4551,6 +5624,146 @@ $\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
 $\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
 
 \newpage
+*** Point Mass 2D Dynamics
+#+BEGIN_EXPORT latex
+\newcommand{\roll}{\ensuremath{\phi}}
+\newcommand{\pitch}{\ensuremath{\theta}}
+\newcommand{\yaw}{\ensuremath{\psi}}
+
+\newcommand{\world}{\ensuremath{w}}
+\newcommand{\body}{\ensuremath{b}}
+\newcommand{\intermediate}{\ensuremath{c}}
+\renewcommand{\frame}{\ensuremath{F}}
+\newcommand{\worldFrame}{\ensuremath{\frame_\world}}
+\newcommand{\bodyFrame}{\ensuremath{\frame_\body}}
+\newcommand{\intermediateFrame}{\ensuremath{\frame_\intermediate}}
+
+\newcommand{\inertiaMatrix}{\ensuremath{J}}
+\newcommand{\inertiaZ}{\ensuremath{I_{zz}}}
+\newcommand{\zw}{\ensuremath{\mathbf{z}_\world}}
+
+\newcommand{\positions}{\ensuremath{\mathbf{h}}}
+\newcommand{\velocity}{\ensuremath{v}}
+\newcommand{\velocityx}{\ensuremath{\dot{x}}}
+\newcommand{\velocityy}{\ensuremath{\dot{y}}}
+\newcommand{\Velocity}{\ensuremath{\mathbf{\velocity}}}
+
+\newcommand{\rotationMatrix}{\ensuremath{\mathbf{R}}}
+\newcommand{\angularVelocity}{\ensuremath{\bm\omega}}
+\newcommand{\angularVelocityMatrix}{\ensuremath{\bm\Omega}}
+
+\renewcommand{\thrust}{\ensuremath{f_{x}}}
+\renewcommand{\Thrust}{\ensuremath{\mathbf{f_{x}}}}
+\renewcommand{\torque}{\ensuremath{\tau_z}}
+
+\newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
+#+END_EXPORT
+cite:williamsAdvancing
+cite:watsonStochastic2020
+cite:watsonAdvancing2021
+
+cite:levineVariational2013
+
+
+cite:bhardwajDifferentiable2020
+
+cite:mukadamContinuoustime2018
+
+The dynamics of a point mass in 2D can represented with the
+state vector $\state = [x, y, \velocityx, \velocityy, \yaw]$,
+where $\positions = [x, y]$ denotes the 2D Euclidean coordinates relative to the world frame $\worldFrame$,
+$\Velocity = [\velocityx, \velocityy]$ is the velocity in the world frame $\worldFrame$ and
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{tikzpicture}
+% body frame
+\draw[thick,->] (0,0) -- (1.5,1.5) node[anchor=south] {$x$};
+\draw[thick,->] (0,0) -- (1.5,-1.5) node[anchor=north] {$y$};
+
+% world frame
+\draw[thick,->] (-3,-3) -- (3,-3) node[anchor=north west] {$x$};
+\draw[thick,->] (-3,-3) -- (-3,3) node[anchor=south east] {$y$};
+\foreach \x in {-3, -2, -1, 0,1,2,3}
+   \draw (\x cm,-3) -- (\x cm,-3) node[anchor=north] {$\x$};
+\foreach \y in {-3, -2, -1, 0,1,2,3}
+    \draw (-3,\y cm) -- (-3,\y cm) node[anchor=east] {$\y$};
+\end{tikzpicture}
+\end{figure}
+#+END_EXPORT
+
+
+The point mass can apply a force along its $x$ axis (known as the thrust vector), which is denoted
+$\Thrust = [\thrust, 0]^T$.
+It can also rotate itself by applying a torque $\torque$ around its $z$ axis.
+The resulting control vector for the 2D point mass is given by $\control = [\thrust, \torque]$.
+The nonlinear dynamics of the system are given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state} &=
+\begin{bmatrix}
+    \dot{\state}_{1} \\
+    \dot{\state}_{2} \\
+    \dot{\state}_{3} \\
+    \dot{\state}_{4} \\
+    \dot{\state}_{5}
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \state_{3} \\
+    \state_{4} \\
+    \frac{1}{m} \thrust \cos{(\yaw)} \\
+    \frac{1}{m} \thrust \sin{(\yaw)} \\
+    \frac{1}{\inertiaZ} \torque
+\end{bmatrix}
+\end{align}
+#+END_EXPORT
+where $m$ is the mass and $\inertiaZ$ is the moment of inertia around the vertical $z$ axis.
+Defining the rotation matrix from the body frame $\bodyFrame$ to the world frame $\worldFrame$ as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\rotationMatrix_{\body,\world} =
+\begin{bmatrix}
+\cos{\yaw} & -\sin(\yaw) \\
+\sin{\yaw} & \cos(\yaw)
+\end{bmatrix}
+\end{align}
+#+END_EXPORT
+the dynamics can be calculated as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state}_{1:2} &= \dot{\positions} = \state_{3:4} \\
+\dot{\state}_{3:4} &= \dot{\Velocity} = \frac{1}{m} \rotationMatrix \Thrust \\
+\dot{\state}_{5} &= \dot{\yaw} = \frac{1}{\inertiaZ} \torque
+\end{align}
+#+END_EXPORT
+
+The unknown dynamics can be modelled by placing GP priors on the accelerations ($\dot{\dot{x}}, \dot{\dot{y}}$) and
+the angular (yaw) velocity $\dot{\yaw}$,
+#+BEGIN_EXPORT latex
+\renewcommand{\input}{\ensuremath{\hat{\state}}}
+\begin{align} \label{eq-quadrotor-dynamics}
+\dot{\state} &=
+\begin{bmatrix}
+    \dot{\state}_{1} \\
+    \dot{\state}_{2} \\
+    \dot{\state}_{3} \\
+    \dot{\state}_{4} \\
+    \dot{\state}_{5}
+\end{bmatrix}
+=
+\begin{bmatrix}
+    \state_{3} \\
+    \state_{4} \\
+    \frac{1}{m} \thrust \cos{(\yaw)} + \mathcal{N} \left( \mu_3(\input),  k_3(\input, \input) \right) \\
+    \frac{1}{m} \thrust \sin{(\yaw)} + \mathcal{N} \left( \mu_4(\input),  k_4(\input, \input) \right) \\
+    \frac{1}{\inertiaZ} \torque + \mathcal{N} \left( \mu_5(\input),  k_5(\input, \input) \right)
+\end{bmatrix}
+\end{align}
+#+END_EXPORT
+
+
+\newpage
 ** Conclusion
 
 using a novel variational lower bound that
@@ -4560,323 +5773,506 @@ via stochastic gradient-based optimisation.
 The method is evaluated on a real-world quadcopter example
 that shows the transition dynamics model can successfully learn a factorised representation
 of the underlying dynamics modes.
-* Trajectory Optimisation in Desired Modes label:chap-traj-opt
+* Mode Constrained Trajectory Optimisation label:chap-traj-opt
+** Maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\nominalStateTraj}{\ensuremath{\stateTraj_*}}
+\newcommand{\nominalControlTraj}{\ensuremath{\controlTraj_*}}
+
+\newcommand{\trajectory}{\ensuremath{\bar{\state}}}
+\newcommand{\stateControlTraj}{\ensuremath{\bm\tau}}
+
+\newcommand{\desiredMode}{\ensuremath{k^*}}
+\newcommand{\desiredGatingFunction}{\ensuremath{h_{k^*}}}
+\newcommand{\desiredDynamicsFunc}{\ensuremath{\mode{\latentFunc}}}
+\newcommand{\desiredStateDomain}{\ensuremath{\mode{\stateDomain}}}
+#+END_EXPORT
 ** Intro :ignore:
-This chapter is concerned with /mode constrained/ trajectory optimisation in learned dynamics models
-using the model in Chapter ref:chap-dynamics.
-The aim is to find trajectories that remain in a preferred dynamics mode
-where possible, and in regions of the transition dynamics that
-have been observed and can be predicted confidently, i.e. have low /epistemic uncertainty/.
+This chapter is concerned with controlling multimodal dynamical systems whose transition dynamics
+have been represented with the probabilistic dynamics model from Chapter ref:chap-dynamics,
+after training on a historical data set $\dataset$, of state transitions over the domain.
+In particular, it is concerned with /mode constrained/ trajectory optimisation, which attempts to
+drive the system from an initial state $\state_0$ (in a desired dynamics mode), to a target state $\state_f$,
+whilst remaining in the desired dynamics mode.
+Given the well-calibrated uncertainty estimates from the model in Chapter ref:chap-dynamics,
+this chapter is concerned with *risk-averse* control.
+That is, the trajectory optimisation algorithms should find trajectories that also
+avoid entering regions of the transition dynamics that
+have not been observed, and cannot be predicted confidently (i.e. have high /epistemic uncertainty/).
+This is because the model cannot be certain whether such a region belongs to the desired dynamics mode
+or not.
+This Chapter introduces two different approaches to performing /mode constrained/ trajectory optimisation.
+
+# trained on this data set $\dataset$, this chapter exploits the
+# well-calibrated uncertainty estimates from the model
+
+# Given that the learned dynamics model may not be fully known
+
+# This chapter considers a *risk-averse setting*
+# in regions of the transition dynamics that
+# have been observed and can be predicted confidently, i.e. have low /epistemic uncertainty/.
+
+# This chapter is concerned with /mode constrained/ trajectory optimisation in learned dynamics models
+# using the model in Chapter ref:chap-dynamics.
+# The aim is to find trajectories that remain in a preferred dynamics mode
+# where possible, and in regions of the transition dynamics that
+# have been observed and can be predicted confidently, i.e. have low /epistemic uncertainty/.
+# The main goals of the trajectory optimisation in this Chapter can be summarised as,
+# - Goal 1 :: remain in a preferred dynamics mode $k^*$ where possible, label:to-goal-mode
+# - Goal 2 :: avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
+
+
+Section ref:sec-problem-statement formally states the problem and then Sections ref:sec-traj-opt-geometric
+and ref:sec-traj-opt-inference detail the two trajectory optimisation algorithms.
+
+The work in this chapter is implemented in JAX and is available on GitHub
+cite:jax2018github[fn:2:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems and icon{\faGithub}/aidanscannell/vimpc]].].
+\todo{make links work}
+
+** Problem Statement label:sec-problem-statement
+This Chapter is interested in performing trajectory optimisation in
+stochastic, discrete-time, fully-observed, multimodal, nonlinear
+systems, with unknown, or partially unknown transition dynamics
+$\dynamicsFunc$, learned with the model from Chapter ref:chap-dynamics.
+Given a desired dynamics mode, $\desiredMode$, with transition dynamics,
+$\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \desiredStateDomain$,
+where $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$,
+this work seeks to find the optimal controls over a horizon,
+$\TimeInd$, that keeps the dynamics in the desired mode, $\desiredDynamicsFunc$,
+and minimises a cost
+function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$,
+whilst moving from an initial state, $\state_{0}$, to a target
+state, $\state_g$,
+in expectation over the
+stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\min_{\controlTraj} &\E\left[ \costFunc_\TimeInd(\state_\TimeInd)
++ \sum_{\timeInd=1}^{\TimeInd-1} \costFunc(\state_\timeInd, \control_\timeInd) \right] \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\latentFunc}(\state_\timeInd, \control_\timeInd) + \epsilon_\modeInd,
+\quad \epsilon_\modeInd \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon_\modeInd}) \\
+&\modeVarK \quad \forall \timeInd \in \mathbb{N} \cap [1,\TimeInd]
+\end{align}
+#+END_EXPORT
+The standard approach to solving such a problem is to construct an objective function encoding
+the goals.
 The main goals of the trajectory optimisation in this Chapter can be summarised as,
-- Goal 1 :: remain in a preferred dynamics mode $k^*$ where possible, label:to-goal-mode
-- Goal 2 :: avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
+- Goal 1 :: remain in a preferred dynamics mode $\desiredMode$ where possible, label:to-goal-mode
+- Goal 2 :: avoid regions of the learned dynamics with high /epistemic uncertainty/, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
 
-This Chapter introduces two different approaches to performing trajectory optimisation that achieve Goals 1 and 2.
-
-** Trajectory Optimisation via Latent ODE Collocation
-The trajectory optimisation algorithm presented in this Section exploits the latent /geometry/ inferred by the
-Gaussian process based gating network in the dynamics model presented in Chapter ref:chap-dynamics.
-The geometry and GP posterior covariance associated with the latent gating functions
-are used to formulate an objective function that encodes both Goals 1 and 2.
-Instead of directly optimising this objective function,
-an approach exploiting concepts of Riemannian geometry is used to implicitly optimise it.
-More specifically, the trajectory optimisation is projected onto a continuous-time
-ODE (the geodesic ODE) whose solutions implicitly minimise the objective function.
-
-Section ref:sec-problem-statement formally states our problem and
-Section ref:sec-traj-opt recaps concepts from Riemannian
-geometry before detailing how they are extended to probabilistic geometries
-and
-used to project the trajectory optimisation onto the latent geodesic ODE.
-It then details how this latent geodesic ODE is solved using direct collocation.
-Section ref:sec-results gives results of the method tested on a real-world
-velocity-controlled quadcopter example.
-
-*** Problem Statement label:sec-problem-statement
-Formally, trajectory optimisation seeks to find the state and control trajectories
-for times $t \in [t_0, t_f]$ that minimise some cost function $g$ whilst satisfying constraints $c$
-and boundary conditions.
-The trajectory optimisation problem is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-traj-opt}
-\min_{\mathbf{u}(t)} &\int_{t_0}^{t_f} g(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t \quad \forall t \nonumber \\
-\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}} \nonumber \\
-&c(\mathbf{x}(t)) \leq 0 \quad \forall t \nonumber \\
-&\mathbf{x}(t_0) = \mathbf{x}_0  \quad \mathbf{x}(t_f) = \mathbf{x}_f
-\end{align}
-#+END_EXPORT
-The standard approach to solving such a problem is to construct an objective function that encodes
-our two goals.
-
-We follow this approach and construct an objective function based on probabilistic Riemannian geometry.
-However, instead of minimising this objective function subject to our systems transition dynamics,
-we exploit the observation detailed in Section ref:sec-riemannian-geometry Eq. ref:eq-length-objective.
-That is, trajectories that minimise our objective function are actually solutions
-to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode;
-an ODE whose solutions are geodesics (i.e. shortest paths) on the Riemannian manifold endowed with the metric
-$\mathbf{G}$.
-With this observation we project the trajectory optimisation onto this ODE
-and deploy a simple objective function.
-Our goals are thus encoded into the Riemannian metric tensor $\mathbf{G}$ that
-appears in Eq ref:eq-2ode.
-Let us now provide an intuitive and thorough walk-through of the approach detailed above.
-
-*** Concepts of Riemannian Geometry label:sec-riemannian-geometry
-This section introduces the concepts of Riemannian geometry that are used to formulate
-a \textit{geometric} objective function for
-the trajectory optimisation presented in Chapter ref:chap-traj-opt.
-The aim of the \textit{geometric} objective function is to find shortest trajectories
-(known as geodesics) on a Riemannian manifold.
-This section starts by defining Riemannian manifolds and then details how lengths can
-be calculated on these manifolds.
-
-The Euclidean norm provides an intuitive notion for the length of a vector in the Euclidean space.
-Just as the dot product is the inner product of the Euclidean space it is possible to
-define inner products for Riemannian spaces (also known as Riemannian manifolds).
-Remembering that a norm can be expressed for any space endowed with an inner product
-provides us with the tools to for calculating lengths on manifolds.
-
-**** Riemannian Manifolds
-Intuitively Riemannian manifolds are smoothly curved spaces with an inner product.
-Formally, cite:carmoRiemannian1992 define them as smooth manifolds equipped with a Riemannian metric.
-#+BEGIN_EXPORT latex
-\begin{definition}[Riemannian Metric]
-A Riemannian metric $\mathbf{G}$ on a
-manifold $\mathcal{M}$ is a symmetric and positive definite matrix which defines
-a smoothly varying inner product
-$\langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b$
-in the tangent space $T_{\mathbf{x}}\mathcal{M}$, for each point $\mathbf{x} \in \mathcal{M}$ and
-$\dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \in T_{\mathbf{x}}\mathcal{M}$.
-\end{definition}
-\todo{comment on how I have assumed tangent space is velocity etc}
-#+END_EXPORT
-Riemannian manifolds are often represented as charts; a parameter space for the
-curved surface. An example of a chart is the spherical coordinate system that is
-used to describe a sphere.
-The chart is often a flat space and the curvature of the manifold arises
-through smooth changes in the metric.
-Measurements on the surface can thus be computed in the chart locally and
-integrated to give global measures.
-On a Riemannian manifold $\mathcal{M}$ the length of a trajectory (curve) $\bar{\mathbf{x}}$
-is given by the norm of the tangent vector along the trajectory,
-#+BEGIN_EXPORT latex
-\todo{define $\bar{\mathbf{x}}$}
-\begin{align} \label{eq-manifold-length}
-\text{Length}(\bar{\mathbf{x}})
-&=\int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t \\
-&=\int_{t_0}^{t_f}\sqrt{\dot{\mathbf{x}}(t)^T \mathbf{G}(\mathbf{x}(t)) \dot{\mathbf{x}}(t) } \mathrm{d} t,
-\end{align}
-#+END_EXPORT
-where $\mathbf{G}(\mathbf{x}(t))$ is the metric tensor at $\mathbf{x}(t)$.
-Throughout this thesis we use Newton's notation to denote differentiation with respect to time.
-\todo{Make this point about Newton's notation at earliest use of it.}
-
-**** Lengths on Riemannian Manifolds
-With this method for calculating lengths on Riemannian manifolds
-let us now turn to the definition of geodesics, i.e. the notion of shortest paths on Riemannian manifolds.
-Formally, a geodesic is defined as follows.
-#+BEGIN_EXPORT latex
-\begin{definition}[Geodesic]
-Given two points $\mathbf{x}_0, \mathbf{x}_f \in
-\mathcal{M}$, a Geodesic is a length minimising trajectory (curve)
-$\bar{\mathbf{x}}_g$ connecting the points such that,
-\begin{align} \label{eq-geodesic-conds}
-  \bar{\mathbf{x}}_{g}=\arg \min_{\bar{\mathbf{x}}} \operatorname{Length}(\bar{\mathbf{x}}), \quad \bar{\mathbf{x}}(t_0)=\mathbf{x}_{0}, \bar{\mathbf{x}}(t_f)=\mathbf{x}_{f}.
-\end{align}
-\end{definition}
-#+END_EXPORT
-An important observation from cite:carmoRiemannian1992 that we exploit in
-Chapter ref:chap-traj-opt, is that geodesics satisfy a continuous-time $2^{\text{nd}}$ order ODE,
-#+BEGIN_EXPORT latex
-\small
-\begin{align} \label{eq-2ode}
- \ddot{\mathbf{x}}(t)
-&= y(t, \mathbf{x}, \dot{\mathbf{x}}) \\
-&=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{x}(t))]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right),
-\end{align}
-\normalsize
-#+END_EXPORT
-where $\operatorname{vec}[\mathbf{G}(\mathbf{x}(t)])$ stacks the columns of $\mathbf{G}(\mathbf{x}(t))$
-and $\otimes$ denotes the Kronecker product.
-The implication of Eqs. ref:eq-geodesic-conds and ref:eq-2ode is that trajectories that are solutions
-to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode implicitly minimise the objective,
-#+BEGIN_EXPORT latex
-\todo{define $\bar{\mathbf{x}}$}
-\begin{align} \label{eq-length-objective}
-J &= \min \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t
-\end{align}
-#+END_EXPORT
-
-
-# Computing geodesics involves finding a solution to Eq. ref:eq-2ode
-# with $\mathbf{x}(t_0) = \mathbf{x}_1$ and $\mathbf{x}(t_f) = \mathbf{x}_2$.
-# This is a boundary value problem with a smooth solution so it can be solved
-# using any direct trajectory optimisation framework and can therefore
-# incorporate state and action constraints.
-# #+BEGIN_EXPORT latex
-# \todo[inline]{Hmm, not sure this is true, read up - It only involves discretizing the geodesic curve and not
-# the feature space and as this is always 1-dimensional the approach scales
-# to higher dimensional feature spaces.}
-# #+END_EXPORT
-
-
-# We can formulate this as an initial value problem and use techniques such as the
-# shooting method to determine the correct inintial velocity and from this the
-# geodesic path.
-# This is advantageous as it only involves discretizing the geodesic curve and not
-# the the feature space. This is always 1-dimensional and thus the approach scales
-# to highgher dimensional feature spaces.
-
-*** Geometric Objective Function
-To help provide intuition let us first formulate an objective function with two terms,
-one to address each of our goals,
+To help provide intuition, first consider an objective function with two terms
+(one to address each of the goals),
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-cost-trajectory}
 J&= \int_{t_0}^{t_f}  g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t)) + g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t,
 \end{align}
 #+END_EXPORT
-where the $g_{\text{mode}}$ term favours remaining in dynamics mode $k^*$
+where the $g_{\text{mode}}$ term favours remaining in dynamics mode $\desiredMode$,
 and the $g_{\text{epistemic}}$ term favours trajectories that avoid regions of the
 dynamics with high epistemic uncertainty.
-We will now instantiate Eq. ref:eq-cost-trajectory following two different approaches that use
-information learned by our transition dynamics model.
-The first objective is simple to construct and is intuitively the "go to" objective function for our problem.
-The second objective is more involved and requires the concepts of Riemannian geometry
-from Section ref:sec-riemannian-geometry to be extended to probabilistic geometries.
 
-*Simple Cost Function* Remembering that the gating network indicates the probability of being in a particular dynamics mode at a given
-time step, and that the Bayesian formulation of the dynamics model
-lends itself to well-calibrated uncertainty estimates,
-the objective function can be instantiated as,
+# Following this approach, an objective function based on probabilistic Riemannian geometry is constructed.
+# However, instead of minimising this objective function subject to the systems transition dynamics,
+# we exploit the observation detailed in Section ref:sec-riemannian-geometry Eq. ref:eq-length-objective.
+# That is, trajectories that minimise our objective function are actually solutions
+# to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode;
+# an ODE whose solutions are geodesics (i.e. shortest paths) on the Riemannian manifold endowed with the metric
+# $\mathbf{G}$.
+# With this observation we project the trajectory optimisation onto this ODE
+# and deploy a simple objective function.
+# Our goals are thus encoded into the Riemannian metric tensor $\mathbf{G}$ that
+# appears in Eq ref:eq-2ode.
+# Let us now provide an intuitive and thorough walk-through of the approach detailed above.
+# \todo{move this paragraph}
+
+** Trajectory Optimisation via Latent ODE Collocation label:sec-traj-opt-geometric
+*** Maths :ignore:
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-cost-trajectory-learned}
-J &= \int_{t_0}^{t_f} \underbrace{- \Pr(\alpha(t)=k^*)}_{g_{\text{mode}}}
-+ \lambda \underbrace{\V_{\text{epistemic}}\left[\latentFunc(\mathbf{x}(t), \mathbf{u}(t))\right]}_{g_{\text{epistemic}}}  \text{d}t,
-\end{align}
+\newcommand{\manifold}{\ensuremath{\mathcal{M}}}
+\newcommand{\manifoldFunction}{\ensuremath{h}}
+\newcommand{\manifoldDomain}{\ensuremath{\mathcal{Z}}}
+\newcommand{\manifoldCodomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\ManifoldDim}{\ensuremath{D}}
+\newcommand{\manifoldDim}{\ensuremath{d}}
+\newcommand{\manifoldInput}{\ensuremath{\mathbf{x}}}
+
+% \newcommand{\jacobian}{\ensuremath{\mathbf{J}_{\mathbf{x}_t}}}
+\newcommand{\jacobian}{\ensuremath{\mathbf{J}(\state(t))}}
+\newcommand{\metricTensor}{\ensuremath{\mathbf{G}}}
+
+\newcommand{\geodesicFunction}{\ensuremath{f_G}}
+
+\newcommand{\gatingDomain}{\ensuremath{\hat{\mathcal{X}}}}
+\newcommand{\gatingCodomain}{\ensuremath{\mathcal{A}}}
+
+\newcommand{\desiredManifold}{\ensuremath{\mathcal{M}_{k^*}}}
+%\newcommand{\desiredMetricTensor}{\ensuremath{\mathbf{G}_{k^*}}}
+\newcommand{\desiredMetricTensor}{\ensuremath{\mathbf{G}}}
+%\newcommand{\desiredJacobian}{\ensuremath{\mathbf{J}_{k^*}(\state(t))}}
+\newcommand{\desiredJacobian}{\ensuremath{\mathbf{J}}}
+\newcommand{\GatingDim}{\ensuremath{d_{x+u}}}
+\newcommand{\gatingDim}{\ensuremath{d}}
 #+END_EXPORT
-where the variance term $\V_{\text{epistemic}}$ is due to the epistemic uncertainty arising from
-learning $f$ from observations and $\lambda$ is a user-tuneable parameter.
-This objective function is fairly intuitive,
-we want to maximise the probability of being in our desired mode and we want to minimise
-the amount of variance (due to epistemic uncertainty) introduced over the trajectory.
+*** Intro :ignore:
+The trajectory optimisation algorithm presented in this Section exploits the latent /geometry/ inferred by the
+GP-based gating network from Chapter ref:chap-dynamics.
+The geometry and GP posterior covariance associated with the latent gating functions
+are used to formulate an objective function that encodes both Goals 1 and 2.
+Instead of directly optimising this objective function,
+an approach exploiting concepts of Riemannian geometry is used to implicitly optimise it.
+More specifically, the trajectory optimisation is projected onto the continuous-time
+geodesic ODE, whose solutions implicitly optimise the objective function.
 
-\todo{should probably test this and comment on why we don't use it...}
-
-**** A Geometric Cost Function :ignore:
-*Geometric Cost Function* The geometry of the latent gating functions can also be used to formulate a cost term
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Intuition for Geometric Approach} The geometry of the latent gating functions can be used to formulate a cost term
 that favours trajectories remaining in a preferred dynamics mode.
-The $g_{\text{mode}}$ term in Eq. ref:eq-cost-trajectory can be expressed as finding shortest
+The $g_{\text{mode}}$ term in Eq. \ref{eq-cost-trajectory} can be expressed as finding shortest
 paths on the desired mode's gating function.
 Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
-manifold given by the desired mode's gating function
+manifold given by the desired mode's gating function,
 increases when it passes over the contours; analogous to climbing a hill.
 Given appropriate scaling of the gating function, shortest trajectories between two locations are
 those that attempt to follow the contours, i.e. remain in a single mode by not climbing up or down any hills.
-This formulation is given by,
+\end{myquote}
+#+END_EXPORT
+
+\todo{state dim or state and control dim??}
+Section ref:sec-riemannian-geometry recaps concepts from Riemannian
+geometry before detailing how they are extended to probabilistic geometries
+and
+used to project the trajectory optimisation onto the latent geodesic ODE.
+It then details how this latent geodesic ODE is solved using direct collocation.
+Section ref:sec-traj-opt-results gives results of the method tested on a real-world
+velocity-controlled quadcopter example.
+
+*** Concepts of Riemannian Geometry label:sec-riemannian-geometry
+The first trajectory optimisation algorithm presented in this chapter exploits the fact that Goals 1 and 2
+are encoded as shortest trajectories (aka geodesic trajectories),
+on a latent Riemannian manifold parameterised by the gating network from Chapter ref:chap-dynamics.
+The necessary concepts of Riemannian geometry that are needed to understand this section are detailed here.
+
+**** Lengths in Euclidean Spaces :ignore:
+\newline
+*Lengths in Euclidean Spaces*
+The $l^2$ norm (aka Euclidean norm) provides an intuitive notion for the length of a
+vector $\manifoldInput \in \manifoldDomain \subseteq \R^\manifoldDim$
+in a Euclidean space. Under the $l^2$ norm, the length of a trajectory
+${\trajectory = \{\manifoldInput(t) \in \manifoldDomain \quad \forall t \in [t_0, t_f]\}}$ is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-euclidean-length}
+\text{Length}\left(\trajectory\right)
+&= \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_2 \mathrm{d}t,
+\end{align}
+#+END_EXPORT
+where Newton's notation has been used to denote differentiation with respect to time $t$.
+As a norm can be expressed for any space endowed with an inner product, it is possible to
+calculate lengths of trajectories on manifolds endowed with an inner product.
+# Just as the dot product is the inner product of the Euclidean space, it is possible to
+# define inner products for Riemannian spaces (also known as Riemannian manifolds).
+# Remembering that a norm can be expressed for any space endowed with an inner product,
+# provides us with the tools to for calculating lengths on manifolds.
+
+**** Lengths on Riemannian Manifolds :ignore:
+# *Lengths on Riemannian Manifolds*
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Riemannian Manifolds}
+In this dissertation if suffices to consider manifolds $\manifold$ defined by a mapping
+function,
+%#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-manifold-function}
+\manifoldFunction : \manifoldDomain \rightarrow \manifoldCodomain,
+\end{equation}
+%#+END_EXPORT
+where $\manifoldDomain$ and $\manifoldCodomain$ are open subsets of Euclidean spaces.
+The manifold $\manifold$ is given by $\manifold = \manifoldFunction(\manifoldDomain)$ and is said to
+be immersed in the ambient space $\manifoldCodomain$.
+Riemannian manifolds can intuitively be seen as $d\text{-dimensional}$ curved surfaces with a smoothly
+varying positive-definite inner product, governed by the Riemannian metric $\metricTensor$ \citep{carmoRiemannian1992}.
+\begin{definition}[Riemannian Metric]
+A Riemannian metric $\metricTensor$,
+on a manifold $\manifold$, is a smooth function
+$\metricTensor : \manifoldDomain \rightarrow \R^{\ManifoldDim \times \ManifoldDim}$
+that assigns a symmetric positive definite matrix to any point in $\manifoldDomain$.
+%A Riemannian metric $\metricTensor$ on a
+%manifold $\manifold$ is a symmetric and positive definite matrix which defines
+%a smoothly varying inner product
+%$\langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b$
+%in the tangent space $T_{\mathbf{x}}\manifold$, for each point $\mathbf{x} \in \manifold$ and
+%$\dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \in T_{\mathbf{x}}\manifold$.
+\end{definition}
+Intuitively, the metric forms a local inner product in $\manifoldDomain$ that informs how to measure lengths
+on the manifold $\manifold$, locally in $\manifoldDomain$.
+Riemannian manifolds locally resemble Euclidean spaces $\R^\manifoldDim$ and have
+globally defined differentiable structure.
+\end{myquote}
+#+END_EXPORT
+*Lengths on Riemannian Manifolds*
+The length of a trajectory $\trajectory$ on a manifold $\manifold$, can be calculated
+by mapping it through the function $\manifoldFunction$, and
+using Eq. ref:eq-euclidean-length,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-manifold-length}
+\text{Length}\left(\manifoldFunction(\trajectory)\right)
+&= \int_{t_0}^{t_f}\left\|\dot{\manifoldFunction}(\manifoldInput(t))\right\|_2 \mathrm{d}t.
+\end{align}
+#+END_EXPORT
+Applying the chain-rule allows Eq. ref:eq-manifold-length to be expressed in terms of the Jacobian and the
+velocity,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-manifold-length-chain}
+\text{Length}\left(\manifoldFunction(\trajectory)\right)
+&= \int_{t_0}^{t_f}\left\|\jacobian \dot{\manifoldInput}(t)\right\|_2 \mathrm{d}t, \\
+\jacobian &= \frac{\partial \manifoldFunction}{\partial \manifoldInput(t)} \in \R^{1 \times \ManifoldDim}.
+\end{align}
+#+END_EXPORT
+This implies that the length of a trajectory on the manifold $\manifold$,
+can be calculated in the input space $\manifoldDomain$,
+using a locally defined norm,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-manifold-norm}
+\left\|\jacobian \dot{\manifoldInput}(t)\right\|_2
+&= \sqrt{ \left(\dot{\manifoldInput}(t) \jacobian\right)^T
+\jacobian \dot{\manifoldInput}(t)} \\
+&= \sqrt{\dot{\mathbf{x}}^T(t) \metricTensor_{\mathbf{x}_t} \dot{\manifoldInput}(t)}
+\defeq \left\|\dot{\manifoldInput}(t)\right\|_{\metricTensor_{\manifoldInput_t}},
+%= \left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))}.
+\end{align}
+#+END_EXPORT
+where $\metricTensor_{\mathbf{x}_t} = \jacobian^T \jacobian}$
+is a symmetric positive definite matrix
+(akin to a local Mahalanobis distance measure), known as the natural Riemannian metric.
+The length of a trajectory on a manifold $\manifold$, endowed with the metric $\metricTensor$,
+can then be calculated as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-manifold-length-G}
+\text{Length}(\manifoldFunction(\trajectory))
+&= \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_{\metricTensor_{\mathbf{x}_t}} \mathrm{d}t.
+\end{align}
+#+END_EXPORT
+
+**** Geodesics :ignore:
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Geodesics}
+Given this method for calculating lengths on Riemannian manifolds,
+it is trivial to define the notion of a shortest trajectory, or geodesic, as a length minimising trajectory.
+Formally, a geodesic is defined as follows,
+\begin{definition}[Geodesic]
+Given two points $\manifoldInput_0, \manifoldInput_f \in
+\manifold$, a Geodesic is a length minimising trajectory (curve)
+$\trajectory_g$ connecting the points, such that,
+\begin{align} \label{eq-geodesic}
+  \trajectory_{g} =\arg &\min_{\trajectory} \operatorname{Length}(\trajectory) \\
+\text{s.t.} \quad  \manifoldInput(t_0)&=\manifoldInput_{0} \\
+  \manifoldInput(t_f)&=\manifoldInput_{f}.
+\end{align}
+\end{definition}
+\end{myquote}
+#+END_EXPORT
+An important observation from cite:carmoRiemannian1992, is that geodesics
+satisfy a continuous-time $2^{\text{nd}}$ order ODE, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-2ode}
+ \ddot{\manifoldInput}(t)
+&= \geodesicFunction(t, \manifoldInput, \dot{\manifoldInput}) \\
+&=-\frac{1}{2} \metricTensor^{-1}(\manifoldInput(t))\left[
+\frac{\partial \operatorname{vec}[\metricTensor(\manifoldInput(t))]}{\partial \manifoldInput(t)}
+\right]^{T}\left(\dot{\manifoldInput}(t) \otimes \dot{\manifoldInput}(t)\right),
+\end{align}
+#+END_EXPORT
+where $\operatorname{vec}[\metricTensor(\manifoldInput(t)])$ stacks the columns of $\metricTensor(\manifoldInput(t))$
+and $\otimes$ denotes the Kronecker product.
+The implication of Eqs. ref:eq-geodesic and ref:eq-2ode is that trajectories that are solutions
+to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode implicitly minimise the objective,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-length-objective}
+J_{\text{geodesic}} &= \min \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_{\metricTensor(\mathbf{x}(t))} \mathrm{d}t.
+\end{align}
+#+END_EXPORT
+Given this observation, computing geodesics involves finding a solution to Eq. ref:eq-2ode
+with $\manifoldInput(t_0) = \manifoldInput_0$ and $\manifoldInput(t_f) = \manifoldInput_f$.
+This is a boundary value problem with a smooth solution so it can be solved using
+any BVP solver, e.g. (multiple) shooting and collocation methods.
+
+*** Geometric Objective Function
+**** old :ignore:
+# We will now instantiate Eq. ref:eq-cost-trajectory following two different approaches that use
+# information learned by our transition dynamics model.
+# The first objective is simple to construct and is intuitively the "go to" objective function for our problem.
+# The second objective is more involved and requires the concepts of Riemannian geometry
+# from Section ref:sec-riemannian-geometry to be extended to probabilistic geometries.
+
+# **** Simple cost function :ignore:noexport:
+# *Simple Cost Function* Remembering that the gating network indicates the probability of being in a particular dynamics mode at a given
+# time step, and that the Bayesian formulation of the dynamics model
+# lends itself to well-calibrated uncertainty estimates,
+# the objective function can be instantiated as,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-cost-trajectory-learned}
+# J &= \int_{t_0}^{t_f} \underbrace{- \Pr(\alpha(t)=k^*)}_{g_{\text{mode}}}
+# + \lambda \underbrace{\V_{\text{epistemic}}\left[\latentFunc(\mathbf{x}(t), \mathbf{u}(t))\right]}_{g_{\text{epistemic}}}  \text{d}t,
+# \end{align}
+# #+END_EXPORT
+# where the variance term $\V_{\text{epistemic}}$ is due to the epistemic uncertainty arising from
+# learning $f$ from observations and $\lambda$ is a user-tuneable parameter.
+# This objective function is fairly intuitive,
+# we want to maximise the probability of being in our desired mode and we want to minimise
+# the amount of variance (due to epistemic uncertainty) introduced over the trajectory.
+
+# \todo{should probably test this and comment on why we don't use it...}
+
+**** intro :ignore:
+Now that the relevant concepts from Riemannian geometry have been introduced, the objective function
+for the first trajectory optimisation can be detailed.
+Given the desired mode's gating function,
+$\desiredGatingFunction : \gatingDomain \rightarrow \gatingCodomain$,
+this trajectory optimisation algorithm exploits the fact that length minimising trajectories
+on the manifold $\desiredManifold=\desiredGatingFunction(\gatingDomain)$,
+endowed with the metric $\desiredMetricTensor$, where,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-desired-metric-tensor}
+\desiredMetricTensor &= \desiredJacobian^T \desiredJacobian, \\
+\desiredJacobian &= \frac{\partial \desiredGatingFunction}{\partial \manifoldInput(t)} \in \R^{1 \times \gatingDim},
+\end{align}
+#+END_EXPORT
+will attempt to remain in the desired dynamics mode $\desiredMode$ (i.e. encode Goal 1).
+Based on this intuition, the following objective function,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-geodesic-objective}
-J = \int_{t_0}^{t_f}\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \mathrm{d}t,
+J_{\text{geometric}} = \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_{\desiredMetricTensor(\manifoldInput(t))} \mathrm{d}t.
 \end{align}
 #+END_EXPORT
-where $\mathbf{G}(\mathbf{x}(t))$ represents a Riemannian metric tensor evaluated at $\mathbf{x}(t)$,
-encoding the desired cost, e.g. a Riemannian metric tensor associated with the desired
-mode's gating function.
-Given that $\mathbf{G}(\mathbf{x}(t))$ represents a Riemannian metric tensor then
-Eq. ref:eq-geodesic-objective is a method for calculating the length of a trajectory on the Riemannian
-manifold endowed with the metric $\mathbf{G}$.
-Formulating $\mathbf{G}$ as the Riemannian metric tensor for the manifold parameterised by the
-desired mode's gating function $\gatingFuncKs$ encodes the $g_{\text{mode}}$ term.
-However, the objective in Eq ref:eq-geodesic-objective has not addressed the
-$g_{\text{epistemic}}$ term in Eq. ref:eq-cost-trajectory.
+encodes the $g_{\text{mode}}$ term from Eq. ref:eq-cost-trajectory.
+This objective encodes the $g_{\text{mode}}$ term as length minimising trajectories,
+however, it has not addressed the $g_{\text{epistemic}}$ term.
+Observing that the metric tensor will have a probability distribution induced over
+it by the gating function's GP,
+the $g_{\text{epistemic}}$ term can be encoded
+by extending the metric $\desiredMetricTensor$ to probabilistic geometries.
 
-We can address this by first observing that our metric tensor is parameterised
-by the desired mode's gating function. This will induce
-a probability distribution over the metric tensor $\mathbf{G}$.
-This will become apparent in Section ref:sec-prob-geo when we detail how the metric tensor
-is calculated but let us assume it is the case for now.
-With this observation, the $g_{\text{epistemic}}$ term can be encoded into the cost in Eq. ref:eq-geodesic-objective,
-by extending it to probabilistic geometries, which we detail in the next section.
+**** Extension to Probabilistic Geometries label:sec-prob-geo
+# Given the Jabobian
+# of the desired mode's gating function
+# $\jacobian=\frac{\partial \desiredGatingFunction}{\partial \manifoldInput} \in \R^{P \times \StateDim}$
+# Each gating function's output is one-dimensional in our case.
 
-***** Extension to Probabilistic Geometries label:sec-prob-geo
-With the observation that our metric tensor is probabilistic,
-the objective in Eq. ref:eq-geodesic-objective should be rewritten to consist of
-expectations over the metric tensor,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-geodesic-objective-expectation}
-J =  \int_{t_0}^{t_f} \E_{p\left(\mathbf{G}(\mathbf{x}(t))\right)} \left[
-\left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))} \right]
-\mathrm{d}t.
-\end{align}
-#+END_EXPORT
-Let us now follow cite:tosiMetrics2014 and formulate a metric tensor that captures the variance in the manifold
+Following cite:tosiMetrics2014 this work formulates a metric tensor that captures the variance in the manifold
 via a probability distribution.
-Motivated by obtaining a probability distribution over the metric tensor, they
-introduce the following Riemannian metric,
+First note that as the differential operator is linear, the derivative of a GP is also a GP.
+Therefore, the metric tensor $\desiredMetricTensor$ in Eq. ref:eq-desired-metric-tensor is the outer product of
+two normally distributed random variables.
+As such, the metric tensor $\desiredMetricTensor$ is also a random variable, following
+a non-central Wishart distribution citep:andersonNonCentral1946,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-metric-tensor}
-  \langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \Jac^T \Jac \dot{\mathbf{x}}_b =
-  \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b
+\begin{align} \label{eq-metric-dist}
+  \desiredMetricTensor \sim
+  \mathcal{W}_{\StateDim}\left(P, \covJac, \mathbb{E}\left[\Jac^{T}\right] \mathbb{E}[\Jac]\right),
 \end{align}
 #+END_EXPORT
-where $\Jac=\frac{\partial h}{\partial \mathbf{x}} \in \R^{P \times \StateDim}$ denotes the
-Jacobian of $h : \R^{\StateDim} \rightarrow \R^{P}$.
-Each gating function's output is one-dimensional in our case, i.e. $P=1$.
-The differential operator is linear so the derivative of a GP is also a GP.
-Consequently, the Jacobian $\testJac = \Jac(\testInput)$ of
-the function evaluated at a new input $\testInput$
-is jointly Gaussian with the function evaluated at the training inputs $\allInput$.
-For the desired mode's gating function the joint distribution takes the form,
+where $P$ is the number of degrees of freedom (always one in our case), and
+$\E\left[\desiredJacobian\right]$ and $\covJac$ are the mean and covariance matrices
+associated with the GP over the Jacobian.
 #+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Gaussian Process Jacobain}
+The Jacobian $\testJac = \Jac(\testInput)$ of a function modelled as a GP,
+evaluated at a new input, $\testInput$,
+is jointly Gaussian with the function evaluated at the training inputs $\allInput$.
+The conditional distribution over $\testJac$ can therefore easily be obtained using
+the properties of multivariate normal distributions,
+\begin{align} \label{eq-predictive-jacobian-dist}
+p\left(\testJac | \HDes, \testInput, \allInput \right)
+&= \mathcal{N}\left(\testJac \mid \muJac, \covJac \right) \\
+\muJac &= \frac{\partial \modeDes{\mu}}{\partial \testInput} + \dK \iKxx \left( \HDes - \modeDes{\bm\mu} \right) \\
+\covJac &= \ddK - \dK \iKxx \dK^{T}
+\end{align}
+%&= \mathcal{N}\left(\testJac \mid \dK \iKxx \left( \HDes - \modeDes{\bm\mu} \right), \ddK - \dK \iKxx \dK^{T} \right) \\
+with covariance matrices given by,
 \begin{align} \label{eq-joint-jacobian-dist}
-p(\testJac, \HDes \mid \testInput, \allInput) &=
- \mathcal{N}\left(
-\left[\begin{array}{c}
-        \testJac \\
-        \HDes
-      \end{array}\right] \mid
-\left[\begin{array}{c}
-        \bm{0} \\
-        \modeDes{\bm\mu}
-      \end{array}\right], \left[\begin{array}{cc}
-                              \ddK & \dK^{T} \\
-                              \dK & \K
-                          \end{array}\right]\right) \\
 \Kxx &= \modeDes{k}\left( \allInput, \allInput \right) \in \R^{\NumData \times \NumData} \\
 \dK &= \frac{\partial \modeDes{k}\left(\testInput, \allInput\right)}{\partial \testInput} \in \R^{\StateDim \times \NumData} \\
 \ddK &= \frac{\partial^2 \modeDes{k}\left(\testInput, \testInput \right)}{\partial \testInput \partial \testInput} \in \R^{\StateDim \times \StateDim}
 \end{align}
-\todo{state dim or state and control dim??}
+where $\modeDes{\mu}$ and $\modeDes{k}$ are the mean and covariance functions
+associated with the desired mode's gating function respectively.
+Eq. \ref{eq-predictive-jacobian-dist} is a $\StateDim\text{-dimensional}$ multivariate Normal distribution.
+\end{myquote}
 #+END_EXPORT
-where $\modeDes{k}$ is the covariance function associated with the desired mode's gating function.
-Note that we assume the derivative of the desired mode's mean function with respect to an input is zero,
-i.e. $\frac{\partial \modeDes{\mu}}{\partial \testInput} = 0$.
-As such, we can easily obtain the conditional distribution over $\testJac$ using
-the properties of multivariate normal distributions,
+The expected value of the metric tensor in Eq. ref:eq-metric-dist is given by,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-predictive-jacobian-dist}
-p\left(\testJac | \HDes, \testInput, \allInput \right)
-&= \mathcal{N}\left(\testJac \mid \muJac, \covJac \right) \\
-&= \mathcal{N}\left(\testJac \mid \dK \iKxx \left( \HDes - \modeDes{\bm\mu} \right), \ddK - \dK \iKxx \dK^{T} \right)
+\begin{align} \label{eq-expected-metric}
+  \E[\desiredMetricTensor] = \E[\mathbf{J}^T] \E[\mathbf{J}] + \covJac.
 \end{align}
 #+END_EXPORT
-which is a $\StateDim$ -dimensional Gaussian distribution.
-Importantly, the metric tensor in Eq. ref:eq-metric-tensor is the outer product of two normally
-distributed random variables so the resulting random variable $\mathbf{G}$ follows
-a non-central Wishart distribution citep:andersonNonCentral1946,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-metric-dist}
-  p(\mathbf{G} \mid \testInput, \allInput)
-  =\mathcal{W}_{\StateDim}\left(P, \covJac, \mathbb{E}\left[\Jac^{T}\right] \mathbb{E}[\Jac]\right),
-\end{align}
-#+END_EXPORT
-where $P$ is the number of degrees of freedom (always one in our case).
+Importantly, this expected metric tensor includes a covariance term $\covJac$,
+which implies that lengths on the manifold increase in areas of high covariance.
+This is a desirable behaviour because it encourages length minimising trajectories
+to avoid regions of the learned dynamics with high epistemic uncertainty,
+encoding the $g_\text{epistemic}$ cost term in Eq. ref:eq-cost-trajectory.
+The model in Chapter ref:chap-dynamics is built upon sparse GP approximations,
+so the Jacobian in Eq. ref:eq-predictive-jacobian-dist must be extended for such approximations.
+
 #+BEGIN_EXPORT latex
 \begin{myquote}
-\subsubsection*{Sparse Gaussian Process Jacobian}
-Before detailing our approach to minimising Eq. \ref{eq-geodesic-objective-expectation}
-we note that the distribution over the Jacobian is different for GP models that
-exploit sparse approximations. We detail the extension here.
+\textbf{Sparse Gaussian Process Jacobian}
+In the sparse GP setting, the predictive distribution over the Jacobian given a new
+input, can be obtained by conditioning on the inducing variables, $\gatingInducingOutput$,
+and then marginalising them with respect to the variational distribution, $\gatingInducingVariational$.
+\begin{align}
+p(\testJac \mid \testInput, \gatingInducingInput) &=
+\int \gatingInducingVariational
+p(\testJac \mid \testInput, \gatingInducingOutput, \gatingInducingInput)
+\text{d} \gatingInducingOutput
+&= \mathcal{N}\left( \testJac \mid \muJac, \covJac \right)
+\end{align}
 
+\todo{finish this box}
+
+Sparse approximations are based on hallucinated inducing variables that are samples from the same GP prior,
+\begin{equation}
+p\left(\uHDes \mid \zHDes \right) &=\mathcal{N}\left(\uHDes \mid \modeDes{\mu}(\zHDes), \modeDes{k}(\zHDes, \zHDes) \right).
+\end{equation}
+In the sparse approximation setting it is these inducing variables that are jointly
+Gaussian with the Jacobian at a new test location,
+\begin{align} \label{eq-joint-jacobian-dist-sparse}
+\Kzz &= \modeDes{k}\left( \zHDes, \zHDes \right) \in \R^{\NumInd \times \NumInd} \\
+\dKz &= \frac{\partial \modeDes{k}\left(\testInput, \zHDes \right)}{\partial \testInput} \in \R^{\StateDim \times \NumInd},
+\end{align}
+
+In Section \ref{sec-inference} we adopted a variational approach
+and approximated the inducing variable's posterior with a variational distribution,
+\begin{equation} \label{eq-}
+p\left(\uHDes \mid \zHDes \right) \approx \qDes = \mathcal{N}(\uHDes \mid \mDes, \SDes),
+\end{equation}
+and treated $\mDes$ and $\SDes$ as variational parameters to learn.
+In order to maintain the positive-definiteness of $\SDes$, we actually utilised the Cholesky
+decomposition $\SDes = \mathbf{L}\mathbf{L}^T$ and optimised $\mathbf{L}$.
+To obtain the predictive distribution over the Jacobian at a new input location $\testInput$
+we must condition on the inducing variable $\uHDes$ and then integrate it out with $\qDes$,
+which is a GP,
+\begin{align} \label{eq-predictive-jacobian-dist-sparse}
+\small
+q&\left(\testJac \mid \testInput, \zHDes \right)
+=\int \qDes p\left(\testJac \mid \testInput, \uHDes, \zHDes \right)
+\text{d} \uHDes \\
+&= \mathcal{N}\left(\testJac \mid
+\dKz \Kzz^{-1} \left( \mDes - \modeDes{\hat{\bm\mu}} \right),
+\ddK - \dKz \iKzz \left( \Kzz - \SDes \right) \iKzz \dKz^{T} \right). \nonumber
+\normalsize
+\end{align}
+\todo{assumed that GP jacobian has zero mean}
+Note that when $\qDes=\pDes$ Eq. \ref{eq-predictive-jacobian-dist-sparse} reduces to the original marginal
+distribution $p(\testJac \mid \testInput)$.
+\end{myquote}
+#+END_EXPORT
+
+
+
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Sparse Gaussian Process Jacobian}
 Sparse approximations are based on hallucinated inducing variables that are samples from the same GP prior,
 \begin{equation}
 p\left(\uHDes \mid \zHDes \right) &=\mathcal{N}\left(\uHDes \mid \modeDes{\mu}(\zHDes), \modeDes{k}(\zHDes, \zHDes) \right).
@@ -4928,8 +6324,7 @@ distribution $p(\testJac \mid \testInput)$.
 \end{myquote}
 #+END_EXPORT
 
-
-***** Old :noexport:
+**** Old :noexport:
 The trajectory optimisation is projected onto a continuous-time
 ODE whose solutions are geodesics on a probabilistic manifold, induced
 by one of the latent gating function GPs.
@@ -4958,60 +6353,19 @@ Solutions to this ODE are trajectories that remain in a single dynamics mode
 This latent geodesic ODE is solved using a Hermite-Simpson collocation method cite:kellyIntroduction2017.
 
 *** Implicit Trajectory Optimisation
-In the previous section we formulated an objective function that encodes our two goals.
-As alluded to previously, we do not optimise this objective function in the usual way.
-Instead, we exploit the fact that trajectories minimising Eq. ref:eq-geodesic-objective-expectation
-are geodesics on $\mathcal{M}$
-and must satisfy the continuous-time second-order ODE,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-2ode-stochastic}
- \ddot{\mathbf{x}}(t)
-&= f_G(t, \dot{\mathbf{x}}, \mathbf{x}) \\
-&=-\frac{1}{2} \mathbf{G}^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}[\mathbf{G}(\mathbf{x}(t))]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right), \nonumber
-\end{align}
-#+END_EXPORT
-where $\operatorname{vec}[\mathbf{G}(\mathbf{x}(t)])$ stacks the columns of $\mathbf{G}(\mathbf{x}(t))$
-and $\otimes$ denotes the Kronecker product.
-This is a classic result of differential geometry cite:carmoRiemannian1992.
-Performing trajectory optimisation in Eq. ref:eq-2ode-stochastic
+# The previous section formulated a geometric objective function that encodes Goals 1 and 2.
+# This work exploits the fact that solutions to the second-order ODE
+# in Eq. ref:eq-2ode implicitly optimise the objective.
+Solving the second-order ODE in Eq. ref:eq-2ode
 is equivalent to solving the trajectory optimisation in Eq. ref:eq-traj-opt
-with the objective function in Eq. ref:eq-geodesic-objective-expectation
+with the objective function in Eq. ref:eq-geodesic-objective
 subject to the same boundary conditions.
 
-However, the ODE in Eq. ref:eq-2ode-stochastic contains the metric tensor $\mathbf{G}$ which is a random
-variable. As a result, Eq. ref:eq-2ode-stochastic is actually a stochastic differential equation (SDE).
-Solving SDEs is notoriously hard so we instead exploit the observation that
-the expected metric tensor,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expected-metric}
-  \E[\mathbf{G}] = \E[\mathbf{J}^T] \E[\mathbf{J}] + \mathbf{\Sigma}_J,
-\end{align}
-#+END_EXPORT
-includes the covariance term $\mathbf{\Sigma}_J$.
-This implies that the expected
-metric is larger when the covariance in the mapping is higher.
-This will lead to lengths on the manifold increasing in areas of high covariance.
-This is a desirable behaviour because it encourages trajectories to
-avoid regions of the learned dynamics with high epistemic uncertainty -
-implementing the $g_{\text{epistemic}}$ cost term in Eq. ref:eq-cost-trajectory.
-
-Instead of considering the SDE in Eq. ref:eq-2ode-stochastic we substitute the expected metric tensor
-in place of its associated random variable $\mathbf{G}$, to obtain a deterministic ODE,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-2ode-expected}
- \ddot{\mathbf{x}}(t)
-&= f_G(t, \dot{\mathbf{x}}, \mathbf{x}) \\
-&=-\frac{1}{2} \E\left[\mathbf{G} \right]^{-1}(\mathbf{x}(t))\left[\frac{\partial \operatorname{vec}\left[\E\left[\mathbf{G}(\mathbf{x}(t)) \right]\right]}{\partial \mathbf{x}(t)}\right]^{T}\left(\dot{\mathbf{x}}(t) \otimes \dot{\mathbf{x}}(t)\right). \nonumber
-\end{align}
-#+END_EXPORT
-Solutions to this ODE implicitly minimise the objective in Eq. ref:eq-geodesic-objective endowed with this
-expected metric.
-
-**** Direct Collocation
-Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode-expected cannot
+*Differential Flatness*
+Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode cannot
 be solved with simple forward or backward integration.
-Instead, we transcribe the problem using the approach of differential
-flatness cite:milamNew2000c,rossPseudospectral2004.
+Instead, the problem is transcribed using the approach of differential
+flatness cite:milamNew2000,rossPseudospectral2004.
 A set of outputs $\mathbf{z}(t)$ are defined such that the
 states $\mathbf{x}(t)$ and controls $\mathbf{u}(t)$ can be
 expressed in terms of the flat output $\mathbf{z}(t)$ and a finite number of its derivatives,
@@ -5025,7 +6379,6 @@ In the velocity-controlled quadcopter example, the flat output is the
 state $\mathbf{z}(t) = \mathbf{x}(t)$
 and the control is simply the state derivative
 $\mathbf{u}(t) &= \dot{\mathbf{z}}(t)$.
-
 The original trajectory optimisation problem can then be converted to finding $\mathbf{z}(t)$
 for $t \in [t_0, t_f]$ subject to the boundary conditions and the dynamics,
 #+BEGIN_EXPORT latex
@@ -5033,39 +6386,412 @@ for $t \in [t_0, t_f]$ subject to the boundary conditions and the dynamics,
 \ddot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t)) &= f_G(t, \dot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t)), \mathbf{x}(\mathbf{z}(t), \dot{\mathbf{z}}(t))).
 \end{align}
 #+END_EXPORT
+*Collocation*
 Collocation methods are used to transcribe continuous-time trajectory optimisation problems into
 nonlinear programs, i.e. constrained parameter optimisation cite:kellyIntroduction2017,fahrooDirect2000  .
 The expected metric in Eq. ref:eq-expected-metric is substituted into
 Eq. ref:eq-diff-flat-ode and solved via direct collocation.
-This work implements a simple Hermite-Simpson collocation method
-that enforces the state derivative predicted by the polynomials to
-equal the geodesic ODE $f_G$ at a set of $I$ collocation points $\{\mathbf{z}_{i,c}\}_{i=1}^I$.
-This is achieved through the collocation defects,
+This work implements a simple Hermite-Simpson collocation method that enforces the state
+derivative interpolated by the polynomials to equal the geodesic ODE $f_G$
+at the midpoints between a set of $I$ collocation points
+$\{\mathbf{z}_i\}_{i=1}^I$. This is achieved through the collocation defects,
 #+BEGIN_EXPORT latex
-\begin{align*} \label{eq-defect}
-\Delta_i &= \ddot{\mathbf{z}}_{i,c} - f_G(t_{i,c}, \dot{\mathbf{z}}_{i,c},\mathbf{z}_{i,c}) \numberthis
-\end{align*}
+\begin{align} \label{eq-defect}
+\Delta_{i+\frac{1}{2}} &= \ddot{\mathbf{z}}_{{i+\frac{1}{2}} - f_G(t_{{i+\frac{1}{2}}, \dot{\mathbf{z}}_{{i+\frac{1}{2}},\mathbf{z}_{{i+\frac{1}{2}})
+\end{align}
 #+END_EXPORT
-where $\ddot{\mathbf{z}}_{i,c}$ is the $2^{\text{nd}}$
-derivative w.r.t time at the $i^{\text{th}}$ collocation point predicted by the polynomials.
-Eq. ref:eq-defect defines a set of contraints ensuring trajectories are
-solutions to the geodesic ODE $f_G$.
-The nonlinear program that this work solves uses a dummy cost and is given by,
+where $\ddot{\mathbf{z}}_{i+\frac{1}{2}}, \dot{\mathbf{z}}_{i+\frac{1}{2}}, {\mathbf{z}}_{i+\frac{1}{2}}$
+are obtained by interpolating between $\mathbf{z}_i$ and $\mathbf{z}_{i+1}$.
+Eq. ref:eq-defect defines a set of constraints ensuring trajectories are solutions
+to the geodesic ODE $f_G$.
+The nonlinear program that this work solves is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-}
-\min_{\mathbf{z}(t), \dot{\mathbf{z}}(t)}& \int_{t_0}^{t_f} 1 \text{d}t \\
+\min_{\mathbf{z}(t), \dot{\mathbf{z}}(t)}& \int_{t_0}^{t_f} \costFunc(\state(\timeInd), \control(\timeInd)) \text{d}t \\
 &\text{s.t. }\text{Eqs. \ref{eq-diff-flat-ode} and \ref{eq-defect}}  \\
 \mathbf{x}&\left(\mathbf{z}(t_0), \dot{\mathbf{z}}(t_0) \right) = \mathbf{x}_0 \\
 \mathbf{x}&(\mathbf{z}(t_f),\dot{\mathbf{z}}(t_f)) = \mathbf{x}_f
-%c&(\mathbf{x}(\mathbf{z}(t), \dot{\mathbf{z}}(t)), \mathbf{u}(\mathbf{z}(t), \dot{\mathbf{z}}(t)) \leq 0 \quad \forall t
 \end{align}
 #+END_EXPORT
 This is solved using Sequential Least Squares Programming (SLSQP) in SciPy.
+\todo[inline]{Lagrance multipliers to make TO unconstrained}
 
-** Trajectory Optimisation as Probabilistic Inference :noexport:
+*** Results label:sec-traj-opt-results
+**** Velocity Controlled Quadcopter
+The trajectory optimisation is tested on the quadcopter control problem shown in
+Fig. ref:fig-problem-statement.
+#+NAME:
+#+ATTR_LATEX: :width 0.6\textwidth :placement [!h] :center t
+#+caption: My catption
+[[file:./images/geometric-traj-opt-over-svgp.pdf]]
+
+It projects the optimisation onto
+the desired mode's learned gating function, shown in Fig. ref:fig-svgp_2d_traj.
+It seeks to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$
+that 1) remain in the non-turbulent mode and 2) avoid regions of the learned
+transition dynamics with high epistemic uncertainty.
+To aid with user control the metric tensor in Eq. ref:eq-expected-metric is modified with
+a weighting parameter $\lambda$ that enables the relevance of the covariance term to be adjusted,
 #+BEGIN_EXPORT latex
-\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
-\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+\begin{align} \label{eq-expected-metric-weighting}
+  \tilde{\mathbf{G}} = \E[\mathbf{J}^T] \E[\mathbf{J}] + \lambda \mathbf{\Sigma}_J.
+\end{align}
+#+END_EXPORT
+Setting $\lambda$ to be small should find trajectories that prioritise staying in the desired mode,
+whereas selecting a large $\lambda$ should find trajectories that prioritise avoiding regions
+of the dynamics with high epistemic uncertainty.
+The trajectory optimisation is tested with two $\lambda$ settings.
+
+#+NAME: fig-mixing_prob_vs_time
+#+ATTR_LATEX: :width 0.4\textwidth :placement [!h] :center t
+#+caption: Comparision of the intial and optimised trajectories' performance at staying in the desired mode. The plot shows mode 1's mixing probability over the trajectories for two settings of $\lambda$.
+[[file:./images/geometric-traj-opt-prob-vs-time.pdf]]
+
+#+NAME: fig-epistemic_var_vs_time
+#+ATTR_LATEX: :width 0.4\textwidth :placement [!h] :center t
+#+caption: Comparison of the initial and optimised trajectories' at avoiding regions of high epistemic uncertainty. It shows the posterior variance associated with the desired mode's gating function.
+[[file:./images/geometric-traj-opt-epistemic-vs-time.pdf]]
+
+
+The initial (cyan) trajectory in Fig. ref:fig-svgp_2d_traj is initialised with
+$10$ collocation points indicated by the crosses.
+The trajectories are compared via mode 1's mixing
+probability and its gating function's GP variance over the trajectories.
+We want to maximise the probability of being in our desired mode
+whilst minimising the amount of variance (due to epistemic uncertainty).
+The results are shown in Table ref:tab-results.
+#+LABEL: tab-results
+#+CAPTION: Comparison of performance with different settings of $\lambda$.
+#+CAPTION: The performance measures are summed over collocation points.
+#+attr_latex: :placement [!t]
+|-------------------------+----------------------------------------------------+-----------------------------------------------------|
+| Trajectory              | Mixing Probability                                 | Epistemic Uncertainty                               |
+|                         | $\sum_{i=1}^{I} \Pr(\alpha_i=1 \mid \mathbf{z}_i)$ | $\sum_{i=1}^{I} \mathbb{V}[h^{(1)}(\mathbf{z}_i)]$  |
+|-------------------------+----------------------------------------------------+-----------------------------------------------------|
+| Initial                 | $7.480$                                            | $1.345$                                             |
+| Optimised $\lambda=20$  | $6.091$                                            | $\mathbf{1.274}$                                    |
+| Optimised $\lambda=0.5$ | $\mathbf{8.118}$                                   | $1.437}$                                            |
+It is clear from Fig. ref:fig-svgp_2d_traj (left) and Fig. ref:fig-mixing_prob_vs_time
+that for $\lambda=0.5$,
+trajectories favour remaining in dynamics mode 1 at the cost of entering regions of the learned dynamics
+with high epistemic uncertainty (shown in Fig. ref:fig-epistemic_var_vs_time).
+For $\lambda=20$, the trajectory has tried to remain in dynamics mode 1 at the
+start of the trajectory but then hits the area of high epistemic uncertainty and favours avoiding
+this region over remaining in dynamics mode 1.
+# These qualitative results are confirmed in Table ref:tab-results.
+
+# Although we have not tested it here, we believe that our approach is theoretically sound and
+Although not tested, we believe that our approach is theoretically sound and
+can easily be extended to more than two dynamics modes.
+However, it is interesting to consider if this is even necessary given our goals.
+For example, in the quadcopter experiment, we intentionally instantiated the transition dynamics model
+with two dynamics modes, although in reality there could be more.
+We engineered our desired dynamics mode to have a noise variance that we deemed operatable.
+We then used the other dynamics mode to explain away all of the un-operatable modes.
+We think that in most scenarios a similar approach could be followed.
+
+
+*** Clearpage :ignore:
+#+begin_latex
+\clearpage
+#+end_latex
+
+** Trajectory Optimisation as Probabilistic Inference label:sec-traj-opt-inference
+*** Maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
+\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVarK)}}
+\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
+\newcommand{\controlDist}{\ensuremath{p(\control_\timeInd \mid \state_\timeInd)}}
+
+\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
+\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
+
+\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
+\newcommand{\monotonicFunc}{\ensuremath{g}}
+\newcommand{\temperature}{\ensuremath{\gamma}}
+
+\newcommand{\modeProb}{\ensuremath{\Pr(\modeVar_\timeInd = \modeInd \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
+
+\newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
+
+\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
+%\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \modeVar_{1:\TimeInd}=\modeDes{\modeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}, \modeVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+#+END_EXPORT
+*** Intro :ignore:
+The trajectory optimisation algorithm presented here
+builds off of the control-as-inference framework citep:toussaintProbabilistic2006,kappenOptimal2013,
+which frames optimal control as probabilistic inference.
+Translating optimal control to inference can be viewed as a subset of probabilistic numerics
+citep:hennigProbabilistic2015, where statistical methods are used to solve numerical problems,
+providing uncertainty quantification, regularisation and faster convergence.
+This is achieved by assuming access to a dynamics model, and
+embedding the cost function into the likelihood.
+
+*** Cost Functions as Likelihoods
+To formulate optimal control as probabilistic inference
+it is first embedded into a graphical model (see Figure ref:fig-basic-control-graphical-model).
+The joint probability model (over a trajectory) is augmented with an
+additional variable to encode the notion of cost (or reward)
+over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
+The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
+time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
+The likelihood distribution can be formulated by mapping the negative
+cost through a monotonically increasing function $\monotonicFunc$,
+giving the likelihood,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-monotonicOptimalityLikelihood}
+\optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+A common (and convenient) approach is to formulate
+the likelihood using an exponential transform of
+the cost. This results in a Boltzmann distribution where the
+inverse temperature, $\temperature$, is used to scale the cost,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-exponentialOptimalityLikelihood}
+\optimalProb &\propto \exp ( -\temperature\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+The resulting negative log-likelihood is an affine transformation of the cost, which preserves convexity.
+#+BEGIN_EXPORT latex
+\todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
+\begin{myquote}
+As shown in \cite{okadaVariational2020}, the choice of monotonic function,
+$\monotonicFunc$,
+leads to the inference algorithm resembling different well-known algorithms.
+For example, selecting $\monotonicFunc$ to be the exponential function,
+\begin{align} \label{eq-}
+\optimalProb &\propto \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
+\end{align}
+leads to the algorithm resembling Model Predictive Path Integral (MPPI)
+\cite{williamsModel2017,williamsInformation2017}, whilst
+selecting $\monotonicFunc$ to as,
+\begin{align} \label{eq-}
+\optimalProb &\propto \mathbb{I}\left[( \costFunc(\state_\timeInd, \control_\timeInd)) \leq \costFunc_{\text{thd}} \right]
+\end{align}
+recovers an algorihtm resembling the Cross Entropy Method (CEM).
+\end{myquote}
+#+END_EXPORT
+
+For simplicity, this work sticks to the exponential transform.
+
+\todo{cite cite:watsonStochastic2021}
+
+*** Joint Probability Model :ignore:
+\newline
+The joint probability for an optimal trajectory, i.e.
+for $\optimalVar_\timeInd=1$ and $\modeVarK$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$, is given by,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-}
+\jointDist =
+& \startStateDist \underset{\text{Terminal Cost}}{\terminalCostDist} \\
+&\prod_{\timeInd=1}^{\TimeInd-1}
+\underset{\text{Cost}}{\optimalProb}
+\underset{\text{Mode Constraint}}{\modeProb}
+\underset{\text{Dynamics}}{\transitionDist}
+\underset{\text{Controller}}{\controlDist}
+\end{align}
+\normalsize
+#+END_EXPORT
+where $\controlDist$ denotes the policy.
+In the case of RL the policy is parameterised with parameters, $\theta$, but in control we are usually interested in
+optimising the states and controls directly.
+The object of interest in this model is the distribution over the control, $\control_\timeInd$,
+conditioned on the state, $\state_\timeInd$, and all future time steps being optimal,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1, \modeVar_{\timeInd:\TimeInd}=\modeInd) =
+\frac{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)
+p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd, \control_\timeInd)
+\controlDist p(\state_\timeInd)}{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)
+p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd)
+p(\state_\timeInd)}.
+\end{align}
+#+END_EXPORT
+The distributions $p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)$,
+$p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd)$,
+$p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd, \control_\timeInd)$ and
+$p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd)$
+can be obtained via recursive message passing,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd) =
+\prod_{\timeInd+1}^{\TimeInd-1}
+\int \int \optimalProb p(\state_\timeInd \mid \state_{\timeInd-1}, \control_{\timeInd-1}) \controlDist \text{d}\state_{\timeInd} \text{d}\control_{\timeInd}.
+\end{align}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\todo[inline]{Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
+\begin{align} \label{eq-}
+p(\optimalVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})
+= \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \optimalDist
+p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\state_\timeInd) \mid \state_\timeInd, \control_\timeInd)
+\controlDist
+\end{align}
+\begin{align} \label{eq-}
+\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \dynamicsFunc(\state_{\timeInd-1}), \control_\timeInd)) \\
+\end{align}
+}
+#+END_EXPORT
+
+*** graphical model :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[h!]
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \node[latent, above=of u1] (o1) {$\optimalVar_1$};
+      \node[latent, right=of o1] (o2) {$\optimalVar_2$};
+      \node[latent, right=of o2] (o3) {$\optimalVar_3$};
+
+      \node[latent, below=of x1] (a1) {$\modeVar_1$};
+      \node[latent, right=of a1] (a2) {$\modeVar_2$};
+      \node[latent, right=of a2] (a3) {$\modeVar_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+
+      \draw[->] (u1)--(o1);
+      \draw[->] (x1) to [out=100,in=240] (o1);
+      \draw[->] (u2)--(o2);
+      \draw[->] (x2) to [out=100,in=240] (o2);
+      \draw[->] (u3)--(o3);
+      \draw[->] (x3) to [out=100,in=240] (o3);
+
+      \draw[->] (x1)--(a1);
+      \draw[->] (u1) to [out=-90,in=30] (a1);
+      \draw[->] (x2)--(a2);
+      \draw[->] (u2) to [out=-90,in=30] (a2);
+      \draw[->] (x3)--(a3);
+      \draw[->] (u3) to [out=-90,in=30] (a3);
+    \end{tikzpicture}
+    %}
+\caption{Graphical model with optimality and mode indicator variables.}
+\label{fig-constrained-control-graphical-model}
+\end{figure}
+#+END_EXPORT
+*** Variational Inference
+In variational inference the distribution over the latent variables
+$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
+is approximated with another, potentially simpler
+(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
+In this case, the aim is to approximate the distribution over the optimal policy,
+$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd}=1)$.
+Introducing the variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood
+&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
+&= \text{log} \E_\trajectoryVarDist \left[
+\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
+\right] \\
+&\geq \E_\trajectoryVarDist \left[
+\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
+\frac{\controlVarDist}{\controlDist} \right] \\
+&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
+- \text{log}\controlVarDist\right]
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood &\geq
+ \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
+- \text{log}\controlVarDist\right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
+- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\end{align}
+#+END_EXPORT
+
+
+
+*** graphical model :ignore:noexport:
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
+      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
+      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+
+      \draw[->] (u1)--(o1);
+      \draw[->] (x1) to [out=100,in=240] (o1);
+      \draw[->] (u2)--(o2);
+      \draw[->] (x2) to [out=100,in=240] (o2);
+      \draw[->] (u3)--(o3);
+      \draw[->] (x3) to [out=100,in=240] (o3);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model of control formulated as inference.}
+\label{fig-control-graphical-model}
+\end{figure}
+#+END_EXPORT
+
+** Optimal Control as Probabilistic Inference :noexport:
+*** maths :ignore:
+#+BEGIN_EXPORT latex
 
 \newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
 \newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
@@ -5084,32 +6810,16 @@ This is solved using Sequential Least Squares Programming (SLSQP) in SciPy.
 
 \newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
 \newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+
+\newcommand{\temperatureParam}{\ensuremath{\lambda}}
 #+END_EXPORT
+*** lit review :ignore:
 cite:toussaintRobot2009 formulate trajectory optimisation (and stochastic optimal control) as
 approximate inference and derive a local approximation
 where the maximum likelihood solution returns the deterministic optimal trajectory, and the local Gaussian belief
 approximation is equivalent to the LQG perturbation model around the optimal trajectory.
 cite:levineReinforcement2018 followed a similar approach formulating RL as probabilistic inference
 and showing how different approximate inference algorithms instantiated different popular RL algorithms.
-
-
-To formulate the optimal control problem as probabilistic inference we follow cite:levineReinforcement2018
-and embed the control problem into a graphical model (see Figure ref:fig-basic-control-graphical-model).
-The joint probability model (over a trajectory) is augmented with an
-additional variable to encode the notion of cost (or reward)
-over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
-The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
-time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
-The probability $\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)$ of this
-Bernoulli distribution can be formulated by mapping the negative cost through a monotonically increasing
-function $\monotonicFunc$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\optimalProb &\propto \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
-\end{align}
-#+END_EXPORT
-We will return to the choice of $\monotonicFunc$ in Section \todo{insert ref to section}
-as it leads to our algorithm resembling different well-known algorithms.
 
 this is from cite:watsonStochastic2021
 Control-as-inference techniques use a belief in optimality
@@ -5127,6 +6837,29 @@ from a target state z
 ∗
 is space z ∈ R
 dz via transform h,
+
+
+*** intro :ignore:
+Optimal control as input estimation
+
+To formulate the optimal control problem as probabilistic inference we follow cite:levineReinforcement2018
+and embed the control problem into a graphical model (see Figure ref:fig-basic-control-graphical-model).
+The joint probability model (over a trajectory) is augmented with an
+additional variable to encode the notion of cost (or reward)
+over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
+The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
+time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
+The probability $\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)$ of this
+Bernoulli distribution can be formulated by mapping the negative cost through a monotonically increasing
+function $\monotonicFunc$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-boltzmann-dist}
+\optimalProb &\propto \monotonicFunc( -\temperatureParam \costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+We will return to the choice of $\monotonicFunc$ in Section \todo{insert ref to section}
+as it leads to our algorithm resembling different well-known algorithms.
+
 
 *** graphical model :ignore:
 #+BEGIN_EXPORT latex
@@ -5772,6 +7505,17 @@ and $\otimes$ denotes the Kronecker product.
 # the the feature space. This is always 1-dimensional and thus the approach scales
 # to highgher dimensional feature spaces.
 
+** Comparison and Discussion
+
+- Algorithm 2 can remain in a set of modes whereas Algorithm 1 can only remain in a single mode. \todo{could Algorithm 1 be modified to remain in a set of modes? Transforming gating functions?}
+- Algorithm 2 more naturally handles chance constraints as it calculates
+  the mode probabilities.
+- Trajectories from Algorithm 2 will satisfy the dynamics whereas trajectories from Algorithm 1 may not.
+  This is because the state and control trajectories obtained from
+  Algorithm 1 are solutions to the geodesic ODE and not the dynamics.
+- How to add constraints to Algorithm 1 e.g. for smoothness?
+- Algorithm 2 doesn't decouple mean and variance and allow a $\lambda$ parameter.
+- Algorithm 2 considers uncertainty in dynamics. Algorithm 1 approximates geodesic SDE to be deterministic.
 ** Conclusion
 This chapter has presented a method for performing trajectory optimisation in
 multimodal dynamical systems with the transition dynamics modelled as a
@@ -5782,8 +7526,8 @@ Given a start and end state, the trajectory optimisation can be tuned to find tr
 prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
 dynamics model with high epistemic uncertainty.
 
-* Trajectory Optimisation in Desired Modes as Probabilistic Inference label:chap-active-learning
-** Intro :ignore:
+* Trajectory Optimisation in Desired Modes as Probabilistic Inference :noexport:
+** Intro :ignore:noexport:
 #+BEGIN_EXPORT latex
 \newcommand{\timeInd}{\ensuremath{t}}
 \newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
@@ -5796,106 +7540,7 @@ dynamics model with high epistemic uncertainty.
 \newcommand{\policies}{\ensuremath{\Pi}}
 \newcommand{\policy}{\ensuremath{\pi_{\theta}}}
 #+END_EXPORT
-** Literature Review (iLQR/iLQG/DDP/MPPI for Trajectory Generation)
-*Iterative LQR/LQG* can be used to generate trajectories for non-linear systems by iteratively approximating
-the dynamics to be linear around a nominal trajectory and optimising for the controls.
-iLQR works well for quadratic cost functions and can be used with any cost function by approximating the cost
-function with a second order Taylor expansion. However, in this case iLQR is susceptible to converging
-to terrible (local) optima if the true cost function is highly non-convex.
-
-cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
-
-cite:boedeckerApproximate2014 present a real-time iLQR based on sparse GPs.
-
-cite:rohrProbabilistic2021 propose a novel controller synthesis for
-linearised GP dynamics that yields robust controllers with
-respect to a probabilistic stability margin.
-
-In cite:marcoAutomatic2016 they parameterise the weight matrices
-$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
-and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification
-by adapting the parameters.
-
-*Differential Dynamic Programming* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
-the main difference being that only a /first-order/ approximation of the dynamics is used, instead of /second-order/.
-cite:liaoAdvantages1992 show that DDP is comparable to a full Newton step for the entire control
-sequence. Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
-and the quadratic model is inaccurate.
-\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
-
-The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
-
-DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
-
-
-cite:panProbabilistic2014 present a probabilistic trajectory optimisation
-framework for systems with unknown dynamics called probabilistic
-differential dynamic programming (PDDP).
-It extends differential dynamic programming to explicitly account
-for uncertainty in the learned dynamics modelled using gaussian processes.
-In contrast to typical gradient based policy search methods, PDDP does not
-require a policy parameterisation as it learns a locally optimal,
-time-varying control policy.
-Based on the second-order local approximation of the value function,
-PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
-
-*Path Integral*  control is a method for developing optimal controls based on stochastic
-sampling of trajectories cite:theodorouGeneralized2010.
-This work was originally limited to control affine systems cite:williamsModel2017
-but has since been extended to general nonlinear
-dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
-
-** Problem Statement
-Given our partially know open loop system,
-#+BEGIN_EXPORT latex
-\begin{equation} \label{eq-open-loop-dynamics}
-\state_{t+1} = f(\state_t, \control_t)
-\end{equation}
-#+END_EXPORT
-we would like a policy,
-#+BEGIN_EXPORT latex
-\begin{equation} \label{eq-}
-\control_t = \pi_{\theta}(\state_t)
-\end{equation}
-#+END_EXPORT
-with parameters $\theta$. The policy may be control theoretic exploiting the learned dynamics in
-Eq. ref:eq-open-loop-dynamics or it may also be learned (from observations/learned dynamics).
-Should the policy be open loop or closed loop?
-
-*Control Theoretic Policy*
-- Slow to calculate open loop trajectory if using our learned dynamics,
-- Maybe faster if we approximate dynamics as linear/deterministic,
--
-Closed loop control theoretic policy
-is probably only possible if approximating dynamics as linear/deterministic.
-
-*Learned Policy*
-- Learn open loop policy where the information in the dynamics is distilled into the policy,
-- Fast open loop trajectories,
-- Use formulate a closed loop controller?
-Maybe this policy finds open loop trajectories and it runs fast enough
-that we can used it to formulate a closed loop controller?
-Closed loop system
-#+BEGIN_EXPORT latex
-\begin{equation} \label{eq-}
-\state_{t+1} = f(\state_t, \pi_\theta(\state_t))
-\end{equation}
-#+END_EXPORT
-
-BO acquisition function
-#+BEGIN_EXPORT latex
-\newcommand{\traj}{\ensuremath{\bar{\state}}}
-\begin{align} \label{eq-}
-\traj^* &= \text{arg} \max \alpha(\traj)
-\end{align}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\alpha(\traj) = \frac{\text{Length}_{\mathcal{X}}(\traj)}{\text{Length}_{\mathcal{M}}(\traj)}
-\end{align}
-#+END_EXPORT
-
-** Differential Flatness of 3D Quadrotor Dynamics
+** Differential Flatness of 3D Quadrotor Dynamics :noexport:
 #+BEGIN_EXPORT latex
 \newcommand{\roll}{\ensuremath{\phi}}
 \newcommand{\pitch}{\ensuremath{\theta}}
@@ -5949,513 +7594,7 @@ $\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
 $\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
 
 \newpage
-** Point Mass 2D Dynamics
-#+BEGIN_EXPORT latex
-\newcommand{\roll}{\ensuremath{\phi}}
-\newcommand{\pitch}{\ensuremath{\theta}}
-\newcommand{\yaw}{\ensuremath{\psi}}
-
-\newcommand{\world}{\ensuremath{w}}
-\newcommand{\body}{\ensuremath{b}}
-\newcommand{\intermediate}{\ensuremath{c}}
-\renewcommand{\frame}{\ensuremath{F}}
-\newcommand{\worldFrame}{\ensuremath{\frame_\world}}
-\newcommand{\bodyFrame}{\ensuremath{\frame_\body}}
-\newcommand{\intermediateFrame}{\ensuremath{\frame_\intermediate}}
-
-\newcommand{\inertiaMatrix}{\ensuremath{J}}
-\newcommand{\inertiaZ}{\ensuremath{I_{zz}}}
-\newcommand{\zw}{\ensuremath{\mathbf{z}_\world}}
-
-\newcommand{\positions}{\ensuremath{\mathbf{h}}}
-\newcommand{\velocity}{\ensuremath{v}}
-\newcommand{\velocityx}{\ensuremath{\dot{x}}}
-\newcommand{\velocityy}{\ensuremath{\dot{y}}}
-\newcommand{\Velocity}{\ensuremath{\mathbf{\velocity}}}
-
-\newcommand{\rotationMatrix}{\ensuremath{\mathbf{R}}}
-\newcommand{\angularVelocity}{\ensuremath{\bm\omega}}
-\newcommand{\angularVelocityMatrix}{\ensuremath{\bm\Omega}}
-
-\renewcommand{\thrust}{\ensuremath{f_{x}}}
-\renewcommand{\Thrust}{\ensuremath{\mathbf{f_{x}}}}
-\renewcommand{\torque}{\ensuremath{\tau_z}}
-
-\newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
-#+END_EXPORT
-cite:williamsAdvancing
-cite:watsonStochastic2020
-cite:watsonAdvancing2021
-
-cite:levineVariational2013
-
-
-cite:bhardwajDifferentiable2020
-
-cite:mukadamContinuoustime2018
-
-The dynamics of a point mass in 2D can represented with the
-state vector $\state = [x, y, \velocityx, \velocityy, \yaw]$,
-where $\positions = [x, y]$ denotes the 2D Euclidean coordinates relative to the world frame $\worldFrame$,
-$\Velocity = [\velocityx, \velocityy]$ is the velocity in the world frame $\worldFrame$ and
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{tikzpicture}
-% body frame
-\draw[thick,->] (0,0) -- (1.5,1.5) node[anchor=south] {$x$};
-\draw[thick,->] (0,0) -- (1.5,-1.5) node[anchor=north] {$y$};
-
-% world frame
-\draw[thick,->] (-3,-3) -- (3,-3) node[anchor=north west] {$x$};
-\draw[thick,->] (-3,-3) -- (-3,3) node[anchor=south east] {$y$};
-\foreach \x in {-3, -2, -1, 0,1,2,3}
-   \draw (\x cm,-3) -- (\x cm,-3) node[anchor=north] {$\x$};
-\foreach \y in {-3, -2, -1, 0,1,2,3}
-    \draw (-3,\y cm) -- (-3,\y cm) node[anchor=east] {$\y$};
-\end{tikzpicture}
-\end{figure}
-#+END_EXPORT
-
-
-The point mass can apply a force along its $x$ axis (known as the thrust vector), which is denoted
-$\Thrust = [\thrust, 0]^T$.
-It can also rotate itself by applying a torque $\torque$ around its $z$ axis.
-The resulting control vector for the 2D point mass is given by $\control = [\thrust, \torque]$.
-The nonlinear dynamics of the system are given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\dot{\state} &=
-\begin{bmatrix}
-    \dot{\state}_{1} \\
-    \dot{\state}_{2} \\
-    \dot{\state}_{3} \\
-    \dot{\state}_{4} \\
-    \dot{\state}_{5}
-\end{bmatrix}
-=
-\begin{bmatrix}
-    \state_{3} \\
-    \state_{4} \\
-    \frac{1}{m} \thrust \cos{(\yaw)} \\
-    \frac{1}{m} \thrust \sin{(\yaw)} \\
-    \frac{1}{\inertiaZ} \torque
-\end{bmatrix}
-\end{align}
-#+END_EXPORT
-where $m$ is the mass and $\inertiaZ$ is the moment of inertia around the vertical $z$ axis.
-Defining the rotation matrix from the body frame $\bodyFrame$ to the world frame $\worldFrame$ as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\rotationMatrix_{\body,\world} =
-\begin{bmatrix}
-\cos{\yaw} & -\sin(\yaw) \\
-\sin{\yaw} & \cos(\yaw)
-\end{bmatrix}
-\end{align}
-#+END_EXPORT
-the dynamics can be calculated as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\dot{\state}_{1:2} &= \dot{\positions} = \state_{3:4} \\
-\dot{\state}_{3:4} &= \dot{\Velocity} = \frac{1}{m} \rotationMatrix \Thrust \\
-\dot{\state}_{5} &= \dot{\yaw} = \frac{1}{\inertiaZ} \torque
-\end{align}
-#+END_EXPORT
-
-The unknown dynamics can be modelled by placing GP priors on the accelerations ($\dot{\dot{x}}, \dot{\dot{y}}$) and
-the angular (yaw) velocity $\dot{\yaw}$,
-#+BEGIN_EXPORT latex
-\renewcommand{\input}{\ensuremath{\hat{\state}}}
-\begin{align} \label{eq-quadrotor-dynamics}
-\dot{\state} &=
-\begin{bmatrix}
-    \dot{\state}_{1} \\
-    \dot{\state}_{2} \\
-    \dot{\state}_{3} \\
-    \dot{\state}_{4} \\
-    \dot{\state}_{5}
-\end{bmatrix}
-=
-\begin{bmatrix}
-    \state_{3} \\
-    \state_{4} \\
-    \frac{1}{m} \thrust \cos{(\yaw)} + \mathcal{N} \left( \mu_3(\input),  k_3(\input, \input) \right) \\
-    \frac{1}{m} \thrust \sin{(\yaw)} + \mathcal{N} \left( \mu_4(\input),  k_4(\input, \input) \right) \\
-    \frac{1}{\inertiaZ} \torque + \mathcal{N} \left( \mu_5(\input),  k_5(\input, \input) \right)
-\end{bmatrix}
-\end{align}
-#+END_EXPORT
-
-
-\newpage
-** Optimal Control as Probabilistic Inference
-#+BEGIN_EXPORT latex
-
-\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
-\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
-\newcommand{\stateControlTraj}{\ensuremath{\bm\tau}}
-\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
-\newcommand{\controlDist}{\ensuremath{p(\control_\timeInd \mid \state_\timeInd)}}
-
-\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
-%\newcommand{\dynamicsFunc}{\ensuremath{f_{k_*}}}
-\newcommand{\dynamicsFunc}{\ensuremath{f}}
-\newcommand{\costFunc}{\ensuremath{c}}
-\newcommand{\monotonicFunc}{\ensuremath{g}}
-
-\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
-\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
-
-\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
-\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
-#+END_EXPORT
-cite:toussaintRobot2009 formulate trajectory optimisation (and stochastic optimal control) as
-approximate inference and derive a local approximation
-where the maximum likelihood solution returns the deterministic optimal trajectory, and the local Gaussian belief
-approximation is equivalent to the LQG perturbation model around the optimal trajectory.
-cite:levineReinforcement2018 followed a similar approach formulating RL as probabilistic inference
-and showing how different approximate inference algorithms instantiated different popular RL algorithms.
-
-
-To formulate the optimal control problem as probabilistic inference we follow cite:levineReinforcement2018
-and embed the control problem into a graphical model (see Figure ref:fig-basic-control-graphical-model).
-The joint probability model (over a trajectory) is augmented with an
-additional variable to encode the notion of cost (or reward)
-over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
-The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
-time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
-The probability $\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)$ of this
-Bernoulli distribution can be formulated by mapping the negative cost through a monotonically increasing
-function $\monotonicFunc$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\optimalProb &\propto \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
-\end{align}
-#+END_EXPORT
-We will return to the choice of $\monotonicFunc$ in Section \todo{insert ref to section}
-as it leads to our algorithm resembling different well-known algorithms.
-
-this is from cite:watsonStochastic2021
-Control-as-inference techniques use a belief in optimality
-to perform optimal control [1], a binary random variable
-O ∈ {0, 1}, for which 1 indicates optimality. A convenient
-approach for this likelihood is an exponential transform of
-the cost [48]. The resulting Boltzmann distribution introduces
-inverse ‘temperature’ α to scale the cost,
-p(O=1|x,u) ∝ exp(−αC(x,u)). (10)
-As a result, the negative log-likelihood is an affine transform
-of the cost, which preserves convexity. In this work, we
-consider when the distribution in (10) is the multivariate
-Normal distribution, for which C is a Mahalanobis distance
-from a target state z
-∗
-is space z ∈ R
-dz via transform h,
-
-*** graphical model :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}[b]
-  \centering
-  \begin{subfigure}{.45\textwidth}
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[obs] (x1) {$\state_1$};
-      \node[latent, right=of x1] (x2) {$\state_2$};
-      \node[latent, right=of x2] (x3) {$\state_3$};
-      \node[latent, right=of x3] (x4) {$\state_4$};
-
-      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
-      \node[latent, right=of u1] (u2) {$\control_2$};
-      \node[latent, right=of u2] (u3) {$\control_3$};
-
-      \draw[post] (x1)--(x2);
-      \draw[post] (x2)--(x3);
-      \draw[post] (x3)--(x4);
-
-      \draw[post] (x1)--(u1);
-      \draw[post] (x2)--(u2);
-      \draw[post] (x3)--(u3);
-
-      \draw[post] (u1)--(x2);
-      \draw[post] (u2)--(x3);
-      \draw[post] (u3)--(x4);
-    \end{tikzpicture}
-    %}
-  \caption{Graphical model with states and controls.}
-\label{fig-basic-control-graphical-model}
-\end{subfigure}
-\begin{subfigure}{.45\textwidth}
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[obs] (x1) {$\state_1$};
-      \node[latent, right=of x1] (x2) {$\state_2$};
-      \node[latent, right=of x2] (x3) {$\state_3$};
-      \node[latent, right=of x3] (x4) {$\state_4$};
-
-      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
-      \node[latent, right=of u1] (u2) {$\control_2$};
-      \node[latent, right=of u2] (u3) {$\control_3$};
-
-      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
-      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
-      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
-
-      \draw[post] (x1)--(x2);
-      \draw[post] (x2)--(x3);
-      \draw[post] (x3)--(x4);
-
-      \draw[post] (x1)--(u1);
-      \draw[post] (x2)--(u2);
-      \draw[post] (x3)--(u3);
-
-      \draw[post] (u1)--(x2);
-      \draw[post] (u2)--(x3);
-      \draw[post] (u3)--(x4);
-
-      \draw[->] (u1)--(o1);
-      \draw[->] (x1) to [out=100,in=240] (o1);
-      \draw[->] (u2)--(o2);
-      \draw[->] (x2) to [out=100,in=240] (o2);
-      \draw[->] (u3)--(o3);
-      \draw[->] (x3) to [out=100,in=240] (o3);
-    \end{tikzpicture}
-    %}
-  \caption{Graphical model with optimality variable.}
-\label{fig-augmented-control-graphical-model}
-\end{subfigure}
-\caption{Graphical models of control formulated as inference.}
-\label{fig-control-graphical-model}
-\end{figure}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{figure}[h!]
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[obs] (x1) {$\state_1$};
-      \node[latent, right=of x1] (x2) {$\state_2$};
-      \node[latent, right=of x2] (x3) {$\state_3$};
-      \node[latent, right=of x3] (x4) {$\state_4$};
-
-      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
-      \node[latent, right=of u1] (u2) {$\control_2$};
-      \node[latent, right=of u2] (u3) {$\control_3$};
-
-      \node[latent, above=of u1] (o1) {$\optimalVar_1$};
-      \node[latent, right=of o1] (o2) {$\optimalVar_2$};
-      \node[latent, right=of o2] (o3) {$\optimalVar_3$};
-
-      \node[latent, below=of x1] (a1) {$\modeVar_1$};
-      \node[latent, right=of a1] (a2) {$\modeVar_2$};
-      \node[latent, right=of a2] (a3) {$\modeVar_3$};
-
-      \draw[post] (x1)--(x2);
-      \draw[post] (x2)--(x3);
-      \draw[post] (x3)--(x4);
-
-      \draw[post] (x1)--(u1);
-      \draw[post] (x2)--(u2);
-      \draw[post] (x3)--(u3);
-
-      \draw[post] (u1)--(x2);
-      \draw[post] (u2)--(x3);
-      \draw[post] (u3)--(x4);
-
-      \draw[->] (u1)--(o1);
-      \draw[->] (x1) to [out=100,in=240] (o1);
-      \draw[->] (u2)--(o2);
-      \draw[->] (x2) to [out=100,in=240] (o2);
-      \draw[->] (u3)--(o3);
-      \draw[->] (x3) to [out=100,in=240] (o3);
-
-      \draw[->] (x1)--(a1);
-      \draw[->] (u1) to [out=-90,in=30] (a1);
-      \draw[->] (x2)--(a2);
-      \draw[->] (u2) to [out=-90,in=30] (a2);
-      \draw[->] (x3)--(a3);
-      \draw[->] (u3) to [out=-90,in=30] (a3);
-    \end{tikzpicture}
-    %}
-\caption{Graphical model with optimality and mode indicator variables.}
-\label{fig-constrained-control-graphical-model}
-\end{figure}
-#+END_EXPORT
-*** model :ignore:
-\newline
-*Joint Probability Model* The marginal likelihood of this augmented model for an optimal trajectory i.e.
-for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$, is obtained by
-marginalising the states and controls over the trajectory,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\marginalLikelihood &=
-\int \int \jointDist \text{d} \state_{1:\TimeInd} \text{d} \control_{1:\TimeInd} \\
-&= \int \int \startStateDist \prod_{\timeInd=1}^{\TimeInd} \optimalProb \transitionDist \controlDist
-\text{d} \state_{1:\TimeInd} \text{d} \control_{1:\TimeInd}
-\end{align}
-#+END_EXPORT
-where $\controlDist$ denotes the policy.
-In the case of RL the policy is parameterised with parameters $\theta$ but in control we are usually interested in
-optimising the states and controls directly.
-The object of interest in this model is the distribution over the control $\control_\timeInd$
-conditioned on the state $\state_\timeInd$ and all future time steps being optimal,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1) =
-\frac{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd) \controlDist p(\state_\timeInd)}{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd) p(\state_\timeInd)}.
-\end{align}
-#+END_EXPORT
-The distributions $p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)$
-and $p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd)$
-can be obtained via recursive message passing,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd) =
-\prod_{\timeInd+1}^{\TimeInd-1}
-\int \int \optimalProb p(\state_\timeInd \mid \state_{\timeInd-1}, \control_{\timeInd-1}) \controlDist \text{d}\state_{\timeInd} \text{d}\control_{\timeInd}.
-\end{align}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\todo[inline]{Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
-Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
-\begin{align} \label{eq-}
-p(\optimalVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})
-= \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \optimalDist
-p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\state_\timeInd) \mid \state_\timeInd, \control_\timeInd)
-\controlDist
-\end{align}
-\begin{align} \label{eq-}
-\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \dynamicsFunc(\state_{\timeInd-1}), \control_\timeInd)) \\
-\end{align}
-}
-#+END_EXPORT
-
-*** Variational Inference
-In variational inference the distribution over the latent variables
-$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
-is approximated with another, potentially simpler
-(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
-In this case, the aim is to approximate the distribution over the optimal policy,
-$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd})$.
-#+BEGIN_EXPORT latex
-\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
-\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
-\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood &= \text{log} \int \int \jointDist \text{d} \state_{1:\TimeInd} \text{d} \control_{1:\TimeInd} \\
-&= \text{log} \int \int \jointDist \frac{\trajectoryVarDist}{\trajectoryVarDist}
-\text{d} \state_{1:\TimeInd} \text{d} \control_{1:\TimeInd} \\
-&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
-&= \text{log} \E_\trajectoryVarDist \left[
-\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
-\right] \\
-&\geq \E_\trajectoryVarDist \left[
-\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
-\frac{\controlVarDist}{\controlDist} \right] \\
-&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb \right]
-- \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^\TimeInd \text{log}\frac{\controlVarDist}{\controlDist}\right] \\
-%- \sum_{\timeInd=1}^\TimeInd \text{KL}\left(\controlVarDist \mid \mid \controlDist \right)
-&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
-- \text{log}\controlVarDist\right] \\
-&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
-- \text{log}\controlVarDist\right]
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood &\geq
- \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
-- \text{log}\controlVarDist\right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
-- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-- \sum_{\timeInd=1}^{\TimeInd} \underbrace{\E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{-Entropy}} \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{myquote}
-As shown in \cite{okadaVariational2020}, the choice of $\monotonicFunc$ leads to the optimisation algorithm
-resembling different well-known algorithms.
-For example, selecting $\monotonicFunc$ to be the exponential function,
-\begin{align} \label{eq-}
-\optimalProb &= \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
-\end{align}
-leads to the algorithm resembling Model Predictive Path Integral (MPPI)
-\cite{williamsModel2017,williamsInformation2017}.
-\end{myquote}
-\todo{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
-#+END_EXPORT
-
-*** graphical model :ignore:noexport:
-#+BEGIN_EXPORT latex
-\begin{figure}[t]
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[obs] (x1) {$\state_1$};
-      \node[latent, right=of x1] (x2) {$\state_2$};
-      \node[latent, right=of x2] (x3) {$\state_3$};
-      \node[latent, right=of x3] (x4) {$\state_4$};
-
-      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
-      \node[latent, right=of u1] (u2) {$\control_2$};
-      \node[latent, right=of u2] (u3) {$\control_3$};
-
-      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
-      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
-      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
-
-      \draw[post] (x1)--(x2);
-      \draw[post] (x2)--(x3);
-      \draw[post] (x3)--(x4);
-
-      \draw[post] (x1)--(u1);
-      \draw[post] (x2)--(u2);
-      \draw[post] (x3)--(u3);
-
-      \draw[post] (u1)--(x2);
-      \draw[post] (u2)--(x3);
-      \draw[post] (u3)--(x4);
-
-      \draw[->] (u1)--(o1);
-      \draw[->] (x1) to [out=100,in=240] (o1);
-      \draw[->] (u2)--(o2);
-      \draw[->] (x2) to [out=100,in=240] (o2);
-      \draw[->] (u3)--(o3);
-      \draw[->] (x3) to [out=100,in=240] (o3);
-    \end{tikzpicture}
-    %}
-  \caption{Graphical model of control formulated as inference.}
-\label{fig-control-graphical-model}
-\end{figure}
-#+END_EXPORT
-
-** Safety
+** Safety :noexport:
 #+BEGIN_EXPORT latex
 \newcommand{\controlCost}{\ensuremath{\mathbf{R}}}
 \newcommand{\stateCost}{\ensuremath{\mathbf{Q}}}
@@ -6678,7 +7817,7 @@ For any $\delta \in (0,1)$, we have with probability at least $1 - \delta$ that 
 #+END_EXPORT
 
 \newpage
-** Probabilistic Geometries for Quadratic Costs
+** Probabilistic Geometries for Quadratic Costs :noexport:
 *Linear Dynamics*
 Approximate dynamics to be linear around a nominal trajectory
 $(\nominalStateTraj, \nominalControlTraj)$,
@@ -6818,7 +7957,7 @@ p(\mathbf{J}(\state_{\timeInd})) =
 
 ** Results
 ** Conclusion
-* Active Learning in Multimodal Dynamical Systems
+* Active Learning in Multimodal Dynamical Systems label:chap-active-learning
 ** Intro :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\timeInd}{\ensuremath{t}}
