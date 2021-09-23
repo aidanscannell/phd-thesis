@@ -135,7 +135,7 @@ Note that org-ref links won't work here because the attr latex will be pasted as
 The date time package allows us to specify a "formatted" date object, which will print different formats according to the current locale & language. I use this in my title page.
 #+latex_header: \usepackage[level]{datetime}
 
-*** Setup bibliography
+*** Bibliography
 General configuration.
 # #+latex_header: \usepackage[autocite=plain, backend=biber, doi=true, url=true, hyperref=true,uniquename=false, maxbibnames=99, maxcitenames=2, sortcites=true, style=authoryear-comp]{biblatex}
 # #+LATEX_HEADER: \usepackage[citestyle=authoryear-comp, maxcitenames=2, maxbibnames=99, doi=false, isbn=false, eprint=false, backend=bibtex, hyperref=true, url=false, natbib=true, style=authoryear-comp]{biblatex}
@@ -202,13 +202,6 @@ Make the equation numbers follow the chapter, not the whole thesis.
 *** TikZ and bayesnet for graphical models
 #+LATEX_HEADER: \usepackage{tikz}
 #+LATEX_HEADER: \usetikzlibrary{bayesnet}
-
-*** Used in papers but not thesis
-# #+LATEX_HEADER: \usepackage[format=plain,labelfont={bf},textfont=it]{caption} % make captions italic
-# #+LATEX_HEADER: \usepackage[margin=0pt,font=small,labelfont=bf,labelsep=endash]{caption}
-# #+LATEX_HEADER: \usepackage{xcolor}
-# #+LATEX_HEADER: \usepackage{textcomp}
-# #+LATEX_HEADER: \usepackage{algorithmic}
 
 *** Notes in margins
 # #+LATEX_HEADER: \usepackage{geometry}
@@ -285,7 +278,8 @@ Make the equation numbers follow the chapter, not the whole thesis.
 *** Data set
 # Dataset/inputs/outputs
 #+LATEX_HEADER: \newcommand{\state}{\ensuremath{\mathbf{x}}}
-#+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{u}}}
+# #+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{u}}}
+#+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{a}}}
 
 # #+LATEX_HEADER: \newcommand{\x}{\ensuremath{\mathbf{x}}}
 # #+LATEX_HEADER: \newcommand{\y}{\ensuremath{\mathbf{y}}}
@@ -5790,6 +5784,8 @@ of the underlying dynamics modes.
 \newcommand{\desiredStateDomain}{\ensuremath{\mode{\stateDomain}}}
 
 \newcommand{\valueFunc}{\ensuremath{V}}
+
+\renewcommand{\controlledPolicyDist}{\ensuremath{q_\policy}}
 #+END_EXPORT
 ** Intro :ignore:
 This chapter is concerned with controlling multimodal dynamical systems whose transition dynamics
@@ -5868,6 +5864,19 @@ p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
 \policy(\control_\timeInd \mid \state_\timeInd).
 \end{align}
 #+END_EXPORT
+For notational conciseness the terminal and integral cost functions are combined into a single cost function,
+given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-cost-func}
+\costFunc(\state_\timeInd, \control_\timeInd) =
+\begin{cases}
+\integralCostFunc(\state_\timeInd, \control_\timeInd), &\text{if} \quad \timeInd \in [0, \ldots, \TimeInd-1], \\
+\terminalCostFunc(\state_\timeInd), \quad &\text{if} \quad \timeInd=\TimeInd.
+\end{cases}
+\end{align}
+#+END_EXPORT
+To simply notation the state and control trajectories are denoted
+as $\stateTraj = \state_{1:T}$ and $\controlTraj = \control_{0:T-1}$ respectively.
 
 The optimal controls can be derived from Bellman's dynamics programming (DP) perspective, using the value function,
 $\valueFunc_\timeInd$, for the expected cost.
@@ -6553,8 +6562,8 @@ We think that in most scenarios a similar approach could be followed.
 \renewcommand{\controlDist}{\ensuremath{\policy(\control_\timeInd \mid \state_\timeInd)}}
 
 
-\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
-\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
+\renewcommand{\trajectoryVarDist}{\ensuremath{q(\stateTraj, \controlTraj)}}
+\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{0:\TimeInd} \mid \state_{0:\TimeInd})}}
 \newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
 
 \newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
@@ -6562,23 +6571,45 @@ We think that in most scenarios a similar approach could be followed.
 \newcommand{\temperature}{\ensuremath{\gamma}}
 
 \newcommand{\modeProb}{\ensuremath{\Pr(\modeVar_\timeInd = \modeInd \mid \state_\timeInd, \control_\timeInd)}}
-\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
+\renewcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
 \newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
 
 \newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
 
-\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
+\renewcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{0:\TimeInd} = 1, \modeVar=\desiredMode \mid \state_0)}}
 %\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \modeVar_{1:\TimeInd}=\modeDes{\modeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
 %\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}, \modeVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
 \renewcommand{\jointDist}{\ensuremath{p(\optimalVar_{0:\TimeInd}=1, \stateTraj, \controlTraj \mid \state_0})}}
 
 \renewcommand{\trajectoryDist}{\ensuremath{p(\state_{1:\TimeInd}, \control_{0:\TimeInd} \mid \state_0)}}
 
+\renewcommand{\targetState}{\ensuremath{\state_f}}
+\renewcommand{\stateCostMatrix}{\ensuremath{\mathbf{Q}}}
+\renewcommand{\controlCostMatrix}{\ensuremath{\mathbf{R}}}
+\renewcommand{\terminalStateCostMatrix}{\ensuremath{\mathbf{H}}}
+
+\newcommand{\stateMean}{\ensuremath{\bm\mu_{\state_\timeInd}}}
+\newcommand{\stateCov}{\ensuremath{\bm\Sigma_{\state_\timeInd}}}
+\newcommand{\terminalStateMean}{\ensuremath{\bm\mu_{\state_\TimeInd}}}
+\newcommand{\terminalStateCov}{\ensuremath{\bm\Sigma_{\state_\TimeInd}}}
+\newcommand{\controlMean}{\ensuremath{\bm\mu_{\control_\timeInd}}}
+\newcommand{\controlCov}{\ensuremath{\bm\Sigma_{\control_\timeInd}}}
+\newcommand{\stateDiff}{\ensuremath{\Delta \state}}
+\newcommand{\stateDiffMean}{\ensuremath{\bm\mu_{\stateDiff_\timeInd}}}
+\newcommand{\stateDiffCov}{\ensuremath{\bm\Sigma_{\stateDiff_\timeInd}}}
+
+\newcommand{\objective}{\ensuremath{J_{\text{quadratic}}}}
+
 \renewcommand{\priorPolicy}{\ensuremath{\policy_0}}
 \renewcommand{\priorPolicyDist}{\ensuremath{p_{\policy_0}}}
-\renewcommand{\controlledPolicyDist}{\ensuremath{q_\policy}}
 #+END_EXPORT
 *** Intro :ignore:
+The trajectory optimisation algorithm presented in Section ref:sec-traj-opt-geometric can be viewed as
+an indirect method.
+\todo{Fact check it as an indirect method?}
+The trajectory optimisation algorithm presented in this section is a direct method that considers the
+full stochastic nature of the learned dynamics model. In particular, it considers uncertainties propagation
+through the dynamics
 Given the SOC problem in Eq. ref:eq-mode-soc-problem, the trajectory optimisation algorithm presented here
 builds off of the control-as-inference framework citep:toussaintProbabilistic2006,kappenOptimal2013,
 which frames optimal control as probabilistic inference.
@@ -6587,6 +6618,10 @@ citep:hennigProbabilistic2015, where statistical methods are used to solve numer
 providing uncertainty quantification, regularisation and faster convergence.
 This is achieved by assuming access to a dynamics model, and
 embedding the cost function into the likelihood.
+
+This section firsts recaps the control-as-inference framework. It then details how the framework is extended
+to find mode remaining trajectories.
+
 *** Cost Functions as Likelihoods
 To formulate optimal control as probabilistic inference
 it is first embedded into a graphical model (see Figure ref:fig-basic-control-graphical-model).
@@ -6634,19 +6669,110 @@ inverse temperature, $\temperature$, is used to scale the cost,
 #+END_EXPORT
 The resulting negative log-likelihood,
 for a single state-control trajectory \stateTraj, \controlTraj,
+is an affine transformation of the cost,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-negative-log-likelihood-cost}
 -\log \p(\optimalVar_{0:\TimeInd} \mid \stateTraj, \controlTraj)
-&=  \temperature\costFunc(\stateTraj, \controlTraj)
+&=  \temperature\costFunc(\stateTraj, \controlTraj),
 \end{align}
 #+END_EXPORT
-is an affine transformation of the cost (preserving convexity).
+which preserves convexity.
 When the inverse temperature parameter is set to 1, (i.e. $\temperature=1$) the Maximum Likelihood (ML)
 trajectory coincides with classical optimal control cite:toussaintRobot2009.
 
+**** Quadratic Cost Functions
 This work primarily focuses on quadratic costs, $\costFunc$, which are ubiquitous in control.
-Under Normally distributed states, $\state_\timeInd$, and controls, $\control_\timeInd$,
-the expected quadratic costs can be calculated in closed-form.
+
+*Terminal Control Problems*
+To find a trajectory between a start state, $\state_0$, and a target state, $\targetState$, at
+time, $\TimeInd$, it is common to minimise the deviation of the final state, $\state_\TimeInd$,
+from the desired target state $\targetState$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadratic-terminal-cost-matrix-notation}
+J = (\state_{\TimeInd} - \targetState)^T(\state_{\TimeInd} - \targetState).
+\end{align}
+#+END_EXPORT
+This can also be written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadratic-terminal-cost-norm}
+J = || \state_\TimeInd - \targetState ||^2,
+\end{align}
+#+END_EXPORT
+where $|| \state_\TimeInd - \targetState ||^2$ denotes the L2 norm.
+To allow greater generality, a user defined, real symmetric positive definite matrix,
+$\terminalStateCostMatrix$, can be introduced,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadratic-terminal-cost}
+J &= (\state_{\TimeInd} - \targetState)^T \terminalStateCostMatrix (\state_{\TimeInd} - \targetState) \\
+&= || \state_\TimeInd - \targetState ||^2_{\terminalStateCostMatrix}.
+\end{align}
+#+END_EXPORT
+When $\terminalStateCostMatrix$ is the identity matrix Eq. ref:eq-quadratic-terminal-cost-matrix-notation
+is recovered.
+
+*Minimum Control Effort Problems*
+It is also common to find trajectories that minimise the expenditure of control effort.
+The meaning of minimum control effort depends upon the specific problem.
+It may refer to minimising the total expenditure of fuel, or to minimising the energy dissipated from the system.
+Regardless of the specific interpretation, it is usually desirable to regularise the controls.
+Similar to the terminal cost, it is common to use a quadratic form,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadratic-cost-control}
+J &= \sum_{\timeInd=0}^{\TimeInd-1} \control_{\timeInd}^T \controlCostMatrix \control_{\timeInd} \\
+&= || \control_\timeInd ||_\controlCostMatrix^2,
+\end{align}
+#+END_EXPORT
+where $\controlCostMatrix$ is a user defined, real symmetric positive definite weight matrix.
+This objective regularises the control trajectory under the L2 norm.
+It is worth noting that the control weight matrix can be a function of time, $\controlCostMatrix(t)$.
+
+#+BEGIN_EXPORT latex
+\todo{Add tracking/regulating state cost term? And length of trajectory with $\dot{x}^T\dot{x}$?}
+#+END_EXPORT
+
+# *Tracking Problems*
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-quadratic-cost-state}
+# J &= \state_{\timeInd}^T \stateCostMatrix \state_{\timeInd}
+#   &= || \state_\timeInd ||_\stateCostMatrix^2
+# \end{align}
+# #+END_EXPORT
+# where $\stateCostMatrix$ and $\controlCostMatrix$ are
+# user defined, real symmetric positive semi-definite and real symmetric positive definite weight matrices respectively.
+# It is worth noting that the state and control weight matrices can be functions of time, i.e.
+# $\stateCostMatrix(t)$ and $\controlCostMatrix(t)$.
+# This cost function regularises state
+This work seeks to control the terminal state and regularise the controls so combines these two objectives as
+follows,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadratic-cost-terminal-control}
+\objective =
+||\state_{\TimeInd} - \targetState ||^2_{\terminalStateCostMatrix}
++ \sum_{\timeInd=0}^{\TimeInd-1}
++ ||\control_{\timeInd}||^2_{\controlCostMatrix}.
+\end{align}
+#+END_EXPORT
+Importantly, given a trajectory where each state and control are normally distributed,
+${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$
+and
+${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
+the expected cost for a trajectory can be calculated in closed-form,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expected-quadratic-cost}
+%\E_{\stateTraj, \controlTraj} \left[ \costFunc_{\text{quadratic}}(\stateTraj, \controlTraj) \right]
+\E_{\stateTraj, \controlTraj} \left[ \objective \right] =
+\text{tr}(\terminalStateCostMatrix \terminalStateCov) +
+(\terminalStateMean - \targetState)^T \terminalStateCostMatrix (\terminalStateMean - \targetState)
++ \sum_{\timeInd=1}^{\TimeInd-1}
+%\text{tr}(\stateCostMatrix \stateCov_\timeInd)
+%+ \stateMean_{\timeInd}^T \stateCostMatrix \stateMean_{\timeInd}
+\text{tr}(\controlCostMatrix \controlCov )
++ \controlMean^T \controlCostMatrix \controlMean
+\end{align}
+#+END_EXPORT
+
+It is worth noting that if a cost function is not quadratic then a quadratic approximation
+can be obtained with a Taylor expansion.
 
 *** graphical model :ignore:
 #+BEGIN_EXPORT latex
@@ -6812,8 +6938,7 @@ optimal trajectory, taking expectations over trajectories (i.e. calculating $\lo
 is not equivalent to expected cost minimisation.
 cite:rawlikStochastic2013 extend the concepts from  cite:toussaintRobot2009 to show the general relation
 to classical SOC.
-They introduce a prior policy, $\priorPolicy$, which is conditioned on the optimality variable
-but generated by a potentially uniform policy, $\priorPolicy$. The distribution over state-control trajectories
+They introduce a prior policy, $\priorPolicy$, and the distribution over state-control trajectories
 under this policy is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-prior-trajectory-dist}
@@ -6824,6 +6949,8 @@ Z^{-1}
 \integralCostFunc(\state_\timeInd,\control_\timeInd) \right)
 \end{align}
 #+END_EXPORT
+This distribution is conditioned on the optimality variable but generated by a
+potentially uniform policy, $\priorPolicy$.
 Intuitively $\controlledPolicyDist(\stateTraj, \controlTraj)$, is thought of as the controlled process, which
 is not conditioned on optimality and $\priorPolicyDist(\stateTraj, \controlTraj)$,
 as the posterior process, conditioned on optimality
@@ -6881,39 +7008,64 @@ the full graphical model  ref:eq-traj-opt-joint-dist can be
 computed using approximate Gaussian message passing, for which effective methods exist cite:loeligerFactor2007.
 The inference problem can then be solved using the
 expectation maximisation algorithm for dynamical system estimation
-cite:shumwayAPPROACH1982,ghahramaniLearning1999,schonSystem2011, with input estimation cite:watsonStochastic2021.
+citep:shumwayAPPROACH1982,ghahramaniLearning1999,schonSystem2011, with input estimation cite:watsonStochastic2021.
 
 However, inference in nonlinear SSMs is
 
 *** Mode Remaining Trajectory Optimisation as Variational Inference
+**** maths :ignore:
+#+BEGIN_EXPORT latex
+%\renewcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1, \modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd)}}
+%\renewcommand{\modeProb}{\ensuremath{\Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd)}}
+\renewcommand{\modeProb}{\ensuremath{\Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd)}}
+\renewcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1, \modeVar_\TimeInd=\desiredMode \mid \state_\TimeInd)}}
+\renewcommand{\jointDist}{\ensuremath{p(\optimalVar_{0:\TimeInd}=1, \modeVar_{0:\TimeInd}=\desiredMode, \stateTraj, \controlTraj \mid \state_0})}}
+
+\renewcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVarK)}}
+
+#+END_EXPORT
+
+**** intro :ignore:
 # The resulting probabilistic graphical model
 # can be solved efficiently using recursive Bayesian inference over time.
-This work is primarily interested in finding accurate trajectories that attempt to remain in a
+Whilst real-time control requires efficient inference algorithms,
+"offline" trajectory optimisation can trade in computational cost for greater accuracy.
+This work is primarily interested in finding trajectories that attempt to remain in a
 desired dynamics mode.
-This comes at the cost of increased computational time, hindering
-its suitability to obtain a closed-loop controller via MPC cite:eduardof.Model2007 .
-However, it can be used offline to generate reference trajectories for a tracking controller,
-or for guided policy search cite:levineGuided2013 in a model-based RL setting.
+For the sake of simplicity, it considers the "offline" trajectory optimisation setting.
+The increased computational time may hinder
+its suitability to obtain a closed-loop controller via MPC citep:eduardof.Model2007 .
+However, it can be used "offline" to generate reference trajectories for a tracking controller,
+or for guided policy search in a model-based RL setting citep:levineGuided2013.
+Alternatively, future work could investigate approximate inference methods for efficient state estimation
+to aid with real-time control,
+e.g. based on linear/quadratic approximations of the dynamics (iLQG/DDP).
 
-Motivated by accuracy this work does not approximate the dynamics to be linear or quadratic.
-
-In order to find trajectories that remain in a desired dynamics mode this work further augments
-the graphical model with the mode indicator variable $\modeVar \in \modeDomain$ from Eq. ref:eq-multimodal-dynamics-disc.
+*Augmented Graphical Model* In order to find trajectories that remain in a desired
+dynamics mode, this work further augments
+the graphical model with the mode indicator variable, $\modeVar \in \modeDomain$,
+from Eq. ref:eq-multimodal-dynamics-disc.
 The resulting graphical model is shown in Figure ref:fig-mode-augmented-control-graphical-model,
 where the evidence is that $\optimalVar_{\timeInd}=1$ and $\modeVar_{\timeInd}=\desiredMode$ for
-all $\timeInd \in \{0,\ldots,\TimeInd\}$. Also note that the posterior is conditioned on
-the initial state $\state_0$.
+all $\timeInd \in \{0,\ldots,\TimeInd\}$.
+The joint probability model is then given by,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-traj-opt-joint-dist-mode}
+\jointDist =
+&\underbrace{\terminalCostDist}_{\text{Terminal Cost}} \\
+\prod_{\timeInd=0}^{\TimeInd-1} \big[&
+\underbrace{\optimalProb}_{\text{Integral Cost}}
+\underbrace{\modeProb}_{\text{Mode Remaining Term}} \\
+&\underbrace{\transitionDist}_{\text{Dynamics}}
+\underbrace{\controlDist}_{\text{Controller}} \big]. \nonumber
+\end{align}
+\normalsize
+#+END_EXPORT
 
 
-# As before the distribution over trajectories under a policy $\policy$ is given by,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-}
-# p(\stateTraj, \controlTraj \mid \state_0) =
-# \prod_{\timeInd=0}^\TimeInd
-# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
-# \policy(\control_\timeInd \mid \state_\timeInd)
-# \end{align}
-# #+END_EXPORT
+# Also note that the posterior is conditioned on the initial state $\state_0$.
+
 
 # Intuitively, the posterior of interest is th
 # #+BEGIN_EXPORT latex
@@ -6944,20 +7096,207 @@ the initial state $\state_0$.
 # In the RL setting the policy is parameterised with parameters, $\theta$, which are optimised and used
 # to predict the controls.
 # In contrast, the control setting is usually interested in optimising the states and controls directly.
-The object of interest is the distribution over the controls, $\controlTraj$,
-conditioned on the initial state, $\state_0$, all future time steps being optimal and in the
-desired dynamics mode,
 
+# The object of interest is the distribution over the controls, $\controlTraj$,
+# conditioned on the initial state, $\state_0$, all future time steps being optimal and in the
+# desired dynamics mode,
+
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-optimal-control-message-passing}
+# p(\controlTraj \mid \state_{0}, \optimalVar_{0:\TimeInd}=1, \modeVar_{0:\TimeInd}=\desiredMode) &=
+# \frac{
+# p(\optimalVar_{0:\TimeInd}=1 \mid \stateTraj, \controlTraj)
+# p(\modeVar_{0:\TimeInd}=\desiredMode \mid \stateTraj, \controlTraj)
+# p(\stateTraj, \controlTraj \mid \optimalVar_{0:\TimeInd}=1, \modeVar_{0:\TimeInd}=\desiredMode, \state_0)
+# }{}
+# \end{align}
+# #+END_EXPORT
+
+**** Variational Inference
+This work draws on the connection between KL-divergence control citep:rawlikStochastic2013
+and structured variational inference.
+Whilst the derivation shown here differs from citep:rawlikStochastic2013, the underlying framework and
+objective are the same.
+
+# p(\stateTraj, \controlTraj \mid \)$
+In variational inference the goal is to approximate a distribution $p(\mathbf{y})$
+with another, potentially simpler distribution $q(\mathbf{y})$.
+Typically this distribution $q(\mathbf{y})$ is selected to be a product of conditional distributions connected in a
+chain or tree, which lends itself to exact inference.
+In this work, the goal is to approximate the intractable distribution over optimal trajectories,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-optimal-control-message-passing}
-p(\controlTraj \mid \state_{0}, \optimalVar_{0:\TimeInd}=1, \modelVar_{0:\TimeInd}=\desiredMode) &=
-\frac{
-p(\optimalVar_{0:\TimeInd}=1 \mid \stateTraj, \controlTraj)
-p(\modeVar_{0:\TimeInd}=\desiredMode \mid \stateTraj, \controlTraj)
-p(\stateTraj, \controlTraj \mid \optimalVar_{0:\TimeInd}=1, \modeVar_{0:\TimeInd}=\desiredMode, \state_0)
-}{}
+\begin{align} \label{eq-}
+p(\stateTraj, \controlTraj \mid \state_0, \optimalVar_{0:\TimeInd}=1, \modeVar_{0:\TimeInd}=\desiredMode)
+= \underbrace{\left[ \prod_{\timeInd=0}^{\TimeInd-1} \transitionDist \policy(\control_\timeInd \mid \state_\timeInd) \right]}_{\text{controlled dynamics}}
+\exp \left( \sum_{\timeInd=0}^\TimeInd \costFunc(\state_\timeInd, \control_\timeInd) \right),
 \end{align}
 #+END_EXPORT
+with the variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+q(\stateTraj, \controlTraj)
+= \prod_{\timeInd=0}^{\TimeInd-1} q(\state_{\timeInd+1} \mid \state_{\timeInd}, \control_\timeInd)
+\controlVarDist.
+\end{align}
+#+END_EXPORT
+Further setting the variational dynamics equal to the learned dynamics,
+${q(\state_{\timeInd+1} \mid \state_{\timeInd}, \control_\timeInd)=\transitionDist}$
+simplifies inference and prevents the agent from attempting to change the dynamics.
+
+Variational inference seeks to optimise $q(\stateTraj, \controlTraj \mid \state_0)$
+w.r.t. the variational lower bound (aka evidence lower bound or ELBO).
+In this setup the evidence is that $\optimalVar_{\timeInd}=1$ and $\modeVar_{\timeInd}=\desiredMode$ for
+all $\timeInd \in \{0,\ldots,\TimeInd\}$.
+Also note that the posterior is conditioned on the initial state $\state_0$.
+Given this, the evidence lower bound is given by,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood
+&= \text{log} \E_{\trajectoryVarDist} \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
+&= \text{log} \E_{\trajectoryVarDist} \left[
+\frac{\prod_{\timeInd=0}^{\TimeInd-1} \optimalProb \cancel{\transitionDist} \controlDist}{\prod_{\timeInd=0}^{\TimeInd-1} \cancel{\transitionDist} \controlVarDist}
+\right] \\
+&\geq \E_{\trajectoryVarDist} \left[
+\sum_{\timeInd=0}^{\TimeInd-1} \text{log} \optimalProb - \sum_{\timeInd=0}^{\TimeInd-1} \text{log}
+\frac{\controlVarDist}{\controlDist} \right] \\
+&= \sum_{\timeInd=0}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=0}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[
+\log \Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd) \right] \\
+&\quad - \sum_{\timeInd=0}^{\TimeInd}
+\text{KL}\left(\controlVarDist \mid\mid \policy(\control_\timeInd \mid \state_\timeInd) \right)  \coloneqq \mathcal{L}
+\end{align}
+\normalsize
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood
+&= \text{log} \E_{\trajectoryVarDist} \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
+&= \text{log} \E_{\trajectoryVarDist} \left[
+\frac{p(\optimalVar_\TimeInd \mid \state_{\TimeInd})
+\prod_{\timeInd=0}^{\TimeInd-1} \optimalProb \cancel{\transitionDist} \controlDist}{\prod_{\timeInd=0}^{\TimeInd-1} \cancel{\transitionDist} \controlVarDist}
+\right] \\
+&\geq \E_{\trajectoryVarDist} \left[
+\sum_{\timeInd=0}^{\TimeInd-1} \text{log} \optimalProb - \sum_{\timeInd=0}^{\TimeInd-1} \text{log}
+\frac{\controlVarDist}{\controlDist} \right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood &\geq
+ \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
+- \text{log}\controlVarDist\right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
+- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\end{align}
+#+END_EXPORT
+**** State Estimation
+#+BEGIN_EXPORT latex
+\renewcommand{\singleInput}{\ensuremath{\state_\timeInd, \control_\timeInd}}
+\renewcommand{\singleInput}{\ensuremath{\hat{\state}_\timeInd}}
+\renewcommand{\singleOutput}{\ensuremath{\Delta\state_{\timeInd+1}}}
+
+\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput)}}
+\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput)}}
+%\newcommand{\expertInducingVariational}{\ensuremath{q(\mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\expertInducingVariational}{\ensuremath{q(\expertInducingOutput)}}
+\newcommand{\expertsInducingVariational}{\ensuremath{q(\expertsInducingOutput)}}
+\newcommand{\expertsVariational}{\ensuremath{q(\LatentFunc_\numData)}}
+%\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \expertInducingOutput)}}
+%\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \expertInducingOutput)}}
+
+\newcommand{\expertVariational}{\ensuremath{q(\mode{\latentFunc}(\singleInput))}}
+
+\newcommand{\singleInputMean}{\ensuremath{\hat{\bm\mu_}}}
+\newcommand{\singleInputCov}{\ensuremath{\hat{\bm\Sigma}}}
+\newpage
+#+END_EXPORT
+
+Importantly, given a trajectory where each state and control are normally distributed,
+${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$
+and
+${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
+the expected cost for a trajectory can be calculated in closed-form,
+
+Given a deterministic state, $\state_\timeInd$, and a deterministic control, $\control_\timeInd$,
+concatenated into a single state-control input, $\singleInput=(\state_\timeInd,\control_\timeInd)$,
+the transition density, $\transitionDist$, can be calculated using the
+desired mode's dynamics function,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\state_{\timeInd+1} &= \mode{\latentFunc}(\state_\timeInd, \control_\timeInd) + \state_\timeInd +  \mode{\epsilon}.
+\end{align}
+#+END_EXPORT
+Each mode's dynamics function is modelled using a sparse variational GP, which
+captures the joint distribution of the data in the mode's corresponding
+inducing variables $\expertInducingOutput$.
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\Delta\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVarK) &=
+\E_{\expertVariational} \left[\singleExpertLikelihood \right] \\
+\expertVariational &=  \E_{ \expertInducingVariational} \left[  \singleLatentExpertGivenInducing \right] \\
+\expertInducingVariational &= \mathcal{N}\left( \expertInducingOutput \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
+\end{align}
+#+END_EXPORT
+The functional form of \expertsVariational is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\expertsVariational &= \prod_{\modeInd=1}^\ModeInd \mathcal{N} \left( \mode{\latentFunc}(\singleInput) \mid
+\mode{\mathbf{A}} \mode{\mathbf{m}},
+\expertKernel(\singleInput, \singleInput)
++ (\mode{\mathbf{S}} - \expertKernel(\expertInducingInput,\expertInducingInput))
+\mode{\mathbf{A}}^T
+\right),
+\end{align}
+#+END_EXPORT
+where
+$\mode{\mathbf{A}} = \expertKernel(\singleInput, \expertInducingInput)\left(\expertKernel(\expertInducingInput, \expertInducingInput)\right)^{-1}$.
+
+Given a Gaussian distributed state,
+${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$,
+and control,
+${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
+the distribution over the successor state
+
+As both the state and control at a given time step are Gaussian distributed,
+${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$,
+and control,
+${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
+the joint distribution of the state and control, $p(\singleInput)$, is also Gaussian distributed,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\singleInput) = p(\state_{\timeInd}, \control_\timeInd) = p(\state_{\timeInd}) p(\control_\timeInd).
+\end{align}
+#+END_EXPORT
+
+Consider the problem of predicting the desired modes dynamics function value, $\desiredDynamicsFunc(\singleInput)$,
+given a Normally distributed input,
+${\singleInput \sim \mathcal{N}(\singleInputMean, \singleInputCov)}$,
+where $\desiredDynamicsFunc \sim \mathcal{GP}$.
+This prediction problem corresponds to calculating the following integral,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\desiredDynamicsFunc(\singleInput) ) = \int  \underbrace{p(\desiredDynamicsFunc(\singleInput) \mid \singleInput)}_{\text{GP predictive dist}}
+p(\singleInput) \text{d}\singleInput.
+\end{align}
+#+END_EXPORT
+The mean and variance of the GP predictive distribution $p(\desiredDynamicsFunc(\singleInput) \mid \singleInput)}$
+
+# $\mode{\hat{\mathbf{A}}} = \gatingKernel(\singleInput, \gatingInducingInput)\left(\expertKernel(\gatingInducingInput, \gatingInducingInput)\right)^{-1}$.
+
+*** old
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-optimal-control-message-passing}
 p(\controlTraj \mid \state_{0}, \optimalVar_{0:\TimeInd}=1, \modelVar_{0:\TimeInd}=\desiredMode) &=
@@ -7202,49 +7541,6 @@ p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\stat
 \label{fig-constrained-control-graphical-model}
 \end{figure}
 #+END_EXPORT
-*** Variational Inference
-In variational inference the distribution over the latent variables
-$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
-is approximated with another, potentially simpler
-(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
-In this case, the aim is to approximate the distribution over the optimal policy,
-$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd}=1)$.
-Introducing the variational distribution,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood
-&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
-&= \text{log} \E_\trajectoryVarDist \left[
-\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
-\right] \\
-&\geq \E_\trajectoryVarDist \left[
-\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
-\frac{\controlVarDist}{\controlDist} \right] \\
-&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
-- \text{log}\controlVarDist\right]
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood &\geq
- \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
-- \text{log}\controlVarDist\right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
-- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
-\end{align}
-#+END_EXPORT
-
 
 *** graphical model :ignore:noexport:
 #+BEGIN_EXPORT latex
