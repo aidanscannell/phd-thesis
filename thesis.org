@@ -29,8 +29,8 @@
                ("\\section{%s}" . "\\section*{%s}")
                ("\\subsection{%s}" . "\\subsection*{%s}")
                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-               ("\\paragraph{%s}" . "\\paragraph*{%s}")
-               ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+               ("\\paragraph{%s}\\newline" . "\\paragraph*{%s}\\newline")
+               ("\\subparagraph{%s}\\newline" . "\\subparagraph*{%s}\\newline")))
 #+end_src
 # #+EXPORT_FILE_NAME: ./tmp/thesis.pdf
 ** Org Mode Export Options :noexport:
@@ -211,6 +211,14 @@ Make the equation numbers follow the chapter, not the whole thesis.
 # #+LATEX_HEADER: \renewcommand*{\marginfont}{\footnotesize}
 # #+LATEX_HEADER: \newcommand{\parmarginnote}[1]{\hspace{\z@}\marginnote{#1}\ignorespaces}
 #+LATEX_HEADER: \newcommand{\parmarginnote}[1]{\marginnote{#1}}
+*** Captions
+# #+LATEX_HEADER: \usepackage{caption}
+# #+LATEX_HEADER: \usepackage{subcaption}
+#+LATEX_HEADER: \ifCLASSOPTIONcompsoc \usepackage[caption=false,font=footnotesize,labelfon
+#+LATEX_HEADER: t=it,textfont=it]{subfig} \else
+#+LATEX_HEADER: \usepackage[caption=false,font=footnotesize]{subfig}
+#+LATEX_HEADER: \fi
+#+LATEX_HEADER: \usepackage[format=plain,labelfont={bf},textfont=it]{caption} % make captions italic
 ** Text Variables :noexport:
 #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Learning and Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Data Efficient Learning for Control in Multimodal Dynamical Systems}}
@@ -3420,17 +3428,31 @@ up inference.
 #+END_EXPORT
 
 ** Intro :ignore:
+This chapter is interested in learning representations of multimodal dynamical systems for control.
+The work in this chapter assumes access to a data set $\dataset$ of observations that
+have previously been sampled from the system at a constant frequency,
+(i.e. with a fixed time-step).
+
+that pairs of input $\x$ and output $\y$ observations
+have previously been sampled from the system at a constant frequency,
+(i.e. with a fixed time-step) to give a data set $\dataset$.
+
+introduces the class of continuous-time multimodal dynamical systems
+
 This chapter introduces the class of continuous-time multimodal dynamical systems
 that this work considers and then details an approach to performing Bayesian inference in such models.
+
 Throughout this chapter it is assumed that pairs of input $\x$ and output $\y$ observations
 have previously been sampled from the system at a constant frequency,
 (i.e. with a fixed time-step) to give a data set $\dataset$.
 Based on this assumption, this chapter constructs a discrete-time representation of the system's transition dynamics
 and then formulates it as a probabilistic model based on GPs.
+
 This thesis is interested in multimodal systems where the dynamics modes vary over the
 input (state, control) domain, such that the mode switching can by modelled
 by input-dependent functions.
 This set of functions governing the mode switching is commonly referred to as a gating network.
+
 This work is motivated by data-efficient learning and specifically focuses on gating networks
 where prior knowledge of the system can be encoded into the model via informative priors.
 As a result, the probabilistic model constructed in this chapter resembles a \acrfull{mogpe}
@@ -6474,13 +6496,13 @@ This is solved using Sequential Least Squares Programming (SLSQP) in SciPy.
 \todo[inline]{Lagrance multipliers to make TO unconstrained}
 
 *** Results label:sec-traj-opt-results
+#+NAME: fig-geometric-traj-opt-over-svgp
+#+ATTR_LATEX: :width 1.1\textwidth :placement [!t] :center t
+#+caption: Contour plots showing the GP posterior mean (left) and variance (right) over the gating function associated with dynamics mode 1 after training on a subset of the quadcopter data set. The initial and optimised trajectories are overlayed to show the influence of the GP's mean and variance on the trajectory optimisation with different $\lambda$ settings.
+[[file:./images/geometric-traj-opt-over-svgp.pdf]]
 **** Velocity Controlled Quadcopter
 The trajectory optimisation is tested on the quadcopter control problem shown in
 Fig. ref:fig-problem-statement.
-#+NAME:
-#+ATTR_LATEX: :width 0.6\textwidth :placement [!h] :center t
-#+caption: My catption
-[[file:./images/geometric-traj-opt-over-svgp.pdf]]
 
 It projects the optimisation onto
 the desired mode's learned gating function, shown in Fig. ref:fig-svgp_2d_traj.
@@ -6489,6 +6511,23 @@ that 1) remain in the non-turbulent mode and 2) avoid regions of the learned
 transition dynamics with high epistemic uncertainty.
 To aid with user control the metric tensor in Eq. ref:eq-expected-metric is modified with
 a weighting parameter $\lambda$ that enables the relevance of the covariance term to be adjusted,
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.45\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/geometric-traj-opt-prob-vs-time.pdf}
+\subcaption{Mode 1's mixing probability over the trajectories.}
+\end{minipage}
+\begin{minipage}[r]{0.45\columnwidth}
+\includegraphics[width=\textwidth]{./images/geometric-traj-opt-epistemic-vs-time.pdf}
+%\label{}
+\subcaption{Posterior variance associated with mode 1's gating function over the trajectories.}
+\end{minipage}
+\caption{\label{fig-metric-vs-time}Comparision of the intial and optimised trajectories' performance (for two settings of $\lambda$) at a) staying in the desired mode and b) avoiding regions of high epistemic uncertainty.}
+\end{figure}
+#+END_EXPORT
+
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expected-metric-weighting}
   \tilde{\mathbf{G}} = \E[\mathbf{J}^T] \E[\mathbf{J}] + \lambda \mathbf{\Sigma}_J.
@@ -6499,18 +6538,9 @@ whereas selecting a large $\lambda$ should find trajectories that prioritise avo
 of the dynamics with high epistemic uncertainty.
 The trajectory optimisation is tested with two $\lambda$ settings.
 
-#+NAME: fig-mixing_prob_vs_time
-#+ATTR_LATEX: :width 0.4\textwidth :placement [!h] :center t
-#+caption: Comparision of the intial and optimised trajectories' performance at staying in the desired mode. The plot shows mode 1's mixing probability over the trajectories for two settings of $\lambda$.
-[[file:./images/geometric-traj-opt-prob-vs-time.pdf]]
-
-#+NAME: fig-epistemic_var_vs_time
-#+ATTR_LATEX: :width 0.4\textwidth :placement [!h] :center t
-#+caption: Comparison of the initial and optimised trajectories' at avoiding regions of high epistemic uncertainty. It shows the posterior variance associated with the desired mode's gating function.
-[[file:./images/geometric-traj-opt-epistemic-vs-time.pdf]]
 
 
-The initial (cyan) trajectory in Fig. ref:fig-svgp_2d_traj is initialised with
+The initial (cyan) trajectory in Fig. ref:fig-geometric-traj-opt-over-svgp is initialised with
 $10$ collocation points indicated by the crosses.
 The trajectories are compared via mode 1's mixing
 probability and its gating function's GP variance over the trajectories.
@@ -6528,7 +6558,7 @@ The results are shown in Table ref:tab-results.
 | Initial                 | $7.480$                                            | $1.345$                                             |
 | Optimised $\lambda=20$  | $6.091$                                            | $\mathbf{1.274}$                                    |
 | Optimised $\lambda=0.5$ | $\mathbf{8.118}$                                   | $1.437}$                                            |
-It is clear from Fig. ref:fig-svgp_2d_traj (left) and Fig. ref:fig-mixing_prob_vs_time
+It is clear from Fig. ref:fig-geometric-traj-opt-over-svgp (left) and Fig. ref:fig-mixing_prob_vs_time
 that for $\lambda=0.5$,
 trajectories favour remaining in dynamics mode 1 at the cost of entering regions of the learned dynamics
 with high epistemic uncertainty (shown in Fig. ref:fig-epistemic_var_vs_time).
@@ -6548,10 +6578,10 @@ We then used the other dynamics mode to explain away all of the un-operatable mo
 We think that in most scenarios a similar approach could be followed.
 
 
-*** Clearpage :ignore:
-#+begin_latex
-\clearpage
-#+end_latex
+# *** Clearpage :ignore:
+# #+begin_latex
+# \clearpage
+# #+end_latex
 
 ** Trajectory Optimisation as Probabilistic Inference label:sec-traj-opt-inference
 *** Maths :ignore:
@@ -6576,7 +6606,7 @@ We think that in most scenarios a similar approach could be followed.
 
 \newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
 
-\renewcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{0:\TimeInd} = 1, \modeVar=\desiredMode \mid \state_0)}}
+\renewcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{0:\TimeInd} = 1, \modeVar_{0:\TimeInd}=\desiredMode \mid \state_0)}}
 %\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \modeVar_{1:\TimeInd}=\modeDes{\modeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
 %\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}, \modeVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
 \renewcommand{\jointDist}{\ensuremath{p(\optimalVar_{0:\TimeInd}=1, \stateTraj, \controlTraj \mid \state_0})}}
@@ -7139,8 +7169,8 @@ q(\stateTraj, \controlTraj)
 \controlVarDist.
 \end{align}
 #+END_EXPORT
-Further setting the variational dynamics equal to the learned dynamics,
-${q(\state_{\timeInd+1} \mid \state_{\timeInd}, \control_\timeInd)=\transitionDist}$
+Setting the variational dynamics $q(\state_{\timeInd+1} \mid \state_{\timeInd}, \control_\timeInd)$,
+equal to the learned dynamics, ${\transitionDist}$
 simplifies inference and prevents the agent from attempting to change the dynamics.
 
 Variational inference seeks to optimise $q(\stateTraj, \controlTraj \mid \state_0)$
@@ -7155,52 +7185,122 @@ Given this, the evidence lower bound is given by,
 \text{log} \marginalLikelihood
 &= \text{log} \E_{\trajectoryVarDist} \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
 &= \text{log} \E_{\trajectoryVarDist} \left[
-\frac{\prod_{\timeInd=0}^{\TimeInd-1} \optimalProb \cancel{\transitionDist} \controlDist}{\prod_{\timeInd=0}^{\TimeInd-1} \cancel{\transitionDist} \controlVarDist}
-\right] \\
-&\geq \E_{\trajectoryVarDist} \left[
-\sum_{\timeInd=0}^{\TimeInd-1} \text{log} \optimalProb - \sum_{\timeInd=0}^{\TimeInd-1} \text{log}
-\frac{\controlVarDist}{\controlDist} \right] \\
-&= \sum_{\timeInd=0}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
+\frac{\prod_{\timeInd=0}^{\TimeInd-1} \optimalProb
+\Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd)
+\controlDist}{\prod_{\timeInd=0}^{\TimeInd-1}  \controlVarDist}
+\right] \nonumber \\
+&\geq \sum_{\timeInd=0}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
 + \sum_{\timeInd=0}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[
-\log \Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd) \right] \\
+\log \Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd) \right] \nonumber \\
 &\quad - \sum_{\timeInd=0}^{\TimeInd}
 \text{KL}\left(\controlVarDist \mid\mid \policy(\control_\timeInd \mid \state_\timeInd) \right)  \coloneqq \mathcal{L}
+\nonumber
 \end{align}
 \normalsize
 #+END_EXPORT
-
+For notational conciseness the terminal values have been omitted.
+Assuming a uniform prior for $\policy(\control_\timeInd \mid \state_\timeInd)$ leads to,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood
-&= \text{log} \E_{\trajectoryVarDist} \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
-&= \text{log} \E_{\trajectoryVarDist} \left[
-\frac{p(\optimalVar_\TimeInd \mid \state_{\TimeInd})
-\prod_{\timeInd=0}^{\TimeInd-1} \optimalProb \cancel{\transitionDist} \controlDist}{\prod_{\timeInd=0}^{\TimeInd-1} \cancel{\transitionDist} \controlVarDist}
-\right] \\
-&\geq \E_{\trajectoryVarDist} \left[
-\sum_{\timeInd=0}^{\TimeInd-1} \text{log} \optimalProb - \sum_{\timeInd=0}^{\TimeInd-1} \text{log}
-\frac{\controlVarDist}{\controlDist} \right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\small
+\begin{align} \label{eq-traj-opt-elbo}
+\mathcal{L} &= \sum_{\timeInd=0}^{\TimeInd}
+\underbrace{\E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]}_{\text{Expected cost}}
++ \sum_{\timeInd=0}^{\TimeInd} \underbrace{\E_{\controlVarDist q(\state_{\timeInd})} \left[
+\log \Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd) \right]}_{\text{Mode remainig term}}
++ \sum_{\timeInd=0}^{\TimeInd} \underbrace{\mathcal{H}(\control_{\timeInd})}_{\text{Entropy}}
+\end{align}
+\normalsize
+#+END_EXPORT
+Calculating the objective in Eq. ref:eq-traj-opt-elbo requires simulating the trajectory in the desired
+mode's GP dynamics.
+
+*Predictions with Uncertain Inputs*
+Consider the problem of predicting the next state  $\state_{\timeInd+1}$
+given multivariate Normally distributed states,
+${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$,
+and controls,
+${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
+where $\desiredDynamicsFunc \sim \mathcal{GP}$.
+This prediction problem corresponds to calculating the following integral,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-state-unc-prop}
+p(\state_{\timeInd+1}) = \int \int
+p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd) p(\control_\timeInd) p(\state_\timeInd)
+\text{d}\state_{\timeInd} \text{d}\control_{\timeInd}
 \end{align}
 #+END_EXPORT
+Approximate closed-form solutions exist for propagating uncertain inputs through GP models
+cite:girardGaussian2003,kussGaussian2006,quinonero-candelaPropagation2003.
+\todo{correct girard citation}
+This work exploits the moment-matching approximation
+implemented in the =uncertain_conditional= from GPflow cite:GPflow2017.
+For more details on the approximation see Section 7.2.1 of cite:kussGaussian2006.
+\todo{Add moment matching figure?}
+This work propagates model uncertainty forwards by cascading such one-step predictions.
+
 
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood &\geq
- \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
-- \text{log}\controlVarDist\right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
-- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\small
+\begin{align} \label{eq-traj-opt-elbo}
+\mathcal{N}(\state_1 \mid M_1, V_1) \coloneq \mathcal{N}(\state_1)
 \end{align}
+\normalsize
 #+END_EXPORT
-**** State Estimation
+The objective in Eq. ref:eq-traj-opt-elbo is calculated as follows:
+1. Rollout the given control trajectory in the GP dynamics,
+   - Propagate the state and control uncertainty via moment matching.
+2. Rollout the given control trajectory in the GP dynamics,
+
+
+# #+BEGIN_EXPORT latex
+# \begin{algorithm}
+# $i\gets 10$\;
+# \for{$t \in [0, \ldots, \TimeInd$}
+# {
+# $\dynamicsFunc$
+#     $i\gets i-1$\;
+# }{
+#     \If{$i\leq 3$}
+#     {
+#         $i\gets i+2$\;
+#     }
+# }
+# \end{algorithm}
+# #+END_EXPORT
+
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-}
+# \text{log} \marginalLikelihood
+# &= \text{log} \E_{\trajectoryVarDist} \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
+# &= \text{log} \E_{\trajectoryVarDist} \left[
+# \frac{p(\optimalVar_\TimeInd \mid \state_{\TimeInd})
+# \prod_{\timeInd=0}^{\TimeInd-1} \optimalProb \cancel{\transitionDist} \controlDist}{\prod_{\timeInd=0}^{\TimeInd-1} \cancel{\transitionDist} \controlVarDist}
+# \right] \\
+# &\geq \E_{\trajectoryVarDist} \left[
+# \sum_{\timeInd=0}^{\TimeInd-1} \text{log} \optimalProb - \sum_{\timeInd=0}^{\TimeInd-1} \text{log}
+# \frac{\controlVarDist}{\controlDist} \right] \\
+# &= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
+# + \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+# &= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
+# + \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+# \end{align}
+# #+END_EXPORT
+
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-}
+# \text{log} \marginalLikelihood &\geq
+#  \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
+# - \text{log}\controlVarDist\right] \\
+# &= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
+# - \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
+# &= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
+# + \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+# &= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
+# + \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+# \end{align}
+# #+END_EXPORT
+
+**** Approximate Inference for Dynamics Predictions
 #+BEGIN_EXPORT latex
 \renewcommand{\singleInput}{\ensuremath{\state_\timeInd, \control_\timeInd}}
 \renewcommand{\singleInput}{\ensuremath{\hat{\state}_\timeInd}}
@@ -7215,64 +7315,87 @@ Given this, the evidence lower bound is given by,
 %\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \mode{\latentFunc}(\expertInducingInput))}}
 \newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \expertInducingOutput)}}
 %\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \mode{\latentFunc}(\expertInducingInput))}}
-\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \expertInducingOutput)}}
+\renewcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \singleInput, \expertInducingOutput)}}
 
-\newcommand{\expertVariational}{\ensuremath{q(\mode{\latentFunc}(\singleInput))}}
+\renewcommand{\expertVariational}{\ensuremath{q(\mode{\latentFunc}(\singleInput) \mid \singleInput)}}
 
-\newcommand{\singleInputMean}{\ensuremath{\hat{\bm\mu_}}}
+\newcommand{\singleInputMean}{\ensuremath{\hat{\bm\mu}}}
 \newcommand{\singleInputCov}{\ensuremath{\hat{\bm\Sigma}}}
-\newpage
+
+%\newpage
 #+END_EXPORT
+The aformentioned trajectory optimisation technique relies on the ability to simulate the controlled
+system using the learned dynamics model.
+Recursively estimating the state of a nonlinear dynamical system is a common problem.
+Exact Bayesian solutions in closed-form can only be obtained for a few special cases.
+For example, the Kalman filter for linear Gaussian systems citep:kalmanNew1960 is exact.
+In the nonlinear case, approximate methods are required to obtain efficient closed-form solutions.
+\todo{cite Extended Kalman filter (EKF), Unscented Kalman filter (UKF) etc?}
 
-Importantly, given a trajectory where each state and control are normally distributed,
-${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$
-and
-${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
-the expected cost for a trajectory can be calculated in closed-form,
+Constructing approximate closed-form solutions based on the model in Chapter ref:chap-dynamics
+is especially difficult, due to the exponential growth in the number of Gaussian components.
+\marginpar{multimodal exponential growth}
+Consider approximating the dynamics modes to be independent over a trajectory of length, $N$,
+and recursively propagating each component through both modes.
+This approximation would lead to the distribution over the final state consisting of
+$\ModeInd^N$ Gaussian components.
 
-Given a deterministic state, $\state_\timeInd$, and a deterministic control, $\control_\timeInd$,
-concatenated into a single state-control input, $\singleInput=(\state_\timeInd,\control_\timeInd)$,
-the transition density, $\transitionDist$, can be calculated using the
-desired mode's dynamics function,
+# After the initial time step the state distribution will be a mixture of $\ModeInd$ modes.
+# Assuming that the $\ModeInd$ components are independent and that each of the dynamics GPs are independent,
+# propagating the components would result in a
+# mode would result in the next state distribution containing $\ModInd^2$ modes.
+
+# This is due to the explosion in the number of Gaussian components that would need to be modelled.
+
+Luckily, this work is interested in remaining in a single dynamics mode $\desiredMode$,
+which simplifies the problem.
+Assuming that the controlled system remains in this desired dynamics mode,
+the state trajectory can be simulated using only a single dynamics function,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-}
 \state_{\timeInd+1} &= \mode{\latentFunc}(\state_\timeInd, \control_\timeInd) + \state_\timeInd +  \mode{\epsilon}.
 \end{align}
 #+END_EXPORT
-Each mode's dynamics function is modelled using a sparse variational GP, which
-captures the joint distribution of the data in the mode's corresponding
-inducing variables $\expertInducingOutput$.
+The model in Chapter ref:chap-dynamics represents each mode's dynamics function as a sparse variational GP,
+giving the transition density as,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\Delta\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVarK) &=
-\E_{\expertVariational} \left[\singleExpertLikelihood \right] \\
-\expertVariational &=  \E_{ \expertInducingVariational} \left[  \singleLatentExpertGivenInducing \right] \\
+\begin{subequations}
+\label{eq-sparse-gp-dynamics}
+\begin{align}
+p(\Delta\state_{\timeInd+1} \mid \singleInput, \modeVarK) &=
+\E_{\expertVariational} \left[\singleExpertLikelihood \right] \label{eq-sparse-gp-dynamics-0} \\
+\expertVariational &=  \E_{ \expertInducingVariational} \left[  \singleLatentExpertGivenInducing \right] \label{eq-sparse-gp-dynamics-1} \\
 \expertInducingVariational &= \mathcal{N}\left( \expertInducingOutput \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
+\label{eq-sparse-gp-dynamics-2}
 \end{align}
+\end{subequations}
 #+END_EXPORT
-The functional form of \expertsVariational is given by,
+where the functional form of \expertVariational is given by,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\expertsVariational &= \prod_{\modeInd=1}^\ModeInd \mathcal{N} \left( \mode{\latentFunc}(\singleInput) \mid
+\begin{align}
+\expertVariational &=
+\mathcal{N} \left( \mode{\latentFunc}(\singleInput) \mid
 \mode{\mathbf{A}} \mode{\mathbf{m}},
 \expertKernel(\singleInput, \singleInput)
 + (\mode{\mathbf{S}} - \expertKernel(\expertInducingInput,\expertInducingInput))
 \mode{\mathbf{A}}^T
-\right),
+\right) \\
+\mode{\mathbf{A}} &=
+\expertKernel(\singleInput, \expertInducingInput)\left(\expertKernel(\expertInducingInput, \expertInducingInput)\right)^{-1}.
 \end{align}
 #+END_EXPORT
-where
-$\mode{\mathbf{A}} = \expertKernel(\singleInput, \expertInducingInput)\left(\expertKernel(\expertInducingInput, \expertInducingInput)\right)^{-1}$.
-
-Given a Gaussian distributed state,
+Remember that the variational posterior $\expertVariational$ is an approximation,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\expertVariational &\approx p(\mode{\latentFunc}(\singleInput) \mid \singleInput, \allInput, \allOutput),
+\end{align}
+#+END_EXPORT
+that captures the joint distribution in the data through the inducing variables $\expertInducingOutput$.
+Given a deterministic state-control input, $\singleInput$, Eq. ref:eq-sparse-gp-dynamics can be used
+to calculate the density over the next state $\state_{\timeInd+1}$.
+However, as both the state and control at a given time step could also be Gaussian distributed,
 ${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$,
-and control,
-${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
-the distribution over the successor state
-
-As both the state and control at a given time step are Gaussian distributed,
-${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$,
-and control,
+and
 ${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
 the joint distribution of the state and control, $p(\singleInput)$, is also Gaussian distributed,
 #+BEGIN_EXPORT latex
@@ -7281,22 +7404,52 @@ p(\singleInput) = p(\state_{\timeInd}, \control_\timeInd) = p(\state_{\timeInd})
 \end{align}
 #+END_EXPORT
 
-Consider the problem of predicting the desired modes dynamics function value, $\desiredDynamicsFunc(\singleInput)$,
-given a Normally distributed input,
-${\singleInput \sim \mathcal{N}(\singleInputMean, \singleInputCov)}$,
+***** Predictions with Uncertain Inputs
+Consider the problem of predicting the next state  $\state_{\timeInd+1}$
+given multivariate Normally distributed states,
+${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$,
+and controls,
+${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
 where $\desiredDynamicsFunc \sim \mathcal{GP}$.
 This prediction problem corresponds to calculating the following integral,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\desiredDynamicsFunc(\singleInput) ) = \int  \underbrace{p(\desiredDynamicsFunc(\singleInput) \mid \singleInput)}_{\text{GP predictive dist}}
-p(\singleInput) \text{d}\singleInput.
+\begin{align} \label{eq-state-unc-prop}
+p(\state_{\timeInd+1}) = \int \int
+p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd) p(\control_\timeInd) p(\state_\timeInd)
+\text{d}\state_{\timeInd} \text{d}\control_{\timeInd}
 \end{align}
 #+END_EXPORT
-The mean and variance of the GP predictive distribution $p(\desiredDynamicsFunc(\singleInput) \mid \singleInput)}$
+Approximate closed-form solutions exist for propagating uncertain inputs through GP models
+cite:girardGaussian2003,kussGaussian2006,quinonero-candelaPropagation2003.
+\todo{correct girard citation}
+This work exploits the moment-matching approximation
+implemented in the =uncertain_conditional= from GPflow cite:GPflow2017.
+For more details on the approximation see Section 7.2.1 of cite:kussGaussian2006.
+\todo{Add moment matching figure?}
+This work propagates model uncertainty forwards by cascading such one-step predictions.
 
-# $\mode{\hat{\mathbf{A}}} = \gatingKernel(\singleInput, \gatingInducingInput)\left(\expertKernel(\gatingInducingInput, \gatingInducingInput)\right)^{-1}$.
+# The transition density $\transitionDist$ can be obtained
+# by recursive moment-matching
+# This is the case when using a GP model to simulate more than a single time step.
 
-*** old
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-}
+# q(\desiredDynamicsFunc(\singleInput) ) = \int  \underbrace{q(\desiredDynamicsFunc(\singleInput) \mid \singleInput)}_{\text{GP predictive dist}}
+# p(\singleInput) \text{d}\singleInput.
+# \end{align}
+# #+END_EXPORT
+
+
+
+# Importantly, given a trajectory where each state and control are normally distributed,
+# ${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$
+# and
+# ${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
+# the expected cost for a trajectory can be calculated in closed-form,
+
+
+
+*** old :noexport:
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-optimal-control-message-passing}
 p(\controlTraj \mid \state_{0}, \optimalVar_{0:\TimeInd}=1, \modelVar_{0:\TimeInd}=\desiredMode) &=
