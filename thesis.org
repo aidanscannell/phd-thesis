@@ -91,6 +91,8 @@ See more information [[https://tex.stackexchange.com/questions/68516/avoid-that-
 Self-explanatory.
 #+latex_header: \usepackage[colorlinks=true, citecolor=BrickRed, linkcolor=BrickRed, urlcolor=BrickRed]{hyperref}
 
+*** Cleverref
+#+latex_header: \usepackage[capitalise,noabbrev]{cleveref}
 *** Bookmarks
 
 The bookmark package implements a new bookmark (outline) organisation for package hyperref. This lets us change the "tree-navigation" associated with the generated pdf and constrain the menu only to H:2.
@@ -1068,13 +1070,13 @@ must be controlled subject to /constraints/ (for safety, efficiency, and so on).
 In contrast to simulation, the control of physical systems also has real-world consequences:
 components may get damaged, the system may damage its environment, or the system may catastrophically fail.
 As such, any learning-based control strategy deployed in the real-world, should handle both the uncertainty inherent
-to the environment, as well as the uncertainty introduced by learning from observations.
+to the environment, and the uncertainty introduced by learning from observations.
 # As such, any control strategy deployed in the real-world should ensure the safety of itself and
 # its surrounding environment.
 # Therefore, any control strategy deployed in the real-world should ensure the safety of itself and
 # its surrounding environment.
 
-Many dynamical systems exhibit multimodalities (in their transition dynamics), where some of the dynamics modes
+Many dynamical systems exhibit multimodalities (in their transition dynamics), where some dynamics modes
 \parmarginnote{multimodal systems}
 are believed to be /unoperatable/ or /undesirable/.
 These multimodalities may be due to spatially varying model parameters, for example,
@@ -1453,8 +1455,9 @@ probabilistic belief over which mode is responsible for predicting at a given in
 # * Background and Related Work
 ** maths :ignore:
 #+begin_export latex
+\newcommand{\gpDomain}{\ensuremath{\hat{\stateDomain}}}
 \newcommand{\inputDomain}{\ensuremath{\hat{\stateDomain}}}
-\newcommand{\outputDomain}{\ensuremath{\controlDomain}}
+\newcommand{\outputDomain}{\ensuremath{\stateDomain}}
 #+end_export
 ** intro :ignore:
 This chapter provides an overview of learning-based control and details the relevant background information
@@ -1572,6 +1575,8 @@ In our work we generally assume that there is no observation noise and therefore
 
 \newcommand{\dynamicsFunc}{\ensuremath{f}}
 
+\renewcommand{\u}{\ensuremath{\mathbf{u}}}
+
 \renewcommand{\allInput}{\ensuremath{\hat{\state}_{1:\TimeInd}}}
 \renewcommand{\allOutput}{\ensuremath{{\Delta\state}_{1:\TimeInd}}}
 #+END_EXPORT
@@ -1671,8 +1676,6 @@ via a /mathematical model/.
 state-space models
 dynamics models
 
-
-
 *** Discrete-Time Dynamical Systems
 When learning dynamical systems it is common that observations of the system
 are sampled from the underlying system at a fixed time step, $\Delta \timeInd=t_*$.
@@ -1692,14 +1695,792 @@ it is natural to consider the discrete-time representation of the dynamics,
 \end{align}
 #+END_EXPORT
 
-*** Bayesian Inference
+*** Gaussian Processes
+This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
+Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
+Introducing multivariate Gaussians is a natural place to start.
+
+# In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
+# of the inference in this thesis.
+
+**** Multivariate Gaussian Identities
+Gaussian distributions are very popular in machine learning and control theory. This is not only due to their
+natural emergence in statistical scenarios (central limit theorem) but also their intuitiveness and
+mathematical properties that render their manipulation tractable and easy.
+
+Consider a multivariate Gaussian whose random variables are partitioned into two vectors $\f$ and $\u$.
+The joint distribution takes the following form,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-joint-gaussian}
+\left[\begin{array}{c}
+      \f \\
+      \u
+\end{array}\right]
+\sim\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \bm\mu_{\f} \\
+      \bm\mu_{\u}
+ \end{array}\right]
+\left[\begin{array}{cc}
+      \bm\Sigma_{\f\f} & \bm\Sigma_{\f\u} \\
+      \bm\Sigma_{\u\f} & \bm\Sigma_{\u\u}
+ \end{array}\right]\right),
+\end{align*}
+#+END_EXPORT
+where $\bm\mu_{\f}$ and $\bm\mu_{\u}$ represent the mean vectors, $\bm\Sigma_{\f\f}$ and $\bm\Sigma_{\u\u}$
+represent the covariance matrices,
+and $\bm\Sigma_{\u\f}$ and $\bm\Sigma_{\f\u}$ represent the cross-covariance matrices.
+The marginalisation property of Gaussian distributions states that for two jointly Gaussian random variables,
+the marginals are also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-marginal}
+p(\f) &= \int p(\f, \u) \text{d}\u = \mathcal{N} \left(\f \mid \bm\mu_{\f}, \bm\Sigma_{\f\f} \right), \\
+p(\u) &= \int p(\f, \u) \text{d}\f = \mathcal{N} \left(\u \mid \bm\mu_{\u}, \bm\Sigma_{\u\u} \right).
+\end{align}
+#+END_EXPORT
+Conveniently, the conditional densities are also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-conditional}
+\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\u - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}\bm\Sigma_{\u\u}^{-1}\bm\Sigma_{\u\f} \right), \\
+\u \mid \f &\sim \mathcal{N} \left(\bm\mu_{\u} + \bm\Sigma_{\u\f} \bm\Sigma_{\f\f}^{-1}(\f - \bm\mu_{\f}), \bm\Sigma_{\u\u} - \bm\Sigma_{\u\f}\bm\Sigma_{\f\f}^{-1}\bm\Sigma_{\f\u} \right).
+\end{align}
+#+END_EXPORT
+Consider the case where $\u$ represents some observations and $\f$ represents a new test location.
+Eq. ref:eq-gaussian-conditional can be used to make
+inferences in the location $\f$ given the observations $\u$, i.e. make
+sophisticated interpolations on the measurements, based on their closeness.
+In real-world scenarios, it is desirable to consider the entire input domain, instead of simply
+pre-selecting a discrete set of locations.
+Gaussian processes provide this mathematical machinery.
+
+**** Gaussian Processes
+Informally, GPs are a generalisation of the multivariate Gaussian distribution, indexed by an
+input domain as opposed to an index set.
+Similar to how a sample from an $N-\text{dimensional}$ multivariate Gaussian is an $N-\text{dimensional}$ vector,
+a sample from a GP is a random function over its domain.
+Formally, a GP is defined as follows,
+#+BEGIN_EXPORT latex
+\begin{definition}[Gaussian process]
+A Gaussian process (GP) is a collection of random variables, any finite number of which
+have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
+\end{definition}
+#+END_EXPORT
+
+# More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
+More intuitively, a Gaussian process  is a distribution over functions $f(\cdot): \gpDomain \rightarrow \R$
+defined over an input domain $\gpDomain \in \R^{D_f}$.
+Whilst Gaussian distributions represent distributions over finite-dimensional vectors, GPs represent
+distributions over infinite-dimensional functions.
+\marginpar{mean and covariance functions}
+A GP is fully defined by a mean function $\mu(\cdot) : \gpDomain \rightarrow \R$ and a covariance
+function $k(\cdot, \cdot) : \gpDomain \times \gpDomain \rightarrow \R$ (also known as a kernel),
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-mean-cov}
+f(\cdot) &\sim \mathcal{GP}\left(\mu(\cdot), k(\cdot,\cdot) \right), \\
+\mu(\cdot) &= \E[f(\cdot)], \\
+k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))],
+\end{align}
+#+END_EXPORT
+Importantly, for a given set of training inputs from the
+\marginpar{Gaussian process prior}
+functions domain $~{\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}}$, the associated function values
+$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$,
+are jointly Gaussian.
+This results in an $N-\text{dimensional}$ multivariate Gaussian random variable $\mathbf{f}$, given by,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-marginal}
+\mathbf{f} \sim \mathcal{N}(\mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+\end{equation}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{myquote}
+A common kernel that is used throughout this dissertation is the Squared Exponential
+kernel with Automatic Relevance Determination (ARD), given by,
+\begin{equation} \label{eq-se-kernel}
+k(x, x') = \sigma_f^2 \exp\left(-\frac{1}{2} \sum_{d=1}^{D_f} \left( \frac{x_{d}- x'_{i}}{l_d} \right) \right),
+\end{equation}
+where $\sigma_f^2$ represent the signal variance and $l_d$ is a lengthscale parameter associated with
+input dimension $d$.
+The lengthscale parameter determines the length of the "wiggles" in the function and
+the signal variance $\sigma_f^2$ determines the average deviation of the function from its mean.
+\end{myquote}
+#+END_EXPORT
+Given mean and kernel functions with parameters $\bm\theta$, the marginal distribution is given by,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+\end{equation}
+#+END_EXPORT
+where the dependency on the parameters $\bm\theta$ has been dropped, i.e.
+$p(\f \mid \mathbf{X}) = p(\f \mid \mathbf{X}, \bm\theta)$.
+This simplification will be used throughout this dissertation for notational conciseness.
+By definition, these observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
+\marginpar{jointly Gaussian}
+$f_* = f(\mathbf{x}_*)$ at a new test input,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-gp-joint}
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      f^{*}
+\end{array}\right]
+\sim\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \mu(\mathbf{X}) \\
+      \mu(\mathbf{x}_{*})
+ \end{array}\right]
+\left[\begin{array}{cc}
+      k(\mathbf{X}, \mathbf{X}) & k(\mathbf{X},\mathbf{x}_{*}) \\
+      k(\mathbf{x}_{*},\mathbf{X}) & k(\mathbf{x}_{*},\mathbf{x}_{*})
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+Given the multivariate Gaussian conditionals in Eq. ref:eq-gaussian-conditional, it is easy to see how
+the distribution over the test function value $f_*$,
+\marginpar{noise-free predictions}
+can be obtained by conditioning on the observations,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-prediction}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
+\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} (\mathbf{f} - \mu(\mathbf{X})) \nonumber\\
+\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) - k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} k(\mathbf{X}, \mathbf{x}_*). \nonumber
+\end{align}
+#+END_EXPORT
+
+It is typical in real-world modelling scenarios that observations of the true function values $\f$
+are not directly accessible.
+\marginpar{predictions with noise}
+Instead, observations are usually corrupted by noise,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-noisy}
+\mathbf{y} = f(\mathbf{x}) + \epsilon, \quad \epsilon \sim \mathcal{N}\left( \mathbf{0}, \sigma^2_{n} \mathbf{I} \right).
+\end{align}
+#+END_EXPORT
+where $\sigma^2_n$ is the noise variance.
+In this scenario, the function values $\f$ become latent variables and a Gaussian likelihood
+is introduced,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-likelihood}
+p(\mathbf{y} \mid \f) = \mathcal{N}\left( \mathbf{y} \mid \f, \sigma^2_{n} \mathbf{I} \right),
+\end{align}
+#+END_EXPORT
+to relate the observations to the latent function values $\f$.
+The predictive distribution for a test input $\mathbf{x}_*$ follows from Eq. ref:eq-gaussian-conditional,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-prediction-noisy}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{y}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
+\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X})
+\left(k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right)^{-1} (\mathbf{y} - \mu(\mathbf{X})) \nonumber\\
+\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) -
+k(\mathbf{x}_*, \mathbf{X})
+\left( k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right))^{-1}
+k(\mathbf{X}, \mathbf{x}_*). \nonumber
+\end{align}
+#+END_EXPORT
+This predictive distribution is the GP posterior.
+
+
+**** Bayesian Model Selection label:sec-bayesian-model-selection
+#+BEGIN_EXPORT latex
+\newcommand{\weights}{\ensuremath{\mathbf{w}}}
+\newcommand{\hyperparameters}{\ensuremath{\bm\theta}}
+\newcommand{\modelStructures}{\ensuremath{\mathcal{H}_i}}
+\newcommand{\weightPrior}{\ensuremath{p(\weights \mid \hyperparameters, \modelStructures)}}
+\newcommand{\weightLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \weights, \modelStructures)}}
+\newcommand{\weightMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \hyperparameters, \modelStructures)}}
+\newcommand{\weightPosterior}{\ensuremath{p(\weights \mid \mathbf{y}, \mathbf{X}, \hyperparameters, \modelStructures)}}
+
+\newcommand{\hyperPrior}{\ensuremath{p(\hyperparameters \mid \modelStructures)}}
+\newcommand{\hyperLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \hyperparameters, \modelStructures)}}
+\newcommand{\hyperMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \modelStructures)}}
+\newcommand{\hyperPosterior}{\ensuremath{p(\hyperparameters \mid \mathbf{y}, \mathbf{X}, \modelStructures)}}
+
+\newcommand{\modelPrior}{\ensuremath{p(\modelStructures)}}
+\newcommand{\modelLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \modelStructures)}}
+\newcommand{\modelMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X})}}
+\newcommand{\modelPosterior}{\ensuremath{p(\modelStructures \mid \mathbf{y}, \mathbf{X})}}
+#+END_EXPORT
+The /posterior/ distribution in Eq. ref:eq-gp-prediction-noisy considers a fixed covariance function.
+In most practical applications it is hard to specify all components of the covariance function /a priori/.
+Although some properties of the underlying function may be known, such as stationarity,
+it may not be easy to specify the hyperparameters, e.g. lengthscales.
+The parameters of the /likelihood/ may also be hard to specify /a priori/, e.g. noise variance.
+In order to deploy Gaussian process models in practical applications it is important to address
+this model selection problem.
+
+
+
+Bayesian model selection provides a principled framework for performing learning in probabilistic models.
+This section gives a brief overview of the main ideas in Bayesian model selection.
+The overview is general but highlights the difficulties that arise when working with Gaussian
+process models.
+
+In machine learning it is common to use hierarchical models.
+At the lowest level are model parameters $\weights$, such as the weights of a neural network,
+or the weights in linear regression.
+\marginpar{hierarchical models}
+At the next level are hyperparameters $\hyperparameters$, which serve as parameters in the distributions
+over the model parameters at the lowest level.
+For example, kernel hyperparameters in Gaussian process regression or the weight decay term in
+neural networks.
+At the highest level is the underlying model structure,
+that is, there may be a set of (discrete) model structures $\modelStructures$ to be considered.
+For example, the functional form of the covariance function.
+
+*Maximum Likelihood*
+Let us quickly introduce a simple (non Bayesian) approach to finding the best
+values for the parameters.
+This approach finds the best parameter settings by maximising the likelihood $\weightLikelihood$
+with respect to the parameters $\weights$.
+\marginpar{maximum likelihood}
+This approach is known as maximum likelihood and is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-maximum-likelihood}
+\weights = \text{arg}\max_{\weights} \weightLikelihood,
+\end{align}
+#+END_EXPORT
+This obtains a point estimate for the "best" parameter values $\weights$.
+Unfortunately, as the likelihood function is higher for more complex model structures,
+this approach leads to overfitting.
+
+# This can be overcome by noticing that integrating out the parameters (instead of optimising them),
+# automatically protects from overfitting.
+A more principled approach -- that overcomes overfitting -- is to treat the parameters as random variables
+(i.e. place priors over them), and integrate them out (instead of optimising them).
+This is advantageous as it considers all possible settings of the parameters,
+penalising complex models and preventing overfitting.
+This is known as /Bayesian Occam's razor/ citep:mackayProbable1995,rasmussenOccam2001,murrayNote2005
+named after the principle of /Occam's razor/ (William of Occam 1285-1349).
+The principle says that "one should pick the simplest model that adequately explains the data".
+# This provides automatic Occam's razor, penalising complex models and preventing overfitting.
+# and returns the
+# posterior distribution $p(\mathbf{\Theta} | \mathbf{Y})$ over the unknown variables,
+# in contrast to the point estimate in maximum likelihood.
+
+Model selection takes place one step at a time, by repeatedly applying the rules of probability theory,
+see cite:mackayBayesian1992 for more details on this framework.
+At the lowest level, the /posterior/ distribution over the model parameters $\weightPosterior$
+\marginpar{level 1 inference}
+is obtained via Bayes' rule,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-bayes-rule-1}
+\weightPosterior = \frac{\weightLikelihood \weightPrior}{\weightMarginalLikelihood}
+\end{align}
+#+END_EXPORT
+where $\weightLikelihood$ is the /likelihood/, a statistical model relating the data to the model
+parameters and $\weightPrior$ is the /prior/ over the parameters.
+The /prior/ distribution encodes our initial belief in the parameters.
+It may take a particular form to reflect the underlying structure of the problem, or
+it may be broad to reflect having little prior knowledge.
+The /posterior/ is the object of interest because it
+combines information from the /prior/ distribution, with information from the data,
+via the /likelihood/.
+The denominator $\weightMarginalLikelihood$ is a normalising constant and is independent of the model
+parameters $\weights$. It is known as the /marginal likelihood/  (or evidence) and is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-marginal-likelihood-1}
+\weightMarginalLikelihood = \int \weightLikelihood \weightPrior \text{d} \weights,
+\end{align}
+#+END_EXPORT
+where the variables of interest (the model parameters $\weights$) have been integrated out of the
+joint distribution.
+So far so good, however, how should the hyperparameters $\hyperparameters$ be set?
+The same process can be repeated to obtain the /posterior/ distribution over the
+\marginpar{level 2 inference}
+hyperparameters,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-bayes-rule-2}
+\hyperPosterior = \frac{\hyperLikelihood \hyperPrior}{\hyperMarginalLikelihood}
+\end{align}
+#+END_EXPORT
+where $\hyperPrior$ is the /hyper-prior/, a prior over the hyperparameters.
+Notice that the /marginal likelihood/ from the lowest level $\weightMarginalLikelihood$
+now takes the role of the /likelihood/. Similarly to before, the normalisation constant
+is given by integrating out the object of interest (the hyperparameters $\hyperparameters$),
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-marginal-likelihood-2}
+\hyperMarginalLikelihood = \int \hyperLikelihood \hyperPrior \text{d} \hyperparameters.
+\end{align}
+#+END_EXPORT
+Finally, at the top level, the /posterior/ distribution over the model structure $\modelPosterior$
+\marginpar{level 3 inference}
+is computed,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-bayes-rule-3}
+\modelPosterior = \frac{\modelLikelihood \modelPrior}{\modelMarginalLikelihood},
+\end{align}
+#+END_EXPORT
+where $\modelMarginalLikelihood = \sum_{i} \modelLikelihood \modelPrior$.
+It is important to note how performing Bayesian inference requires the computation of
+integrals in the denominator of Bayes' rule.
+These integrals are often not analytically tractable, due to details of the model.
+As such, approximate inference techniques are often required.
+These approximations may be analytical or based on Markov Chain Monte Carlo (MCMC) methods.
+
+*Type II Maximum Likelihood*
+In Gaussian process methods, the marginalisation of the hyperparameters in Eq. ref:eq-marginal-likelihood-2
+is often difficult.
+\marginpar{type II maximum likelihood}
+When it is not possible to marginalise all of the variables, the next best thing to a full Bayesian
+treatment -- without resorting to Maximum Likelihood --
+is to marginalise as many variables as possible, and optimise the remaining variables subject to maximising
+the /marginal likelihood/.
+This optimisation is known as Type II Maximum Likelihood and is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-type-2-maximum-likelihood}
+\weights &= \text{arg}\max_{\weights} \weightMarginalLikelihood \\
+&= \text{arg}\max_{\weights} \int \weightLikelihood \weightPrior \text{d} \weights,
+\end{align}
+#+END_EXPORT
+
+
+**** old :noexport:
+# The integral in Eq. ref:eq:type-2-ml is often always tractable so approximations
+
+# In Bayesian machine learning it is common to use GPs to formulate prior distributions over functions
+# $p(\f \mid \mathbf{X})$.
+# Different likelihood functions can be used to formulate GP regression and GP classification.
+# Selecting a Gaussian likelihood
+
+# It is possible to use GPs to place priors over functions in both the regression and classification settings.
+
+# Bayesian inference with GP priors and different likelihood functions
+# Performing Bayesian inference with GP priors and different likelihood functions
+
+#+BEGIN_EXPORT latex
+\begin{myquote}
+Bayesian machine learning seeks to update a prior belief over latent variables $p(\bm\theta)$
+given observations $\mathcal{D}$.
+Bayesian inference derives the posterior probability from the prior probability $p(\bm\theta)$
+and the likelihood function $p(\mathcal{D} \mid \bm\theta)$ --
+a statistical model for the observed data -- using Bayes rule,
+\begin{align} \label{eq-bayes-rule}
+\underbrace{p(\bm\theta \mid \mathcal{D})}_{\text{posterior}} = \frac{p(\mathcal{D} \mid \bm\theta) p(\bm\theta)}{p(\mathcal{D})}
+\propto \underbrace{p(\mathcal{D} \mid \bm\theta)}_{\text{likelihood}} \underbrace{p(\bm\theta)}_{\text{\prior}}
+\end{align}
+where $p(\mathcal{D})$ is the model evidence (aka marginal likelihood).
+Given the posterior distribution $p(\bm\theta \mid \mathcal{D})$, it is possible to make predictions by
+marginalising the latent variables -- known as Bayesian model averaging.
+\begin{align} \label{eq-bayes-ml-prediction}
+p(\mathbf{y}_* \mid \mathbf{x}_*, \mathcal{D} = \int
+p(\mathbf{y}_* \mid \mathbf{x}_*, \bm\theta, \mathcal{D})
+\underbrace{p(\bm\theta \mid \mathcal{D})}_{\text{posterior}}
+\text{d} \bm\theta
+\end{align}
+\end{myquote}
+#+END_EXPORT
+
+
+
+
+
+
+**** Model Selection for GP Regression
+Bayesian principles are an appealing framework for inference.
+However, for most interesting models arising in machine learning, the required computations
+(integrals over the latent variables) are analytically intractable.
+Gaussian process regression with Gaussian noise is a rare exception, where the posterior
+is analytically tractable Eq. ref:eq-gp-prediction-noisy.
+
+The power of Gaussian process regression arises from the tractability of the marginal likelihood of the
+observed outputs given the observed inputs.
+The marginal likelihood is the product of the Gaussian likelihood and the GP prior, with the latent
+variables integrated out,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-marginal-likelihood}
+p(\mathbf{y} \mid \mathbf{X}, \bm\theta) &= \int
+\underbrace{p(\mathbf{y} \mid \f)}_{\text{likelihood}}
+\underbrace{p(\f \mid \mathbf{X}, \bm\theta)}_{\text{GP prior}}
+\text{d}\f.
+%&= \mathcal{N} \left( \mathbf{y} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right).
+\end{align}
+#+END_EXPORT
+This marginalisation implies that a whole family of functions are simultaneously considered.
+The covariance function determines the properties of the functions (such as smoothness)
+and defines a nonparametric form of $f$.
+In this setting, the Gaussian process is used as the /prior/ over the latent function $f$
+and the Gaussian likelihood is used to relate the data to the model.
+Conditioning the /prior/ on the observed data obtains the /posterior/ distribution, which
+fits the data.
+
+Although GPs are nonparametric, the mean and kernel functions may contain hyperparameters $\bm\theta$.
+In practical settings, it is desirable to find the best hyperparameter settings given the observations.
+Unfortunately, specifying (hyper-)priors over the hyperparameters and marginalising them
+(Eq. ref:eq-marginal-likelihood-2), is often difficult for GP models.
+As such, it is common to resort to Type II Maximum Likelihood and maximise the log marginal likelihood
+with respect to the kernel hyperparameters $\bm\theta$ and noise variance $\sigma^2_n$.
+The log marginal likelihood is given by,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-gp-log-marginal-likelihood}
+\text{log} p(\mathbf{y} \mid \mathbf{X}, \bm\theta) =
+- \underbrace{\frac{1}{2} \mathbf{y}^T (k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I})^{-1} \mathbf{y}}_{\text{data fit}}
+- \underbrace{\frac{1}{2} \log \left| k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right|}_{\text{complexity penalty}}
+- \underbrace{\frac{n}{2} \log 2 \pi}_{\text{constant}}
+\end{align}
+\normalsize
+#+END_EXPORT
+The three terms in the log marginal likelihood have interpretable roles:
+1. Data fit term,
+   - $\frac{1}{2} \mathbf{y}^T (k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I})^{-1} \mathbf{y}$,
+2. Complexity penalty depending only on the covariance function and the inputs,
+   - $\frac{1}{2} \log | k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} |$,
+3. Normalisation constant,
+   - $\frac{n}{2} \log 2 \pi$.
+Importantly, as discussed in Section ref:sec-bayesian-model-selection,
+maximising the log marginal likelihood automatically balances the trade-off
+between model complexity and data fit, i.e. it provides automatic Occam's razor.
+The resulting optimisation is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-type-2-maximum-likelihood}
+\bm\theta = \text{arg}\max_{\bm\theta} \log p(\mathbf{y} \mid \mathbf{X}, \bm\theta)
+= \text{arg}\max_{\bm\theta} \log \int p(\mathbf{y} \mid \f) p(\f \mid \mathbf{X}, \bm\theta) \text{d} \f.
+\end{align}
+#+END_EXPORT
+
+# Making predictions in Eq. ref:eq-gp-prediction-noisy is computationally expensive due to conditioning
+
+
+**** Sparse Gaussian Processes
+The nonparametric nature of Gaussian process methods is responsible for their flexibility but also
+their shortcomings, namely their memory and computational limitations.
+In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
+due to the inversion of the $N \times N$ covariance matrix $k(\mathbf{X},\mathbf{X})$.
+This makes its application to data sets with more than a few thousand data points prohibitive.
+The main direction in the literature attempting to overcome this limitation is sparse approximations
+cite:titsiasVariational2009,snelsonSparse2005a,quinonero-candelaUnifying2005,leibfriedTutorial2021.
+Many approximation schemes have been proposed to reduce the computational complexity, see
+cite:quinonero-candelaUnifying2005 for a review.
+
+
+# The log marginal likelihood in Eq. ref:eq-gp-log-marginal-likelihood is computationally
+# expensive due to the inversion of the covariance matrix evaluated between all of the
+# training inputs $\mathbf{X}$.
+# In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
+# due to the inversion of the covariance matrix $k(\mathbf{X},\mathbf{X})$.
+
+
+***** Variational Sparse Gaussian Processes
+
+**** Sparse Gaussian Processes for Regression label:sec-sparse-gps
+
+Consider another Gaussian density $q(\u)$ over the vector $\u$, as well as $p(\u)$, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-marginal-q}
+q(\u) &= \mathcal{N} \left(\u \mid \mathbf{m}_{\u}, \mathbf{S}_{\u\u} \right)
+\end{align}
+#+END_EXPORT
+with mean $\mathbf{m}_{\u}$ and covariance $\mathbf{S}_{\u\u}$.
+The marginal distribution over $\f$ can be obtained by conditioning on $\u$ and marginalising w.r.t. this
+new distribution $q(\f) = \int p(\f \mid \u) q(\u) \text{d} \u$.
+This marginal distribution is also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-conditional-q}
+\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\mathbf{m}_{\u} - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}
+\bm\Sigma_{\u\u}^{-1}
+\left(\bm\Sigma_{\u\u} - \mathbf{S}_{\u\u} \right)
+\bm\Sigma_{\u\u}^{-1}
+\bm\Sigma_{\u\f} \right).
+\end{align}
+#+END_EXPORT
+Replacing $q(\u)$ with $p(\u)$ would recover the original marginal distribution $p(\f)$ with
+mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from Eq. ref:eq-gaussian-marginal.
+
+
+
+
+This work focuses on inducing point methods citep:snelsonSparse2005a, where the latent variables
+are augmented with inducing input-output pairs known as inducing "inputs" $\Z \in \inputDomain$, and inducing
+"variables" $\uF = f(\Z)$.
+Introducing a set of $M$ inducing points from the same GP prior
+$p(\uF \mid \Z) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mu(\Z), k(\Z, \Z))$
+can reduce the computational cost
+if $M < N$.
+Note that these inducing variables $\uF$ are jointly gaussian with the latent function values $\F$,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-spare-gp-joint}
+p(\mathbf{f}, \uF \mid \mathbf{X}) =\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      \uF
+\end{array}\right]
+      \mid \bm{0} ,
+\left[\begin{array}{cc}
+      \mathbf{K}_{nn} & \mathbf{K}_{nm} \\
+      \mathbf{K}_{nm}^{T} & \mathbf{K}_{mm}
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+where $\K_{mm}$ is the covariance function evaluated between all inducing inputs $\Z$, and
+$\K_{nm}$ is the covariance function evaluated between the data inputs $\mathbf{X}$ and the inducing inputs $\Z$.
+This joint distribution can be re-written using the properties of multivariate normal distributions as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-joint-cond}
+p(\mathbf{f}, \uF \mid \mathbf{X}) &= p(\mathbf{f} \mid \uF) p(\uF \mid \mathbf{X}) \\
+&= \mathcal{N}(\mathbf{f} \mid \mathbf{K}_{nm} \mathbf{K}_{mm}^{-1} \uF, \mathbf{K}_{nn} - \mathbf{Q}_{nn})
+\mathcal{N}(\uF \mid \mathbf{0}, \mathbf{K}_{mm})
+\end{align}
+#+END_EXPORT
+where $\mathbf{Q}_{nn} = \mathbf{K}_{nm}\mathbf{K}_{mm}^{-1}\mathbf{K}_{nm}^{T}$.
+The full joint distribution is then given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-full-joint}
+p(\mathbf{y}, \mathbf{f}, \uF \mid \mathbf{X}) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \uF) p(\uF \mid \mathbf{X})
+\end{align}
+#+END_EXPORT
+Computationally efficient inference is obtained by approximating the integration over $\mathbf{f}$.
+\marginpar{FITC}
+The popular Fully Independent Training Conditional (FITC) method (in the case of a Gaussian likelihood)
+is obtained via the factorisation: $p(\mathbf{y} \mid \uF) \approx \prod^{N}_{n=1} p(y_{n} \mid \uF)$.
+To obtain a variational approximation Jensen's inequality is first used to bound this conditional,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-bound-cond}
+\text{log}p(\mathbf{y}\mid\uF) \geq \E_{p(\F \mid \uF)} \left[ \text{log} p(\mathbf{y} \mid \F) \right] := \mathcal{L}_{1}.
+\end{align}
+#+END_EXPORT
+This is the standard bound shown in cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
+In cite:titsiasVariational2009 this bound is then substituted into the marginal likelihood
+to obtain a tractable lower bound,
+\marginpar{Titsias' bound}
+#+BEGIN_EXPORT latex
+\begin{align}
+\text{log} p(\mathbf{y} \mid \mathbf{X})
+&= \text{log} \E_{p(\uF \mid \mathbf{X})} \left[ p(\mathbf{y} \mid \uF) \right] \\
+&\geq \text{log} \E_{p(\uF \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] := \mathcal{L}_{\text{titsias}} \label{eq-titsias-bound-2} \\
+&= \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
+- \frac{1}{2\sigma^2}\text{tr}(\K_{nn} - \mathbf{Q}_{nn}) \label{eq-titsias-bound},
+\end{align}
+#+END_EXPORT
+where $\sigma^2$ is the noise variance associated with the Gaussian likelihood.
+The bound in Eq. ref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
+when the inducing inputs $\Z$ equal the
+data inputs $\mathbf{X}$ as $\K_{nm}=\K_{mm}=\K_{nn}$ so $\mathbf{Q}_{nn}=\K_{nn}$.
+
+cite:hensmanGaussian2013 noted that this bound has complexity $O(NM^{2})$ so
+introduced additional variational parameters to achieve a more computationally scalable bound
+with complexity $O(M^{3})$.
+Instead of collapsing the inducing points in Eq. ref:eq-titsias-bound
+they explicitly represent them as a variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq--inducing-dist}
+q(\uF) = \mathcal{N}\left(\uF \mid \mathbf{m}, \mathbf{S} \right),
+\end{align}
+#+END_EXPORT
+which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf{X})$ by
+\marginpar{Hensman's bound}
+further bounding $\mathcal{L}_{\text{titsias}}$,
+#+BEGIN_EXPORT latex
+\begin{align}
+\mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\uF \mid \mathbf{X})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
+&\geq \E_{q(\uF)} \left[ \mathcal{L}_{1} \right]
+- \text{KL}\left[q(\uF) \mid\mid p(\uF \mid \mathbf{X})\right] \\
+&\geq \E_{q(\F)} \left[ p(\mathbf{y} \mid \F) \right]
+- \text{KL}\left[q(\uF) \mid\mid p(\uF \mid \mathbf{X})\right] := \mathcal{L}_{\text{hensman}}, \label{eq-hensman-bound}
+\end{align}
+#+END_EXPORT
+where $q(\F) = \int p(\F \mid \uF) q(\uF) \text{d} \uF$.
+This is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
+If the likelihood factorizes across data $p(\mathbf{y} \mid \F) = \prod_{n=1}^{N} p(y_{n} \mid f_{n})$
+only the marginals of $q(\F)$ are needed to calculate Eq. ref:eq-hensman-bound,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-3-fact}
+\mathcal{L}_{\text{hensman}}
+= \sum_{n=1}^{N}\E_{q(f_{n})} \left[ \text{log} p(y_{n} \mid f_{n}) \right]
+- \text{KL}\left[q(\uF) \mid\mid p(\uF \mid \mathbf{X}) \right].
+\end{align}
+#+END_EXPORT
+Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
+to preform stochastic gradient methods on $q(\uF)$.
+
+
+
+**** Variational Inference :noexport:
+\todo{seek to convert inference into an optimisation}
+
+Variational approaches seek to lower bound the marginal likelihood (or evidence) $p(\mathbf{Y})$ using a functional that depends on variational parameters $q(\mathbf{\Theta})$.
+
+#+BEGIN_EXPORT latex
+\begin{align}
+	\text{log}\ p(\mathbf{Y}) &= \text{log} \int p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta} = \text{log} \int p(\mathbf{Y} | \mathbf{\Theta}) p(\mathbf{\Theta}) \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \int \frac{q(\mathbf{\Theta})}{q(\mathbf{\Theta})} p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \int q(\mathbf{\Theta}) \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \E_{q(\mathbf{\Theta})} \bigg[ \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \bigg]
+	\\
+	&\geq \E_{q(\mathbf{\Theta})} \bigg[ \text{log} \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \bigg]
+\end{align}
+#+END_EXPORT
+
+The bound becomes exact if $q(\mathbf{\Theta}) = p(\mathbf{\Theta} | \mathbf{Y})$. The true posterior is intractable but the variational posterior $q(\mathbf{\Theta})$ must be constrained (so that it is tractable). It is common to factorise $q(\mathbf{\Theta})$ with respect to groups of elements belonging to parameter set $\mathbf{\Theta}$, this is known as mean field approximation.
+
+
+
+**** Sparse Gaussian Processes :noexport:
+A GP cite:edwardrasmussenGaussian2010 is a distribution over functions $f : \R^{D_f} \rightarrow \R$
+fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$.
+For a given set of inputs  from the
+functions domain $\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}$ the associated function values
+$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$
+are jointly Gaussian,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \bm\mu_{\mathbf{X}}, \mathbf{K}_{\mathbf{X}, \mathbf{X}})
+\end{equation}
+#+END_EXPORT
+where $\bm\mu_{\mathbf{X}}= \mu(\mathbf{X})$ is the mean vector, and
+$\mathbf{K}_{\mathbf{X},\mathbf{X}} = k(\mathbf{X}, \mathbf{X})$ is the covariance function evaluated
+between the inputs $\mathbf{X}$.
+In this work, the squared exponential covariance function with Automatic Relevance Determination
+is used for all GPs.
+The distribution over the function value $f_*$ at a new input $\mathbf{x}_*$ (i.e. to make a prediction)
+is given by the conditional,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-gp-prediction}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2) \numberthis \\
+\mu &= \mu_{\mathbf{x}_*} + \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} (\mathbf{f} - \bm\mu_{\mathbf{X}}) \\
+\sigma^2 &= k_{\mathbf{x}_*, \mathbf{x}_*} - \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} \mathbf{k}_{\mathbf{X}, \mathbf{x}_*}.
+\end{align*}
+#+END_EXPORT
+The conditional in Eq. ref:eq-gp-prediction is computationally expensive due to conditioning
+on all of the training data $\mathbf{X}, \mathbf{f}$.
+Introducing a set of $M$ inducing points from the same GP prior can reduce the computational cost
+if $M < N$.
+The inducing inputs are denoted $\bm\xi$ and outputs as
+$\hat{\mathbf{f}} = f(\bm\xi)$.
+The inducing variables
+$\hat{\mathbf{f}}$ are jointly Gaussian with the latent function values $\mathbf{f}$.
+The GP predictive distribution can be approximated by conditioning on this
+smaller set of inducing variables,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-prediction}
+p({f}_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &\approx
+p({f}_* \mid \mathbf{x}_*, \hat{\mathbf{f}}, \bm\xi) \\
+p(\hat{\mathbf{f}}) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mathbf{m}, \mathbf{S}).
+\end{align}
+#+END_EXPORT
+The approximation becomes exact when the
+inducing variables $\hat{\mathbf{f}}$ are a sufficient statistic
+for the latent function values $\mathbf{f}$ cite:Titsias2009.
+# The predicted latent function values are then mutually independent given the inducing variables.
+# A central assumption is that given enough well
+# placed inducing variables $\hat{\mathbf{f}}$ they are a
+# sufficient statistic for the latent function values $\mathbf{f}$.
+
+*** Gaussian Processes :noexport:
+This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
+In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
+of the inference in this thesis.
+
+
+#+BEGIN_EXPORT latex
+\begin{definition}[Gaussian process]
+A Gaussian process (GP) is a collection of random variables, any finite number of which
+have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
+\end{definition}
+#+END_EXPORT
+
+# More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
+More intuitively, a Gaussian process  is a distribution over functions $f(\cdot): \inputDomain \rightarrow \R$
+defined over an input domain $\inputDomain \in \R^{D_f}$.
+Whilst Gaussian distributions represent distributions over finite-dimensional vectors, GPs represent
+distributions over infinite-dimensional functions. Vector indexes in multivariate Gaussian random variables
+correspond to evaluation points $\mathbf{X} \in \inputDomain$ in GP random functions.
+\marginpar{mean and covariance functions}
+A GP is fully defined by a mean function $\mu(\cdot) : \inputDomain \rightarrow \R$ and a covariance
+function $k(\cdot, \cdot) : \inputDomain \times \inputDomain \rightarrow \R$ (also known as a kernel),
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-mean-cov}
+f(\cdot) &\sim \mathcal{GP}\left(\mu(\cdot), k(\cdot,\cdot) \right), \\
+\mu(\cdot) &= \E[f(\cdot)], \\
+k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))],
+\end{align}
+#+END_EXPORT
+Importantly, for a given set of training inputs from the
+\marginpar{Gaussian process prior}
+functions domain $~{\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}}$, the associated function values
+$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$,
+are jointly Gaussian.
+This results in an $N-\text{dimensional}$ multivariate Gaussian random variable $\mathbf{f}$.
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+\mathbf{f} \sim \mathcal{N}(\mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+\end{equation}
+#+END_EXPORT
+By definition, the training observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
+\marginpar{jointly Gaussian}
+$f_*$ at any new test input $\mathbf{x}_*$,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-spare-gp-joint}
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      f^{*}
+\end{array}\right]
+\sim\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \mu(\mathbf{X}) \\
+      \mu(\mathbf{x}_{*})
+ \end{array}\right]
+\left[\begin{array}{cc}
+      k(\mathbf{X}, \mathbf{X}) & k(\mathbf{X},\mathbf{x}_{*}) \\
+      k(\mathbf{x}_{*},\mathbf{X}) & k(\mathbf{x}_{*},\mathbf{x}_{*})
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+
+# The prior distribution over $\mathbf{f}$ is then given by,
+# #+BEGIN_EXPORT latex
+# \begin{equation} \label{eq-gp-prior}
+# p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+# \end{equation}
+# #+END_EXPORT
+# By definition, the training observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
+# \marginpar{jointly Gaussian}
+# $f_*$ at a new test input $\mathbf{x}_*$,
+# #+BEGIN_EXPORT latex
+# \begin{align*} \label{eq-spare-gp-joint}
+# \left[\begin{array}{c}
+#       \mathbf{f} \\
+#       f^{*}
+# \end{array}\right]
+# \sim\ &\mathcal{N}\left(
+#       \bm{0} ,
+# \left[\begin{array}{cc}
+#       k(\mathbf{X}, \mathbf{X}) & k(\mathbf{X},\mathbf{x}_{*}) \\
+#       k(\mathbf{x}_{*},\mathbf{X}) & k(\mathbf{x}_{*},\mathbf{x}_{*})
+#  \end{array}\right]\right).
+# \end{align*}
+# #+END_EXPORT
+The distribution over the test function value $f_*$ (i.e. to make a prediction)
+\marginpar{noise-free predictions}
+can therefore easily be obtained by conditioning on the prior observations.
+This is easily obtained using the properties of multivariate Normal distributions to give
+the predictive conditional distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-prediction}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
+\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} (\mathbf{f} - \mu(\mathbf{X})) \nonumber\\
+\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) - k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} k(\mathbf{X}, \mathbf{x}_*). \nonumber
+\end{align}
+#+END_EXPORT
+The conditional in Eq. ref:eq-gp-prediction is computationally expensive due to conditioning
+on all of the training data $\mathbf{X}, \mathbf{f}$.
+The computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$
+due to the inversion of the covariance matrix $k(\mathbf{X},\mathbf{X})$.
+Many approximation schemes have been proposed to reduce the computational complexity, see
+cite:quinonero-candelaUnifying2005 for a review.
+
+**** Bayesian Inference with Gaussian Processes
+
+
+\todo{introduce noisy outputs and Gaussian likelihood}
 
 Suppose we have some observations $\mathbf{Y}$ generated from a family of models $p(\mathbf{Y}, \mathbf{\Theta})$, where $\mathbf{\Theta}$ represents the unknown random variables that the model depends on.
 
-**** Maximum Likelihood
+*Maximum Likelihood*
 In maximum likelihood we seek to find the best model by maximising the likelihood $p(\mathbf{Y} | \mathbf{\Theta})$. We obtain a point estimate for the "best" variables $\mathbf{\Theta}$. The likelihood function is higher for more complex model structures, leading to overfitting.
 
-**** Type II MLE/MAP
+*Type II MLE/MAP*
 Bayesian methods overcome overfitting by treating the model parameters as random variables and averaging over the likelihood for different settings of the parameters. They achieve this by maximising the logarithm of the marginal likelihood (or evidence) $p(\mathbf{Y})$,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq:type-2-ml}
@@ -1731,80 +2512,56 @@ Variational approaches seek to lower bound the marginal likelihood (or evidence)
 
 The bound becomes exact if $q(\mathbf{\Theta}) = p(\mathbf{\Theta} | \mathbf{Y})$. The true posterior is intractable but the variational posterior $q(\mathbf{\Theta})$ must be constrained (so that it is tractable). It is common to factorise $q(\mathbf{\Theta})$ with respect to groups of elements belonging to parameter set $\mathbf{\Theta}$, this is known as mean field approximation.
 
-*** Gaussian Processes
-This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
-In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
-of the inference in this thesis.
-
-#+BEGIN_EXPORT latex
-\begin{definition}[Gaussian process]
-A Gaussian process (GP) is a collection of random variables, any finite number of which
-have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
-\end{definition}
-#+END_EXPORT
-
-More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
-\marginpar{mean and covariance functions}
-fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-mean-cov}
-\mu(\mathbf{x}) &= \E[f(\mathbf{x})], \\
-k(\mathbf{x}, \mathbf{x}') &= \E[(f(\mathbf{x}) -\mu(\mathbf{x})) (f(\mathbf{x}') - \mu(\mathbf{x}'))],
-\end{align}
-#+END_EXPORT
-Importantly, for a given set of training inputs from the
-\marginpar{Gaussian process prior}
-functions domain $\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}$ the associated function values
-$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$
-are jointly Gaussian. The prior distribution over $\mathbf{f}$ is then given by,
-#+BEGIN_EXPORT latex
-\begin{equation} \label{eq-gp-prior}
-p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
-\end{equation}
-#+END_EXPORT
-By definition, the training observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
-\marginpar{jointly Gaussian}
-$f_*$ at a new test input $\mathbf{x}_*$,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-spare-gp-joint}
-\left[\begin{array}{c}
-      \mathbf{f} \\
-      f^{*}
-\end{array}\right]
-\sim\ &\mathcal{N}\left(
-      \bm{0} ,
-\left[\begin{array}{cc}
-      k(\mathbf{X}, \mathbf{X}) & k(\mathbf{X},\mathbf{x}_{*}) \\
-      k(\mathbf{x}_{*},\mathbf{X}) & k(\mathbf{x}_{*},\mathbf{x}_{*})
- \end{array}\right]\right).
-\end{align*}
-#+END_EXPORT
-The distribution over the test function value $f_*$ (i.e. to make a prediction)
-\marginpar{noise-free predictions}
-can therefore easily be obtained by conditioning on the prior observations.
-This is easily obtained using the properties of multivariate normal distributions to give
-the predictive conditional distribution,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-prediction}
-p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
-\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} (\mathbf{f} - \mu(\mathbf{X})) \nonumber\\
-\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) - k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} k(\mathbf{X}, \mathbf{x}_*). \nonumber
-\end{align}
-#+END_EXPORT
-The conditional in Eq. ref:eq-gp-prediction is computationally expensive due to conditioning
-on all of the training data $\mathbf{X}, \mathbf{f}$.
-The computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$
-due to the inversion of the covariance matrix $k(\mathbf{X},\mathbf{X})$.
-Many approximation schemes have been proposed to reduce the computational complexity, see
-cite:quinonero-candelaUnifying2005 for a review.
-
-\todo{introduce noisy outputs and Gaussian likelihood}
 
 
 
 **** Sparse Gaussian Processes for Regression label:sec-sparse-gps
-This work focuses on inducing point methods cite:snelsonSparse2005a, where the latent variables
-are augmented with inducing input-output pairs known as inducing "inputs" $\Z$, and inducing
+
+Consider another Gaussian density $q(\u)$ over the vector $\u$, as well as $p(\u)$, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-marginal-q}
+q(\u) &= \mathcal{N} \left(\u \mid \mathbf{m}_{\u}, \mathbf{S}_{\u\u} \right)
+\end{align}
+#+END_EXPORT
+with mean $\mathbf{m}_{\u}$ and covariance $\mathbf{S}_{\u\u}$.
+The marginal distribution over $\f$ can be obtained by conditioning on $\u$ and marginalising w.r.t. this
+new distribution $q(\f) = \int p(\f \mid \u) q(\u) \text{d} \u$.
+This marginal distribution is also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-conditional-q}
+\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\mathbf{m}_{\u} - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}
+\bm\Sigma_{\u\u}^{-1}
+\left(\bm\Sigma_{\u\u} - \mathbf{S}_{\u\u} \right)
+\bm\Sigma_{\u\u}^{-1}
+\bm\Sigma_{\u\f} \right).
+\end{align}
+#+END_EXPORT
+Replacing $q(\u)$ with $p(\u)$ would recover the original marginal distribution $p(\f)$ with
+mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from Eq. ref:eq-gaussian-marginal.
+
+
+Consider a set of $N$ random variable with a joint Gaussian distribution,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+\f \sim \mathcal{N}(\mathbf{f} \mid \bm\mu, \bm\Sigma_{\f\f})
+= (2\pi)^{-\frac{n}{2}} -\K_{ff}^{-\frac{1}{2}}\exp\left( - \frac{1}{2} \mathbf{f}^T \K_{ff}^{-1} \mathbf{F} \right)
+\end{equation}
+#+END_EXPORT
+
+
+
+
+The prior distribution over $\mathbf{f}$ is then given by,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X}))
+= (2\pi)^{-\frac{n}{2}} -\K_{ff}^{-\frac{1}{2}}\exp\left( - \frac{1}{2} \mathbf{f}^T \K_{ff}^{-1} \mathbf{F} \right)
+\end{equation}
+#+END_EXPORT
+
+
+This work focuses on inducing point methods citep:snelsonSparse2005a, where the latent variables
+are augmented with inducing input-output pairs known as inducing "inputs" $\Z \in \inputDomain$, and inducing
 "variables" $\uF = f(\Z)$.
 Introducing a set of $M$ inducing points from the same GP prior
 $p(\uF \mid \Z) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mu(\Z), k(\Z, \Z))$
@@ -3427,6 +4184,9 @@ up inference.
 %\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
 %\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
 \newcommand{\modeDomain}{\ensuremath{\mathcal{A}}}
+
+\newcommand{\tightBound}{\ensuremath{\mathcal{L}_{\text{tight}}}}
+\newcommand{\furtherBound}{\ensuremath{\mathcal{L}_{\text{further}}}}
 #+END_EXPORT
 
 ** Intro :ignore:
@@ -3521,7 +4281,7 @@ cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper[fn:1:Code accompany
 
 ** Problem Statement
 This work is interested in learning multimodal, stochastic, nonlinear dynamical systems,
-with continuous  states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
 $\control \in \controlDomain \subseteq \R^\ControlDim$, given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-cont}
@@ -3552,7 +4312,10 @@ is given by,
 \quad \text{if} \quad \modeVarK,
 \end{align}
 #+END_EXPORT
-where $\state_t \in \stateDomain$, $\control_t \in \controlDomain$ and $\alpha_t \in \modeDomain$
+where
+$\singleOutput = \state_{\timeInd} - \state_{\timeInd-1}$ is the change in state between time $\timeInd-1$
+and $\timeInd$ and
+$\state_t \in \stateDomain$, $\control_t \in \controlDomain$ and $\alpha_t \in \modeDomain$
 are the state, control and mode indicator variable at time, $t$, respectively.
 # Given the data set $\mathcal{D}$, the goal is to learn a predictive model that can predict the
 
@@ -3654,6 +4417,7 @@ for all dimensions as $\fkn$ and at all data points as $\Fk$.
 
 \newcommand{\moeLikelihood}{\ensuremath{p\left(\allOutput \mid \LatentFunc(\allInput), \GatingFunc (\allInput) \right)}}
 \newcommand{\singleMoeLikelihood}{\ensuremath{p\left(\singleOutput \mid \mode{\latentFunc}(\allInput), \GatingFunc (\allInput) \right)}}
+
 #+END_EXPORT
 *** Intro :ignore:
 This section first introduces mixture models as they are a natural choice for modelling
@@ -3779,6 +4543,7 @@ of directly capturing the correlations between all observations.
 # in this work.
 # The gating network is of particular importance in this work as it models how the dynamics switch
 # between modes over the input space.
+\todo{cite cite:trappDeep2020 cite:nguyenStochastic2018 and others. Check NeurIPS paper intro?}
 The gating network models how the dynamics switch between modes over the input space.
 It can be seen as a handle for encoding prior knowledge that can be used to constrain the set of admissible functions.
 It is of particular interest in this work as it
@@ -4632,6 +5397,7 @@ with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode.
 %\newcommand{\expertInducingVariational}{\ensuremath{q(\mode{\latentFunc}(\expertInducingInput))}}
 \newcommand{\expertInducingVariational}{\ensuremath{q(\expertInducingOutput)}}
 \newcommand{\expertsInducingVariational}{\ensuremath{q(\expertsInducingOutput)}}
+\newcommand{\expertVariational}{\ensuremath{q(\mode{\latentFunc}(\singleInput))}}
 \newcommand{\expertsVariational}{\ensuremath{q(\LatentFunc_\numData)}}
 %\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \mode{\latentFunc}(\expertInducingInput))}}
 \newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \expertInducingOutput)}}
@@ -4894,13 +5660,15 @@ variational posteriors are given by,
 \expertsVariational &= \prod_{\modeInd=1}^\ModeInd \mathcal{N} \left( \mode{\latentFunc}(\singleInput) \mid
 \mode{\mathbf{A}} \mode{\mathbf{m}},
 \expertKernel(\singleInput, \singleInput)
-+ (\mode{\mathbf{S}} - \expertKernel(\expertInducingInput,\expertInducingInput))
++ \mode{\mathbf{A}}
+(\mode{\mathbf{S}} - \expertKernel(\expertInducingInput,\expertInducingInput))
 \mode{\mathbf{A}}^T
 \right) \\
 \gatingsVariational &= \prod_{\modeInd=1}^\ModeInd \mathcal{N} \left( \mode{\gatingFunc}(\singleInput) \mid
 \mode{\hat{\mathbf{A}}} \mode{\hat{\mathbf{m}}},
 \gatingKernel(\singleInput, \singleInput)
-+ (\mode{\hat{\mathbf{S}}} - \gatingKernel(\gatingInducingInput,\gatingInducingInput))
++ \mode{\hat{\mathbf{A}}}
+(\mode{\hat{\mathbf{S}}} - \gatingKernel(\gatingInducingInput,\gatingInducingInput))
 \mode{\hat{\mathbf{A}}}^T
 \right), \label{eq--variational-posteriors-functional-gating}
 \end{align}
@@ -4922,16 +5690,73 @@ in practice only use single samples because the added stochasticity helps the op
 The bound in Eq. ref:eq-lower-bound-further meets the necessary conditions to perform stochastic
 gradient methods on $\expertsInducingVariational$ and $\gatingsInducingVariational$.
 Firstly, it contains a sum of $\NumData$ terms corresponding to input-output pairs, enabling optimisation
-with mini-batches,
-and secondly, the expectation over the log-likelihood is calculated using Monte Carlo samples.
+with mini-batches.
+Secondly, the expectation over the log-likelihood is calculated using Monte Carlo samples.
+
+*Stochastic Optimisation*
+At each iteration $i$, a random subset of $\NumData_b$ data points are sampled from the data set $\mathcal{D}$,
+to get a minibatch $\mathcal{D}_i = \{d_n\}_{n=1}^{\NumData_b}$, where $d_n$ represents a single
+input-output pair.
+The ELBO is then approximated by,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-approx-lower-bound-further}
+# \hat{\mathcal{L}}_{2} = \frac{\NumData}{\NumData_b} \sum_{\singleInput, \singleOutput \in \mathcal{D}_i}
+# &\E_{\gatingsVariational \expertsVariational}
+# \left[ \text{log} \sum_{\modeInd=1}^{\ModeInd} \singleGatingLikelihood \singleExpertLikelihood \right] \\
+# &- \gatingsKL - \expertsKL.
+# \end{align}
+# #+END_EXPORT
+#+BEGIN_EXPORT latex
+\renewcommand{\expertSampleInd}{\ensuremath{s}}
+\renewcommand{\ExpertSampleInd}{\ensuremath{S}}
+\renewcommand{\gatingSampleInd}{\ensuremath{\hat{s}}}
+\renewcommand{\GatingSampleInd}{\ensuremath{\hat{S}}}
+\renewcommand{\batchSampleInd}{\ensuremath{n}}
+\newcommand{\singleExpertLikelihoodSample}{\ensuremath{p\left(\y_{\batchSampleInd} \mid \mode{f}(\x_{\batchSampleInd-1})^{(\expertSampleInd)}\right)}}
+\newcommand{\singleGatingLikelihoodSample}{\ensuremath{\Pr\left(\alpha_\batchSampleInd = \modeInd \mid \GatingFunc(\x_{\batchSampleInd-1})^{(\gatingSampleInd)} \right)}}
+\small
+%\sum_{\singleInput, \singleOutput \in \mathcal{D}_i}
+\begin{align} \label{eq-approx-lower-bound-further}
+\hat{\mathcal{L}}_{2} &= \frac{\NumData}{\NumData_b}
+\sum_{d_n \in \mathcal{D}_i}
+\left(
+\frac{1}{\ExpertSampleInd} \sum_{\expertSampleInd=1}^{\ExpertSampleInd}
+\frac{1}{\GatingSampleInd} \sum_{\gatingSampleInd=1}^{\GatingSampleInd} \nonumber
+\text{log} \sum_{\modeInd=1}^{\ModeInd} \singleGatingLikelihoodSample \singleExpertLikelihoodSample \right)  \\
+&- \gatingsKL - \expertsKL, \\
+\text{where} \quad &\mode{\latentFunc}(\x_{\batchSampleInd-1})^{(\expertSampleInd)} \sim \expertVariationalSample, \\
+&\mathbf{\gatingFunc}(\x_{\batchSampleInd-1})^{(\gatingSampleInd)} \sim \gatingsVariationalSample
+\end{align}
+\normalsize
+#+END_EXPORT
+The variational distributions over the inducing variables are represented using the mean vector $\mode{\mathbf{m}}$
+and lower triangular $\mode{\mathbf{L}}$ of the covariance matrix
+$\mode{\mathbf{S}} = \mode{\mathbf{S}} \mode{\mathbf{S}}^T$.
+A downside to this formulation is that $(\ModeInd^2)(M-1)M/2 + \ModeInd^2 M$ extra parameters need to be optimised.
+In the two expert case this reduces to $(\ModeInd+1)(M-1)M/2 + (\ModeInd+1) M$ extra parameters.
+Optimising the inducing inputs, $\gatingInducingInput$ and $\expertsInducingInput$, introduces a further
+$M(\StateDim+\ControlDim)$ optimisation parameters.
+
 The inducing inputs $\{\Z\}_{\modeInd=1}^{\ModeInd}$, kernel hyperparameters and noise variances, are treated as
 variational hyperparameters and optimised alongside the variational parameters, using stochastic gradient descent
 e.g. Adam citep:kingmaAdam2017.
 
 Note that the augmented model captures the dependencies in the joint distribution of the data through the
 inducing variables, but as $M \ll \NumData$ these have a much lower computational burden.
-Given a batch of $\NumData_b$ observations, this bound has complexity
+
+*Computational Complexity* Assuming that each of the experts have the same number of inducing points $M$,
+the cost of computing the KL divergences and their derivatives, is $\mathcal{O}\left( \ModeInd M^{2} \right)$.
+The cost of computing the expected likelihood term
+$\E_{\gatingsVariational \expertsVariational} \left[ \text{log} \sum_{\modeInd=1}^{\ModeInd} \singleGatingLikelihood \singleExpertLikelihood \right]$,
+is dependent on the batch size $\NumData_b$ and has complexity
 $\mathcal{O}\left( \NumData_{b} \ModeInd M^{3} \right)$ to evaluate.
+When the number of inducing points $M$ is smaller than the batch size, most of the cost will arise from
+computing the expected likelihood term.
+The bound has complexity
+$\max\left(\mathcal{O}\left( \ModeInd M^{2} \right),\mathcal{O}\left( \NumData_{b} \ModeInd M^{3} \right)\right)$.
+
+# Given a batch of $\NumData_b$ observations, this bound has complexity
+# $\mathcal{O}\left( \NumData_{b} \ModeInd M^{3} \right)$ to evaluate.
 
 *** Predictions
 For a given test input $\input_*$, this model makes probabilistic predictions following
@@ -5363,166 +6188,574 @@ This is another bound I implemented,
 
 ** Evaluation of Model and Approximate Inference
 *** Intro :ignore:
-The model and approximate inference scheme introduced in this chapter are now evaluated on three different data sets.
-Following other MoGPE work, they are first tested on the motorcycle data set.
-They are then tested on a data set collected onboard a DJI Tello quadcopter flying in the Bristol Robotics
-Laboratory, and finally, a data set collected from a simulator of a 2D point mass.
+# As a mixture of experts method we aim to improve on standard GP regression
+# with the ability to model non-stationary functions and multimodal distributions.
+# This work also proposes to address their inherent identifiability issues, by adopting a gating network
+# that we can place informative priors on.
+# As such, the method is tested on two data sets,
+# 1) *Artificial data set* to demonstrate how the method improves identifiability,
+# 2) *Motorcycle data set* cite:Silverman1985 to provide a comparison to other MoGPE methods and to,
+#    - thoroughly compare the different ELBO's in Section ref:sec-inference,
+#    - evaluate the impact of the number of inducing points $M$ and the batch size $\NumData_b$.
 
-\todo{Add results for mcycle, quadcopter-sim and quadcopter and more??}
+As a mixture of experts method, our model aims to improve on standard GP regression
+with the ability to model non-stationary functions and multimodal distributions over the output variable.
+This work also proposes to address their inherent identifiability issues, by adopting a gating network
+that can encode domain knowledge through informative priors.
+With this in mind,
+the model and approximate inference scheme are evaluated on three data sets.
+Following other MoGPE work, they are first tested on the motorcycle data set citep:Silverman1985.
+The method is then tested on an artificial data set to demonstrate its power at improving identifiability.
+Although these data sets do not represent state transitions from a dynamical system,
+they do contain non-stationary points, heterogeneous noise and complex switching behaviour,
+which make them interesting data sets to study from the MoGPE perspective.
+Finally, they are tested on a data set collected onboard a DJI Tello quadcopter flying in the Bristol Robotics
+Laboratory.
+
+
+
+# , and finally, a data set collected from a simulator of a 2D point mass.
+
+# \todo{Add results for mcycle, quadcopter-sim and quadcopter and more??}
 
 - test num inducing points?
 - test batch size?
 - compare both bounds?
+  + we know tighter bound should be better so
+  + need to compare complexity of bounds? or speed to run?
+- update mcycle table with correct NLML
+  + NLML/num_data on test_dataset not full_dataset
 - compare to other MoGPE models?
 - example showing why we want GP based gating network?
+- Add link to youtube video
 
-*** Evaluation on Motorcycle Data Set :noexport:
+**** Goals
+- Finish writing up mcycle results
+  - compare bounds
+  - compare batch size
+- add artificial dataset
+  - copied from nerurips paper
+- Update quadcopter results
+  + Add quiver
+- Add discussion
+  - compare to time series methods
+    + Switching State-Space model
+  - compare to time series methods
+
+*** Experiments
+#+BEGIN_EXPORT latex
+\newcommand{\numTest}{\ensuremath{n}}
+\newcommand{\NumTest}{\ensuremath{N}}
+\newcommand{\testSingleInput}{\ensuremath{\x_{\numTest}}}
+\newcommand{\testSingleOutput}{\ensuremath{\y_{\numTest}}}
+\newcommand{\predictedSingleInput}{\ensuremath{\testSingleInput^*}}
+\newcommand{\predictedSingleOutput}{\ensuremath{\testSingleOutput^*}}
+#+END_EXPORT
+To test the performance of our method (MoSVGPE), the model is
+instantiated with $\ModeInd=2$ and $\ModeInd=3$ experts.
+The two variational lower bounds, $\mathcal{L}_{1}$ and $\mathcal{L}_2$, from Section ref:sec-inference,
+are compared by training the model -- with the same model and training parameters -- for each lower bound.
+MoSVGPE is compared against a Gaussian process (GP) and a sparse variational Gaussian
+process (SVGP),
+which use Squared Exponential (SE) kernels with automatic relevance determination (ARD) and
+a Gaussian likelihood in all experiments.
+
+Each experiment was carried out on a system with an Intel Core i9 CPU at 2.4GHz with 16GB DDR4 RAM.
+All data sets were split into test and training sets with $70\%$ for training and $30\%$ for testing.
+In order to evaluate and compare the full predictive posteriors the Negative Log Marginal Likelihood (NLML)
+is computed on the test set.
+The models are also compared using the Root Mean Squared Error (RMSE) and the Mean Absolute Error (MAE).
+Given a test data set $\{(\testSingleInput, \testSingleOutput)\}_{\numTest=1}^{\NumTest$,
+they are calculated as follows,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-scores}
+\text{RMSE} &= \sqrt{\frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} (\predictedSingleOutput - \testSingleOutput)^2} \\
+\text{MAE} &= \frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} | \predictedSingleOutput - \testSingleOutput | \\
+\text{NLML} &= \frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} - \log (\testSingleOutput \mid \testSingleInput, \mathcal{D}, \expertParams, \gatingParams)
+\end{align}
+#+END_EXPORT
+where $\predictedSingleOutput$ is the models prediction at $\testSingleInput$.
+Note that all figures in this section show models that were trained on the full data set, i.e. no test/train split.
+
+*** Evaluation on Motorcycle Data Set
 The motorcycle data set
 (discussed in cite:Silverman1985) contains 133 data points
 ($\allInput \in \inputDomain \subseteq \R^{133 \times 1}$ and
-$\allOutput \in \outputDomain \subseteq \R^{133 \times 1}$)
+$\allOutput \in \stateDomain \subseteq \R^{133 \times 1}$)
 and input dependent noise.
-The data set represents motorcycle impact data - time (ms) vs acceleration (g).
-Although it does not represent state transitions from a dynamical system,
-it does contain non-stationary points and heterogeneous noise, which makes it an interesting data set
-to study from the MoGPE perspective.
-With this in mind, the model and inference are evaluated by instantiating the model with both two and three experts.
+The data set represents motorcycle impact data -- time (ms) vs acceleration (g).
+
+With this in mind, the model and inference are evaluated by instantiating the model with both two $\ModeInd=2$
+and three $\ModeInd=3$ experts.
+The two lower bounds derived in Section ref:sec-inference are compared by training each instantiation of
+the model -- with the same model and training parameters -- with each lower bound.
 An evaluation on the effect of the number of inducing points, batch size, and the different ELBO's is then
 detailed.
 
+cref:tab-mcycle-metrics summarises the results and compares them to a standard GP regression model
+and a SVGP method instantiated with $\NumInducing=16$ and $\NumInducing=32$ inducing points.
+Both methods use Gaussian likelihoods and optimise their hyperparameters, noise variances
+(and inducing inputs in the SVGP case) using their well known
+objectives -- the marginal likelihood and evidence lower bound.
+
+The NLML indicates the probability of the data given the
+parameters which are not marginalised, e.g. hyperparameters and inducing inputs.
+Following Bayesian model selection, it is known that lower values indicate higher performing models, i.e.
+predictive posteriors that more accurately match the distribution of the data .
+The predictive posterior is most accurate when MoSVGPE is instantiated with three experts $\ModeInd=3$
+and trained using the tight lower bound $\tightBound$.
+The tight lower bound $\tightBound$ achieved better NLML than the further lower bound $\furtherBound$
+for both two and three experts.
+This is expected as it is a tighter bound.
+\todo{add something on further bound being better computationally????}
+
+Interestingly, the standard GP regression model achieved the best RMSE, followed by the SVGP models and then the
+MoSVGPE models.
+
+**** Results table :ignore:
+
+#+Name: tab-mcycle-metrics
+#+Caption: Results on the Motorcycle data set cite:Silverman1985.
+#+Caption: Comparison of the root mean squared error (RMSE) mean absolute error (MAE)
+#+Caption: and the negative log marginal likelihood (NLML) on the test data set for different
+#+Caption: instantiations of our model (MoSVGPE).
+#+Caption: Results for a Gaussian process (GP) and a sparse variational Gaussian process (SVGP) with
+#+Caption: $\NumInducing=16$ and $\NumInducing=32$ inducing points are shown for comparison.
+#+Caption: All models were instantiated with a Squared Exponential kernel and were
+#+Caption: trainind for $25,000$ iterations.
+#+Caption: The GP's hyperparamters were optimised using SciPy's citep:2020SciPy-NMeth L-BFGS-B optimiser.
+#+Caption: The SVGP and MoSVGPE models were trained with Adam citep:kingmaAdam2017 using a learning rate
+#+Caption: of $0.01$ and a minibatch size of $\NumData_b=16$.
+#+Caption: The MoSVGPE expertiments used $\NumInducing=32$ inducing points for all each expert and gating network GPs.
+|--------------------------------+-------------------+-------------------+-------------------|
+|                                | RMSE              | NLPD              | MAE               |
+|--------------------------------+-------------------+-------------------+-------------------|
+| GP                             | $\mathbf{0.4554}$ | $1.1154$          | $0.3405$          |
+|--------------------------------+-------------------+-------------------+-------------------|
+| SVGP $(M=16)$                  | $0.4580$          | $1.0700$          | $0.3407$          |
+| SVGP $(M=32)$                  | $0.4584$          | $1.0737$          | $0.3414$          |
+|--------------------------------+-------------------+-------------------+-------------------|
+| MoSVGPE $(k=2, \tightBound)$   | $0.4598$          | $0.4639$          | $0.3394$          |
+| MoSVGPE $(k=2, \furtherBound)$ | $0.4597$          | $0.5760$          | $\mathbf{0.3381}$ |
+| MoSVGPE $(k=3, \tightBound)$   | $0.4634$          | $\mathbf{0.2903}$ | $0.3388$          |
+| MoSVGPE $(k=3 ,\furtherBound)$ | $0.4688$          | $0.5686$          | $0.3398$          |
+
+**** two expert y fig :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L1/y_means.pdf}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
+\subcaption{}
+\label{fig-y-means-mcycle-two-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/y_means.pdf}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-y-means-mcycle-two-experts-further}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L1/y_samples.pdf}
+\subcaption{}
+\label{fig-y-samples-mcycle-two-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/y_samples.pdf}
+\subcaption{}
+\label{fig-y-samples-mcycle-two-experts-further}
+\end{minipage}
+%\begin{minipage}[r]{0.49\textwidth}
+%\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L1/y_samples_density.pdf}
+%\subcaption{}
+%\label{fig-y-samples-mcycle-two-experts}
+%\end{minipage}
+%\begin{minipage}[r]{0.49\textwidth}
+%\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/y_samples_density.pdf}
+%\subcaption{}
+%\label{fig-y-samples-mcycle-three-experts}
+%\end{minipage}
+\caption{Visualisation of the model instantiated with $\ModeInd=2$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\mathcal{L}_1$ (left column) and with $\mathcal{L}_2$ (right column).  \subref{fig-y-means-mcycle-two-experts-tight}-\subref{fig-y-means-mcycle-two-experts-further} show the data set (black crosses) and the posterior means associated with the MoSVGPE (black solid line) and a SVGP (red dashed line) for comparison. \subref{fig-y-samples-mcycle-two-experts-tight}-\subref{fig-y-samples-mcycle-two-experts-further} show samples from the MoSVGPE posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
+\label{fig-y-mcycle-two-experts}
+\end{figure}
+#+END_EXPORT
+
+# #+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
+
+**** two expert latent fig :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L1/experts_f.pdf}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
+\subcaption{}
+\label{fig-expert-gps-mcycle-two-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L2/experts_f.pdf}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-expert-gps-mcycle-two-experts-further}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L1/gating_gps.pdf}
+%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=2$.}
+\subcaption{}
+\label{fig-gating-gps-mcycle-two-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L2/gating_gps.pdf}
+%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-gating-gps-mcycle-two-experts-further}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L1/gating_mixing_probs.pdf}
+%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=2$.}
+\subcaption{}
+\label{fig-mixing-probs-mcycle-two-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L2/gating_mixing_probs.pdf}
+%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-mixing-probs-mcycle-two-experts-further}
+\end{minipage}
+\caption{Visualisation of the model's latent variables (instantiated with $\ModeInd=2$ experts), after training on the
+Motorcycle data set \citep{Silverman1985}, with $\mathcal{L}_1$ (left column) and with $\mathcal{L}_2$ (right column).
+(\subref{fig-expert-gps-mcycle-two-experts-tight}-\subref{fig-expert-gps-mcycle-two-experts-further}) show the GP
+posteriors associated with the experts' latent functions $q(\mode{\latentFunc}(\state_*))$,
+where the solid lines show the mean and the shaded regions show the $95\%$ confidence intervals, i.e. $\pm2\sigma$.
+The gating network's GP posteriors $q(h_{k}(\state_*))$ are shown in
+(\subref{fig-gating-gps-mcycle-two-experts-tight}-\subref{fig-gating-gps-mcycle-two-experts-further}) and
+their associated mixing probabilities $\predictiveProb$ in
+(\subref{fig-mixing-probs-mcycle-two-experts-tight}-\subref{fig-mixing-probs-mcycle-two-experts-further}).}
+\label{fig-latent-mcycle-two-experts}
+\end{figure}
+#+END_EXPORT
+
 **** Two Experts
-Figure ref:mototcycle-dataset shows the model (instantiated with two experts) after ????? iterations
-of optimising
-The results after training the model with two experts
-are shown in Figure ref:mototcycle-dataset.
-The method is compared to a Sparse Variational Gaussian Process (SVGP) trained on the same data set.
-The right plot shows the samples from the predictive posterior of the MoGPE model (sampled blue dots) as well
-plus or minus two standard deviations of the SVGP's posterior variance (shown by the red lines).
-It is clear that the SVGP has explained the observations by increasing its single
-noise variance term. The MoGPE model has been able to learn two noise variances and these
-reflect the noise in the observations much better.
-The left plot illustrates that MoGPE method is capable of modelling the non-stationarity
+The two lower bounds are first compared by instantiating the model with two experts $\ModeInd=2$
+and comparing their performance.
+All experiments use $\NumInducing=32$ inducing points for all GPs and are trained for $25,000$ iterations
+of Adam citep:kingmaAdam2017, with a learning rate of $0.01$ and a batch size of $\NumData_b=16$.
+
+The method is compared to a Sparse Variational Gaussian Process (SVGP) trained with the same
+number of inducing points and training parameters.
+The results are show in cref:fig-y-mcycle-two-experts,
+where the motorcycle data set is represented by the black crosses.
+The left column shows results for the tight bound $\tightBound$ and the right column shows
+results for the further bound $\furtherBound$.
+This layout is used in
+cref:fig-y-mcycle-two-experts,fig-latent-mcycle-two-experts,fig-y-mcycle-three-experts,fig-latent-mcycle-three-experts.
+
+For each lower bound, cref:fig-y-mcycle-two-experts visualises the predictive mean (top row) and
+predictive density (bottom row) and compares them to a Sparse Variational Gaussian Process (SVGP).
+cref:fig-latent-mcycle-two-experts then visualises the posteriors over the latent variables associated with
+each model.
+
+# for the tight bound $\tightBound$ (ref:fig-y-means-two-experts-tight)
+# and the further bound $\furtherBound$ (ref:fig-y-means-two-experts-further) respectively.
+cref:fig-y-means-mcycle-two-experts-tight,fig-y-means-mcycle-two-experts-further
+compare the posterior means (black solid line) to the SVGP's posterior mean (red dashed line) and
+cref:fig-y-samples-mcycle-two-experts-tight,fig-y-samples-mcycle-two-experts-further
+compare the posterior densities to the SVGP.
+The red lines show plus or minus two standard deviations of the SVGP's posterior variance.
+As the MoSVGPE posterior is a Gaussian mixture, it is visualised by drawing samples
+from its posterior, i.e. sample a mode indicator variable $\modeVar_*$ and then draw a sample
+form the corresponding expert.
+The colour of the sample indicates the underlying expert where
+cyan represents expert one $\ModeInd=1$ and magenta represents expert two $\ModeInd=2$.
+
+*Predictive distribution* Both MoSVGPE results are capable of modelling the non-stationarity
 at $x \approx -0.7$ better than the sparse variational Gaussian process (SVGP).
-At this non-stationary point there are clearly two modes in the predictive distribution of the MoGPE model
-(right plot).
-Expert one is responsible for the horizontal line ($-2$ to $-1$) and expert two is responsible
-for the shorter lengthscale function ($-0.5$ to $1.2$).
-The lengthscale of the gating network kernel governs how fast the model can shift responsibility from
+\todo{quantify this with local RMSE?}
+At this non-stationary point there are clearly two modes in the MoSVGPE predictive distributions,
+indicated by the overlap in samples from each expert
+(in cref:fig-y-samples-mcycle-two-experts-tight,fig-y-samples-mcycle-two-experts-further).
+It is clear that the SVGP has explained the observations by increasing its single
+noise variance term. In contrast, both of the MoSVGPE results have been able to learn
+two noise variances and these reflect the noise in the observations much better.
+This is indicated by expert one learning a low noise variance and expert two a high noise
+variance (similar to the SVGP's noise variance).
+\todo{Add values for noise variances}
+
+*Latent variables* More insight into this behaviour can be obtained by considering the latent variables.
+Figure ref:fig-latent-mcycle-two-experts shows the posteriors over the latent variables where
+cref:fig-expert-gps-mcycle-two-experts-tight,fig-expert-gps-mcycle-two-experts-further
+show the GP posteriors over the experts' latent functions $q(\mode{\latentFunc}(\state_*))$.
+cref:fig-gating-gps-mcycle-two-experts-tight,fig-gating-gps-mcycle-two-experts-further
+show the GP posteriors over the latent gating functions $q(\mode{\gatingFunc}(\state_*))$
+and cref:fig-mixing-probs-mcycle-two-experts-tight,fig-mixing-probs-mcycle-two-experts-further
+show the mixing probabilities associated with the probability mass function over the expert
+indicator variable $\modeVar$.
+These figures highlight differences between the two lower bounds,
+in particular, how they represent the uncertainty in the gating network.
+As our variational inference scheme couples the learning of the experts and the gating network
+it is interesting to see their impact on the posteriors over the latent variables.
+
+*Gating network* The lengthscale of the gating network kernel governs how fast the model can shift responsibility from
 expert one to expert two.
-At $x \geq 1.5$ the gating network tends to a uniform distribution (max entropy)
-even though it has been trained with observations up to $x=2.5$. This is evidence that there are multiple
-factors influencing the mixing probability as discussed in Section ref:sec-opt.
+For the further lower bound $\furtherBound$,
+the distribution over the expert indicator variable tends to a uniform distribution (maximum entropy)
+at $x \geq 1.5$.
+This is in contrast to the tight lower bound $\tightBound$, whose distribution over the expert indicator variable
+assigns responsibility to expert two and represents the uncertainty in the
+GP posterior over the gating functions, instead of the posterior over the mode indicator variable.
 
-***** Two experts figure :ignore:
-#+NAME: mototcycle-dataset
-#+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
-#+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
-[[file:images/mcycle_svgp_comparison.pdf]]
+\todo{to make this point I need to need to train bounds with some missing data and see what happens?}
+The gating network serves as a probabilistic decision boundary that is dependent on both the mean and
+the variance of the GPs over the gating functions $\gatingFunc$.
+As such, the model loses a degree of freedom, w.r.t. interpretability, making it difficult to
+interpret the meaning of $\Pr(\alpha_*=k \mid \mathbf{x}_*, \mathcal{D}, \bm\phi)= 0.5$.
+It could mean that it is confident that the observations were generated by a 50:50 mixture of the two experts.
+Alternatively, the variance of $p(h_*  \mid  \mathbf{x}_*, \mathcal{D}, \bm\phi)$
+may be high indicating that the gating function can not be confident making a prediction at $\mathbf{x}_*$.
+It could also indicate that the model is confident that neither expert explains the data well
+and so the optimisation has set the mixing probability to $0.5$ to prevent either experts
+"fit" degrading.
+For example, if the model needs a third expert.
 
-***** Training :ignore:
-\newline
-*Model Training*
-Table ref:tab-params-quadcopter contains the initial values for all of the trainable parameters in the model.
+*Experts* Optimising with both bounds resulted in expert one learning a
+long lengthscale to fit the horizontal line from $-2$ to $-1$ and
+expert two learning a shorter lengthscale function to fit the wiggly section from $-0.5$ to $1.2$.
+The noise variance inferred by expert one is larger for the further lower bound $\furtherBound$
+than for the tight lower bound $\tightBound$.
+This is due to the gating network sharing the responsibility at $x \geq 1.5$ and expert one increasing its
+noise variance to help explain away the data.
 
-#+begin_table
-#+LATEX: \caption{Initial parameter settings before training on motorcycle data set with two experts.}
-#+LATEX: \label{tab-params-quadcopter}
-#+LATEX: \resizebox{\textwidth}{!}{
-#+ATTR_LATEX: :center nil
-|                 | Description                | Symbol                    | Value                                                                                   |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Num data                   | $\NumData$                | $133$                                                                                   |
-|                 | Batch size                 | $\NumData_b$              | $30$                                                                                    |
-| Optimiser       | Epochs                     | N/A                       | $8000$                                                                                  |
-|                 | Num samples                | $S$                       | $1$                                                                                     |
-|                 | Learning rate              | N/A                       | $0.001$                                                                                 |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Kernel Variance            | $\sigma_f$                | $0.1$                                                                                   |
-|                 | Kernel Lengthscales        | $l$                       | $10$                                                                                    |
-|                 | Likelihood Variance        | $\sigma_n$                | $0.0011$                                                                                |
-| Expert 1        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
-|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
-|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Kernel Variance            | $\sigma_f$                | $20$                                                                                    |
-|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
-|                 | Likelihood Variance        | $\sigma_n$                | $0.9$                                                                                   |
-| Expert 2        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
-|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
-|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Kernel Variance            | $\sigma_f$                | $3$                                                                                     |
-|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
-| Gating Function | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
-|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
-|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                    |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-#+LATEX: }
-#+end_table
-
-**** Three Expets
-Figure ref:mototcycle-dataset shows the model (instantiated with two experts) after ????? iterations
-of optimising
-The results after training the model with two experts
-are shown in Figure ref:mototcycle-dataset.
-***** Two experts figure :ignore:
-#+NAME: mototcycle-dataset
-#+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
-#+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
-[[file:images/mcycle_svgp_comparison.pdf]]
+even though it has been trained with observations up to $x=2.5$.
 
 
-***** Training :ignore:
-\newline
-*Model Training*
-Table ref:tab-params-quadcopter contains the initial values for all of the trainable parameters in the model.
 
-#+begin_table
-#+LATEX: \caption{Initial parameter settings before training on motorcycle data set with two experts.}
-#+LATEX: \label{tab-params-quadcopter}
-#+LATEX: \resizebox{\textwidth}{!}{
-#+ATTR_LATEX: :center nil
-|                 | Description                | Symbol                    | Value                                                                                   |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Num data                   | $\NumData$                | $133$                                                                                   |
-|                 | Batch size                 | $\NumData_b$              | $30$                                                                                    |
-| Optimiser       | Epochs                     | N/A                       | $8000$                                                                                  |
-|                 | Num samples                | $S$                       | $1$                                                                                     |
-|                 | Learning rate              | N/A                       | $0.001$                                                                                 |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Kernel Variance            | $\sigma_f$                | $0.1$                                                                                   |
-|                 | Kernel Lengthscales        | $l$                       | $10$                                                                                    |
-|                 | Likelihood Variance        | $\sigma_n$                | $0.0011$                                                                                |
-| Expert 1        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
-|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
-|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Kernel Variance            | $\sigma_f$                | $20$                                                                                    |
-|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
-|                 | Likelihood Variance        | $\sigma_n$                | $0.9$                                                                                   |
-| Expert 2        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
-|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
-|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Kernel Variance            | $\sigma_f$                | $3$                                                                                     |
-|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
-| Gating Function | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
-|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
-|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                    |
-|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-#+LATEX: }
-#+end_table
+
+
+
+**** three expert y fig :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L1/y_means.pdf}
+\subcaption{}
+\label{fig-y-means-three-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/y_means.pdf}
+\subcaption{}
+\label{fig-y-means-three-experts-further}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L1/y_samples.pdf}
+\subcaption{}
+\label{fig-y-samples-mcycle-three-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/y_samples.pdf}
+\subcaption{}
+\label{fig-y-samples-mcycle-three-experts-further}
+\end{minipage}
+%\begin{minipage}[r]{0.49\textwidth}
+%\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L1/y_samples_density.pdf}
+%\subcaption{}
+%\label{fig-y-samples-mcycle-two-experts}
+%\end{minipage}
+%\begin{minipage}[r]{0.49\textwidth}
+%\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/y_samples_density.pdf}
+%\subcaption{}
+%\label{fig-y-samples-mcycle-three-experts}
+%\end{minipage}
+\caption{Visualisation of the model instantiated with $\ModeInd=3$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\mathcal{L}_1$ (left column) and with $\mathcal{L}_2$ (right column).  \subref{fig-y-means-three-experts-tight}-\subref{fig-y-means-three-experts-further} show the data set (black crosses) and the posterior means associated with the MoSVGPE (black solid line) and a SVGP (red dashed line) for comparison. \subref{fig-y-samples-mcycle-three-experts-tight}-\subref{fig-y-samples-mcycle-three-experts-further} show samples from the MoSVGPE posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$, yellow $\ModeInd=3$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
+\label{fig-y-mcycle-three-experts}
+\end{figure}
+#+END_EXPORT
+
+
+# #+BEGIN_EXPORT latex
+# \begin{figure}[t!]
+# \centering
+# \begin{minipage}[r]{0.49\textwidth}
+# \includegraphics[width=\textwidth]{./images/model/mcycle/two-experts/y_samples.pdf}
+# \subcaption{}
+# \label{fig-y-samples-mcycle-two-experts}
+# \end{minipage}
+# \begin{minipage}[r]{0.49\textwidth}
+# \includegraphics[width=\textwidth]{./images/model/mcycle/three-experts/y_samples.pdf}
+# \subcaption{}
+# \label{fig-y-samples-mcycle-three-experts}
+# \end{minipage}
+# \begin{minipage}[r]{0.49\textwidth}
+# \includegraphics[width=\textwidth]{./images/model/mcycle/two-experts/y_samples_density.pdf}
+# \subcaption{}
+# \label{fig-y-samples-mcycle-two-experts}
+# \end{minipage}
+# \begin{minipage}[r]{0.49\textwidth}
+# \includegraphics[width=\textwidth]{./images/model/mcycle/three-experts/y_samples_density.pdf}
+# \subcaption{}
+# \label{fig-y-samples-mcycle-three-experts}
+# \end{minipage}
+# \begin{minipage}[r]{0.49\textwidth}
+# \includegraphics[width=\textwidth]{./images/model/mcycle/two-experts/y_means.pdf}
+# %\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
+# \subcaption{}
+# \label{fig-gating-gps-mcycle-two-experts}
+# \end{minipage}
+# \begin{minipage}[r]{0.49\textwidth}
+# \includegraphics[width=\textwidth]{./images/model/mcycle/three-experts/y_means.pdf}
+# %\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
+# \subcaption{}
+# \label{fig-gating-gps-mcycle-three-experts}
+# \end{minipage}
+# \caption{Visualisation of the model after training on the motorcycle data set with two experts (left column) and  three experts (right column). (a-b) show the GP posteriros associated with the gating funcions, $q(h_{k}(\state_*))$, where the solind lines show the means $\E[h_{k}(\state_*)]$ and the shaded regions show the 95\% confidence interval, i.e. $\pm2\simga$. (c-d) show the predictive mixing probabilities $\predictiveProb$.}
+# \label{fig-gating-network-mcycle-subset}
+# \end{figure}
+# #+END_EXPORT
+
+**** three expert latent fig :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L1/experts_f.pdf}
+\subcaption{}
+\label{fig-expert-gps-mcycle-three-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L2/experts_f.pdf}
+\subcaption{}
+\label{fig-expert-gps-mcycle-three-experts-further}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L1/gating_gps.pdf}
+\subcaption{}
+\label{fig-gating-gps-mcycle-three-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L2/gating_gps.pdf}
+\subcaption{}
+\label{fig-gating-gps-mcycle-three-experts-further}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L1/gating_mixing_probs.pdf}
+\subcaption{}
+\label{fig-mixing-probs-mcycle-three-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L2/gating_mixing_probs.pdf}
+%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-mixing-probs-mcycle-three-experts-further}
+\end{minipage}
+\caption{Visualisation of the model's latent variables (instantiated with $\ModeInd=3$ experts), after training on the
+Motorcycle data set \citep{Silverman1985}, with $\mathcal{L}_1$ (left column) and with $\mathcal{L}_2$ (right column).
+(\subref{fig-expert-gps-mcycle-three-experts-tight}-\subref{fig-expert-gps-mcycle-three-experts-further}) show the GP
+posteriors associated with the experts' latent functions $q(\mode{\latentFunc}(\state_*))$,
+where the solid lines show the mean and the shaded regions show the $95\%$ confidence intervals, i.e. $\pm2\sigma$.
+The gating network's GP posteriors $q(h_{k}(\state_*))$ are shown in
+(\subref{fig-gating-gps-mcycle-three-experts-tight}-\subref{fig-gating-gps-mcycle-three-experts-further}) and
+their associated mixing probabilities $\predictiveProb$ in
+(\subref{fig-mixing-probs-mcycle-three-experts-tight}-\subref{fig-mixing-probs-mcycle-three-experts-further}).}
+\label{fig-latent-mcycle-three-experts}
+\end{figure}
+#+END_EXPORT
+
+**** Three Experts
+**** two vs three expert latent fig OLD :ignore:noexport:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/two-experts/experts_f.pdf}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
+\subcaption{}
+\label{fig-gating-gps-mcycle-two-experts}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/three-experts/experts_f.pdf}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-gating-gps-mcycle-three-experts}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/two-experts/gating_gps.pdf}
+%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=2$.}
+\subcaption{}
+\label{fig-gating-gps-mcycle-two-experts}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/three-experts/gating_gps.pdf}
+%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-gating-gps-mcycle-three-experts}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/model/mcycle/two-experts/gating_mixing_probs.pdf}
+%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=2$.}
+\subcaption{}
+\label{fig-gating-mixing-probs-mcycle-two-experts}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/model/mcycle/three-experts/gating_mixing_probs.pdf}
+%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-gating-mixing-probs-mycle-three-experts}
+\end{minipage}
+\caption{Visualisation of the model after training on the motorcycle data set with two experts (left column) and  three experts (right column). (a-b) show the GP posteriros associated with the gating funcions, $q(h_{k}(\state_*))$, where the solind lines show the means $\E[h_{k}(\state_*)]$ and the shaded regions show the 95\% confidence interval, i.e. $\pm2\simga$. (c-d) show the predictive mixing probabilities $\predictiveProb$.}
+\label{fig-gating-network-mcycle-subset}
+\end{figure}
+#+END_EXPORT
+
+**** training loss fig :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/training_curves/training_loss_num_ind_133.png}
+\subcaption{}
+\label{fig-mcycle-training-curve-133}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/training_curves/training_loss_num_ind_64.png}
+\subcaption{}
+\label{fig-mcycle-training-curve-64}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/training_curves/training_loss_num_ind_32.png}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
+\subcaption{}
+\label{fig-mcycle-training-curve-32}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\includegraphics[width=\textwidth]{./images/model/mcycle/training_curves/training_loss_num_ind_16.png}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
+\subcaption{}
+\label{fig-mcycle-training-curve-16}
+\end{minipage}
+\caption{Training curves}
+\label{fig-mcycle-training-curve}
+\end{figure}
+#+END_EXPORT
 
 **** End :ignore:
 \newpage
 
-*** Evaluation on Velocity Controlled Quadcopter
+*** Evaluation on Velocity Controlled Quadcopter label:sec-brl-experiment
 **** intro :ignore:
 # The goal of this dissertation is to control a DJI Tello quadcopter in an indoor environment
 # subject to two modes of operation characterised by turbulence.
@@ -5531,6 +6764,12 @@ a data set was collected (at the Bristol Robotics Laboratory) using
 a velocity controlled DJI Tello quadcopter and a Vicon tracking system.
 A high turbulence dynamics mode was induced by placing a desktop fan at the right side of a room
 (see Figure ref:fig-quadcopter-environment for a diagram of the environment).
+
+
+This data set represents samples from a dynamical system with constant controls, i.e.
+$\Delta\state_{\timeInd} = \latentFunc(\state_{\timeInd-1};\control_{\timeInd-1}=\control_*)$.
+The resulting data set has two dimensional inputs and two-dimensional outputs making it easy to visualise
+the different components of the model.
 
 # #+NAME: quadcopter-environment
 # #+ATTR_LATEX: :width .6\textwidth :placement [h] :center t
@@ -5649,6 +6888,11 @@ The data set consists of $T=1282$ state transitions.
 Figure ref:fig-quiver is a quiver plot showing the resulting data set.
 
 **** Results
+The model was configured to have two experts, with the goal of each expert learning a separate dynamics mode and the
+gating network learning a representation of how the underlying dynamics modes vary over the state space.
+The model was then trained on the velocity controlled quadcopter data set using the model and training
+parameters shown in Table ref:tab-params-quadcopter.
+
 # #+NAME: fig-gating-mixing-probs-quadcopter-subset
 # #+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
 # #+caption: Gating network's predictive mixing probabilties $\predictiveProb$ after training on the quadcopter data set.
@@ -5657,6 +6901,11 @@ Figure ref:fig-quiver is a quiver plot showing the resulting data set.
 # #+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
 # #+caption: Gating network's predictive posterior $\predictiveGatingPrior$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(h_{k}(\state_*))$, corresponding to expert $k$. The mean $\E[h_{k}(\state_*)]$ is on the left and the variance $\V[h_{k}(\x_*)]$ is on the right.
 # [[file:./images/model/quadcopter/subset/gating_gps.pdf]]
+
+#+NAME: fig-y-mm-quadcopter-subset
+#+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
+#+caption: Moment matched predictive posterior $p(\y_* \mid \x_*)$ after training on the quadcopter data set. Each row corresponds to an output dimension $d$ and the left plots shows the moment matched means $\E[\Delta \state_d]$ and the right plots show the moment matched variances $\V[\Delta \state_d]$.
+[[file:./images/model/quadcopter/subset/y_moment_matched.pdf]]
 
 #+NAME: fig-experts-f-quadcopter-subset
 #+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
@@ -5674,7 +6923,7 @@ Figure ref:fig-quiver is a quiver plot showing the resulting data set.
 \end{minipage}
 \begin{minipage}[r]{1.0\textwidth}
 \includegraphics[width=\textwidth]{./images/model/quadcopter/subset/gating_gps.pdf}
-\subcaption{Gating network's predictive posterior $\predictiveGatingPrior$ where each row corresponds to a single GP posterior, $q(h_{k}(\state_*))$, corresponding to expert $k$. The mean $\E[h_{k}(\state_*)]$ is on the left and the variance $\V[h_{k}(\x_*)]$ is on the right.}
+\subcaption{Gating network's predictive posterior $\predictiveGatingPrior$ where each row corresponds to a single GP posterior, $q(h_{k}(\state_*))$, corresponding to expert $k$. The left hand plots show the means $\E[h_{k}(\state_*)]$ and the right hand plots show the variances $\V[h_{k}(\state_*)]$.}
 \label{fig-gating-gps-quadcopter-subset}
 \end{minipage}
 \caption{Visualisation of the gating network after training on the quadcopter data set. The plots in a) show the predictive mixing probabilities $\predictiveProb$ for Expert 1 (left) and Expert 2 (right). The plots in b) show the predictive GP posteriors $q(h_{k}(\state_*))$ associated with Expert 1 (top) and Expert 2 (bottom).}
@@ -5687,28 +6936,35 @@ Figure ref:fig-quiver is a quiver plot showing the resulting data set.
 # #+caption: Experts' predictive posterior over the output $q(\Delta\state_{kd} \mid \state_*)$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(\Delta\state_{kd} \mid \state_*)$, corresponding to dimension $d$ of expert $k$. The mean $\E[\Delta\state_{kd}\mid \state_*]$ is on the left and the variance $\V[\Delta\state_{kd} \mid \x_*]$ is on the right.
 # [[file:./images/model/quadcopter/subset/experts_y.pdf]]
 
-#+NAME: fig-y-mm-quadcopter-subset
-#+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
-#+caption: Moment matched predictive posterior $p(\y_* \mid \x_*)$ after training on the quadcopter data set.
-[[file:./images/model/quadcopter/subset/y_moment_matched.pdf]]
 
-The model was configured to have two experts, with the goal of each expert learning a separate dynamics mode and the
-gating network learning a representation of how the underlying dynamics modes vary over the state space.
-The model was then trained on the velocity controlled quadcopter data set
-using the initial parameters in Table ref:tab-params-quadcopter.
 
-# Figure ref:fig-experts-y-quadcopter-subset shows the predictive posteriors $q(\Delta\state_{kd} \mid \state_*)$
-# associated with each dimension $d$
-# of each expert $k$ and Figure ref:fig-gating-mixing-probs-quadcopter-subset shows the gating network's
-# predictive mixing probabilities.
+Given a new input $\input_*$ the predictive density over the output, $p(\output_* \mid \input_*)$,
+follows a mixture of $\ModeInd$ Gaussian's.
+Visualising a mixture of two Gaussian's with a two-dimensional input space and a two-dimensional output space
+requires the components and mixing probabilities to be visualised separately.
+To aid with visualisation, Figure ref:fig-y-mm-quadcopter-subset shows the predictive density
+approximated as a unimodal Gaussian density (via moment matching), where each row corresponds to an
+output dimension.
+The predictive mean is fairly constant over the domain, except for the region in front of the fan, where it is
+higher.
+This result makes sense as the data set was assumed to be collected with constant controls.
+The region with high predictive mean in front of the fan, is modelling the drift arising from the fan blowing the quadrotor in the negative $x$ direction.
+The right hand plots of Figure ref:fig-y-mm-quadcopter-subset
+show the predictive variance. It is high where there are no training observations,
+indicating that the method has successfully represented the model's /epistemic uncertainty/.
+It is also high in the region in front of the fan, showing that the model has successfully inferred
+the high process noise, associated with the turbulence induced by the fan.
+# As the data set was assumed to have constant controls, this result aligns with our knowledge of the environment.
+# That is, the dynamics should be constant
+# dynamics should be constant
+
+Let us now visualise the individual experts and the gating network separately.
 Figure ref:fig-experts-f-quadcopter-subset shows the predictive posteriors $q(f_{kd}(\state_*))$
-associated with each dimension $d$ of each expert $k$ and
-Figure ref:fig-gating-network-quadcopter-subset shows the predictive gating network after training on the
-data set.
+associated with each dimension $d$ of each expert $k$.
 The method has successfully learned a factorised representation of the underlying dynamics, where
 Expert 1 has learned a dynamics mode with low process noise $\Sigma_1 = \diag\left([0.259,0.386]]\right)$
 and Expert 2 to has learned a dynamics mode with high process noise $\Sigma_2 = \diag\left([0.869, 1.243]\right)$.
-Expert 2 has also clearly learned the drift induced by the fan indicated by the dark red region at $y=0$
+Expert 2 has also clearly learned the drift induced by the fan, indicated by the dark red region at $y=0$
 in the two bottom left plots of Figure ref:fig-experts-f-quadcopter-subset.
 It has also learned the control response of the PID controller correcting for the deviation
 from the reference trajectory, indicated by the white region below $y=0$.
@@ -5718,13 +6974,14 @@ associated with the turbulent dynamics mode.
 
 Both experts were initialised with independent inducing inputs, $\expertInducingInput$, providing the model
 flexibility to "soft" partition the data set.
-That is, select each expert's inducing inputs, $\expertInducingInput$, to support only a subset of the data set.
+That is, each expert has the freedom to set its inducing inputs, $\expertInducingInput$,
+to support only a subset of the data set.
 The posterior (co)variance associated with each expert represents their /epistemic uncertainty/.
 The top right plot in Figure ref:fig-experts-f-quadcopter-subset shows the posterior variance associated with
 the first dimension $(x)$ of Expert 1.
 The posterior variance is high in front of the fan because the gating network has assigned responsibility to the
 other expert in this region.
-It is also high in the region where the model has had no training observations, as
+It is also high in the region where the model has had no training observations, as should be
 expected.
 However, the posterior variance associated with the second dimension $(y)$ of Expert 1, is not high in this region.
 This is due to the lengthscale of the second output dimension.
@@ -5732,21 +6989,23 @@ This is due to the lengthscale of the second output dimension.
 
 The bottom two right plots in Figure ref:fig-experts-f-quadcopter-subset show the posterior variance
 associated with the first and second dimensions ($x$ and $y$) of Expert 2.
-The posterior variance is high everywhere except for the region in from of the fan.
+The posterior variance is high everywhere except for the region in front of the fan.
 Again, this is due to the gating network assigning responsibility to the other expert outside of the region in
 front of the fan.
 
+Figure ref:fig-gating-network-quadcopter-subset shows the predictive gating network after training on the
+data set.
 Figure ref:fig-gating-mixing-probs-quadcopter-subset shows that the probability of Expert 1
 $\Pr(\modeVar=1 \mid \state_*)$ is high in
-the low turbulence region and low in front of the fan, i.e. the high turbulence mode.
+the non-turbulent region and low in front of the fan, i.e. the high-turbulence region.
 The predictive mixing probabilities
 tend to a uniform distribution
-${\Pr(\modeVar=1 \mid \state_*)=\Pr(\modeVar=2 \mid \state_*)=0.5}$
+${\Pr(\modeVar_*=k \mid \state_*)=0.5}$
 in the region with no training observations.
 This corresponds to maximum entropy for categorical distributions and is a desirable behaviour.
-It is worth noting that the mixing probabilities can tend to a uniform distribution for multiples reasons.
+However, it is worth noting that the mixing probabilities can tend to a uniform distribution for multiples reasons.
 It could mean that the model is confident that the observations are generated by an equal mixture of the experts
-i.e. the gating functions are all equal to zero and the posterior variance is low.
+i.e. the gating function(s) are all equal and their posterior variance(s) are low.
 Alternatively, it could mean that the model is not confident in predicting which expert is responsible at the given
 input location i.e. the variance(s) of the GP posterior(s) associated with the gating function(s) could be high.
 
@@ -5758,29 +7017,25 @@ input location i.e. the variance(s) of the GP posterior(s) associated with the g
 # Alternatively, the variance of the gating function GP posterior could be high, resulting in the probability tending to
 # maximum entropy.
 
-Figure ref:fig-gating-gps-quadcopter-subset shows the gating network's predictive posterior does not lose a degree
-of freedom. The gating function associated with Expert 1 is high in the low turbulence regions and low in front of
-the fan, i.e. the high turbulence mode. The posterior variance is high where the model has not observed
-the system, indicating that the gating network GPs successfully infer the epistemic uncertainty when using the
-inference scheme in Section ref:sec-inference.
+Figure ref:fig-gating-gps-quadcopter-subset shows the gating network's GP predictive posterior.
+The mean of the gating function associated with Expert 1 $\E[h_{1}(\state_*)]$ is
+high in the low-turbulence regions and low in front of the fan, i.e. the high-turbulence mode.
+The mean also tends to zero where the model has had no training observations.
+The posterior variance is also high in this region, indicating that the gating
+network GPs have successfully inferred the epistemic uncertainty.
+Exploiting a GP-based gating network has clearly provided a principled approach to distinguishing
+between the different reasons the mixing probabilities may tend to a uniform distribution.
+
+# The posterior variance is high where the model has not observed
+# the system, indicating that the gating network GPs successfully infer the epistemic uncertainty when using the
+# inference scheme in Section ref:sec-inference.
+# Formulating the gating network based on GPs has clearly provided a principled approach to distinguishing
+# between the different reasons the mixing probabilities may tend to a uniform distribution.
 
 # The predictive posterior is mixture of $\ModeInd$ Gaussian resulting from combining the experts according to
 # the gating network.
-Given a new input $\input_*$ the predictive density over the output, $p(\output_* \mid \input_*)$,
-follows a mixture of $\ModeInd$ Gaussian's.
-Figure ref:fig-y-mm-quadcopter-subset shows it approximated as a unimodal Gaussian density
-(via moment matching) for visualisation purposes.
-Although an approximation to the true density, the predictive variance has clearly accounted for both
-modelled the
-The variance is high where there are no training observations, indicating that is has successfully represented
-the model's /epistemic uncertainty/.
-It is also high in the region in front of the fan, showing that the model has successfully inferred
-the high process noise induced by the fan.
 
-
-
-
-*** Evaluation on Simulated Quadcopter Data Set
+*** Evaluation on Simulated Quadcopter Data Set :noexport:
 #+BEGIN_EXPORT latex
 \newcommand{\roll}{\ensuremath{\phi}}
 \newcommand{\pitch}{\ensuremath{\theta}}
@@ -5873,7 +7128,7 @@ $\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
 $\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
 
 \newpage
-*** Point Mass 2D Dynamics
+*** Point Mass 2D Dynamics :noexport:
 #+BEGIN_EXPORT latex
 \newcommand{\roll}{\ensuremath{\phi}}
 \newcommand{\pitch}{\ensuremath{\theta}}
@@ -6047,6 +7302,8 @@ Alternatively, the variance of the gating function GP posterior could be high.
 # "fit" degrading.
 # For example, if the model needs a third expert.
 
+** Related Work
+Switching state-space models (HMM)
 ** Conclusion
 
 using a novel variational lower bound that
@@ -6765,6 +8022,9 @@ This is solved using Sequential Least Squares Programming (SLSQP) in SciPy.
 #+ATTR_LATEX: :width 1.1\textwidth :placement [!t] :center t
 #+caption: Contour plots showing the GP posterior mean (left) and variance (right) over the gating function associated with dynamics mode 1 after training on a subset of the quadcopter data set. The initial and optimised trajectories are overlayed to show the influence of the GP's mean and variance on the trajectory optimisation with different $\lambda$ settings.
 [[file:./images/geometric-traj-opt-over-svgp.pdf]]
+
+- Show optimised state trajectory
+  + Show trajectory resulting from applying the controls in the simulator
 **** Velocity Controlled Quadcopter
 The trajectory optimisation is tested on the quadcopter control problem shown in
 Fig. ref:fig-problem-statement.
@@ -6916,6 +8176,8 @@ embedding the cost function into the likelihood.
 
 This section firsts recaps the control-as-inference framework. It then details how the framework is extended
 to find mode remaining trajectories.
+
+\todo[inline]{implications of approximating expected Riemannian metric? Effect of using mean state for G(x) instead of integrating}
 
 *** Cost Functions as Likelihoods
 To formulate optimal control as probabilistic inference
@@ -9617,48 +10879,147 @@ p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_
 ** Multivariate Normals
 ** Derivatives of a Gaussian Process
 ** Results
+*** Velocity Controlled Quadcopter Experiments
+Table ref:tab-params-quadcopter contains the optimisation settings and initial values for the optimisable parameters
+that were used to train the model on the velocity controlled quadcopter data set in  Section ref:sec-brl-experiment.
 
-**** Training :ignore:
+*Experts* Both expert's GP priors were initialised with constant mean functions (with
+a learnable parameter $c_{\modeInd}$) and separate independent squared exponential
+kernels (with Automatic Relevance Determination) on each output dimension.
+Table ref:tab-params-quadcopter shows a single set of kernel parameters $\sigma_f, l$ for each expert, as
+the kernel associated with each output dimension was initialised with the same initial values.
+Each experts likelihood was initialised with diagonal covariance matrices $\Sigma_{\epsilon_{\modeInd}}$.
 
-*Model Training*
-Table ref:tab-params-quadcopter contains the initial values for all of the trainable parameters in the model.
+*Gating Network* The gating network GP was initialised with a zero mean function, and a squared exponential kernel
+with ARD.
 
 #+begin_table
-#+LATEX: \caption{Initial parameter settings before training on DJI Tello quadcopter data set.}
+#+LATEX: \caption{Optimiser settings and initial values for optimisable parameters before training on the DJI Tello quadcopter data set.}
 #+LATEX: \label{tab-params-quadcopter}
 #+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center nil
 |                 | Description                | Symbol                    | Value                                                                                   |
 |-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
-|                 | Num data                   | $\NumData$                | $1282$                                                                                  |
-|                 | Batch size                 | $\NumData_b$              | $300$                                                                                   |
-| Optimiser       | Epochs                     | N/A                       | $15000$                                                                                 |
+|                 | Num data                   | $\NumData$                | $1129$                                                                                  |
+|                 | Batch size                 | $\NumData_b$              | $64$                                                                                    |
+| Optimiser       | Num epochs                 | N/A                       | $6000$                                                                                  |
+|                 | Num samples                | $S$                       | $1$                                                                                     |
+|                 | Learning rate              | N/A                       | $0.01$                                                                                  |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Constant mean function     | $c_1$                     | $[0,0]$                                                                                 |
+|                 | Kernel variance            | $\sigma_f$                | $0.1$                                                                                   |
+|                 | Kernel lengthscales        | $l$                       | $[10, 10]$                                                                              |
+|                 | Likelihood variance        | $\Sigma_{\epsilon_1}$     | $\diag([0.0011, 0.0011])$                                                               |
+| Expert 1        | Num inducing points        | $\NumInducing$            | $100$                                                                                   |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Constant mean function     | $c_2$                     | $[0,0]$                                                                                 |
+|                 | Kernel variance            | $\sigma_f$                | $20$                                                                                    |
+|                 | Kernel lengthscales        | $l$                       | $[0.5, 0.5]$                                                                            |
+|                 | Likelihood variance        | $\Sigma_{\epsilon_2}$     | $\diag([1.9,1.9])$                                                                      |
+| Expert 2        | Num inducing points        | $\NumInducing$            | $100$                                                                                   |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel variance            | $\sigma_f$                | $0.6$                                                                                   |
+|                 | Kernel lengthscales        | $l$                       | $[1.5, 1.5]$                                                                            |
+| Gating function | Num inducing points        | $\NumInducing$            | $100$                                                                                   |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | $2 \times$ ones plus Gaussian noise                                                     |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+#+LATEX: }
+#+end_table
+
+*** Motorcycle Experiments
+
+**** Two Experts :ignore:
+\newline
+*Model Training*
+Table ref:tab-params-quadcopter contains the initial values for all of the trainable parameters in the model.
+
+#+begin_table
+#+LATEX: \caption{Initial parameter settings before training on motorcycle data set with two experts.}
+#+LATEX: \label{tab-params-quadcopter}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center nil
+|                 | Description                | Symbol                    | Value                                                                                   |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Num data                   | $\NumData$                | $133$                                                                                   |
+|                 | Batch size                 | $\NumData_b$              | $30$                                                                                    |
+| Optimiser       | Epochs                     | N/A                       | $8000$                                                                                  |
 |                 | Num samples                | $S$                       | $1$                                                                                     |
 |                 | Learning rate              | N/A                       | $0.001$                                                                                 |
 |-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
 |                 | Kernel Variance            | $\sigma_f$                | $0.1$                                                                                   |
-|                 | Kernel Lengthscales        | $l$                       | $[10, 10]$                                                                              |
-|                 | Likelihood Variance        | $\sigma_n$                | $[0.0011, 0.0011]$                                                                      |
-| Expert 1        | Num inducing points        | $\NumInducing$            | $150$                                                                                   |
+|                 | Kernel Lengthscales        | $l$                       | $10$                                                                                    |
+|                 | Likelihood Variance        | $\sigma_n$                | $0.0011$                                                                                |
+| Expert 1        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
 |                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
 |                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
 |-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
 |                 | Kernel Variance            | $\sigma_f$                | $20$                                                                                    |
-|                 | Kernel Lengthscales        | $l$                       | $[0.5, 0.5]$                                                                            |
-|                 | Likelihood Variance        | $\sigma_n$                | $[1.9, 1.9]$                                                                            |
-| Expert 2        | Num inducing points        | $\NumInducing$            | $150$                                                                                   |
+|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
+|                 | Likelihood Variance        | $\sigma_n$                | $0.9$                                                                                   |
+| Expert 2        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
 |                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
 |                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
 |-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
 |                 | Kernel Variance            | $\sigma_f$                | $3$                                                                                     |
-|                 | Kernel Lengthscales        | $l$                       | $[0.5, 0.5]$                                                                            |
-|                 | Likelihood Variance        | $\sigma_n$                | $[3, 3]$                                                                                |
-| Gating Function | Num inducing points        | $\NumInducing$            | $150$                                                                                   |
+|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
+| Gating Function | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
 |                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
 |                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
-|                 | Inducing variable cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                    |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                    |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+#+LATEX: }
+#+end_table
+
+**** Three Experts :ignore:
+\newline
+*Model Training*
+Table ref:tab-params-quadcopter contains the initial values for all of the trainable parameters in the model.
+
+#+begin_table
+#+LATEX: \caption{Initial parameter settings before training on motorcycle data set with two experts.}
+#+LATEX: \label{tab-params-quadcopter}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center nil
+|                 | Description                | Symbol                    | Value                                                                                   |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Num data                   | $\NumData$                | $133$                                                                                   |
+|                 | Batch size                 | $\NumData_b$              | $30$                                                                                    |
+| Optimiser       | Epochs                     | N/A                       | $8000$                                                                                  |
+|                 | Num samples                | $S$                       | $1$                                                                                     |
+|                 | Learning rate              | N/A                       | $0.001$                                                                                 |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $0.1$                                                                                   |
+|                 | Kernel Lengthscales        | $l$                       | $10$                                                                                    |
+|                 | Likelihood Variance        | $\sigma_n$                | $0.0011$                                                                                |
+| Expert 1        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $20$                                                                                    |
+|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
+|                 | Likelihood Variance        | $\sigma_n$                | $0.9$                                                                                   |
+| Expert 2        | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | ones plus Gaussian noise                                                                |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
+|                 | Kernel Variance            | $\sigma_f$                | $3$                                                                                     |
+|                 | Kernel Lengthscales        | $l$                       | $0.5$                                                                                   |
+| Gating Function | Num inducing points        | $\NumInducing$            | $30$                                                                                    |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$ |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                               |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                    |
 |-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------|
 #+LATEX: }
 #+end_table
