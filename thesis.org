@@ -2715,7 +2715,23 @@ for the latent function values $\mathbf{f}$ cite:Titsias2009.
 # sufficient statistic for the latent function values $\mathbf{f}$.
 
 *** Learning in Multimodal Dynamical Systems
+From deep structured mixture of expets
+
 products of experts
+
+Naive-Local-Experts (NLE) cite:trespBayesian2000a,vasudevanGaussian2009a
+
+Products-of-Experts (PoE) cite:cohenHealing2020s
+
+Generalised  cite:gaddEnriched2020
+
+
+mixture of experts
+
+Gaussian process state-space models
+state-space models
+cite:doerrProbabilistic2018,schonSystem2011
+cite:eleftheriadisIdentification2017
 **** Mixtures of Gaussian Process Experts
 Tresp
 
@@ -4189,6 +4205,13 @@ up inference.
 
 \renewcommand{\state}{\ensuremath{\mathbf{s}}}
 
+\renewcommand{\nominalDynamics}{\ensuremath{\mathbf{n}}}
+\renewcommand{\unknownDynamics}{\ensuremath{\mathbf{f}}}
+\renewcommand{\nominalDynamicsK}{\ensuremath{\mode{\mathbf{n}}}}
+\renewcommand{\unknownDynamicsK}{\ensuremath{\mode{\mathbf{f}}}}
+
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{T}}
 \newcommand{\inputDim}{\ensuremath{d}}
 \newcommand{\InputDim}{\ensuremath{D}}
 #+END_EXPORT
@@ -4267,16 +4290,27 @@ up inference.
 This chapter is interested in /learning/ representations of multimodal dynamical systems,
 that can be leveraged to control robotic systems in uncertain environments, where both the underlying
 dynamics modes, and how the dynamics switches between them, are /not fully known a priori/.
-However, it does assume that the dynamics modes vary over the
-input (state, control) domain, such that the mode switching can be modelled by input-dependent functions.
+This chapter assumes access to a data set $\dataset$ of state transitions, that
+have previously been sampled from the system at a constant frequency, i.e. with a fixed time-step.
+
+# However, it does assume that the dynamics modes vary over the
+# input (state, control) domain, such that the mode switching can be modelled by input-dependent functions.
 # This set of functions governing the mode switching is commonly referred to as a gating network.
 
-This chapter further assumes access to a data set $\dataset$ of state transitions, that
-have previously been sampled from the system at a constant frequency, i.e. with a fixed time-step.
-Given such a data set, this chapter first constructs a discrete-time representation of
-multimodal dynamical systems.
-It then formulates a probabilistic representation of this model and details an approach to performing Bayesian
-inference in the model.
+# This work is motivated by learning synergising model learning for controlling multimodal dynamical systems.
+
+# This work is motivated by learning /latent/ structure that can be exploited for model-based control.
+
+# In particular
+
+# As such, correctly identifying the underlying dynamics modes is extremely important
+
+# Identifiability
+
+# Given such a data set, this chapter first constructs a discrete-time representation of
+# multimodal dynamical systems.
+# It then formulates a probabilistic representation of this model and details an approach to performing Bayesian
+# inference in the model.
 
 Motivated by synergising model learning and control, the probabilistic model constructed in this chapter
 resembles a \acrfull{mogpe} with a \acrshort{gp}-based gating network.
@@ -4353,79 +4387,305 @@ cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper[fn:1:Code accompany
 # The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub
 # cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper[fn:1:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].].
 
+** Problem Statement
+This work is interested in learning /unknown/, or /partially unknown/  multimodal,
+stochastic, nonlinear dynamical systems,
+with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+$\control \in \controlDomain \subseteq \R^\ControlDim$, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-cont}
+\dot{\state}(t) &=
+\mathbf{g}(\state(t), \control(t)) + \bm\epsilon(t) &\\
+&= \mode{\mathbf{g}}(\state(t), \control(t)) + \mode{\bm\epsilon}(t)
+\quad &\text{if} \quad \alpha(t)=\modeInd, \\
+%&= \underbrace{\nominalDynamics(\state(t), \control(t))}_{\text{nominal}}
+%+ \underbrace{\unknownDynamics(\state(t), \control(t))}_{\text{unknown}}
+%+ \underbrace{\bm\epsilon(t)}_{\text{process noise}} \\
+% &= \fk(\state(t), \control(t)) + \mode{\bm\epsilon}(t)
+&= \underbrace{\nominalDynamicsK(\state(t), \control(t))}_{\text{nominal mode \modeInd}}
++ \underbrace{\unknownDynamicsK(\state(t), \control(t))}_{\text{unknown error mode \modeInd}}
++ \mode{\bm\epsilon}(t)
+\quad &\text{if} \quad \alpha(t)=\modeInd,
+%\bm\mode{\epsilon}(t) &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\epsilon}} \right),
+\end{align}
+#+END_EXPORT
+where $\dot{\state}$ denotes the state derivative w.r.t. time, i.e. Newton's dot notation.
+One of the $\ModeInd$ dynamics modes,
+$\{\mode{\mathbf{g}} : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$, and associated noise models,
+$\mode{\bm\epsilon}(t) &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
+$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
+are selected by a discrete mode indicator variable,
+$\alpha(t) \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$, at any given time $t$.
+The nominal dynamics
+$\{\nominalDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+represents the known dynamics and the additive dynamics
+$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+represents the initially unknown dynamics, which are to be learned from observations.
+This work considers systems that are stochastic (i.e. subject to process noise), but
+are not subject to observation noise.
+Thus, the $\mode{\bm\epsilon}$ term solely represents the process noise.
+
+This chapter assumes access to historical data comprising state transitions from $\NumEpisodes$ trajectories
+of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
+The data set has ${N=ET}$ elements
+and we abuse notation by appending the independent trajectories along
+time to get the data set $\mathcal{D}=\{(\state_{\timeInd-1},\control_{\timeInd-1}),\Delta \state_t\}^\NumData_{\timeInd=1}$.
+The discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont, corresponding to this data set,
+is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc}
+\Delta \state_{\timeInd} &= \mode{\mathbf{g}} (\state_{\timeInd}, \control_{\timeInd} ; \Delta t = t_*) + \mode{\epsilon}
+&\text{if} \quad \modeVar_{\timeInd} = \modeInd \\
+&= \underbrace{\nominalDynamicsK(\state_t, \control_t ; \Delta t = t_*)}_{\text{nominal mode \modeInd}}
++ \underbrace{\unknownDynamicsK(\state_t, \control_t ; \Delta t = t_*)}_{\text{unknown error mode \modeInd}}
++ \mode{\bm\epsilon}(t)
+&\text{if} \quad \alpha_{t} = \modeInd,
+\end{align}
+#+END_EXPORT
+where
+$\Delta \state_{\timeInd} = \state_{\timeInd} - \state_{\timeInd-1}$ is the change in state between time $\timeInd-1$
+and $\timeInd$ and
+$\state_t \in \stateDomain$, $\control_t \in \controlDomain$ and $\alpha_t \in \modeDomain$
+are the state, control and mode indicator variable at time, $t$, respectively.
+
+To help with understanding and ease of notation,
+only a single output dimension is considered in this chapter,
+i.e. $\fk(\cdot)$ is assumed to be $\mode{\latentFunc}(\cdot)$.
+The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
+To further ease notation, the state-control input domain is denoted
+$\inputDomain = \stateDomain \times \controlDomain \in \R^{\InputDim}$,
+giving a single input
+$\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
+Given this formulation, our task is to learn the mapping $\unknownDynamics$,
+where the mapping switches between $\ModeInd$ different functions $\unknownDynamicsK$.
+This is a regression problem,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc}
+\underbrace{\Delta \state_t - \nominalDynamicsK(\state_t, \control_t ; \Delta t = t_*)}_{\text{\singleOutput}}
+= \underbrace{\unknownDynamicsK(\state_t, \control_t ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
++ \mode{\epsilon}
+\quad \text{if} \quad \modeVarK,
+\end{align}
+#+END_EXPORT
+where both the latent dynamics functions $\unknownDynamicsK$ and how the system switches between them,
+$\modeVar$ must be learned.
+A single output is denoted as
+$\singleOutput = \Delta \state_t - \nominalDynamicsK(\state_t, \control_t ; \Delta t = t_*)$.
+The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
+and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
+
+
+# from inputs $\singleInput$ to
+# outputs $\singleOutput$,
+
+
+# Given this notation, our task is to learn the mapping $\f$, from inputs $\singleInput$ to
+# outputs $\singleOutput$,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-disc}
+# \singleOutput = \mode{\latentFunc} (\singleInput) + \mode{\epsilon}
+# \quad \text{if} \quad \modeVarK,
+# \end{align}
+# #+END_EXPORT
+# where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
+
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+# A time series of observations from time $a$ to time $b$ (inclusive)
+# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+# The concatenation of the state and control domains is
+# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+# A single state-control input is denoted as
+# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+# $\allInput$, and the set of all outputs as $\allOutput$.
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
+# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
+# $\NumTimesteps$ steps per episode.
+# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+
+
+# giving the data set,
+# $~{\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}}$.
+
+# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
+# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
+# $\NumTimesteps$ steps per episode.
+# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
+# We abuse notation (considering time indexing) and denote the data set
+# $\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
+
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
+# where we have abused the time indexing notation.
+
+# This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-disc}
+# \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
+# \quad \text{if} \quad \modeVarK,
+# \end{align}
+# #+END_EXPORT
+# where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
+# at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
+# indicates one of $\ModeInd$ dynamics modes) at time $t$.
+
+# A time series of observations from time $a$ to time $b$ (inclusive)
+# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+# The concatenation of the state and control domains is
+# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+# A single state-control input is denoted as
+# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+# $\allInput$, and the set of all outputs as $\allOutput$.
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
 ** Motivation and Related Work
 # In particular, trajectory optimisation algorithms that find trajectories that remain in a desired dynamics mode.
+# This chapter is motivated by learning representations of multimodal dynamical systems
+# that can be exploited by model-based control algorithms.
+# One caveat to model-based control is that it requires a relatively accurate mathematical model of
+# the system.
+# Traditionally, these mathematical models are built using first principles based on physics.
+# However, accurately modelling the underlying transition dynamics can be challenging and
+# lead to the introduction of model errors.
+# For example, both observation and process noise
+# are inherent in many real-world systems and can be hard to model
+# due to both spatial and temporal variations.
+# Incorrectly accounting for this uncertainty can have a detrimental impact on controller performance
+# and is an active area of research in the robust
+# and stochastic optimal control communities citep:freemanRobust1996,stengelStochastic1986.
+
+# The difficulties associated with constructing mathematical models can be overcome by learning from
+# observations cite:ljungSystem1999.
+# However, learning dynamics models for control introduces other difficulties.
+# For example, it is important to know
+# where the model cannot predict confidently due to a lack of training observations.
+# This concept is known as epistemic uncertainty and is reduced in the limit of infinite data.
+
 This chapter is motivated by learning representations of multimodal dynamical systems
 that can be exploited by model-based control algorithms.
-One caveat to model-based control is that it requires a relatively accurate mathematical model of
-the system.
-Traditionally, these mathematical models are built using first principles based on physics.
-However, accurately modelling the underlying transition dynamics can be challenging and
-lead to the introduction of model errors.
-For example, both observation and process noise
-are inherent in many real-world systems and can be hard to model
-due to both spatial and temporal variations.
-Incorrectly accounting for this uncertainty can have a detrimental impact on controller performance
-and is an active area of research in the robust
-and stochastic optimal control communities citep:freemanRobust1996,stengelStochastic1986.
+Probabilistic models provide the capability of constructing mathematical
+models that can represent and manipulate uncertainty in data, models, decisions and
+predictions.
+\marginpar{probabilistic models}
+Learning representations of dynamical systems for controlling in dynamical systems
+using probabilistic models has shown much promise.
+For example, see
+cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
+# In particular, use Gaussian processes (GPs) to learn
+# transition dynamics models.
 
-The difficulties associated with constructing mathematical models can be overcome by learning from
-observations cite:ljungSystem1999.
-However, learning dynamics models for control introduces other difficulties.
-For example, it is important to know
-where the model cannot predict confidently due to a lack of training observations.
-This concept is known as epistemic uncertainty and is reduced in the limit of infinite data.
-
-Probabilistic models have been used to account for epistemic uncertainty and also
-provide a principled approach to modelling stochasticity i.e. aleatoric uncertainty
-citep:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019.
-For example, cite:cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014 use Gaussian processes (GPs) to learn
-transition dynamics models.
-
-Gaussian processes are the state-of-the art approach for Bayesian nonparametric regression.
-However, they suffer from two important limitations.
-Firstly, the covariance function is commonly assumed to be stationary
-due to the challenge of parameterising them to be non-stationary.
-This limits their modelling flexibility.
-For example, if the function has a discontinuity due to different underlying lengthscales
-in different parts of the input space then a stationary covariance function will not be adequate.
-Similarly, if the observations are subject to different noise variances in different regions
-of the input space then conventional homoscedastic regression will not suffice.
-Secondly, GPs cannot model multimodal distributions, i.e. where there are multiple
-regions of high probability mass with regions of low probability mass in between.
-# GP regression with a Gaussian likelihood models a Gaussian predictive distribution
-# that is not capable of modelling such multimodal distributions.
-
-Methods for learning probabilistic multimodal transition dynamics have been proposed:
-cite:mckinnonLearning2017 use a Mixture of Gaussian Process Experts (MoGPE) method,
-cite:moerlandLearning2017 use deep generative models and
-cite:kaiserBayesian2020 use a Bayesian model that learns independent
-dynamics modes whilst maintaining a
-probabilistic belief over which mode is responsible for predicting at a given input location.
-# This work differs is primarily interested in correctly identifying the underlying dynamics modes
+Our work is interested in learning and control in multimodal dynamical systems.
+As such, a primary interest is correctly /identifying/ the underlying dynamics modes.
+That is, ensuring that the learned dynamics modes accurately model the true underlying dynamics modes.
+\marginpar{identifiability}
+Incorrectly identifying the underlying dynamics modes will have a detrimental impact on performance
+and may even lead to system failure.
+# Learning
 # and inferring latent spaces that are convenient for control.
 
-# This requires correctly identifying the underlying dynamics modes and which is often difficult with
+The introduction of /latent variables/ into probabilistic models is a key component providing them with interesting
+and powerful capabilities for synergising model learning and control.
+For example, cite:hafnerLearning2019,rybkinModelBased2021
+\todo{add more latent space dynamics refs}
+learn /latent spaces/ which provide convenient spaces for planning.
+\marginpar{latent spaces for control}
+Of particular interest in this work, is how the system switches between the underlying dynamics modes.
+As such, this work is interested in learning /latent spaces/
+that are rich with information regarding how a system switches between its underlying dynamics modes.
 
-Naive-Local-Experts (NLE) cite:trespBayesian2000a,vasudevanGaussian2009a
+With this in mind, our main goals are to construct a model which,
+1. can /identify/ the true underlying dynamics modes accurately,
+   - this could be achieved by providing handles for encoding domain knowledge,
+2. has a convenient /latent space/ for planning,
+   - this space should be rich with information regarding mode switching.
 
-Products-of-Experts (PoE) cite:cohenHealing2020s
+Methods for learning probabilistic multimodal transition dynamics have been proposed.
+cite:moerlandLearning2017 use deep generative models, namely a conditional Variational Auto-Encoder,
+to learn multimodal transition dynamics for Model-Based Reinforcement Learning.
+However, encoding expert domain knowledge into Variational Auto-Encoders is difficult, which makes
+it hard to ensure that the correct underlying dynamics modes are learned.
 
-Generalised  cite:gaddEnriched2020
+Early work combining hidden Markov models (HMM) and linear dynamical systems, known as
+switching state-space models cite:ghahramaniVariational2000,ghahramaniSwitching1996,
+offer a dynamical generalisation of Mixture of Experts.
+These models have been extended to nonlinear dynamics modes but are limited in
+the switching behaviour that they can model.
+In particular, they do not provide mechanisms for placing informative priors on the switching behaviour.
+\todo{is this right about HMM? Can they incorporate GP priors}
+
+# cite:kaiserBayesian2020 use a Bayesian model that learns independent
+# dynamics modes whilst maintaining a
+# probabilistic belief over which mode is responsible for predicting at a given input location.
+# The methods differs as it does not assign observations to modes.
+cite:mckinnonLearning2017 use a Mixture of Gaussian Process Experts (MoGPE) method to learn switching
+robot dynamics online.
+Their model uses a gating network based on a Dirichlet process to model how the system switches between the underlying
+modes. The Dirichlet process models the switching behaviour via clustering.
+As such, it cannot model complex nonlinear dependencies between the switching behaviour
+and the state-control inputs.
+For example, if a dynamical system oscillates between two dynamics modes over its state-control input space,
+their method would assign new dynamics modes at each oscillation.
+In contrast, we seek enhanced identifiability that learns only the two true dynamics modes.
+
+Gaussian processes are the state-of-the art approach for Bayesian nonparametric regression
+and they provide a powerful mechanism for encoding expert domain knowledge.
+As such, MoGPE methods are a promising direction for modelling multimodal systems.
+Motivated by improving identifiability and learning latent spaces for control, we now
+review the MoGPE literature, starting from their origin, the mixture model.
+
+# Let us now introduce mixture models and detail how they are extended to
+# Let us now introduce mixture models and detail how they are extended to
+
+# Looking at some of the MoGPE methods from the literature, it is clear that many are motivated
+# by the computational issues GP methods.
+
+# Mixture models are a natural choice for modelling multimodal systems.
+# After highlighting the inherent identifiability issues associated with mixture models, it introduces the Mixture of
+# Experts (MoE) model, an extension to mixture models where
+# the mixture weight (aka mixing probability) depends on the input variable.
+# It then details how it breaks down for nonparametric experts
+# and introduces the infinite Mixture of Gaussian Process Experts (MoGPE) model from the literature,
+# which is motivated by the computational issues associated with inference and prediction.
+# Although our model suffers from the complexity issues highlighted by cite:rasmussenInfinite2001, our variational
+# inference scheme significantly improves scalability of inference and prediction in our model, whilst providing
+# attractive mechanisms for improving identifiablity.
 
 
-mixture of experts
 
-Gaussian process state-space models
-state-space models
-cite:doerrProbabilistic2018,schonSystem201cite:eleftheriadisIdentification20171
+# In contrast to this approach, our work seeks mechanisms for encoding expert domain
 
 
-switching state-space models
-cite:ghahramaniVariational2000,ghahramaniSwitching1996
+# This work follows a similar approach but is interested in learning /latent spaces/ for multimodal dynamical systems
+# that are rich with information regarding how the systems switches between the underlying dynamics modes.
 
-# Other models such as d
-# cite:kaiserData2019
+
+# Gaussian processes are the state-of-the art approach for Bayesian nonparametric regression.
+# However, they suffer from two important limitations.
+# Firstly, the covariance function is commonly assumed to be stationary
+# due to the challenge of parameterising them to be non-stationary.
+# This limits their modelling flexibility.
+# For example, if the function has a discontinuity due to different underlying lengthscales
+# in different parts of the input space then a stationary covariance function will not be adequate.
+# Similarly, if the observations are subject to different noise variances in different regions
+# of the input space then conventional homoscedastic regression will not suffice.
+# Secondly, GPs cannot model multimodal distributions, i.e. where there are multiple
+# regions of high probability mass with regions of low probability mass in between.
+# # GP regression with a Gaussian likelihood models a Gaussian predictive distribution
+# # that is not capable of modelling such multimodal distributions.
+
 
 # Let us now introduce mixture models as they are a natural choice for modelling
 # multimodal systems.
@@ -4476,6 +4736,7 @@ the MoE marginal likelihood is given by,
 where $\singleModeVar$ is the expert indicator variable assigning observations to experts.
 The probability mass function over the expert indicator variable is referred to as the gating network and
 indicates which expert governs the model at a given input location.
+See cite:yukselTwenty2012 for a survey of MoE methods.
 
 *Nonparametric Mixtures of Experts*
 Modelling the experts as GPs gives rise to a class of powerful models known as
@@ -4486,18 +4747,18 @@ They are able to model non-stationary functions as
 each expert learns separate hyperparameters (e.g. lengthscales, noise variances) and the gating
 network can turn each expert "on" and "off" in different regions of the input space.
 Many MoGPE methods have been proposed and in general they differ via
-the formulation of their gating network and their approximate inference algorithms citep:yukselTwenty2012.
+the formulation of their gating network and their approximate inference algorithms.
 
-As highlighted in cite:rasmussenInfinite2001,
+As highlighted by cite:rasmussenInfinite2001,
 the traditional MoE marginal likelihood does not apply when the
 experts are nonparametric.
 This is because the model assumes that the observations are i.i.d. given the model parameters,
 which is contrary to GP models, which model the dependencies in the joint distribution, given the
 hyperparameters.
+\marginpar{mixture of nonparametric experts}
 cite:rasmussenInfinite2001 point out that there is a joint distribution corresponding to every possible
 combination of assignments (of observations to experts).
 The marginal likelihood is then a sum over exponentially many assignments,
-\marginpar{mixture of nonparametric experts}
 #+BEGIN_EXPORT latex
 \small
 \begin{align}  \label{eq-np-moe-marginal-likelihood-assign}
@@ -4518,31 +4779,18 @@ The gating network can be considered a handle for encoding prior knowledge that 
 the set of admissible functions.
 This can improve identifiability and lead to learned representations that reflect
 our understanding of the system. The simplest case being reordering the experts.
-Figure ref:gating_network_comparison provides a visual comparison of
+cref:gating_network_comparison provides a visual comparison of
 different gating network formulations,
 providing intuition for how they can differ in restricting the set of admissible functions.
 
 # An EM inference scheme is proposed, which assuming there are $N$ observations, requires
 # $\mathcal{O}(3KN^3)$ computations per iteration.
 The original MoGPE work by cite:trespMixtures2000a, proposed a gating network resembling a GP classification
-model, i.e. a softmax likelihood with independent GPs placed over each of the $K$ latent functions
-(bottom left plot in Figure [[ref:gating_network_comparison]]).
-Although this gating function divides up the input space cite:rasmussenInfinite2001 argue that
-data not assigned to a GP expert will lead to bias near the boundaries.
-Instead they formulate the gating network in terms of conditional
-distributions on the expert indicator variable, on which they place an input-dependent
-Dirichlet process prior.
-
-cite:Meeds2005 proposed an alternative infinite MoGPE similar to cite:rasmussenInfinite2001 except
-that they specify a full generative model over the input and output space $p(\mathbf{y}, \mathbf{x})$,
-as opposed to just a conditional model $p(\mathbf{y} | \mathbf{x})$.
-Each expert's inputs are then Gaussian distributed
-(middle top plot of Figure [[ref:gating_network_comparison]]) giving rise to the gating
-network in the middle bottom plot of Figure [[ref:gating_network_comparison]].
-This gating network is not capable of turning an expert "on" in multiple regions
-of the input space. It will instead generate a new cluster and assign it a new expert.
-These approaches reduce the computational burden by associating each expert with a
-subset of the observations but rely on Markov Chain Monte Carlo (MCMC) inference schemes.
+model, i.e. a softmax likelihood with independent GPs placed over each of the $K$ latent functions.
+Importantly, this gating network is capable of turning a single expert "on" in multiple regions of the input space.
+This is visualised in the bottom left plot in cref:gating_network_comparison, where
+the left and right regions (shaded green) are subsets of the domain where expert
+one has generated the observations (observations are not shown) and the middle region (shaded blue) where expert two has.
 #+NAME: gating_network_comparison
 #+ATTR_LATEX: :width 0.95\textwidth :placement [h] :center t
 #+caption: Comparison of different gating networks (one per column).
@@ -4558,114 +4806,127 @@ subset of the observations but rely on Markov Chain Monte Carlo (MCMC) inference
 #+caption: marginalised the cluster indicator variable from the plot to the left - leading to
 #+caption: a Gaussian mixture over the inputs.
 #+caption: The plot below shows the resulting mixing probabilities.
-[[file:images/model/gating-network-comparison-2by3-cropped.pdf]]
+[[file:images/model/gating-network-comparison-2by3.pdf]]
+# [[file:images/model/gating-network-comparison-2by3-cropped.pdf]]
 
-cite:Yuan proposed a MoGPE with a variational inference scheme which is much faster than using MCMC.
-They assume that the expert indicators $\alpha$ are generated by a Dirichlet distribution and
-that given the expert indicator the inputs follow a Gaussian mixture model (GMM), i.e. they
-introduce a cluster indicator variable $z$.
-This contrasts earlier approaches that let the expert indicator act as the input cluster
-indicator.
-This is illustrated in the right hand plots of Figure [[ref:gating_network_comparison]] which
-show two Gaussian mixtures over the inputs (one for each expert) and
-the resulting expert mixing probabilities.
-Introducing the separate cluster indicator variable has given rise to a
-gating network that can turn a single expert "on" in multiple regions of the input space.
-However, it does not provide a handle for encoding prior information like the GP based gating network.
+# Although this gating network divides up the input space, cite:rasmussenInfinite2001 argue that
+# data not assigned to a GP expert will lead to bias near the boundaries.
+# Instead they formulate the gating network in terms of conditional
+cite:rasmussenInfinite2001 introduced the infinite Mixtures of Gaussian Process Experts method
+which automatically infers the number of experts from observations via an input-dependent
+Dirichlet process prior.
+cite:NIPS2005_f499d34b proposed an alternative infinite MoGPE that models the joint distribution
+over the input and output space $p(\mathbf{y}, \mathbf{x})$,
+as opposed to just a conditional model $p(\mathbf{y} | \mathbf{x})$.
+These methods are not capable of turning a single expert "on" in multiple regions
+of the input space. Instead they will generate a new expert.
+This is illustrated in the middle column of cref:gating_network_comparison.
+The top plot shows clustering of the input space
+where each Gaussian cluster $z=\{1,\ldots, K\}$
+corresponds to the inputs for a particular expert $\alpha = \{1, \ldots, K\}$.
+These models assume that the cluster indicator variable $z$ equals the expert indicator variable $z=\alpha$.
+This gives rise to the gating network in the middle bottom plot of cref:gating_network_comparison, where
+a third expert $k=3$ has been introduced to model the right hand region associated with expert one.
 
-cite:trappDeep2020,nguyenStochastic2018
+# cite:rasmussenInfinite2001 formulate the gating network in terms of conditional
+# distributions on the expert indicator variable, on which they place an input-dependent
+# Dirichlet process prior.
+# cite:Meeds2005 proposed an alternative infinite MoGPE similar to cite:rasmussenInfinite2001 except
+# that they specify a full generative model over the input and output space $p(\mathbf{y}, \mathbf{x})$,
+# as opposed to just a conditional model $p(\mathbf{y} | \mathbf{x})$.
+# The input space is divided into Gaussian clusters where each cluster $z=\{1,\ldots, K\}$
+# corresponds to the inputs for a particular expert $\alpha = \{1, \ldots, K\}$.
+# This is shown in the middle top plot of Figure [[ref:gating_network_comparison]]
+# where the cluster indicator variable equals the expert indicator variable $z=\alpha$.
+# This gives rise to the gating network in the middle bottom plot of Figure [[ref:gating_network_comparison]], where
+# a third expert $k=3$ has been introduced to model the right hand region associated with expert one.
+# This gating network is not capable of turning an expert "on" in multiple regions
+# of the input space. Instead it generates a new cluster and assign it a new expert.
+# Although these approaches reduce the computational burden by associating each expert with a
+# subset of the observations, they rely on Markov Chain Monte Carlo (MCMC) inference schemes.
 
-Modelling the gating network with GPs enables us
-to encode informative prior knowledge through the choice of mean and covariance functions.
+cite:NIPS2008_f4b9ec30 proposed a MoGPE method with a variational inference scheme, which is much faster
+than the previous approaches that rely on MCMC.
+Their method introduces a separate cluster indicator variable $z$, resulting in each experts' inputs
+following a Gaussian mixture model (GMM).
+Introducing the separate cluster indicator variable enables the
+gating network to turn a single expert "on" in multiple regions of the input space.
+This is illustrated in the right hand plots of Figure [[ref:gating_network_comparison]], which
+show Gaussian mixtures over each experts' inputs (top) and the resulting expert mixing probabilities (bottom).
+This method enables a single expert to be turned "on" in multiple regions of the input space.
+However, it still does not provide a handle for encoding prior information like the GP based gating network.
+# prevents an explosion in the number of experts
+
+# cite:Yuan proposed a MoGPE with a variational inference scheme which is much faster than using MCMC.
+# They assume that the expert indicators $\alpha$ are generated by a Dirichlet distribution and
+# that given the expert indicator the inputs follow a Gaussian mixture model (GMM), i.e. they
+# introduce a separate cluster indicator variable $z$.
+# This contrasts earlier approaches that let the expert indicator act as the input cluster
+# indicator.
+# This is illustrated in the right hand plots of Figure [[ref:gating_network_comparison]] which
+# show two Gaussian mixtures over the inputs (one for each expert) and
+# the resulting expert mixing probabilities.
+# Introducing the separate cluster indicator variable has given rise to a
+# gating network that can turn a single expert "on" in multiple regions of the input space.
+# However, it does not provide a handle for encoding prior information like the GP based gating network.
+
+*GP-based Gating Network* Modelling the gating network with a set of input-dependent gating functions
+and a softmax link function, enables complex nonlinear dependencies between the expert indicator
+variable and the input-space to be modelled.
+If knowledge regarding how the model switches between the experts over the input-space is /known a priori/,
+then this can be encoded via the choice of mean and covariance functions.
 For example, adopting a squared exponential covariance function would encode prior belief that
 the mixing probabilities should vary smoothly across the input space.
-If modelling a dynamical system with oscillatory behaviour (e.g. an engine)
-a periodic kernel could be adopted.
-Prior knowledge of the mixing probability values can be encoded through
-the choice of mean function.
-We may also be interested in exploiting techniques from differential geometry
-e.g. finding probabilistic geodesics citep:tosiMetrics2014 on the gating network.
-Again, our choice of covariance function can be used to encode how differentiable
-the gating network should be.
-Learning better representations will also improve the models
-ability to extrapolate as it will be more true to the underlying system.
+If modelling a dynamical system which oscillates between different dynamics modes over the input-space
+(with a constant frequency), then a periodic kernel could be adopted.
+More accurately modelling this dependency will result in superior generalisation,
+i.e. the model will be able to interpolate and extrapolate more accurately.
+
+With regards to constructing convenient /latent spaces/ for control, formulating the gating network GPs
+with differentiable mean and covariance functions, enables techniques from Riemannian geometry
+to be deployed on the gating functions citep:carmoRiemannian1992.
+In particular, our work is interested in finding length minimising trajectories on the
+gating functions' GP posteriors, aka geodesic trajectories citep:tosiMetrics2014.
 
 
-
-# *Identifiability* We note that mixture models are inherently unidentifiable as
-# different combinations of mixture components
-# and mixing coefficients can generate the same predictive distributions.
-# The gating network can be considered a handle for encoding prior knowledge that can be used to constrain
-# the set of admissible functions.
-# This can improve identifiability and lead to learned representations that reflect
-# our understanding of the system. The simplest case being reordering the experts.
-# Figure ref:gating_network_comparison provides a visual comparison of
-# different gating network formulations,
-# providing intuition for how they can differ in restricting the set of admissible functions.
-
-# Modelling the gating network with GPs enables us
-# to encode informative prior knowledge through the choice of mean and covariance functions.
+# Modelling the gating network with GPs (resembling a GP classification model) enables
+# informative prior knowledge to be encoded through the choice of mean and covariance functions.
 # For example, adopting a squared exponential covariance function would encode prior belief that
 # the mixing probabilities should vary smoothly across the input space.
 # If modelling a dynamical system with oscillatory behaviour (e.g. an engine)
 # a periodic kernel could be adopted.
 # Prior knowledge of the mixing probability values can be encoded through
 # the choice of mean function.
-# We may also be interested in exploiting techniques from differential geometry
-# e.g. finding probabilistic geodesics (cite:Tosi2014) on the gating network.
-# Again, our choice of covariance function can be used to encode how differentiable
-# the gating network should be.
+# Our work is interested in exploiting the gating network for techniques from differential geometry,
+# in particular, finding geodesics citep:tosiMetrics2014.
+# Selecting mean and covariance functions which are differentiable with respect to their inputs, enables
+# techniques from Riemannian geometry citep:carmoRiemannian1992 to be deployed on the gating functions.
 # Learning better representations will also improve the models
 # ability to extrapolate as it will be more true to the underlying system.
 
-*Inference* We can also consider the implications of the mentioned gating networks from an inference perspective.
-It is known that developing inference algorithms for propagating uncertain (Gaussian) inputs
-through GPs is itself a challenging problem (see cite:Ustyuzhaninov2019).
-Therefore, developing a scalable inference algorithm to propagate inputs that are distributed according to
-a Gaussian mixture will likely lead to valuable information loss.
-Theoretically the approaches by cite:Rasmussen2002,Meeds2005 are able to achieve very
-accurate results but their inference relies on MCMC sampling methods,
-which can be slow to converge.
+More recent MoGPE methods also exist citep:trappDeep2020,nguyenStochastic2018,gaddEnriched2020.
+The method by cite:trappDeep2020 presents a Deep Structured Mixtures of Gaussian Processes
+based on sum product networks.
+It provides exact inference and attractive computational and memory costs but results in worse predictive densities
+than a Sparse Variational Gaussian Process (SVGP).
+This is indicated by worse Negative Log Predictive Density (NLPD) scores than a SVGP on 6 out of 7 the
+benchmark data sets it is tested on.
+In contrast, our work seeks improved NLPD scores -- relative to a SVGP -- as we seek learned representations that
+more accurately model the data distribution.
+# cite:gaddEnriched2020 present a method that models the joint distribution of the inputs and targets explicitly.
 
-We consider our approach as trading in the computational benefits that can be obtained through
-the formulation of the gating network
-for the ability to improve identifiability with informative GP priors.
-The main contributions of this paper are twofold. Firstly, we re-formulate a gating network
-based on GPs to improve indentifiability.
-Secondly, we derive a variational lower bound
-which improves on the complexity issues associated with inference when adopting such a gating network.
-Motivated by learning representations of dynamical systems with two regimes we instantiate
-the model with two experts as it is  a special case where the gating network can be calculated
-in closed form.
-This is because we seek to learn an operatable mode with one expert and explain away the un-operatable mode
-with the other. This results
-in the gating network indicating which regions of the
-input space are operatable, providing a convenient space for planning.
+\todo{cite trappDeep2020,nguyenStochastic2018,gaddEnriched2020}
 
+# *Inference* We can also consider the implications of the mentioned gating networks from an inference perspective.
+# It is known that developing inference algorithms for propagating uncertain (Gaussian) inputs
+# through GPs is itself a challenging problem (see cite:ustyuzhaninovCompositional2020).
+# Therefore, developing a scalable inference algorithm to propagate inputs that are distributed according to
+# a Gaussian mixture will likely lead to valuable information loss.
+# We consider our approach as trading in the computational benefits that can be obtained through
+# the formulation of the gating network for the ability to improve identifiability with informative GP priors.
 
-
-As highlighted in cite:rasmussenInfinite2001,
-the traditional MoE marginal likelihood does not apply when the
-experts are nonparametric.
-This is because the model assumes that the observations are i.i.d. given the model parameters,
-which is contrary to GP models, which model the dependencies in the joint distribution, given the
-hyperparameters.
-cite:rasmussenInfinite2001 point out that there is a joint distribution corresponding to every possible
-combination of assignments (of observations to experts).
-The marginal likelihood is then a sum over exponentially many assignments,
-\marginpar{mixture of nonparametric experts}
-#+BEGIN_EXPORT latex
-\small
-\begin{align}  \label{eq-np-moe-marginal-likelihood-assign}
-\moeEvidence &= \sum_{\allModeVar} \npmoeGatingPosterior \npmoeExpertPosterior \\
-&= \sum_{\allModeVar} \npmoeGatingPosterior 
-\left[ \prod_{\modeInd=1}^\ModeInd p\left(\{\singleOutput : \singleModeVarK \} \mid \{\singleInput : \singleModeVarK \}, \expertParamsK \right) \right],  \nonumbedr
-\end{align}
-\normalsize
-#+END_EXPORT
-where $\allModeVar = \{\modeVar_1, \ldots, \modeVar_\NumData \}$ represents a set of assignments for all observations.
-This distribution factors into the product over experts, where each expert models the joint Gaussian distribution
-over the observations assigned to it.
+# Theoretically the approaches by cite:rasmussenInfinite2001,NIPS2005_f499d34b are able to achieve very
+# accurate results but their inference relies on MCMC sampling methods, which can be slow to converge.
 
 ** Related Work :noexport:
 Modelling the experts as GPs gives rise to a class of powerful models known as
@@ -4775,134 +5036,18 @@ input space are operatable, providing a convenient space for planning.
 # the benefits of adopting informative covariance functions in the gating network.
 # We then test our model on the motorcycle data set and compare it to a sparse variational GP.
 
-** Problem Statement
-This work is interested in learning multimodal, stochastic, nonlinear dynamical systems,
-with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-$\control \in \controlDomain \subseteq \R^\ControlDim$, given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-cont}
-\dot{\state}(t) &= \f(\state(t), \control(t)) + \bm\epsilon(t) \\
-&= \fk(\state(t), \control(t)) + \mode{\bm\epsilon}(t) \quad \text{if} \quad \alpha(t)=\modeInd, \\
-\bm\mode{\epsilon}(t) &\sim \mathcal{N}\left(0, \bm\Sigma_{\mode{\epsilon}} \right),
-\end{align}
-#+END_EXPORT
-where $\dot{\state}$ denotes the state derivative w.r.t. time, i.e. Newton's dot notation.
-One of the $\ModeInd$ dynamics modes,
-$\{\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$, and associated noise models,
-$\bm\mode{\epsilon}(t) &\sim \mathcal{N}\left(0, \bm\Sigma_{\bm\mode{\epsilon}} \right)$, where
-$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
-are selected by a discrete mode indicator variable,
-$\alpha(t) \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$, at any given time $t$.
-This work considers systems that are stochastic (i.e. subject to process noise), but
-are not subject to observation noise.
-Thus, the $\mode{\epsilon}$ term represents the process noise.
-
-This chapter assumes access to historical data comprising state transitions from $\NumEpisodes$ trajectories
-of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
-The data set has ${N=ET}$ elements
-and we abuse notation by appending the independent trajectories along
-time to get the data set $\mathcal{D}=\{(\state_{\timeInd-1},\control_{\timeInd-1}),\Delta \state_t\}^\NumData_{\numData=1}$.
-The discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont, corresponding to this data set,
-is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc}
-\Delta \state_{\timeInd} = \fk (\state_{\timeInd}, &\control_{\timeInd} ; \Delta t = t_*) + \mode{\epsilon}
-\quad \text{if} \quad \modeVar_\timeInd = \modeInd,
-\end{align}
-#+END_EXPORT
-where
-$\Delta \state_\timeInd= \state_{\timeInd} - \state_{\timeInd-1}$ is the change in state between time $\timeInd-1$
-and $\timeInd$ and
-$\state_t \in \stateDomain$, $\control_t \in \controlDomain$ and $\alpha_t \in \modeDomain$
-are the state, control and mode indicator variable at time, $t$, respectively.
-
-To help with understanding and ease of notation,
-only a single output dimension is considered in this chapter,
-i.e. $\fk$ is assumed to be $\mode{\latentFunc}$.
-The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
-To further ease notation, the state-control input domain is denoted
-$\inputDomain = \stateDomain \times \controlDomain \in \R^{\InputDim}$,
-giving a single input
-$\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
-A single state difference output is denoted as
-$\singleOutput = \Delta \state_t = \state_t - \state_{t-1}$.
-The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
-and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
-Given this notation, our task is to learn the function $\f$, mapping inputs $\singleInput$ to
-outputs $\singleOutput$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc}
-\singleOutput = \mode{\latentFunc} (\singleInput) + \mode{\epsilon}
-\quad \text{if} \quad \modeVarK.
-\end{align}
-#+END_EXPORT
-
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-# A time series of observations from time $a$ to time $b$ (inclusive)
-# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-# The concatenation of the state and control domains is
-# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
-# A single state-control input is denoted as
-# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
-# $\allInput$, and the set of all outputs as $\allOutput$.
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
-# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
-# $\NumTimesteps$ steps per episode.
-# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
-
-
-# giving the data set,
-# $~{\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}}$.
-
-# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
-# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
-# $\NumTimesteps$ steps per episode.
-# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
-# We combine the independent episodes to get the data set
-# $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
-# We abuse notation (considering time indexing) and denote the data set
-# $\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
-
-# We combine the independent episodes to get the data set
-# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
-# where we have abused the time indexing notation.
-
-# This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-multimodal-dynamics-disc}
-# \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
-# \quad \text{if} \quad \modeVarK,
-# \end{align}
-# #+END_EXPORT
-# where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
-# at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
-# indicates one of $\ModeInd$ dynamics modes) at time $t$.
-
-# A time series of observations from time $a$ to time $b$ (inclusive)
-# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-# The concatenation of the state and control domains is
-# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
-# A single state-control input is denoted as
-# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
-# $\allInput$, and the set of all outputs as $\allOutput$.
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
 ** Probabilistic Modelling
+Motivated by synergising model learning and control, the probabilistic model constructed in this chapter
+resembles a \acrfull{mogpe} with a \acrshort{gp}-based gating network.
+The \acrshort{gp}-based gating network infers latent /geometric/ structure that is exploited by the control
+algorithm in Section ref:sec-traj-opt-geometric.
+# This work derives a novel variational lower bound based on sparse GP approximations, that provides
+# well-calibrated uncertainty estimates and scalability via stochastic gradient methods.
+
+# In contrast to
 Given a factorised likelihood for each expert (e.g. Gaussian),
-an alternative approach is to let each expert predict on the basis of all observations
-and leave the gating network to soft assign the observations.
+an alternative approach to cref:eq-np-moe-marginal-likelihood-assign is to let each expert
+predict on the basis of all observations and leave the gating network to soft assign the observations.
 The marginal likelihood of this model is then given by,
 #+BEGIN_EXPORT latex
 \marginpar{marginal likelihood}
@@ -4917,9 +5062,11 @@ The marginal likelihood of this model is then given by,
 \marginpar{marginal likelihood}
 \begin{align} \label{eq-np-moe-marginal-likelihood}
 \moeEvidence &=
+\E_{\expertPrior} \left[
 \prod_{\numData=1}^\NumData \sum_{\modeInd=1}^\ModeInd
 \underbrace{\Pr\left(\singleModeVarK \mid \singleInput, \gatingParams \right)}_{\text{gating network}}
-\underbrace{\E_{\expertPrior} \left[ \singleExpertLikelihood \right]}_{\text{expert } k},
+\underbrace{ \singleExpertLikelihood}_{\text{expert } k}
+\right],
 \end{align}
 #+END_EXPORT
 where each expert follows the standard Gaussian likelihood model,
