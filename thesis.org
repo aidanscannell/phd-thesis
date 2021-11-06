@@ -9005,15 +9005,22 @@ the angular (yaw) velocity $\dot{\yaw}$,
 \newpage
 ** Discussion
 
-It is worth noting that in contrast to other MoGPE models, this model does not partition the data set,
-i.e. each expert depends on **all** of the training inputs.
+*Implicit Data Assignment*
+It is worth noting that in contrast to other MoGPE models, this model does not directly assign observations to experts.
 However, after augmenting each expert with separate inducing points,
 the model has the flexibility to loosely /partition/ the data set.
-Therefore, the number of inducing points $\NumInducing$ associated with each expert,
+Just as sparse GP methods can be viewed as methods that parameterise a full nonparametric GP,
+our approach can be viewed as parameterising the nonparametric Mixture of Gaussian Process Experts.
+Conveniently, our parameterisation, in particular the likelihood approximation in cref:eq-likelihood-approximation,
+deals with the issue of marginalising exponentially many sets of assignments of observations to experts.
+Evident from the results in this chapter, this likelihood approximation appears to retain important information
+regarding the assigning of observations to experts, whilst efficiently marginalising the expert indicator variable.
+It is also worth noting that the number of inducing points $\NumInducing$ associated with each expert,
 could be set by considering the number of data points believed to belong to a particular expert.
-\todo{citation for selecting number of inducing points}
+Currently, each expert's inducing inputs are initialised by randomly sampling a subset of the data inputs.
+Future work could explore different techniques for initialising each expert's inducing inputs.
 
-*Inducing Inputs*
+*Full Bayesian Treatment of Inducing Inputs*
 Common practice in sparse GP methods is to jointly optimise the hyperparameters and the inducing inputs.
 Optimising some of the parameters instead marginalising all parameters is knwon as Type-II marginal likelihood.
 In Bayesian model selection, it is well known that Type-II marginal likelihood can lead to overfitting
@@ -9027,22 +9034,43 @@ In some instances, we observe that optimising the inducing inputs leads to them 
 training data.
 Often this can be avoided by simply sampling the inducing inputs from
 the training inputs and fixing them, i.e. not optimising them.
-This often leads to lower NLML being achieved as well.
-This observation highlights the importance of a full Bayesian treatment of the inducing inputs.
-Specifying priors and performing efficient posterior inference over the inducing inputs is an interesting
-direction for future work -- although a challenging problem.
+This often leads to better NLPD scores as well.
+This observation highlights that a full Bayesian treatment of the inducing inputs is an interesting direction for
+future work.
+However, specifying priors and performing /efficient/ posterior inference over the inducing inputs
+is a challenging problem.
 
-** Related Work
-Switching state-space models (HMM)
 ** Conclusion
+This chapter has presented a method for learning representations of multimodal dynamical systems using
+a Mixture of Gaussian Process Experts method.
+Motivated by learning latent spaces for control
+and ensuring that the true underlying dynamics modes are identified,
+this work formulated a gating network based on input-dependent gating functions with GP priors.
+The GP-based gating network can be used to constrain the set of admissible functions through the placement of informative
+GP priors on the gating functions.
+This aids the inherent identifiability issues associated with mixture models.
+As we shall see in cref:chap-traj-opt, the GP posteriors over the gating functions provide convenient
+latent spaces for control.
 
-using a novel variational lower bound that
-principally handles uncertainty and provides scalability
-via stochastic gradient-based optimisation.
+Further to this, this chapter addresses the issue of marginalising over
+every possible set of assignments to experts -- of which there are $\ModeInd^{\NumData}$ possibilities
+-- in the MoGPE marginal likelihood.
+It overcomes the issue of assigning observations to experts by augmenting each expert GP
+with a set of inducing points.
+These inducing points are used to factorise the joint distribution over every possible set of assignments to experts
+across data and derive a variational lower bound also factorised across data.
+The proposed lower bound provides a nice coupling between the
+optimisation of the experts and the gating network by efficiently marginalising the expert indicator variable.
+Our variational inference scheme principally handles uncertainty and
+provides scalability as it can be optimised with stochastic gradient methods.
 
-The method is evaluated on a real-world quadcopter example
-that shows the transition dynamics model can successfully learn a factorised representation
-of the underlying dynamics modes.
+Three different EBLOs are derived and compared on the Motorcycle data set cite:Silverman1985.
+The $\furtherBound$ bound provides the best performance as it balances the accuracy offered by the tight bound $\tightBound$
+with the computational improvements offered by further bounding the GPs.
+The method is then evaluated on a real-world quadcopter example demonstrating that
+it can successfully learn a factorised representation of the underlying dynamics modes.
+
+
 * Mode Constrained Trajectory Optimisation label:chap-traj-opt
 ** Maths :ignore:
 #+BEGIN_EXPORT latex
