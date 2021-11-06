@@ -290,8 +290,8 @@ Make the equation numbers follow the chapter, not the whole thesis.
 *** Data set
 # Dataset/inputs/outputs
 #+LATEX_HEADER: \newcommand{\state}{\ensuremath{\mathbf{x}}}
-# #+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{u}}}
-#+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{a}}}
+#+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{u}}}
+# #+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{a}}}
 
 # #+LATEX_HEADER: \newcommand{\x}{\ensuremath{\mathbf{x}}}
 # #+LATEX_HEADER: \newcommand{\y}{\ensuremath{\mathbf{y}}}
@@ -1261,7 +1261,7 @@ to learning multimodal dynamical systems in Chapter ref:chap-dynamics are publis
 {\color{BrickRed}\fullcite{scannellTrajectory2021}}
 #+END_EXPORT
 
-** Illustrative Example :label:illustrative_example
+** Illustrative Example label:illustrative_example
 The methods developed throughout this dissertation are evaluated on an illustrative 2D quadcotper example.
 The example considers a quadcopter operating in an environment subject to spatially varying turbulence (induced by a fan).
 It is hard to know the exact transition dynamics due to complex and uncertain
@@ -1271,19 +1271,6 @@ The system's transition dynamics can be represented by two dynamics modes,
 - Mode 2 :: a /non-turbulent/ mode everywhere else.
 However, the underlying dynamics modes, and how the dynamics switches between them, are \textit{not fully known a priori}.
 Fig. ref:fig-problem-statement shows a graphical representation of this environment.
-#+BEGIN_EXPORT latex
-\begin{figure}[!h]
-\centering
-  %\includegraphics[width=0.6\columnwidth]{images/quadcopter_bimodal_domain.pdf}
-  \includegraphics[width=0.9\columnwidth]{images/Figure_1.png}
-  \caption{
-  Diagram showing a top down view of the environment for the 2D quadcopter example.
-  The quadcopter is subject to two dynamics modes: 1) a \textit{turbulent}
-  dynamics mode induced by a fan (green), and, 2) a \texit{non-turbulent} dynamics mode everywhere else (blue).}
-\label{fig-problem-statement}
-\end{figure}
-#+END_EXPORT
-
 #+BEGIN_EXPORT latex
 \begin{figure}[!h]
 \centering
@@ -4209,14 +4196,15 @@ up inference.
 ** Maths Symbols :ignore:
 *** Domains :ignore:
 #+BEGIN_EXPORT latex
-%\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
-%\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
-\renewcommand{\stateDomain}{\ensuremath{\mathcal{S}}}
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+%\renewcommand{\stateDomain}{\ensuremath{\mathcal{S}}}
 \renewcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
 \renewcommand{\modeDomain}{\ensuremath{\mathcal{A}}}
-\renewcommand{\inputDomain}{\ensuremath{\mathcal{X}}}
+%\renewcommand{\inputDomain}{\ensuremath{\mathcal{X}}}
+\renewcommand{\inputDomain}{\ensuremath{\mathcal{Z}}}
 
-\renewcommand{\state}{\ensuremath{\mathbf{s}}}
+%\renewcommand{\state}{\ensuremath{\mathbf{s}}}
+\renewcommand{\state}{\ensuremath{\mathbf{x}}}
 
 \renewcommand{\nominalDynamics}{\ensuremath{\mathbf{n}}}
 \renewcommand{\unknownDynamics}{\ensuremath{\mathbf{f}}}
@@ -4263,6 +4251,13 @@ up inference.
 \renewcommand{\singleInputK}{\ensuremath{\mathbf{x}_{\numData, \modeInd}}}
 \renewcommand{\allInputK}{\ensuremath{\mode{\allInput}}}
 \renewcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
+
+\renewcommand{\x}{\ensuremath{\mathbf{z}}}
+\renewcommand{\y}{\ensuremath{y}}
+\renewcommand{\singleInput}{\ensuremath{\mathbf{z}_{\numData}}}
+\renewcommand{\allInput}{\ensuremath{\mathbf{Z}}}
+\renewcommand{\singleInputK}{\ensuremath{\mathbf{z}_{\numData, \modeInd}}}
+\renewcommand{\allInputK}{\ensuremath{\mode{\allInput}}}
 
 %\newcommand{\expertPrior}{\ensuremath{p\left(\mode{f}(\allInput) \right)}}
 \newcommand{\expertPrior}{\ensuremath{p\left(\mode{f}(\allInputK) \right)}}
@@ -4532,9 +4527,9 @@ $\control \in \controlDomain \subseteq \R^\ControlDim$, given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-cont}
 \dot{\state}(t) &=
-\mathbf{g}(\state(t), \control(t)) + \bm\epsilon(t) & \\
+\mathbf{g}(\state(t), \control(t)) + \bm\epsilon(t) & \nonumber \\
 &= \mode{\mathbf{g}}(\state(t), \control(t)) + \mode{\bm\epsilon}(t)
-\quad &\text{if} \quad \alpha(t)=\modeInd, \\
+\quad &\text{if} \quad \alpha(t)=\modeInd, \nonumber \\
 %&= \underbrace{\nominalDynamics(\state(t), \control(t))}_{\text{nominal}}
 %+ \underbrace{\unknownDynamics(\state(t), \control(t))}_{\text{unknown}}
 %+ \underbrace{\bm\epsilon(t)}_{\text{process noise}} \\
@@ -4572,7 +4567,7 @@ is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-disc}
 \Delta \state_{\timeInd} &= \mode{\mathbf{g}} (\state_{\timeInd-1}, \control_{\timeInd-1} ; \Delta t = t_*) + \mode{\bm\epsilon}
-&\text{if} \quad \modeVar_{\timeInd} = \modeInd \\
+&\text{if} \quad \modeVar_{\timeInd} = \modeInd \nonumber \\
 &= \underbrace{\nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{nominal mode \modeInd}}
 + \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{unknown error mode \modeInd}}
 + \mode{\bm\epsilon}
@@ -4590,7 +4585,7 @@ i.e. $\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain$ is assu
 be $\mode{\latentFunc} : \R \times \controlDomain \rightarrow \R$.
 The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
 To further ease notation, the state-control input domain is denoted
-$\inputDomain = \stateDomain \times \controlDomain \in \R^{\InputDim}$,
+$\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$,
 giving a single input
 $\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
 Given this formulation, our task is to learn the mapping $\unknownDynamics$,
@@ -4911,7 +4906,7 @@ The marginal likelihood is then a sum over exponentially many assignments,
 #+BEGIN_EXPORT latex
 \small
 \begin{align}  \label{eq-np-moe-marginal-likelihood-assign}
-\moeEvidence &= \sum_{\allModeVar} \npmoeGatingPosterior \npmoeExpertPosterior  \\
+\moeEvidence &= \sum_{\allModeVar} \npmoeGatingPosterior \npmoeExpertPosterior  \nonumber \\
 &= \sum_{\allModeVar} \npmoeGatingPosterior
 \left[ \prod_{\modeInd=1}^\ModeInd p\left(\allOutputK \mid \allInputK, \expertParamsK \right) \right],
 \end{align}
@@ -5142,14 +5137,14 @@ cite:rasmussenInfinite2001 introduced the infinite Mixtures of Gaussian Process 
 which automatically infers the number of experts from observations via an input-dependent
 Dirichlet process prior.
 cite:NIPS2005_f499d34b proposed an alternative infinite MoGPE that models the joint distribution
-over the input and output space $p(\mathbf{y}, \mathbf{X})$,
-as opposed to just a conditional model $p(\mathbf{y} | \mathbf{X})$.
+over the input and output space $p(\allOutput, \allInput)$,
+as opposed to just a conditional model $p(\allOutput | \allInput)$.
 These methods are not capable of turning a single expert "on" in multiple regions
 of the input space. Instead they will generate a new expert.
 This is illustrated in the middle column of cref:gating_network_comparison.
 The top plot shows clustering of the input space
-where each Gaussian cluster $z=\{1,\ldots, K\}$
-corresponds to the inputs for a particular expert $\alpha = \{1, \ldots, K\}$.
+where each Gaussian cluster $z=\{1,\ldots, \ModeInd\}$
+corresponds to the inputs for a particular expert $\alpha = \{1, \ldots, \ModeInd\}$.
 These models assume that the cluster indicator variable $z$ equals the expert indicator variable $z=\alpha$.
 This gives rise to the gating network in the middle bottom plot of cref:gating_network_comparison, where
 a third expert $k=3$ has been introduced to model the right hand region associated with expert one.
@@ -5640,7 +5635,7 @@ then the mixing probability can be calculated in closed-form,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mixing-probabilities-analytic}
 \Pr(\modeVarn=1 \mid \singleInput, \gatingParams) &=
- \int \Phi\left(\gatingFunc(\singleInput)\right) \mathcal{N}\left(\gatingFunc(\singleInput) \mid \mu_h, \sigma^2_h \right) \text{d} \gatingFunc(\singleInput) \\
+ \int \Phi\left(\gatingFunc(\singleInput)\right) \mathcal{N}\left(\gatingFunc(\singleInput) \mid \mu_h, \sigma^2_h \right) \text{d} \gatingFunc(\singleInput) \nonumber \\
 &= \Phi \left(\frac{\mu_{h}}{\sqrt{1 + \sigma^2_{h} }}\right).
 \end{align}
 #+END_EXPORT
@@ -7158,8 +7153,6 @@ in practice only single samples are used because the added stochasticity helps t
 
 *** Optimisation
 #+BEGIN_EXPORT latex
-\renewcommand{\x}{\ensuremath{\mathbf{x}}}
-\renewcommand{\y}{\ensuremath{y}}
 \renewcommand{\expertSampleInd}{\ensuremath{s}}
 \renewcommand{\ExpertSampleInd}{\ensuremath{S}}
 \renewcommand{\gatingSampleInd}{\ensuremath{\hat{s}}}
@@ -7279,7 +7272,7 @@ e.g. Adam citep:kingmaAdam2017.
 #+BEGIN_EXPORT latex
 \renewcommand{\testInput}{\ensuremath{\mathbf{X}^*}}
 \renewcommand{\testOutput}{\ensuremath{\mathbf{y}^*}}
-\renewcommand{\numTest}{\ensuremath{\NumData^*}}
+\renewcommand{\NumTest}{\ensuremath{\NumData^*}}
 \renewcommand{\singleTestInput}{\ensuremath{\mathbf{x}_n^*}}
 \renewcommand{\singleTestOutput}{\ensuremath{y_n^*}}
 \newcommand{\testModeVarK}{\ensuremath{\bm\modeVar^* = \modeInd}}
@@ -7293,6 +7286,9 @@ e.g. Adam citep:kingmaAdam2017.
 \newcommand{\predictiveProb}{\ensuremath{\Pr(\singleTestModeVarK \mid \allOutput)}}
 \newcommand{\predictiveProbBernoulli}{\ensuremath{\Pr(\singleTestModeVar=1 \mid \allOutput)}}
 \newcommand{\predictiveExpert}{\ensuremath{p(\singleTestOutput \mid \singleTestModeVarK, \allOutput)}}
+
+\newcommand{\approxPredictiveProb}{\ensuremath{q(\singleTestModeVarK)}}
+\newcommand{\approxPredictiveExpert}{\ensuremath{q(\singleTestOutput \mid \singleTestModeVarK)}}
 
 \newcommand{\predictiveExpertLikelihood}{\ensuremath{p(\singleTestOutput \mid \mode{f}(\singleTestInput))}}
 \newcommand{\predictiveGatingLikelihood}{\ensuremath{\Pr(\singleTestModeVarK \mid \GatingFunc(\singleTestInput))}}
@@ -7314,7 +7310,8 @@ Making predictions with this model involves calculating a density over the outpu
 them using the probabilities obtained from the gating network, i.e. marginalising the expert indicator variable,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-predictive-posterior}
-\predictivePosterior &= \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \predictiveProb \predictiveExpert
+\predictivePosterior &= \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \predictiveProb \predictiveExpert \\
+&\approx \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \approxPredictiveProb \approxPredictiveExpert
 \end{align}
 #+END_EXPORT
 
@@ -7326,7 +7323,8 @@ The experts make predictions at new test locations by integrating over their lat
 &= \int \underbrace{\predictiveExpertLikelihood}_{\text{likelihood}}
 \underbrace{\expertPosterior}_{\text{posterior}} \text{d} \mode{\latentFunc}(\singleTestInput) \nonumber \\
 &\approx \int \underbrace{\predictiveExpertLikelihood}_{\text{likelihood}}
-\underbrace{\expertVariationalPosterior}_{\text{approx posterior}} \text{d} \mode{\latentFunc}(\singleTestInput).
+\underbrace{\expertVariationalPosterior}_{\text{approx posterior}} \text{d} \mode{\latentFunc}(\singleTestInput)
+\coloneqq \approxPredictiveExpert.
 \end{align}
 #+END_EXPORT
 However, the experts' true posteriors $\expertPosterior$ are not known and have been approximated.
@@ -7371,6 +7369,7 @@ by integrating the gating network's posterior through the gating likelihood,
 \underbrace{\gatingPosterior}_{\text{posterior}} \text{d} \GatingFunc(\singleTestInput) \nonumber \\
 &\approx \int \underbrace{\predictiveGatingLikelihood}_{\text{likelihood}}
 \underbrace{\gatingVariationalPosterior}_{\text{approx posterior}} \text{d} \GatingFunc(\singleTestInput)
+\coloneqq \approxPredictiveProb.
 \end{align}
 #+END_EXPORT
 Again, the gating network's true posterior $\gatingPosterior$ has been approximated,
@@ -7411,7 +7410,7 @@ so Eq. ref:eq-gating-prediction can be calculated in closed-form with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-predictive-gating-bernoulli}
 \predictiveProbBernoulli &=
-\int \gatingVariationalPosteriorBernoulli \Phi\left(\modei{\gatingFunc}{1}(\singleTestInput)\right) \text{d} \modei{\gatingFunc}{1}(\singleTestInput) \\
+\int \gatingVariationalPosteriorBernoulli \Phi\left(\modei{\gatingFunc}{1}(\singleTestInput)\right) \text{d} \modei{\gatingFunc}{1}(\singleTestInput) \nonumber \\
 &= \Phi \left(\frac{\mu_{h*}}{\sqrt{1 + \sigma^2_{h_*} }}\right).
 \end{align}
 %\mathcal{N}\left(\gatingFunc(\x_*) \mid \mu_h, \sigma^2_h \right) \text{d} \gatingFunc(\x_*) \\
@@ -8614,7 +8613,7 @@ Each trajectory was repeated 7 times to capture the variability (process noise) 
 *Data Processing* The Vicon stream recorded data at 100Hz, which was then processed to
 give a time step $\Delta t$ of $0.1s$.
 This reduced the size of the data set and left reasonable lengthscales.
-The data set consists of $T=1282$ state transitions.
+The data set consists of $\NumData=2081$ state transitions.
 \todo{update data set size}
 Figure ref:fig-quiver is a quiver plot showing the resulting data set.
 
@@ -8639,7 +8638,7 @@ The model was then trained using the model and training parameters shown in Tabl
 
 #+NAME: fig-experts-f-quadcopter-subset
 #+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
-#+caption: Visualisation of the experts' predictive posteriors $\predictiveExpertsPrior$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(f_{kd}(\state_*))$, corresponding to dimension $d$ of expert $k$. The mean $\E[f_{kd}(\state_*)]$ is on the left and the variance $\V[f_{kd}(\x_*)]$ is on the right. The noise variances learned by Expert 1 and Expert 2 were $\Sigma_1 = \diag\left([0.259,0.386]]\right)$ and $\Sigma_2 = \diag\left([0.869, 1.243]\right)$.
+#+caption: Visualisation of the experts' predictive posteriors $\predictiveExpertsPrior$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(f_{kd}(\singleTestInput))$, corresponding to dimension $d$ of expert $\modeInd$. The mean $\E[f_{kd}(\singleTestInput)]$ is on the left and the variance $\V[f_{kd}(\x_*)]$ is on the right. The noise variances learned by Expert 1 and Expert 2 were $\Sigma_1 = \diag\left([0.259,0.386]]\right)$ and $\Sigma_2 = \diag\left([0.869, 1.243]\right)$.
 [[file:./images/model/quadcopter/subset-10/experts_f.pdf]]
 
 #+BEGIN_EXPORT latex
@@ -8653,10 +8652,10 @@ The model was then trained using the model and training parameters shown in Tabl
 \end{minipage}
 \begin{minipage}[r]{1.0\textwidth}
 \includegraphics[width=\textwidth]{./images/model/quadcopter/subset-10/gating_gps.pdf}
-\subcaption{Gating network's predictive posterior $\predictiveGatingPrior$ where each row corresponds to a single GP posterior, $q(h_{k}(\state_*))$, corresponding to expert $k$. The left hand plots show the means $\E[h_{k}(\state_*)]$ and the right hand plots show the variances $\V[h_{k}(\state_*)]$.}
+\subcaption{Gating network's predictive posterior $\predictiveGatingPrior$ where each row corresponds to a single GP posterior, $q(h_{k}(\singleTestInput))$, corresponding to expert $k$. The left hand plots show the means $\E[h_{k}(\singleTestInput)]$ and the right hand plots show the variances $\V[h_{k}(\singleTestInput)]$.}
 \label{fig-gating-gps-quadcopter-subset}
 \end{minipage}
-\caption{Visualisation of the gating network after training on the quadcopter data set. The plots in a) show the predictive mixing probabilities $\predictiveProb$ for Expert 1 (left) and Expert 2 (right). The plots in b) show the predictive GP posteriors $q(h_{k}(\state_*))$ associated with Expert 1 (top) and Expert 2 (bottom).}
+\caption{Visualisation of the gating network after training on the quadcopter data set. The plots in a) show the predictive mixing probabilities $\predictiveProb$ for Expert 1 (left) and Expert 2 (right). The plots in b) show the predictive GP posteriors $q(h_{k}(\singleTestInput))$ associated with Expert 1 (top) and Expert 2 (bottom).}
 \label{fig-gating-network-quadcopter-subset}
 \end{figure}
 #+END_EXPORT
@@ -8668,9 +8667,10 @@ The model was then trained using the model and training parameters shown in Tabl
 
 
 
-Given a new input $\input_*$ the predictive density over the output, $p(\output_* \mid \input_*)$,
-follows a mixture of $\ModeInd$ Gaussian's.
-Visualising a mixture of two Gaussian's with a two-dimensional input space and a two-dimensional output space
+At a new input location $\singleTestInput$ the density over the output,
+$p(\singleTestOutput \mid \singleTestInput)$,
+follows a mixture of $\ModeInd$ Gaussians.
+Visualising a mixture of two Gaussians with a two-dimensional input space and a two-dimensional output space
 requires the components and mixing probabilities to be visualised separately.
 To aid with visualisation, Figure ref:fig-y-mm-quadcopter-subset shows the predictive density
 approximated as a unimodal Gaussian density (via moment matching), where each row corresponds to an
@@ -8688,18 +8688,20 @@ the high process noise, associated with the turbulence induced by the fan.
 # That is, the dynamics should be constant
 # dynamics should be constant
 
-Let us now visualise the individual experts and the gating network separately.
-Figure ref:fig-experts-f-quadcopter-subset shows the predictive posteriors $q(f_{kd}(\state_*))$
-associated with each dimension $d$ of each expert $k$.
+*Experts* Let us now visualise the individual experts and the gating network separately.
+Figure ref:fig-experts-f-quadcopter-subset shows the predictive posteriors $q(\latentFunc_{kd}(\singleTestInput))$
+associated with each dimension $d$ of each expert $\modeInd$.
 The method has successfully learned a factorised representation of the underlying dynamics, where
-Expert 1 has learned a dynamics mode with low process noise $\Sigma_1 = \diag\left([0.259,0.386]]\right)$
-and Expert 2 to has learned a dynamics mode with high process noise $\Sigma_2 = \diag\left([0.869, 1.243]\right)$.
+expert 1 has learned a dynamics mode with low process noise
+$\Sigma_1 = \diag\left([0.0063, 0.0259]]\right)$
+and expert 2 a mode with high process noise
+$\Sigma_2 = \diag\left([0.0874, 0.0432]\right)$.
 Expert 2 has also clearly learned the drift induced by the fan, indicated by the dark red region at $y=0$
 in the two bottom left plots of Figure ref:fig-experts-f-quadcopter-subset.
 It has also learned the control response of the PID controller correcting for the deviation
 from the reference trajectory, indicated by the white region below $y=0$.
 The control response is an artifact of the data collection process.
-It is clear that Expert 2 has learned both the drift and process noise terms
+It is clear that expert 2 has learned both the drift and process noise terms
 associated with the turbulent dynamics mode.
 
 Both experts were initialised with independent inducing inputs, $\expertInducingInput$, providing the model
@@ -8708,29 +8710,32 @@ That is, each expert has the freedom to set its inducing inputs, $\expertInducin
 to support only a subset of the data set.
 The posterior (co)variance associated with each expert represents their /epistemic uncertainty/.
 The top right plot in Figure ref:fig-experts-f-quadcopter-subset shows the posterior variance associated with
-the first dimension $(x)$ of Expert 1.
+the $x$ dimension of expert 1.
 The posterior variance is high in front of the fan because the gating network has assigned responsibility to the
 other expert in this region.
 It is also high in the region where the model has had no training observations, as should be
 expected.
-However, the posterior variance associated with the second dimension $(y)$ of Expert 1, is not high in this region.
+However, the posterior variance associated with the $y$ dimension of expert 1, is not high in this region.
 This is due to the lengthscale of the second output dimension.
 \todo{is this because of the lengthscale or is it due to gating network}
 
-The bottom two right plots in Figure ref:fig-experts-f-quadcopter-subset show the posterior variance
-associated with the first and second dimensions ($x$ and $y$) of Expert 2.
+The bottom right two plots in Figure ref:fig-experts-f-quadcopter-subset show the posterior variance
+associated with the $x$ and $y$ dimensions of expert 2.
 The posterior variance is high everywhere except for the region in front of the fan.
 Again, this is due to the gating network assigning responsibility to the other expert outside of the region in
 front of the fan.
+It is clear from these results that our likelihood approximation, combined with our gating network
+and variational inference, are capable of modelling the assignment of observations to experts via
+the inducing points.
 
-Figure ref:fig-gating-network-quadcopter-subset shows the predictive gating network after training on the
+*Gating Network*
+Figure ref:fig-gating-network-quadcopter-subset shows the gating network after training on the
 data set.
-Figure ref:fig-gating-mixing-probs-quadcopter-subset shows that the probability of Expert 1
-$\Pr(\modeVar=1 \mid \state_*)$ is high in
-the non-turbulent region and low in front of the fan, i.e. the high-turbulence region.
-The predictive mixing probabilities
-tend to a uniform distribution
-${\Pr(\modeVar_*=k \mid \state_*)=0.5}$
+Figure ref:fig-gating-mixing-probs-quadcopter-subset indicates that the model has assigned responsibility
+to expert 2 in front of the fan as its mixing probability
+$\Pr(\singleTestModeVar=1 \mid \singleTestInput)$ is high in front of the fan, i.e. the high-turbulence region.
+The mixing probabilities tend to a uniform distribution
+${\Pr(\singleTestModeVarK \mid \singleTestInput)=0.5}$
 in the region with no training observations.
 This corresponds to maximum entropy for categorical distributions and is a desirable behaviour.
 However, it is worth noting that the mixing probabilities can tend to a uniform distribution for multiples reasons.
@@ -8747,12 +8752,12 @@ input location i.e. the variance(s) of the GP posterior(s) associated with the g
 # Alternatively, the variance of the gating function GP posterior could be high, resulting in the probability tending to
 # maximum entropy.
 
-Figure ref:fig-gating-gps-quadcopter-subset shows the gating network's GP predictive posterior.
-The mean of the gating function associated with Expert 1 $\E[h_{1}(\state_*)]$ is
+Figure ref:fig-gating-gps-quadcopter-subset shows the GP posteriors associated with the gating functions.
+The mean of the gating function associated with expert 1 $\E[h_{1}(\singleTestInput)]$ is
 high in the low-turbulence regions and low in front of the fan, i.e. the high-turbulence mode.
 The mean also tends to zero where the model has had no training observations.
 The posterior variance is also high in this region, indicating that the gating
-network GPs have successfully inferred the epistemic uncertainty.
+network GPs have successfully modelled the /epistemic uncertainty/.
 Exploiting a GP-based gating network has clearly provided a principled approach to distinguishing
 between the different reasons the mixing probabilities may tend to a uniform distribution.
 
@@ -9360,7 +9365,7 @@ using a locally defined norm,
 \begin{align} \label{eq-manifold-norm}
 \left\|\jacobian \dot{\manifoldInput}(t)\right\|_2
 &= \sqrt{ \left(\dot{\manifoldInput}(t) \jacobian\right)^T
-\jacobian \dot{\manifoldInput}(t)} \\
+\jacobian \dot{\manifoldInput}(t)} \nonumber \\
 &= \sqrt{\dot{\mathbf{x}}^T(t) \metricTensor_{\mathbf{x}_t} \dot{\manifoldInput}(t)}
 \defeq \left\|\dot{\manifoldInput}(t)\right\|_{\metricTensor_{\manifoldInput_t}},
 %= \left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))}.
@@ -9402,7 +9407,7 @@ satisfy a continuous-time $2^{\text{nd}}$ order ODE, given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-2ode}
  \ddot{\manifoldInput}(t)
-&= \geodesicFunction(t, \manifoldInput, \dot{\manifoldInput}) \\
+&= \geodesicFunction(t, \manifoldInput, \dot{\manifoldInput}) \nonumber \\
 &=-\frac{1}{2} \metricTensor^{-1}(\manifoldInput(t))\left[
 \frac{\partial \operatorname{vec}[\metricTensor(\manifoldInput(t))]}{\partial \manifoldInput(t)}
 \right]^{T}\left(\dot{\manifoldInput}(t) \otimes \dot{\manifoldInput}(t)\right),
@@ -9985,7 +9990,7 @@ To allow greater generality, a user defined, real symmetric positive definite ma
 $\terminalStateCostMatrix$, can be introduced,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-quadratic-terminal-cost}
-J &= (\state_{\TimeInd} - \targetState)^T \terminalStateCostMatrix (\state_{\TimeInd} - \targetState) \\
+J &= (\state_{\TimeInd} - \targetState)^T \terminalStateCostMatrix (\state_{\TimeInd} - \targetState) \nonumber \\
 &= || \state_\TimeInd - \targetState ||^2_{\terminalStateCostMatrix}.
 \end{align}
 #+END_EXPORT
@@ -10000,7 +10005,7 @@ Regardless of the specific interpretation, it is usually desirable to regularise
 Similar to the terminal cost, it is common to use a quadratic form,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-quadratic-cost-control}
-J &= \sum_{\timeInd=0}^{\TimeInd-1} \control_{\timeInd}^T \controlCostMatrix \control_{\timeInd} \\
+J &= \sum_{\timeInd=0}^{\TimeInd-1} \control_{\timeInd}^T \controlCostMatrix \control_{\timeInd} \nonumber \\
 &= || \control_\timeInd ||_\controlCostMatrix^2,
 \end{align}
 #+END_EXPORT
@@ -10244,7 +10249,7 @@ Given $\priorPolicy$ is an arbitrary stochastic policy and $\mathbb{D}$ is the s
 policies, the problem,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-kl-control}
-\policy_* &= \argmin_{\policy \in \mathbb{D}}\text{KL}(\controlledPolicyDist \mid\mid \priorPolicyDist) \\
+\policy_* &= \argmin_{\policy \in \mathbb{D}}\text{KL}(\controlledPolicyDist \mid\mid \priorPolicyDist) \nonumber \\
 &= \argmin_{\policy \in \mathbb{D}} Z + \temperature
 \E_{\controlledPolicyDist(\stateTraj, \controlTraj)}
 \left[ \costFunc(\stateTraj, \controlTraj) \right]
@@ -10253,7 +10258,7 @@ policies, the problem,
 \temperature \E_{\controlledPolicyDist(\stateTraj, \controlTraj)}
 \left[ \costFunc(\stateTraj, \controlTraj) \right]
 - \E_{\controlledPolicyDist(\stateTraj, \controlTraj)} \left[ \log \priorPolicy(\controlTraj \mid \stateTraj) \right]
-- \E_{\controlledPolicyDist(\stateTraj)} \left[ H(\policy) \right] \nonumber
+- \E_{\controlledPolicyDist(\stateTraj)} \left[ H(\policy) \right],
 \end{align}
 #+END_EXPORT
 is equivalent to the SOC problem in Eq. ref:eq-mode-soc-problem, with cost per stage,
@@ -10335,12 +10340,12 @@ The joint probability model is then given by,
 \small
 \begin{align} \label{eq-traj-opt-joint-dist-mode}
 \jointDist =
-&\underbrace{\terminalCostDist}_{\text{Terminal Cost}} \\
-\prod_{\timeInd=0}^{\TimeInd-1} \big[&
+&\underbrace{\terminalCostDist}_{\text{Terminal Cost}} \nonumber \\
+\prod_{\timeInd=0}^{\TimeInd-1} \bigg[&
 \underbrace{\optimalProb}_{\text{Integral Cost}}
-\underbrace{\modeProb}_{\text{Mode Remaining Term}} \\
+\underbrace{\modeProb}_{\text{Mode Remaining Term}} \nonumber \\
 &\underbrace{\transitionDist}_{\text{Dynamics}}
-\underbrace{\controlDist}_{\text{Controller}} \big]. \nonumber
+\underbrace{\controlDist}_{\text{Controller}} \bigg].
 \end{align}
 \normalsize
 #+END_EXPORT
@@ -10458,7 +10463,7 @@ term reducing to an entropy term and a constant,
 \mathcal{L} = &\sum_{\timeInd=0}^{\TimeInd}
 \underbrace{\E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]}_{\text{Expected cost}}
 + \sum_{\timeInd=0}^{\TimeInd} \underbrace{\E_{\controlVarDist q(\state_{\timeInd})} \left[
-\log \Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd) \right]}_{\text{Mode remainig term}} \\
+\log \Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd) \right]}_{\text{Mode remainig term}} \nonumber \\
 &+ \sum_{\timeInd=0}^{\TimeInd} \underbrace{\E_{\controlVarDist q(\state_{\timeInd})}
 \left[\log\policy(\control_{\timeInd} \mid \state_\timeInd)\right]}_{\text{Constant}}
 + \sum_{\timeInd=0}^{\TimeInd} \underbrace{\mathcal{H}(\control_{\timeInd})}_{\text{Entropy}}
@@ -10700,7 +10705,6 @@ This work propagates model uncertainty forwards by cascading such one-step predi
 # and
 # ${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
 # the expected cost for a trajectory can be calculated in closed-form,
-
 
 *** old :noexport:
 #+BEGIN_EXPORT latex
