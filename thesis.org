@@ -630,7 +630,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+BEGIN_EXPORT latex
 \frontmatter
 #+END_EXPORT
-** Title Page :ignore:noexport:
+** Title Page :ignore:
 
   #+BEGIN_EXPORT latex
   \begin{titlepage}
@@ -4190,7 +4190,7 @@ Each of our experts predicts on the basis of a set of inducing inputs that are u
 These inducing inputs enable stochastic variational inference in our model which significantly speeds
 up inference.
 
-* Probabilistic Inference for Multimodal Dynamical Systems label:chap-dynamics
+* Probabilistic Inference for Learning Multimodal Dynamical Systems label:chap-dynamics
 #+begin_export latex
 \epigraph{All models are wrong, but some are useful.}{\textit{George Box}}
 #+end_export
