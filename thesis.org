@@ -630,7 +630,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+BEGIN_EXPORT latex
 \frontmatter
 #+END_EXPORT
-** Title Page :ignore:
+** Title Page :ignore:noexport:
 
   #+BEGIN_EXPORT latex
   \begin{titlepage}
@@ -9146,8 +9146,6 @@ providing scalability via stochastic variational inference.
 The method is then evaluated on a real-world quadcopter example demonstrating that
 it can successfully learn a factorised representation of the underlying dynamics modes.
 
-
-
 * Mode Constrained Trajectory Optimisation label:chap-traj-opt
 ** Maths :ignore:
 #+BEGIN_EXPORT latex
@@ -9165,19 +9163,22 @@ it can successfully learn a factorised representation of the underlying dynamics
 \newcommand{\valueFunc}{\ensuremath{V}}
 
 \renewcommand{\controlledPolicyDist}{\ensuremath{q_\policy}}
+
+\renewcommand{\satisfactionProb}{\ensuremath{p_{\modeVar}}}
 #+END_EXPORT
 ** Intro :ignore:
-This chapter is concerned with controlling multimodal dynamical systems whose transition dynamics
-have been represented with the probabilistic dynamics model from Chapter ref:chap-dynamics,
-after training on a historical data set $\dataset$, of state transitions over the domain.
+This chapter is concerned with controlling multimodal dynamical systems, whose transition dynamics
+are represented with the probabilistic dynamics model from Chapter ref:chap-dynamics,
+after training on a historical data set of state transitions $\dataset$.
 In particular, it is concerned with /mode constrained/ trajectory optimisation, which attempts to
-drive the system from an initial state $\state_0$ (in a desired dynamics mode), to a target state $\state_f$,
+drive the system from an initial state $\state_0$ -- in a desired dynamics mode -- to a target state $\state_f$,
 whilst remaining in the desired dynamics mode.
 Given the well-calibrated uncertainty estimates from the model in Chapter ref:chap-dynamics,
 this chapter is concerned with *risk-averse* control.
-That is, the trajectory optimisation algorithms should find trajectories that also
+That is, the algorithms should find trajectories that also
 avoid entering regions of the transition dynamics that
-have not been observed, and cannot be predicted confidently (i.e. have high /epistemic uncertainty/).
+cannot be predicted confidently i.e. have high /epistemic uncertainty/,
+for example, if they have not been observed.
 This is because the model cannot be certain whether such a region belongs to the desired dynamics mode
 or not.
 This Chapter introduces two different approaches to performing /mode constrained/ trajectory optimisation.
@@ -9221,15 +9222,18 @@ $\TimeInd$, that keeps the dynamics in the desired mode, $\desiredDynamicsFunc$,
 and minimises a cost
 function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$,
 whilst moving from an initial state, $\state_{0}$, to a target
-state, $\state_g$,
+state, $\state_g$.
+Formally, this problem is given by,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-mode-soc-problem}
+\begin{subequations} \label{eq-mode-soc-problem}
+\begin{align}
 \min_{\controlTraj} &\E\left[ \terminalCostFunc(\state_\TimeInd)
 + \sum_{\timeInd=0}^{\TimeInd-1} \integralCostFunc(\state_\timeInd, \control_\timeInd) \right] \\
 \text{s.t.} \quad &\state_{\timeInd+1} = \mode{\latentFunc}(\state_\timeInd, \control_\timeInd) + \epsilon_\modeInd,
 \quad \epsilon_\modeInd \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon_\modeInd}) \\
-&\modeVarK \quad \forall \timeInd \in \mathbb{N} \cap [1,\TimeInd]
+&\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [1,\TimeInd] \label{eq-mode-soc-problem-constraint}
 \end{align}
+\end{subequations}
 #+END_EXPORT
 where the expectation is taken w.r.t. the distribution over state-control
 trajectories under policy $\policy$,
@@ -9254,7 +9258,7 @@ given by,
 \end{cases}
 \end{align}
 #+END_EXPORT
-To simply notation the state and control trajectories are denoted
+To simplify notation, the state and control trajectories are denoted
 as $\stateTraj = \state_{1:T}$ and $\controlTraj = \control_{0:T-1}$ respectively.
 
 The optimal controls can be derived from Bellman's dynamics programming (DP) perspective, using the value function,
@@ -9290,22 +9294,22 @@ Guided policy search cite:levineGuided2013
 
 \todo{Add details on LQG etc here}
 
-The standard approach to solving such a problem is to construct an objective function encoding
-the goals.
 The main goals of the trajectory optimisation in this Chapter can be summarised as,
 - Goal 1 :: remain in a preferred dynamics mode $\desiredMode$ where possible, label:to-goal-mode
 - Goal 2 :: avoid regions of the learned dynamics with high /epistemic uncertainty/, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
 
-To help provide intuition, first consider an objective function with two terms
-(one to address each of the goals),
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-cost-trajectory}
-J&= \int_{t_0}^{t_f}  g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t)) + g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t,
-\end{align}
-#+END_EXPORT
-where the $g_{\text{mode}}$ term favours remaining in dynamics mode $\desiredMode$,
-and the $g_{\text{epistemic}}$ term favours trajectories that avoid regions of the
-dynamics with high epistemic uncertainty.
+# # The standard approach to solving such a problem is to construct an objective function encoding
+# # the goals.
+# To help provide intuition, first consider an objective function with two terms
+# (one to address each of the goals),
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-cost-trajectory}
+# J&= \int_{t_0}^{t_f}  g_{\text{mode}}(\mathbf{x}(t), \mathbf{u}(t)) + g_{\text{epistemic}}(\mathbf{x}(t), \mathbf{u}(t)) \text{d}t,
+# \end{align}
+# #+END_EXPORT
+# where the $g_{\text{mode}}$ term favours remaining in dynamics mode $\desiredMode$,
+# and the $g_{\text{epistemic}}$ term favours trajectories that avoid regions of the
+# dynamics with high epistemic uncertainty.
 
 # Following this approach, an objective function based on probabilistic Riemannian geometry is constructed.
 # However, instead of minimising this objective function subject to the systems transition dynamics,
@@ -9321,6 +9325,238 @@ dynamics with high epistemic uncertainty.
 # Let us now provide an intuitive and thorough walk-through of the approach detailed above.
 # \todo{move this paragraph}
 
+** Latent Spaces for Control
+The optimal control problem in cref:eq-mode-soc-problem enforces the mode remaining behaviour via the
+equality constraint in cref:eq-mode-soc-problem-constraint.
+This constraint has assumed access to the mode indicator variable $\modeVar$ at all time steps, which is
+not always possible.
+Conveniently, the probabilistic model in cref:chap-dynamics was formulated with latent variables
+to represent the uncertainty in the mode indicator variable $\modeVar$.
+This chapter now unleashes the power of these latent variables by making decisions under their uncertainty.
+# It is common to solve such a problem by encoding the goals either in the objective function or via
+# inequality constraints.
+
+Let us consider all of the information inferred by the probabilistic model in cref:chap-dynamics that could be
+used to encode our goals.
+
+*Mode Indicator Posterior*
+The mode indicator variable can be used to encode Goal 1 in multiple ways.
+The simplest method is to simply maximise the desired mode's mixing probability over
+the trajectory, by introducing a cost function,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-cost-trajectory}
+\costFunc_{\text{mode}}(\state(t), \control(t)) = - \Pr (\modeVar_{\timeInd} = \desiredMode)
+\end{align}
+#+END_EXPORT
+which favours remaining in dynamics mode $\desiredMode$.
+As our model assumes that the mode indicator depends on the state via the gating function,
+this probability is calculated as follows,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mode-chance-constraint-integral}
+\Pr(\modeVar_{\timeInd} = \desiredMode) = \int
+\Pr(\modeVar_{\timeInd} = \desiredMode \mid \GatingFunc(\state_{\timeInd}) )
+\int \underbrace{q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})}_{\text{approx posterior}}
+\underbrace{p(\state_{\timeInd})}_{\text{state dist}}
+\text{d} \state_{\timeInd}
+\text{d} \GatingFunc(\state_{\timeInd})
+\end{align}
+#+END_EXPORT
+where $q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})$ is the approximate posterior
+from cref:eq-predictive-gating. The dependence on the state input $\state_{\timeInd}$ is reintroduced here,
+as it becomes a random variable when making multi-step predictions.
+
+*Chance Constraints*
+An alternative approach is to encode the goals via constraints.
+Due to the stochastic nature of our problem, the equality constraint in cref:eq-mode-soc-problem-constraint
+must be reformulated as a chance constraint,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mode-chance-constraint}
+\Pr(\modeVar_{\timeInd} = \desiredMode) \geq \satisfactionProb \quad \forall \timeInd.
+\end{align}
+#+END_EXPORT
+This constraint enforces the desired mode's mixing probability to be more than the satisfaction probability
+$\satisfactionProb$ at each time step.
+# As our model assumes that the mode indicator depends on the state via the gating function,
+# this probability is calculated as follows,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-mode-chance-constraint-integral}
+# \Pr(\modeVar_{\timeInd} = \desiredMode) = \int
+# \Pr(\modeVar_{\timeInd} = \desiredMode \mid \GatingFunc(\state_{\timeInd}) )
+# \int \underbrace{q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})}_{\text{approx posterior}}
+# \underbrace{p(\state_{\timeInd})}_{\text{state dist}}
+# \text{d} \state_{\timeInd}
+# \text{d} \GatingFunc(\state_{\timeInd})
+# \end{align}
+# #+END_EXPORT
+# where $q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})$ is the approximate posterior
+# from cref:eq-predictive-gating. The dependence on the state input $\state_{\timeInd}$ is reintroduced here,
+# as it becomes a random variable when making multi-step predictions.
+
+# *Cost Function - Maximum Probability*
+# An alternative approach is to encode Goal ref:to-goal-mode into a cost function.
+# To help provide intuition, first consider a cost function with a term to address each of the two goals,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-cost-trajectory}
+# %J&= \int_{t_0}^{t_f}  g_{\text{mode}}(\state(t), \control(t)) + g_{\text{epistemic}}(\state(t), \control(t)) \text{d}t,
+# \costFunc(\state(t), \control(t)) = \costFunc_{\text{mode}}(\state(t), \control(t))
+# + \costFunc_{\text{epistemic}}(\state(t), \control(t)),
+# \end{align}
+# #+END_EXPORT
+# where the $\costFunc_{\text{mode}}$ term favours remaining in dynamics mode $\desiredMode$
+# and the $\costFunc_{\text{epistemic}}$ term favours trajectories that avoid regions of the
+# dynamics with high epistemic uncertainty.
+
+
+*Cost Function - Length Minimising Trajectories*
+The geometry of the latent gating functions can be used to formulate a cost term
+that favours trajectories remaining in a preferred dynamics mode.
+The $g_{\text{mode}}$ term in cref:eq-cost-trajectory can be expressed as finding length minimising
+trajectories on the desired mode's gating function.
+Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
+manifold given by the desired mode's gating function,
+increases when it passes over the contours; analogous to climbing a hill.
+Given appropriate scaling of the gating function, shortest trajectories between two locations are
+those that attempt to follow the contours, i.e. remain in a single mode by not climbing up or down any hills.
+The length of a trajectory $\trajectory$ on a manifold $\manifold$, can be calculated
+by mapping it through the function $\manifoldFunction$, and
+using Eq. ref:eq-euclidean-length,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-manifold-length}
+\text{Length}\left(\manifoldFunction(\trajectory)\right)
+&= \int_{t_0}^{t_f}\left\|\dot{\manifoldFunction}(\manifoldInput(t))\right\|_2 \mathrm{d}t.
+\end{align}
+#+END_EXPORT
+Applying the chain-rule allows Eq. ref:eq-manifold-length to be expressed in terms of the Jacobian and the
+velocity,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-manifold-length-chain}
+\text{Length}\left(\manifoldFunction(\trajectory)\right)
+&= \int_{t_0}^{t_f}\left\|\jacobian \dot{\manifoldInput}(t)\right\|_2 \mathrm{d}t, \\
+\jacobian &= \frac{\partial \manifoldFunction}{\partial \manifoldInput(t)} \in \R^{1 \times \ManifoldDim}.
+\end{align}
+#+END_EXPORT
+This implies that the length of a trajectory on the manifold $\manifold$,
+can be calculated in the input space $\manifoldDomain$,
+using a locally defined norm,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-manifold-norm}
+\left\|\jacobian \dot{\manifoldInput}(t)\right\|_2
+&= \sqrt{ \left( \jacobian \dot{\manifoldInput}(t) \right)^T
+\jacobian \dot{\manifoldInput}(t)} \nonumber \\
+&= \sqrt{\dot{\mathbf{x}}^T(t) \metricTensor_{\mathbf{x}_t} \dot{\manifoldInput}(t)}
+\defeq \left\|\dot{\manifoldInput}(t)\right\|_{\metricTensor_{\manifoldInput_t}},
+%= \left\|\dot{\mathbf{x}}(t)\right\|_{\mathbf{G}(\mathbf{x}(t))}.
+\end{align}
+#+END_EXPORT
+where $\metricTensor_{\mathbf{x}_t} = \jacobian^T \jacobian}$
+is a symmetric positive definite matrix
+(akin to a local Mahalanobis distance measure), known as the natural Riemannian metric.
+The length of a trajectory on a manifold $\manifold$, endowed with the metric $\metricTensor$,
+can then be calculated as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-manifold-length-G}
+\text{Length}(\manifoldFunction(\trajectory))
+&= \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_{\metricTensor_{\mathbf{x}_t}} \mathrm{d}t.
+\end{align}
+#+END_EXPORT
+
+
+*** Lengths in Euclidean Spaces :ignore:
+\newline
+*Lengths in Euclidean Spaces*
+The $l^2$ norm (aka Euclidean norm) provides an intuitive notion for the length of a
+vector $\manifoldInput \in \manifoldDomain \subseteq \R^\manifoldDim$
+in a Euclidean space. Under the $l^2$ norm, the length of a trajectory
+${\trajectory = \{\manifoldInput(t) \in \manifoldDomain \quad \forall t \in [t_0, t_f]\}}$ is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-euclidean-length}
+\text{Length}\left(\trajectory\right)
+&= \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_2 \mathrm{d}t,
+\end{align}
+#+END_EXPORT
+where Newton's notation has been used to denote differentiation with respect to time $t$.
+As a norm can be expressed for any space endowed with an inner product, it is possible to
+calculate lengths of trajectories on manifolds endowed with an inner product.
+# Just as the dot product is the inner product of the Euclidean space, it is possible to
+# define inner products for Riemannian spaces (also known as Riemannian manifolds).
+# Remembering that a norm can be expressed for any space endowed with an inner product,
+# provides us with the tools to for calculating lengths on manifolds.
+
+*** Lengths on Riemannian Manifolds :ignore:
+# *Lengths on Riemannian Manifolds*
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Riemannian Manifolds}
+In this dissertation if suffices to consider manifolds $\manifold$ defined by a mapping
+function,
+%#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-manifold-function}
+\manifoldFunction : \manifoldDomain \rightarrow \manifoldCodomain,
+\end{equation}
+%#+END_EXPORT
+where $\manifoldDomain$ and $\manifoldCodomain$ are open subsets of Euclidean spaces.
+The manifold $\manifold$ is given by $\manifold = \manifoldFunction(\manifoldDomain)$ and is said to
+be immersed in the ambient space $\manifoldCodomain$.
+Riemannian manifolds can intuitively be seen as $d\text{-dimensional}$ curved surfaces with a smoothly
+varying positive-definite inner product, governed by the Riemannian metric $\metricTensor$ \citep{carmoRiemannian1992}.
+\begin{definition}[Riemannian Metric]
+A Riemannian metric $\metricTensor$,
+on a manifold $\manifold$, is a smooth function
+$\metricTensor : \manifoldDomain \rightarrow \R^{\ManifoldDim \times \ManifoldDim}$
+that assigns a symmetric positive definite matrix to any point in $\manifoldDomain$.
+%A Riemannian metric $\metricTensor$ on a
+%manifold $\manifold$ is a symmetric and positive definite matrix which defines
+%a smoothly varying inner product
+%$\langle \dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \rangle_{\mathbf{x}} = \dot{\mathbf{x}}_a^T \mathbf{G}(\mathbf{x}) \dot{\mathbf{x}}_b$
+%in the tangent space $T_{\mathbf{x}}\manifold$, for each point $\mathbf{x} \in \manifold$ and
+%$\dot{\mathbf{x}}_a, \dot{\mathbf{x}}_b \in T_{\mathbf{x}}\manifold$.
+\end{definition}
+Intuitively, the metric forms a local inner product in $\manifoldDomain$ that informs how to measure lengths
+on the manifold $\manifold$, locally in $\manifoldDomain$.
+Riemannian manifolds locally resemble Euclidean spaces $\R^\manifoldDim$ and have
+globally defined differentiable structure.
+\end{myquote}
+#+END_EXPORT
+
+
+
+
+*Indirect Geodesic Control*
+
+
+- *Cost* Minimise length of trajectory on manifold parameterised by the desired mode's mixing probability,
+- *Constraints* Enforce the desired mode's probabilities at each time step to be more than some threshold,
+- *Inference* Condition optimal trajectory on desired mode's expert indicator variable,
+
+
+Note that the mode indicator variable is a random variable
+$\Pr(\modeVar_{\timeInd} = \desiredMode ) \geq \delta_{\modeVar} \quad \forall \timeInd \in \mathbb{Z} \cap [1,\TimeInd]$
+
+However, none of these approaches provide a principled approach for weighting either of the goals.
+
+
+*Gating Network Posterior*
+- *Cost* Minimise length of trajectory on manifold parameterised by the desired mode's gating function,
+  + Note that this function is probabilistic,
+
+latent /geometry/ inferred by the GP-based gating network from Chapter ref:chap-dynamics.
+
+The geometry and GP posterior covariance associated with the latent gating functions
+are used to formulate an objective function that encodes both Goals 1 and 2.
+
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Intuition for Geometric Approach} The geometry of the latent gating functions can be used to formulate a cost term
+that favours trajectories remaining in a preferred dynamics mode.
+The $g_{\text{mode}}$ term in Eq. \ref{eq-cost-trajectory} can be expressed as finding shortest
+paths on the desired mode's gating function.
+Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
+manifold given by the desired mode's gating function,
+increases when it passes over the contours; analogous to climbing a hill.
+Given appropriate scaling of the gating function, shortest trajectories between two locations are
+those that attempt to follow the contours, i.e. remain in a single mode by not climbing up or down any hills.
+\end{myquote}
+#+END_EXPORT
 ** Trajectory Optimisation via Latent ODE Collocation label:sec-traj-opt-geometric
 *** Maths :ignore:
 #+BEGIN_EXPORT latex
@@ -9469,7 +9705,7 @@ using a locally defined norm,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-manifold-norm}
 \left\|\jacobian \dot{\manifoldInput}(t)\right\|_2
-&= \sqrt{ \left(\dot{\manifoldInput}(t) \jacobian\right)^T
+&= \sqrt{ \left( \jacobian \dot{\manifoldInput}(t) \right)^T
 \jacobian \dot{\manifoldInput}(t)} \nonumber \\
 &= \sqrt{\dot{\mathbf{x}}^T(t) \metricTensor_{\mathbf{x}_t} \dot{\manifoldInput}(t)}
 \defeq \left\|\dot{\manifoldInput}(t)\right\|_{\metricTensor_{\manifoldInput_t}},
