@@ -913,7 +913,7 @@ until it can find a trajectory to the target state that does not violate the cha
 | $\zF$          | Inducing variables - mode k             | $\uFk$  | $\fk(\zFk) \in \R^{\NumInd \times \StateDim}$                                            |
 |                | Inducing variables - all modes          | $\uF$   | $\f(\zF) \in \R^{\NumInd \times \ModeInd \times \StateDim}$                              |
 ** Experts
-GP prior over each output dimension $d$ for each dynamics mode $k$, 
+GP prior over each output dimension $d$ for each dynamics mode $k$,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-prior-single-dim}
 p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDimMode{\mu}(\allInput), \singleDimMode{k}(\allInput, \allInput) \right)
@@ -969,7 +969,6 @@ Mixture of experts marginal likelihood,
 #+END_EXPORT
 
 ** Gating Network
-# TODO: gating function depends on spatial component of state only
 This work is interested in transition dynamics where the governing mode varies over the input domain
 
 This work specifies a probability mass function over the mode indicator variable that is governed by a set of input-dependent
@@ -1018,10 +1017,10 @@ marginal likelihood in Equation ref:eq-moe-marginal-likelihood,
 \pYGivenX &= \prod_{\numData=1}^{\NumData} \sum_{\modeInd=1}^{\ModeInd} \underset{\text{Mixing probability}}{\PraGivenxNegH} \underset{\text{Dynamics mode } k}{\pykGivenxNegF}
 \end{align}
 #+END_EXPORT
-The 
+The
 $\PraGivenxNegH$ contains $\ModeInd$ GP conditionals with complexity
 
-$\pykGivenxNegF$ contains a GP conditional with complexity 
+$\pykGivenxNegF$ contains a GP conditional with complexity
 
 ** Inference
 
@@ -4399,14 +4398,6 @@ up inference.
 \newcommand{\gatingKL}{\ensuremath{\text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
 \newcommand{\gatingsKL}{\ensuremath{\sum_{\modeInd=1}^\ModeInd \text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
 #+END_EXPORT
-** To-Do List :noexport:
-- [X] Check multiline Eqns only have one eq number
-- [ ] Add link to youtube video - TODO https://www.youtube.com/watch?v=VqjkbfIsghM&ab_channel=AidanScannell
-- [X] Finish writing up mcycle results
-- [ ] Add section on gating networks?
-  + [ ] show how GMM isn't useful for specifying informative priors
-  + [ ] Results section called "Improving Identifiability through GP Gating Networks"
-
 ** Intro :ignore:
 This chapter is interested in /learning/ representations of multimodal dynamical systems,
 that can be leveraged to control robotic systems in uncertain environments, where both the underlying
@@ -7862,30 +7853,6 @@ it does contain non-stationary points and heterogeneous noise,
 making it interesting to study from the MoGPE perspective.
 Secondly, they are tested on a data set collected onboard a DJI Tello quadcopter flying in the Bristol Robotics
 Laboratory.
-*** To-Do List :noexport:
-- [-] Finish writing up mcycle results
-  - [X] compare bounds
-    - [X] show tighter bound is better
-    - [X] compare complexity of bounds? or speed to run?
-    - [X] compare how they treat gating network
-      + max entropy in indicator var dist (further) vs gating function dist (tight)
-  - [X] compare batch size
-  - [X] finish writing two experts
-  - [X] finish writing three experts
-  - [X] update mcycle table with correct NLML
-    + NLML/num_data on test_dataset not full_dataset
-  - [X] test num inducing points?
-  - [ ] compare to other MoGPE models?
-- [ ] example showing why we want GP based gating network?
-  + add artificial dataset from nerurips paper
-  + or sigmoid kernel?
-- [X] Update quadcopter results
-  + [X] Add quiver
-- [X] Add comment about not optimising inducing points leading to better performance
-- [ ] Add discussion
-  - [ ] compare to time series methods
-    + [ ] Switching State-Space model
-
 *** Experiments
 #+BEGIN_EXPORT latex
 \newcommand{\numTest}{\ensuremath{n}}
@@ -9154,6 +9121,7 @@ it can successfully learn a factorised representation of the underlying dynamics
 
 \newcommand{\trajectory}{\ensuremath{\bar{\state}}}
 \newcommand{\stateControlTraj}{\ensuremath{\bm\tau}}
+\newcommand{\jacTraj}{\ensuremath{\bar{\mathbf{J}}}}
 
 \newcommand{\desiredMode}{\ensuremath{k^*}}
 \newcommand{\desiredGatingFunction}{\ensuremath{h_{k^*}}}
@@ -9166,6 +9134,63 @@ it can successfully learn a factorised representation of the underlying dynamics
 
 \renewcommand{\satisfactionProb}{\ensuremath{p_{\modeVar}}}
 #+END_EXPORT
+# *** Geometry Maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\manifold}{\ensuremath{\mathcal{M}}}
+\newcommand{\manifoldFunction}{\ensuremath{h}}
+\newcommand{\manifoldDomain}{\ensuremath{\mathcal{Z}}}
+\newcommand{\manifoldCodomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\ManifoldDim}{\ensuremath{D}}
+\newcommand{\manifoldDim}{\ensuremath{d}}
+\newcommand{\manifoldInput}{\ensuremath{\mathbf{x}}}
+
+% \newcommand{\jacobian}{\ensuremath{\mathbf{J}_{\mathbf{x}_t}}}
+\newcommand{\jacobian}{\ensuremath{\mathbf{J}(\state(t))}}
+\newcommand{\metricTensor}{\ensuremath{\mathbf{G}}}
+
+\newcommand{\geodesicFunction}{\ensuremath{f_G}}
+
+%\newcommand{\gatingDomain}{\ensuremath{\hat{\mathcal{X}}}}
+%\newcommand{\gatingCodomain}{\ensuremath{\mathcal{A}}}
+\newcommand{\gatingDomain}{\ensuremath{\mathcal{Z}}}
+\newcommand{\gatingCodomain}{\ensuremath{\mathcal{X}}}
+
+\newcommand{\desiredManifold}{\ensuremath{\mathcal{M}_{k^*}}}
+%\newcommand{\desiredMetricTensor}{\ensuremath{\mathbf{G}_{k^*}}}
+\newcommand{\desiredMetricTensor}{\ensuremath{\mathbf{G}}}
+%\newcommand{\desiredJacobian}{\ensuremath{\mathbf{J}_{k^*}(\state(t))}}
+\newcommand{\desiredJacobian}{\ensuremath{\mathbf{J}}}
+%\newcommand{\GatingDim}{\ensuremath{D_{x+u}}}
+\newcommand{\GatingDim}{\ensuremath{D}}
+\newcommand{\gatingDim}{\ensuremath{d}}
+
+% Manfiold kernels
+\renewcommand{\manifoldKernelMM}{\ensuremath{\mathbf{K}_{\NumInducing \NumInducing}}}
+\newcommand{\jacManifoldKernelsM}{\ensuremath{\partial \mathbf{K}_{* \NumInducing}}}
+\newcommand{\jacManifoldKernelMs}{\ensuremath{\partial \mathbf{K}_{\NumInducing *}}}
+\newcommand{\hessManifoldKernel}{\ensuremath{\partial^2 \mathbf{K}_{**}}}
+\renewcommand{\manifoldKernelNN}{\ensuremath{\mathbf{K}_{\NumData \NumData}}}
+\newcommand{\jacManifoldKernelsN}{\ensuremath{\partial \mathbf{K}_{* \NumData}}}
+\newcommand{\jacManifoldKernelNs}{\ensuremath{\partial \mathbf{K}_{\NumData *}}}
+
+\newcommand{\manifoldInducingInput}{\ensuremath{\bm\xi}}
+\newcommand{\manifoldInducingOutput}{\ensuremath{\mathbf{u}}}
+\newcommand{\manifoldInducingVariational}{\ensuremath{q(\mathbf{u})}}
+\newcommand{\manifoldInducingOutputMean}{\ensuremath{\mathbf{m}}}
+\newcommand{\manifoldInducingOutputCov}{\ensuremath{\mathbf{S}}}
+\newcommand{\manifoldMeanFunc}{\ensuremath{\mu}}
+
+
+%\newcommand{\manifoldFunc}{\ensuremath{\mathbf{h}}}
+%\newcommand{\desiredMeanFunc}{\ensuremath{\mu}}
+\renewcommand{\muJac}{\ensuremath{\bm\mu_{\mathbf{J}}}}
+\renewcommand{\covJac}{\ensuremath{\bm\Sigma_{\mathbf{J}}}}
+\renewcommand{\testInput}{\ensuremath{\mathbf{x}_*}}
+
+\newcommand{\stateDiff}{\ensuremath{\Delta \state}}
+
+\renewcommand{\controlCostMatrix}{\ensuremath{\mathbf{R}}}
+#+END_EXPORT
 ** Intro :ignore:
 This chapter is concerned with controlling multimodal dynamical systems, whose transition dynamics
 are represented with the probabilistic dynamics model from Chapter ref:chap-dynamics,
@@ -9177,8 +9202,8 @@ Given the well-calibrated uncertainty estimates from the model in Chapter ref:ch
 this chapter is concerned with *risk-averse* control.
 That is, the algorithms should find trajectories that also
 avoid entering regions of the transition dynamics that
-cannot be predicted confidently i.e. have high /epistemic uncertainty/,
-for example, if they have not been observed.
+cannot be predicted confidently i.e. have high /epistemic uncertainty/.
+For example, if they have not been observed.
 This is because the model cannot be certain whether such a region belongs to the desired dynamics mode
 or not.
 This Chapter introduces two different approaches to performing /mode constrained/ trajectory optimisation.
@@ -9241,8 +9266,7 @@ trajectories under policy $\policy$,
 \begin{align} \label{eq-trajectory-dist}
 %p(\stateTraj, \controlTraj \mid \state_0) =
 \controlledPolicyDist(\stateTraj, \controlTraj) =
-\policy(\control_0 \mid \state_0)
-\prod_{\timeInd=1}^\TimeInd
+\prod_{\timeInd=0}^{\TimeInd-1}
 p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
 \policy(\control_\timeInd \mid \state_\timeInd).
 \end{align}
@@ -9326,26 +9350,32 @@ The main goals of the trajectory optimisation in this Chapter can be summarised 
 # \todo{move this paragraph}
 
 ** Latent Spaces for Control
+*** intro :ignore:
 The optimal control problem in cref:eq-mode-soc-problem enforces the mode remaining behaviour via the
 equality constraint in cref:eq-mode-soc-problem-constraint.
 This constraint has assumed access to the mode indicator variable $\modeVar$ at all time steps, which is
 not always possible.
 Conveniently, the probabilistic model in cref:chap-dynamics was formulated with latent variables
-to represent the uncertainty in the mode indicator variable $\modeVar$.
+to represent the mode indicator variable $\modeVar$ and our uncertainty in it.
 This chapter now unleashes the power of these latent variables by making decisions under their uncertainty.
+Let us consider all of the information inferred by the probabilistic model in cref:chap-dynamics that could be
+used to encode our goals.
 # It is common to solve such a problem by encoding the goals either in the objective function or via
 # inequality constraints.
 
-Let us consider all of the information inferred by the probabilistic model in cref:chap-dynamics that could be
-used to encode our goals.
+- *Cost* Minimise length of trajectory on manifold parameterised by the desired mode's mixing probability,
+- *Constraints* Enforce the desired mode's probabilities at each time step to be more than some threshold,
+- *Inference* Condition optimal trajectory on desired mode's expert indicator variable,
 
-*Mode Indicator Posterior*
+*** Mode Indicator Variable
+
+# *Mode Indicator Posterior*
 The mode indicator variable can be used to encode Goal 1 in multiple ways.
 The simplest method is to simply maximise the desired mode's mixing probability over
 the trajectory, by introducing a cost function,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-cost-trajectory}
-\costFunc_{\text{mode}}(\state(t), \control(t)) = - \Pr (\modeVar_{\timeInd} = \desiredMode)
+\costFunc_{\text{mode}}(\state(t), \control(t)) = - \Pr (\modeVar_{\timeInd} = \desiredMode),
 \end{align}
 #+END_EXPORT
 which favours remaining in dynamics mode $\desiredMode$.
@@ -9353,8 +9383,8 @@ As our model assumes that the mode indicator depends on the state via the gating
 this probability is calculated as follows,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mode-chance-constraint-integral}
-\Pr(\modeVar_{\timeInd} = \desiredMode) = \int
-\Pr(\modeVar_{\timeInd} = \desiredMode \mid \GatingFunc(\state_{\timeInd}) )
+\Pr(\modeVar_{\timeInd} = \desiredMode) =
+\int \Pr(\modeVar_{\timeInd} = \desiredMode \mid \GatingFunc(\state_{\timeInd}) )
 \int \underbrace{q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})}_{\text{approx posterior}}
 \underbrace{p(\state_{\timeInd})}_{\text{state dist}}
 \text{d} \state_{\timeInd}
@@ -9406,19 +9436,46 @@ $\satisfactionProb$ at each time step.
 # and the $\costFunc_{\text{epistemic}}$ term favours trajectories that avoid regions of the
 # dynamics with high epistemic uncertainty.
 
-
-*Cost Function - Length Minimising Trajectories*
-The geometry of the latent gating functions can be used to formulate a cost term
-that favours trajectories remaining in a preferred dynamics mode.
-The $g_{\text{mode}}$ term in cref:eq-cost-trajectory can be expressed as finding length minimising
-trajectories on the desired mode's gating function.
+*** Probabilistic Geometry of the Gating Network
+**** intro :ignore:
+# Now that the relevant concepts from Riemannian geometry have been introduced, the objective function
+# for the first trajectory optimisation can be detailed.
+# The geometry of the latent gating functions can be used to formulate a cost term
+# that favours trajectories remaining in a preferred dynamics mode.
+An alternative approach is to consider the geometry of the latent gating functions.
+Goal 1 can be encoded as finding length minimising trajectories on the desired mode's gating function.
 Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
 manifold given by the desired mode's gating function,
 increases when it passes over the contours; analogous to climbing a hill.
 Given appropriate scaling of the gating function, shortest trajectories between two locations are
 those that attempt to follow the contours, i.e. remain in a single mode by not climbing up or down any hills.
+Let us quickly recap how to calculate lengths on Riemannian manifolds
+
+**** Lengths in Euclidean Spaces :ignore:
+\newline
+*Lengths in Euclidean Spaces*
+The $l^2$ norm (aka Euclidean norm) provides an intuitive notion for the length of a
+vector $\manifoldInput \in \manifoldDomain \subseteq \R^\manifoldDim$
+in a Euclidean space. Under the $l^2$ norm, the length of a trajectory
+${\trajectory = \{\manifoldInput(t) \in \manifoldDomain \quad \forall t \in [t_0, t_f]\}}$ is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-euclidean-length}
+\text{Length}\left(\trajectory\right)
+&= \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_2 \mathrm{d}t,
+\end{align}
+#+END_EXPORT
+where Newton's notation has been used to denote differentiation with respect to time $t$.
+As a norm can be expressed for any space endowed with an inner product, it is possible to
+calculate lengths of trajectories on manifolds endowed with an inner product.
+# Just as the dot product is the inner product of the Euclidean space, it is possible to
+# define inner products for Riemannian spaces (also known as Riemannian manifolds).
+# Remembering that a norm can be expressed for any space endowed with an inner product,
+# provides us with the tools to for calculating lengths on manifolds.
+
+**** Lengths on Riemannian Manifolds :ignore:
+*Lengths on Riemannian Manifolds*
 The length of a trajectory $\trajectory$ on a manifold $\manifold$, can be calculated
-by mapping it through the function $\manifoldFunction$, and
+by mapping it through the function $\manifoldFunction$ and
 using Eq. ref:eq-euclidean-length,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-manifold-length}
@@ -9460,35 +9517,10 @@ can then be calculated as,
 \end{align}
 #+END_EXPORT
 
-
-*** Lengths in Euclidean Spaces :ignore:
-\newline
-*Lengths in Euclidean Spaces*
-The $l^2$ norm (aka Euclidean norm) provides an intuitive notion for the length of a
-vector $\manifoldInput \in \manifoldDomain \subseteq \R^\manifoldDim$
-in a Euclidean space. Under the $l^2$ norm, the length of a trajectory
-${\trajectory = \{\manifoldInput(t) \in \manifoldDomain \quad \forall t \in [t_0, t_f]\}}$ is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-euclidean-length}
-\text{Length}\left(\trajectory\right)
-&= \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_2 \mathrm{d}t,
-\end{align}
-#+END_EXPORT
-where Newton's notation has been used to denote differentiation with respect to time $t$.
-As a norm can be expressed for any space endowed with an inner product, it is possible to
-calculate lengths of trajectories on manifolds endowed with an inner product.
-# Just as the dot product is the inner product of the Euclidean space, it is possible to
-# define inner products for Riemannian spaces (also known as Riemannian manifolds).
-# Remembering that a norm can be expressed for any space endowed with an inner product,
-# provides us with the tools to for calculating lengths on manifolds.
-
-*** Lengths on Riemannian Manifolds :ignore:
-# *Lengths on Riemannian Manifolds*
 #+BEGIN_EXPORT latex
 \begin{myquote}
 \textbf{Riemannian Manifolds}
-In this dissertation if suffices to consider manifolds $\manifold$ defined by a mapping
-function,
+In this dissertation if suffices to consider manifolds $\manifold$ defined by a mapping,
 %#+BEGIN_EXPORT latex
 \begin{equation} \label{eq-manifold-function}
 \manifoldFunction : \manifoldDomain \rightarrow \manifoldCodomain,
@@ -9517,74 +9549,507 @@ Riemannian manifolds locally resemble Euclidean spaces $\R^\manifoldDim$ and hav
 globally defined differentiable structure.
 \end{myquote}
 #+END_EXPORT
+**** Probabilistic Geometries label:sec-prob-geo
+***** intro :ignore:
+Length minimising trajectories on the manifold $\desiredManifold=\desiredGatingFunction(\gatingDomain)$
+associated with the desired mode's gating function,
+$\desiredGatingFunction : \gatingDomain \rightarrow \gatingCodomain$,
+encode Goal 1.
+That is, trajectories minimising cref:eq-manifold-length,
+subject to the metric $\desiredMetricTensor$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-desired-metric-tensor}
+\desiredMetricTensor &= \desiredJacobian^T \desiredJacobian, \\
+\desiredJacobian &= \frac{\partial \desiredGatingFunction}{\partial \manifoldInput(t)} \in \R^{1 \times \GatingDim},
+\end{align}
+#+END_EXPORT
+will attempt to remain in the desired dynamics mode $\desiredMode$.
+This encodes Goal 1 as length minimising trajectories, however, it does address Goal 2.
+We now address Goal 2 by observing that the metric tensor is actually stochastic.
+For notational conciseness, only a single gating function
+$\manifoldFuncion$ is used to denote the desired mode's gating function in this chapter.
 
-
-
-
-*Indirect Geodesic Control*
-
-
-- *Cost* Minimise length of trajectory on manifold parameterised by the desired mode's mixing probability,
-- *Constraints* Enforce the desired mode's probabilities at each time step to be more than some threshold,
-- *Inference* Condition optimal trajectory on desired mode's expert indicator variable,
-
-
-Note that the mode indicator variable is a random variable
-$\Pr(\modeVar_{\timeInd} = \desiredMode ) \geq \delta_{\modeVar} \quad \forall \timeInd \in \mathbb{Z} \cap [1,\TimeInd]$
-
-However, none of these approaches provide a principled approach for weighting either of the goals.
-
-
-*Gating Network Posterior*
-- *Cost* Minimise length of trajectory on manifold parameterised by the desired mode's gating function,
-  + Note that this function is probabilistic,
-
-latent /geometry/ inferred by the GP-based gating network from Chapter ref:chap-dynamics.
-
-The geometry and GP posterior covariance associated with the latent gating functions
-are used to formulate an objective function that encodes both Goals 1 and 2.
+***** Extension to Probabilistic Geometries :ignore:
+Following cite:tosiMetrics2014 this work formulates a metric tensor that captures the variance in the manifold
+via a probability distribution.
+First note that as the differential operator is linear, the derivative of a GP is also a GP.
+Therefore, the metric tensor $\desiredMetricTensor$ in Eq. ref:eq-desired-metric-tensor is the outer product of
+two Normally distributed random variables.
+As such, the metric tensor $\desiredMetricTensor$ is also a random variable, following
+a non-central Wishart distribution citep:andersonNonCentral1946,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-metric-dist}
+  \desiredMetricTensor \sim
+  \mathcal{W}_{\GatingDim}\left(P, \covJac, \mathbb{E}\left[\Jac^{T}\right] \mathbb{E}[\Jac]\right),
+\end{align}
+#+END_EXPORT
+where $P$ is the number of degrees of freedom (always one in our case) and
+$\E\left[\desiredJacobian\right]$ and $\covJac$ are the mean and covariance matrices
+associated with the GP over the Jacobian.
+The expected value of the metric tensor in Eq. ref:eq-metric-dist is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expected-metric}
+  \E[\desiredMetricTensor] = \E[\mathbf{J}^T] \E[\mathbf{J}] + \covJac.
+\end{align}
+#+END_EXPORT
+Importantly, this expected metric tensor includes a covariance term $\covJac$,
+which implies that lengths on the manifold increase in areas of high covariance.
+This is a desirable behaviour because it encourages length minimising trajectories
+to avoid regions of the learned dynamics with high epistemic uncertainty,
+encoding Goal 2.
+The model in Chapter ref:chap-dynamics is built upon sparse GP approximations,
+so the Jacobian in Eq. ref:eq-predictive-jacobian-dist must be extended for such approximations.
 
 #+BEGIN_EXPORT latex
 \begin{myquote}
-\textbf{Intuition for Geometric Approach} The geometry of the latent gating functions can be used to formulate a cost term
-that favours trajectories remaining in a preferred dynamics mode.
-The $g_{\text{mode}}$ term in Eq. \ref{eq-cost-trajectory} can be expressed as finding shortest
-paths on the desired mode's gating function.
-Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
-manifold given by the desired mode's gating function,
-increases when it passes over the contours; analogous to climbing a hill.
-Given appropriate scaling of the gating function, shortest trajectories between two locations are
-those that attempt to follow the contours, i.e. remain in a single mode by not climbing up or down any hills.
+\textbf{Gaussian Process Jacobain}
+As the differential operator is linear,
+a function $\manifoldFunction: \gatingDomain \rightarrow  \R$ modelled as a GP,
+\begin{align} \label{eq-jacobian-gp-random-var}
+\manifoldFunction \sim \mathcal{N}(\mu(\allInput), k(\allInput, \allInput)),
+\end{align}
+where $\mu$ and $k$ represent the mean and covariance functions,
+is jointly Gaussian with its Jacobian
+at a new input location $\testInput \in \R^{1 \times \GatingDim}$,
+\begin{align} \label{eq-jacobian-random-var}
+\testJac = \Jac(\testInput) = \frac{\partial \manifoldFunction}{ \partial \testInput} \in \R^{\GatingDim},
+\end{align}
+assuming that the mean and covariance functions are differentiable.
+As such, the conditional distribution over the Jacobian
+$\testJac$ can easily be obtained using the properties of multivariate Normals
+and is given by,
+\begin{align} \label{eq-predictive-jacobian-dist}
+p\left(\testJac | \manifoldFunction(\allInput), \testInput, \allInput \right)
+&= \mathcal{N}\left(\testJac \mid \muJac, \covJac \right) \\
+\muJac &= \frac{\partial \mu}{\partial \testInput} + \jacManifoldKernelsM \manifoldKernelNN^{-1}
+\left(\manifoldFunction(\allInput) - \manifoldMeanFunc(\allInput) \right) \\
+\covJac &= \hessManifoldKernel - \jacManifoldKernelsN \manifoldKernelNN^{-1} \jacManifoldKernelNs
+\end{align}
+where the covariance matrices are given by,
+\begin{align} \label{eq}
+\manifoldKernelNN &= k\left( \allInput, \allInput \right) \in \R^{\NumData \times \NumData} \\
+\jacManifoldKernelsN&= \frac{\partial k\left(\testInput, \allInput\right)}{\partial \testInput} \in \R^{\GatingDim \times \NumData} \\
+\hessManifoldKernel &= \frac{\partial^2 k\left(\testInput, \testInput \right)}{\partial \testInput \partial \testInput} \in \R^{\GatingDim \times \GatingDim}.
+\end{align}
+%Eq. \ref{eq-predictive-jacobian-dist} is a $\StateDim\text{-dimensional}$ multivariate Normal distribution.
 \end{myquote}
 #+END_EXPORT
-** Trajectory Optimisation via Latent ODE Collocation label:sec-traj-opt-geometric
-*** Maths :ignore:
+
 #+BEGIN_EXPORT latex
-\newcommand{\manifold}{\ensuremath{\mathcal{M}}}
-\newcommand{\manifoldFunction}{\ensuremath{h}}
-\newcommand{\manifoldDomain}{\ensuremath{\mathcal{Z}}}
-\newcommand{\manifoldCodomain}{\ensuremath{\mathcal{X}}}
-\newcommand{\ManifoldDim}{\ensuremath{D}}
-\newcommand{\manifoldDim}{\ensuremath{d}}
-\newcommand{\manifoldInput}{\ensuremath{\mathbf{x}}}
-
-% \newcommand{\jacobian}{\ensuremath{\mathbf{J}_{\mathbf{x}_t}}}
-\newcommand{\jacobian}{\ensuremath{\mathbf{J}(\state(t))}}
-\newcommand{\metricTensor}{\ensuremath{\mathbf{G}}}
-
-\newcommand{\geodesicFunction}{\ensuremath{f_G}}
-
-\newcommand{\gatingDomain}{\ensuremath{\hat{\mathcal{X}}}}
-\newcommand{\gatingCodomain}{\ensuremath{\mathcal{A}}}
-
-\newcommand{\desiredManifold}{\ensuremath{\mathcal{M}_{k^*}}}
-%\newcommand{\desiredMetricTensor}{\ensuremath{\mathbf{G}_{k^*}}}
-\newcommand{\desiredMetricTensor}{\ensuremath{\mathbf{G}}}
-%\newcommand{\desiredJacobian}{\ensuremath{\mathbf{J}_{k^*}(\state(t))}}
-\newcommand{\desiredJacobian}{\ensuremath{\mathbf{J}}}
-\newcommand{\GatingDim}{\ensuremath{d_{x+u}}}
-\newcommand{\gatingDim}{\ensuremath{d}}
+\begin{myquote}
+\textbf{Sparse Gaussian Process Jacobian}
+In the sparse variational  Gaussian process setting, the predictive distribution over the Jacobian given a new
+input, is obtained by conditioning on the inducing
+variables $\manifoldInducingOutput = \manifoldFunction(\manifoldInducingInput) \in \R^{\NumInducing \times \GatingDim}$,
+\begin{equation} \label{eq-}
+\manifoldInducingOutput \sim \mathcal{N}(\mu(\manifoldInducingInput),
+k(\manifoldInducingInput, \manifoldInducingInput))
+\end{equation}
+and then marginalising them with respect to their variational posterior,
+\begin{equation} \label{eq-}
+\manifoldInducingVariational = \mathcal{N}(\manifoldInducingOutput \mid
+\manifoldInducingOutputMean, \manifoldInducingOutputCov).
+\end{equation}
+The distribution over the Jacobian is approximated as follows,
+\begin{align}
+p(\testJac \mid \testInput, \allOutput, \allInput) &=
+\int \int p(\testJac \mid \testInput, \manifoldFunction(\allInput), \manifoldInducingOutput)
+p(\manifoldFunction(\allInput), \manifoldInducingOutput \mid \allOutput, \allInput)
+\text{d} \manifoldFunction(\allInput) \text{d} \manifoldInducingOutput \nonumber \\
+&\approx \int \int p(\testJac \mid \testInput, \manifoldFunction(\allInput), \manifoldInducingOutput)
+p(\manifoldFunction(\allInput) \mid \manifoldInducingOutput) \manifoldInducingVariational
+\text{d} \manifoldFunction(\allInput) \text{d} \manifoldInducingOutput \nonumber \\
+&= \int  p(\testJac \mid \testInput, \manifoldInducingOutput)
+\manifoldInducingVariational
+\text{d} \manifoldInducingOutput
+\coloneqq q(\testJac \mid \testInput)
+\end{align}
+where the mean and covariance are given by,
+\begin{align}
+q(\testJac \mid \testInput) &= \mathcal{N}\left(\testJac \mid \muJac, \covJac \right) \\
+\muJac &= \jacManifoldKernelsM \manifoldKernelMM^{-1} \left( \manifoldInducingOutputMean - \manifoldMeanFunc(\allInput) \right), \\
+\covJac &= \hessManifoldKernel - \jacManifoldKernelsM \manifoldKernelMM^{-1}
+\left( \manifoldKernelMM - \manifoldInducingOutputCov \right) \manifoldKernelMM^{-1} \jacManifoldKernelMs \right).
+\end{align}
+with covariance matrices given by,
+\begin{align} \label{eq-}
+\manifoldKernelMM &= k\left( \manifoldInducingInput, \manifoldInducingInput \right) \in \R^{\NumInducing \times \NumInducing} \\
+\jacManifoldKernelsM&= \frac{\partial k\left(\testInput, \manifoldInducingInput \right)}{\partial \testInput} \in \R^{\GatingDim \times \NumInducing} \\
+\end{align}
+\end{myquote}
 #+END_EXPORT
+
+**** Latent Geometry
+Given this latent geometry, Goals 1 and 2 can be encoded into the cost function in cref:eq-mode-soc-problem
+as length minimising trajectories using cref:eq-manifold-length-G.
+In fact, length minimising trajectories can be found instead by minimising the curve energy
+cite:carmoRiemannian1992, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-trajectory-energy}
+\text{Energy}(\manifoldFunction(\trajectory))
+= \int \dot{\state}(\timeInd) \metricTensor(\state(\timeInd)) \dot{\state}(\timeInd) \text{d} \timeInd.
+\end{align}
+#+END_EXPORT
+which retains a quadratic form. However, the expected cost for a trajectory,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\E_{\stateTraj, \controlTraj, \jacTraj} \left[ \costFunc(\stateTraj, \controlTraj, \jacTraj) \right]
+= \sum_{\timeInd=1}^\TimeInd
+\E_{\stateDist}\left[ \stateDiff_\timeInd^T
+\E_{\Jac \mid \state_{\timeInd}}\left[ \Jac(\state_\timeInd) \Jac(\state_\timeInd)^T \right]
+ \stateDiff_\timeInd \right]
+\end{align}
+#+END_EXPORT
+has no closed-form expression due to the metric's $\metricTensor$ dependence on the state via the Jacobian.
+
+
+# requires an expectation over the Jacobian $\jacGivenInput$
+# as well as the state,
+# There is no closed-form expression for this expectation due to the Jacobian's dependence on the state.
+
+** Indirect Control via Latent Geodesics
+The first control algorithm presented in this chapter is an indirect trajectory optimisation algorithm that
+exploits the fact that
+length minimising trajectories, on the manifold endowed with the expected metric from cref:eq-expected-metric,
+encodes both of our Goals.
+Shortest lengths on a manifold are known as geodesics, so we refer to shortest
+trajectories as geodesic trajectories.
+
+*** Geodesics :ignore:
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Geodesics}
+Given the method for calculating lengths on Riemannian manifolds in \cref{eq-manifold-length},
+it is trivial to define the notion of a shortest trajectory, or geodesic, as a length minimising trajectory.
+Formally, a geodesic is defined as follows,
+\begin{definition}[Geodesic]
+Given two points $\manifoldInput_0, \manifoldInput_f \in
+\manifold$, a Geodesic is a length minimising trajectory (curve)
+$\trajectory_g$ connecting the points, such that,
+\begin{subequations}
+\begin{align} \label{eq-geodesic}
+  \trajectory_{g} =\arg &\min_{\trajectory} \operatorname{Length}(\trajectory) \\
+\text{s.t.} \quad  \manifoldInput(t_0)&=\manifoldInput_{0} \\
+  \manifoldInput(t_f)&=\manifoldInput_{f}.
+\end{align}
+\end{subequations}
+\end{definition}
+\end{myquote}
+#+END_EXPORT
+*Geodesic ODE* An important observation from cite:carmoRiemannian1992, is that geodesics
+satisfy a continuous-time $2^{\text{nd}}$ order ODE, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-2ode}
+ \ddot{\manifoldInput}(t)
+&= \geodesicFunction(t, \manifoldInput, \dot{\manifoldInput}) \nonumber \\
+&=-\frac{1}{2} \metricTensor^{-1}(\manifoldInput(t))\left[
+\frac{\partial \operatorname{vec}[\metricTensor(\manifoldInput(t))]}{\partial \manifoldInput(t)}
+\right]^{T}\left(\dot{\manifoldInput}(t) \otimes \dot{\manifoldInput}(t)\right),
+\end{align}
+#+END_EXPORT
+where $\operatorname{vec}[\metricTensor(\manifoldInput(t)])$ stacks the columns of $\metricTensor(\manifoldInput(t))$
+and $\otimes$ denotes the Kronecker product.
+The implication of Eqs. ref:eq-geodesic and ref:eq-2ode is that trajectories that are solutions
+to the $2^{\text{nd}}$ order ODE in Eq. ref:eq-2ode implicitly minimise the objective,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-length-objective}
+J_{\text{geodesic}} &= \min \int_{t_0}^{t_f}\left\|\dot{\manifoldInput}(t)\right\|_{\metricTensor(\mathbf{x}(t))} \mathrm{d}t.
+\end{align}
+#+END_EXPORT
+Given this observation, computing geodesics involves finding a solution to Eq. ref:eq-2ode
+with $\manifoldInput(t_0) = \manifoldInput_0$ and $\manifoldInput(t_f) = \manifoldInput_f$.
+This is a boundary value problem with a smooth solution so it can be solved using
+any BVP solver, e.g. (multiple) shooting and collocation methods.
+
+*** Implicit Trajectory Optimisation
+Solving the second-order ODE in cref:eq-2ode with the expected metric from cref:eq-expected-metric,
+is equivalent to solving our trajectory optimisation problem subject to the same boundary conditions.
+This resembles indirect control methods as it is based on an observation that the
+necessary conditions for optimality are encoded via the geodesic ODE.
+However, it is worth noting that solutions to the geodesic ODE are not guaranteed to satisfy the
+dynamics constraints.
+
+*Differential Flatness*
+Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode cannot
+be solved with simple forward or backward integration.
+Instead, the problem is transcribed using the approach of differential
+flatness cite:milamNew2000,rossPseudospectral2004.
+A set of outputs $\mathbf{z}(t)$ are defined such that the
+states $\mathbf{x}(t)$ and controls $\mathbf{u}(t)$ can be
+expressed in terms of the flat output $\mathbf{z}(t)$ and a finite number of its derivatives,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\mathbf{x}(t) &= A(\mathbf{z}(t), \dot{\mathbf{z}}(t), \ldots) \\
+\mathbf{u}(t) &= B(\mathbf{z}(t), \dot{\mathbf{z}}(t), \ldots).
+\end{align}
+#+END_EXPORT
+In the velocity-controlled quadcopter example, the flat output is the
+state $\mathbf{z}(t) = \mathbf{x}(t)$
+and the control is simply the state derivative
+$\mathbf{u}(t) &= \dot{\mathbf{z}}(t)$.
+The original trajectory optimisation problem can then be converted to finding $\mathbf{z}(t)$
+for $t \in [t_0, t_f]$ subject to the boundary conditions and the geodesic ODE,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-diff-flat-ode}
+\ddot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t))
+&= f_G(t, \mathbf{x}(\mathbf{z}(t), \dot{\mathbf{z}}(t)), \dot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t))).
+\end{align}
+#+END_EXPORT
+*Collocation*
+Collocation methods are used to transcribe continuous-time trajectory optimisation problems into
+nonlinear programs, i.e. constrained parameter optimisation cite:kellyIntroduction2017,fahrooDirect2000  .
+The expected metric in cref:eq-expected-metric is substituted into
+cref:eq-diff-flat-ode and solved via collocation.
+This work implements a simple Hermite-Simpson collocation method that enforces the state
+derivative interpolated by the polynomials to equal the geodesic ODE $f_G$
+at the midpoints between a set of $I$ collocation points
+$\{\mathbf{z}_i\}_{i=1}^I$. This is achieved through the collocation defects,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-defect}
+\Delta_{i+\frac{1}{2}} &= \ddot{\mathbf{z}}_{i+\frac{1}{2}} - f_G(t_{i+\frac{1}{2}}, \dot{\mathbf{z}}_{i+\frac{1}{2}},\mathbf{z}_{i+\frac{1}{2}})
+\end{align}
+#+END_EXPORT
+where $\ddot{\mathbf{z}}_{i+\frac{1}{2}}, \dot{\mathbf{z}}_{i+\frac{1}{2}}, \mathbf{z}_{i+\frac{1}{2}}$
+are obtained by interpolating between $\mathbf{z}_i$ and $\mathbf{z}_{i+1}$.
+cref:eq-defect defines a set of constraints ensuring trajectories are solutions
+to the geodesic ODE $f_G$.
+The nonlinear program that this work solves is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+%\min_{\mathbf{z}(t), \dot{\mathbf{z}}(t)}& \int_{t_0}^{t_f} \costFunc(\state(\timeInd), \control(\timeInd)) \text{d}t \\
+\min_{\mathbf{z}(t), \dot{\mathbf{z}}(t)}& \int_{t_0}^{t_f}
+\costFunc(\state(\mathbf{z}(\timeInd), \dot{\mathbf{z}}(\timeInd)),
+\control(\mathbf{z}(\timeInd), \dot{\mathbf{z}}(\timeInd))) \text{d}t \\
+&\text{s.t. }\text{\cref{eq-defect}}  \\
+\mathbf{x}&\left(\mathbf{z}(t_0), \dot{\mathbf{z}}(t_0) \right) = \mathbf{x}_0 \\
+\mathbf{x}&(\mathbf{z}(t_f),\dot{\mathbf{z}}(t_f)) = \mathbf{x}_f
+\end{align}
+#+END_EXPORT
+with a quadratic cost function on the controls,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-quadratic-cost-control}
+\costFunc(\stateTraj, \controlTraj)
+&= \sum_{\timeInd=0}^{\TimeInd-1} \control_{\timeInd}^T \controlCostMatrix \control_{\timeInd} \nonumber \\
+&= \sum_{\timeInd=0}^{\TimeInd-1} \left\| \control_\timeInd \right\|_{\controlCostMatrix},
+\end{align}
+#+END_EXPORT
+where $\controlCostMatrix$ is a user defined, real symmetric positive definite weight matrix.
+It is common to find trajectories that minimise the expenditure of control effort,
+for example, minimising the total expenditure of fuel, or to minimising the energy dissipated from the system.
+This is solved using Sequential Least Squares Programming (SLSQP) in SciPy.
+
+# this work adopts a quadratic cost function on the controls,
+
+# This objective regularises the control trajectory under the L2 norm.
+# The meaning of minimum control effort depends upon the specific problem.
+# It may refer to minimising the total expenditure of fuel, or to minimising the energy dissipated from the system.
+# Regardless of the specific interpretation, it is usually desirable to regularise the controls.
+
+\todo[inline]{Lagrance multipliers to make TO unconstrained? Feels unnecessary to include...}
+
+# *** Results label:sec-traj-opt-results
+# #+NAME: fig-geometric-traj-opt-over-svgp
+# #+ATTR_LATEX: :width 1.1\textwidth :placement [!t] :center t
+# #+caption: Contour plots showing the GP posterior mean (left) and variance (right) over the gating function associated with dynamics mode 1 after training on a subset of the quadcopter data set. The initial and optimised trajectories are overlayed to show the influence of the GP's mean and variance on the trajectory optimisation with different $\lambda$ settings.
+# [[file:./images/geometric-traj-opt-over-svgp.pdf]]
+
+*** Evaluation on Velocity Controlled Quadcopter label:sec-traj-opt-results
+#+NAME: fig-geometric-traj-opt-over-svgp
+#+ATTR_LATEX: :width 1.1\textwidth :placement [!t] :center t
+#+caption: Contour plots showing the GP posterior mean (left) and variance (right) over the gating function associated with dynamics mode 1 after training on a subset of the quadcopter data set. The initial and optimised trajectories are overlayed to show the influence of the GP's mean and variance on the trajectory optimisation with different $\lambda$ settings.
+[[file:./images/geometric-traj-opt-over-svgp.pdf]]
+
+The trajectory optimisation is tested on the real-world quadcopter control problem from the illustrative example
+in cref:fig-problem-statement.
+The model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts and trained on
+the data collected from the velocity controlled quadcopter experiment.
+The controls were kept constant during data collection so the dynamics reduce to
+$\Delta \state_{\timeInd} = \dynamicsFunc(\state_{\timeInd-1})$.
+The velocity controls are recovered via differential flatness cite:rossPseudospectral2004.
+A subset of the observations were removed from the data set to 1) test the model’s ability to represent
+epistemic uncertainty and 2) test the trajectory optimisation's ability to avoid these regions.
+
+cref:fig-geometric-traj-opt-over-prob shows the model's belief (probability) that mode 1 is
+responsible for predicting over the domain.
+The model has clearly learned two dynamics modes characterised by process noise.
+cref:fig-geometric-traj-opt-over-svgp shows the predictive mean (left) and variance (right) of the
+gating function $\gatingFunc_1$ associated with dynamics mode 1.
+The mean is high where the model believes mode 1 is responsible for predicting, low where it
+believes another mode is responsible and zero where it is uncertain.
+The variance (right) has also clearly captured information regrading the epistemic uncertainty,
+i.e. where there are no observations.
+
+The trajectory optimisation is projected onto learned gating function associated with
+the desired mode, shown in cref:fig-geometric-traj-opt-over-svgp.
+It seeks to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$
+that 1) remain in the non-turbulent mode and 2) avoid regions of the learned
+transition dynamics with high epistemic uncertainty.
+To aid with user control the metric tensor in Eq. ref:eq-expected-metric is modified with
+a weighting parameter $\lambda$ that enables the relevance of the covariance term to be adjusted,
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.45\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/geometric-traj-opt-prob-vs-time.pdf}
+\subcaption{Mode 1's mixing probability over the trajectories.}
+\end{minipage}
+\begin{minipage}[r]{0.45\columnwidth}
+\includegraphics[width=\textwidth]{./images/geometric-traj-opt-epistemic-vs-time.pdf}
+%\label{}
+\subcaption{Posterior variance associated with mode 1's gating function over the trajectories.}
+\end{minipage}
+\caption{\label{fig-metric-vs-time}Comparision of the intial and optimised trajectories' performance (for two settings of $\lambda$) at a) staying in the desired mode and b) avoiding regions of high epistemic uncertainty.}
+\end{figure}
+#+END_EXPORT
+
+
+
+
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.49\columnwidth}
+\centering
+\includegraphics[width=1.1\textwidth]{./images/geometric-traj-opt-over-prob.pdf}
+\subcaption{}
+\label{fig-geometric-traj-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{0.49\columnwidth}
+    \begin{minipage}[r]{0.7\columnwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./images/geometric-traj-opt-prob-vs-time.pdf}
+        %\subcaption{Mode 1's mixing probability over the trajectories.}
+        \subcaption{}
+        \label{fig-geometric-traj-opt-prob-vs-time}
+    \end{minipage}
+    \begin{minipage}[r]{0.7\columnwidth}
+        \includegraphics[width=\textwidth]{./images/geometric-traj-opt-epistemic-vs-time.pdf}
+        \subcaption{}
+        \label{fig-geometric-traj-opt-epistemic-vs-time}
+        %\subcaption{Posterior variance associated with mode 1's gating function over the trajectories.}
+    \end{minipage}
+\end{minipage}
+\begin{minipage}[r]{1.1\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/geometric-traj-opt-over-svgp.pdf}
+\subcaption{}
+\label{fig-geometric-traj-opt-over-svgp}
+\end{minipage}
+\caption{\label{fig-metric-vs-time}Comparision of the intial and optimised trajectories' performance -- for two settings of $\lambda$ -- at 1) staying in the desired mode and 2) avoiding regions of high epistemic uncertainty.
+(\subref{eq-geometric-traj-opt-over-prob}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{eq-geometric-traj-opt-over-svgp}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).
+(\subref{geometric-traj-opt-prob-vs-time}) and (\subref{geometric-traj-opt-epistemic-vs-time}) show the
+probability of remaining in the desired mode and the desired mode's posterior variance
+over the trajectories respectively.}
+\end{figure}
+#+END_EXPORT
+
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expected-metric-weighting}
+  \tilde{\mathbf{G}} = \E[\mathbf{J}^T] \E[\mathbf{J}] + \lambda \mathbf{\Sigma}_J.
+\end{align}
+#+END_EXPORT
+Setting $\lambda$ to be small should find trajectories that prioritise staying in the desired mode,
+whereas selecting a large $\lambda$ should find trajectories that prioritise avoiding regions
+of the dynamics with high epistemic uncertainty.
+The trajectory optimisation is tested with two $\lambda$ settings.
+
+
+
+The initial (cyan) trajectory in Fig. ref:fig-geometric-traj-opt-over-svgp is initialised with
+$10$ collocation points indicated by the crosses.
+The trajectories are compared via mode 1's mixing
+probability and its gating function's GP variance over the trajectories.
+We want to maximise the probability of being in our desired mode
+whilst minimising the amount of variance (due to epistemic uncertainty).
+The results are shown in Table ref:tab-results.
+#+LABEL: tab-results
+#+CAPTION: Comparison of performance with different settings of $\lambda$.
+#+CAPTION: The performance measures are summed over collocation points.
+#+attr_latex: :placement [!t]
+|-------------------------+----------------------------------------------------+-----------------------------------------------------|
+| Trajectory              | Mixing Probability                                 | Epistemic Uncertainty                               |
+|                         | $\sum_{i=1}^{I} \Pr(\alpha_i=1 \mid \mathbf{z}_i)$ | $\sum_{i=1}^{I} \mathbb{V}[h^{(1)}(\mathbf{z}_i)]$  |
+|-------------------------+----------------------------------------------------+-----------------------------------------------------|
+| Initial                 | $7.480$                                            | $1.345$                                             |
+| Optimised $\lambda=20$  | $6.091$                                            | $\mathbf{1.274}$                                    |
+| Optimised $\lambda=0.5$ | $\mathbf{8.118}$                                   | $1.437}$                                            |
+It is clear from Fig. ref:fig-geometric-traj-opt-over-svgp (left) and Fig. ref:fig-mixing_prob_vs_time
+that for $\lambda=0.5$,
+trajectories favour remaining in dynamics mode 1 at the cost of entering regions of the learned dynamics
+with high epistemic uncertainty (shown in Fig. ref:fig-epistemic_var_vs_time).
+For $\lambda=20$, the trajectory has tried to remain in dynamics mode 1 at the
+start of the trajectory but then hits the area of high epistemic uncertainty and favours avoiding
+this region over remaining in dynamics mode 1.
+# These qualitative results are confirmed in Table ref:tab-results.
+
+# Although we have not tested it here, we believe that our approach is theoretically sound and
+Although not tested, we believe that our approach is theoretically sound and
+can easily be extended to more than two dynamics modes.
+However, it is interesting to consider if this is even necessary given our goals.
+For example, in the quadcopter experiment, we intentionally instantiated the transition dynamics model
+with two dynamics modes, although in reality there could be more.
+We engineered our desired dynamics mode to have a noise variance that we deemed operatable.
+We then used the other dynamics mode to explain away all of the un-operatable modes.
+We think that in most scenarios a similar approach could be followed.
+
+
+# *** Clearpage :ignore:
+# #+begin_latex
+# \clearpage
+# #+end_latex
+
+*** Discussion
+Although this method provides an elegant solution to finding trajectories that satisfy Goals 1 and 2, it
+is not without its limitations.
+Firstly, this approach does do not necessarily find trajectories that satisfy the dynamics constraints,
+as it projects the problem onto the geodesic ODE.
+As such, an interesting direction for future work could consider different methods for
+incorporating the dynamics constraints into this algorithm.
+Secondly, this algorithm exploits differential flatness to obtain the controls from the state trajectory
+and geodesic ODE.
+Therefore, this approach is only applicable in systems where the state and control can be expressed in terms
+of a flat output.
+
+Thirdly, this algorithm does not consider the full stochastic optimal control problem in cref:mode-soc-problem.
+In reality, the geodesic ODE in cref:eq-2ode is stochastic because both the state and Jacobian are random
+variables.
+This algorithm assumes that the goals are encoded via the expected metric in cref:eq-expected-metric
+such that the full stochastic problem can be simplified to a deterministic ODE.
+In practice, this assumption appears to achieve both of our goals whilst offering an easier problem to solve.
+
+** Control via Variaitional Inference
+However, following a mean-field approximation the Jacobian can be assumed to be independent of the state,
+resulting in the expected cost being given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\E \left[ J(\stateTraj, \controlTraj) \right] &=
+\sum_{\timeInd=1}^\TimeInd
+\E_{\stateDist}\left[ \stateDiff_\timeInd^T
+\E_{\jacDist}\left[ \Jac(\state_\timeInd) \Jac(\state_\timeInd)^T \right]
+ \stateDiff_\timeInd \right] \\
+&= \sum_{\timeInd=1}^\TimeInd \stateDiffMean^T (\muJac \muJac^T + \covJac) \stateDiffMean
++ \text{tr}\left(
+\left(\muJac \muJac^T + \covJac \right)
+\stateDiffCov \right)
+\end{align}
+#+END_EXPORT
+It's a bit hacky but we could assumed the Jacobian distribution is given by marginalising the state
+and moment matching,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\mathbf{J}(\state_{\timeInd})) =
+%\int \mathbf{J}(\state_{\timeInd}) \stateDist \text{d}\state_{\timeInd}
+\int p(\mathbf{J}(\state_{\timeInd}) \mid \state_\timeInd)
+\mathcal{N}(\state_{\timeInd} \mid \stateMean_\timeInd, \stateCov_\timeInd)
+\text{d}\state_{\timeInd}
+\approx \mathcal{N}(\mathbf{J}(\state_{\timeInd}) \mid \muJac, \covJac)
+\end{align}
+#+END_EXPORT
+** Trajectory Optimisation via Latent ODE Collocation label:sec-traj-opt-geometric :noexport:
 *** Intro :ignore:
 The trajectory optimisation algorithm presented in this Section exploits the latent /geometry/ inferred by the
 GP-based gating network from Chapter ref:chap-dynamics.
@@ -10087,97 +10552,6 @@ The nonlinear program that this work solves is given by,
 #+END_EXPORT
 This is solved using Sequential Least Squares Programming (SLSQP) in SciPy.
 \todo[inline]{Lagrance multipliers to make TO unconstrained}
-
-*** Results label:sec-traj-opt-results
-#+NAME: fig-geometric-traj-opt-over-svgp
-#+ATTR_LATEX: :width 1.1\textwidth :placement [!t] :center t
-#+caption: Contour plots showing the GP posterior mean (left) and variance (right) over the gating function associated with dynamics mode 1 after training on a subset of the quadcopter data set. The initial and optimised trajectories are overlayed to show the influence of the GP's mean and variance on the trajectory optimisation with different $\lambda$ settings.
-[[file:./images/geometric-traj-opt-over-svgp.pdf]]
-
-- Show optimised state trajectory
-  + Show trajectory resulting from applying the controls in the simulator
-**** Velocity Controlled Quadcopter
-The trajectory optimisation is tested on the quadcopter control problem shown in
-Fig. ref:fig-problem-statement.
-
-It projects the optimisation onto
-the desired mode's learned gating function, shown in Fig. ref:fig-svgp_2d_traj.
-It seeks to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$
-that 1) remain in the non-turbulent mode and 2) avoid regions of the learned
-transition dynamics with high epistemic uncertainty.
-To aid with user control the metric tensor in Eq. ref:eq-expected-metric is modified with
-a weighting parameter $\lambda$ that enables the relevance of the covariance term to be adjusted,
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{minipage}[r]{0.45\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/geometric-traj-opt-prob-vs-time.pdf}
-\subcaption{Mode 1's mixing probability over the trajectories.}
-\end{minipage}
-\begin{minipage}[r]{0.45\columnwidth}
-\includegraphics[width=\textwidth]{./images/geometric-traj-opt-epistemic-vs-time.pdf}
-%\label{}
-\subcaption{Posterior variance associated with mode 1's gating function over the trajectories.}
-\end{minipage}
-\caption{\label{fig-metric-vs-time}Comparision of the intial and optimised trajectories' performance (for two settings of $\lambda$) at a) staying in the desired mode and b) avoiding regions of high epistemic uncertainty.}
-\end{figure}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expected-metric-weighting}
-  \tilde{\mathbf{G}} = \E[\mathbf{J}^T] \E[\mathbf{J}] + \lambda \mathbf{\Sigma}_J.
-\end{align}
-#+END_EXPORT
-Setting $\lambda$ to be small should find trajectories that prioritise staying in the desired mode,
-whereas selecting a large $\lambda$ should find trajectories that prioritise avoiding regions
-of the dynamics with high epistemic uncertainty.
-The trajectory optimisation is tested with two $\lambda$ settings.
-
-
-
-The initial (cyan) trajectory in Fig. ref:fig-geometric-traj-opt-over-svgp is initialised with
-$10$ collocation points indicated by the crosses.
-The trajectories are compared via mode 1's mixing
-probability and its gating function's GP variance over the trajectories.
-We want to maximise the probability of being in our desired mode
-whilst minimising the amount of variance (due to epistemic uncertainty).
-The results are shown in Table ref:tab-results.
-#+LABEL: tab-results
-#+CAPTION: Comparison of performance with different settings of $\lambda$.
-#+CAPTION: The performance measures are summed over collocation points.
-#+attr_latex: :placement [!t]
-|-------------------------+----------------------------------------------------+-----------------------------------------------------|
-| Trajectory              | Mixing Probability                                 | Epistemic Uncertainty                               |
-|                         | $\sum_{i=1}^{I} \Pr(\alpha_i=1 \mid \mathbf{z}_i)$ | $\sum_{i=1}^{I} \mathbb{V}[h^{(1)}(\mathbf{z}_i)]$  |
-|-------------------------+----------------------------------------------------+-----------------------------------------------------|
-| Initial                 | $7.480$                                            | $1.345$                                             |
-| Optimised $\lambda=20$  | $6.091$                                            | $\mathbf{1.274}$                                    |
-| Optimised $\lambda=0.5$ | $\mathbf{8.118}$                                   | $1.437}$                                            |
-It is clear from Fig. ref:fig-geometric-traj-opt-over-svgp (left) and Fig. ref:fig-mixing_prob_vs_time
-that for $\lambda=0.5$,
-trajectories favour remaining in dynamics mode 1 at the cost of entering regions of the learned dynamics
-with high epistemic uncertainty (shown in Fig. ref:fig-epistemic_var_vs_time).
-For $\lambda=20$, the trajectory has tried to remain in dynamics mode 1 at the
-start of the trajectory but then hits the area of high epistemic uncertainty and favours avoiding
-this region over remaining in dynamics mode 1.
-# These qualitative results are confirmed in Table ref:tab-results.
-
-# Although we have not tested it here, we believe that our approach is theoretically sound and
-Although not tested, we believe that our approach is theoretically sound and
-can easily be extended to more than two dynamics modes.
-However, it is interesting to consider if this is even necessary given our goals.
-For example, in the quadcopter experiment, we intentionally instantiated the transition dynamics model
-with two dynamics modes, although in reality there could be more.
-We engineered our desired dynamics mode to have a noise variance that we deemed operatable.
-We then used the other dynamics mode to explain away all of the un-operatable modes.
-We think that in most scenarios a similar approach could be followed.
-
-
-# *** Clearpage :ignore:
-# #+begin_latex
-# \clearpage
-# #+end_latex
 
 ** Trajectory Optimisation as Probabilistic Inference label:sec-traj-opt-inference
 *** Maths :ignore:
@@ -11346,6 +11720,92 @@ The algorithms in this chapter are evaluated and compared in a simulated environ
 The simulation environment models a velocity controlled quadcopter in an environment with spatially
 varying turbulence.
 
+*** Velocity Controlled Quadcopter Simulator
+These figures are slices with controls equal zero
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/baseline-traj-opt/trajectories_over_desired_prob.pdf}
+\subcaption{}
+\label{eq-traj-opt-over-prob-baseline}
+\end{minipage}
+\begin{minipage}[r]{1.2\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{eq-traj-opt-over-svgp-baseline}
+\end{minipage}
+\caption{\label{fig-metric-vs-time}(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).}
+\end{figure}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy/trajectories_over_desired_prob.pdf}
+\subcaption{}
+\label{eq-geometric-traj-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{eq-geometric-traj-opt-over-svgp}
+\end{minipage}
+\caption{\label{fig-metric-vs-time}(\subref{eq-geometric-traj-opt-over-prob}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{eq-geometric-traj-opt-over-svgp}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).}
+\end{figure}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.49\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy/trajectories_over_desired_prob.pdf}
+\subcaption{}
+\label{eq-geometric-traj-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{0.49\columnwidth}
+    \begin{minipage}[r]{0.7\columnwidth}
+        \centering
+        %\includegraphics[width=\textwidth]{./images/geometric-traj-opt-prob-vs-time.pdf}
+        \includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy/mode_probs_vs_time.pdf}
+        %\subcaption{Mode 1's mixing probability over the trajectories.}
+        \subcaption{}
+        \label{geometric-traj-opt-prob-vs-time}
+    \end{minipage}
+    \begin{minipage}[r]{0.7\columnwidth}
+        %\includegraphics[width=\textwidth]{./images/geometric-traj-opt-epistemic-vs-time.pdf}
+        \includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy/variance_vs_time.pdf}
+        \subcaption{}
+        \label{geometric-traj-opt-epistemic-vs-time}
+        %\subcaption{Posterior variance associated with mode 1's gating function over the trajectories.}
+    \end{minipage}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{eq-geometric-traj-opt-over-svgp}
+\end{minipage}
+\caption{\label{fig-metric-vs-time}Comparision of the intial and optimised trajectories' performance -- for two settings of $\lambda$ -- at 1) staying in the desired mode and 2) avoiding regions of high epistemic uncertainty.
+(\subref{eq-geometric-traj-opt-over-prob}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{eq-geometric-traj-opt-over-svgp}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).
+(\subref{geometric-traj-opt-prob-vs-time}) and (\subref{geometric-traj-opt-epistemic-vs-time}) show the
+probability of remaining in the desired mode and the desired mode's posterior variance
+over the trajectories respectively.}
+\end{figure}
+#+END_EXPORT
+
 ** Optimal Control as Probabilistic Inference :noexport:
 *** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -12073,6 +12533,16 @@ and $\otimes$ denotes the Kronecker product.
 - How to add constraints to Algorithm 1 e.g. for smoothness?
 - Algorithm 2 doesn't decouple mean and variance and allow a $\lambda$ parameter.
 - Algorithm 2 considers uncertainty in dynamics. Algorithm 1 approximates geodesic SDE to be deterministic.
+
+The control methods required control regularisation to prevent the controls leading to state transitions that
+"jump" over the undesired mode.
+That is, trajectories whose discrete time steps appear to satisfy the constraints/cost but the actual continuos time
+trajectory passes through the undesired mode.
+
+Methods for learning continuous time controls that can be used to interpolate cost over trajectory
+to get higher resolution.
+For example a Gaussian process over controls instead of Gaussian.
+Or stochastic collocation.
 ** Conclusion
 This chapter has presented a method for performing trajectory optimisation in
 multimodal dynamical systems with the transition dynamics modelled as a
@@ -12083,7 +12553,7 @@ Given a start and end state, the trajectory optimisation can be tuned to find tr
 prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
 dynamics model with high epistemic uncertainty.
 
-* Trajectory Optimisation in Desired Modes as Probabilistic Inference
+* Trajectory Optimisation in Desired Modes as Probabilistic Inference :noexport:
 ** Intro :ignore:noexport:
 #+BEGIN_EXPORT latex
 \newcommand{\timeInd}{\ensuremath{t}}
