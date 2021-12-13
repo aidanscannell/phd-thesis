@@ -4440,12 +4440,17 @@ have previously been sampled from the system at a constant frequency, i.e. with 
 # It then formulates a probabilistic representation of this model and details an approach to performing Bayesian
 # inference in the model.
 
-Motivated by synergising model learning and control, the probabilistic model constructed in this chapter
+This chapter is motivated by synergising model learning and control.
+As such, it seeks to correctly identify the underlying dynamics modes whilst inferring
+latent structure that can be exploited for control.
+The probabilistic model constructed in this chapter
 resembles a \acrfull{mogpe} with a \acrshort{gp}-based gating network.
 The \acrshort{gp}-based gating network infers latent /geometric/ structure that is exploited by the control
 algorithms in Section ref:sec-traj-opt-geometric.
-This work derives a novel variational lower bound based on sparse GP approximations, that provides
+This work derives novel evidence lower bounds based on sparse GP approximations, that provide
 well-calibrated uncertainty estimates and scalability via stochastic gradient methods.
+The method presented in this chapter is named
+Mixtures of Sparse Variational Gaussian Process Experts (MoSVGPE).
 
 Following other \acrshort{mogpe} methods, the model and inference are first evaluated on the
 motorcyle data set cite:Silverman1985.
@@ -4525,7 +4530,7 @@ cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper.
 # The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub
 # cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper[fn:1:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].].
 
-** Problem Statement
+** Problem Statement :noexport:
 This work is interested in learning /unknown/, or /partially unknown/  multimodal,
 stochastic, nonlinear dynamical systems,
 with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
@@ -4589,6 +4594,159 @@ are the state, control and mode indicator variable at time, $t$, respectively.
 To help with understanding and ease of notation, our modelling only considers a single output dimension,
 i.e. $\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain$ is assumed to
 be $\mode{\latentFunc} : \R \times \controlDomain \rightarrow \R$.
+The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
+To further ease notation, the state-control input domain is denoted
+$\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
+and a single state-control input is dentoed
+$\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
+Given this formulation, our task is to learn the mapping $\unknownDynamics$,
+where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
+This is a regression problem,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc-regression}
+\underbrace{\Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\singleOutput}}
+= \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
++ \mode{\epsilon}
+\quad \text{if} \quad \modeVarK,
+\end{align}
+#+END_EXPORT
+where both the latent dynamics functions $\unknownDynamicsK$ and how the system switches between them
+$\modeVar$, must be inferred from observations.
+A single output is denoted as
+$\singleOutput = \Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)$.
+The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
+and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
+With this notation, the regression problem can be written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc-regression-simple}
+\singleOutput
+= \mode{\latentFunc}(\singleInput) + \mode{\epsilon}
+\quad \text{if} \quad \modeVarK.
+\end{align}
+#+END_EXPORT
+
+
+# from inputs $\singleInput$ to
+# outputs $\singleOutput$,
+
+
+# Given this notation, our task is to learn the mapping $\f$, from inputs $\singleInput$ to
+# outputs $\singleOutput$,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-disc}
+# \singleOutput = \mode{\latentFunc} (\singleInput) + \mode{\epsilon}
+# \quad \text{if} \quad \modeVarK,
+# \end{align}
+# #+END_EXPORT
+# where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
+
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+# A time series of observations from time $a$ to time $b$ (inclusive)
+# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+# The concatenation of the state and control domains is
+# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+# A single state-control input is denoted as
+# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+# $\allInput$, and the set of all outputs as $\allOutput$.
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
+# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
+# $\NumTimesteps$ steps per episode.
+# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+
+
+# giving the data set,
+# $~{\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}}$.
+
+# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
+# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
+# $\NumTimesteps$ steps per episode.
+# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
+# We abuse notation (considering time indexing) and denote the data set
+# $\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
+
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
+# where we have abused the time indexing notation.
+
+# This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-disc}
+# \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
+# \quad \text{if} \quad \modeVarK,
+# \end{align}
+# #+END_EXPORT
+# where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
+# at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
+# indicates one of $\ModeInd$ dynamics modes) at time $t$.
+
+# A time series of observations from time $a$ to time $b$ (inclusive)
+# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+# The concatenation of the state and control domains is
+# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+# A single state-control input is denoted as
+# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+# $\allInput$, and the set of all outputs as $\allOutput$.
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+** Problem Statement
+This work considers /unknown/, or /partially unknown/,  multimodal,
+stochastic, nonlinear dynamical systems,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc}
+\Delta \state_{\timeInd}
+&= \mathbf{g}(\state_{t-1}, \control_{t-1}; \Delta t = t_*) + \bm\epsilon & \nonumber \\
+&= \mode{\mathbf{g}} (\state_{\timeInd-1}, \control_{\timeInd-1} ; \Delta t = t_*) + \mode{\bm\epsilon}
+&\text{if} \quad \modeVar_{\timeInd} = \modeInd \nonumber \\
+&= \underbrace{\nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{nominal mode \modeInd}}
++ \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{unknown error mode \modeInd}}
++ \mode{\bm\epsilon}
+&\text{if} \quad \alpha_{t} = \modeInd,
+\end{align}
+#+END_EXPORT
+with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+$\control \in \controlDomain \subseteq \R^\ControlDim$.
+The state and control at time $t$ are denoted as $\state_t \in \stateDomain$ and $\control_t \in \controlDomain$
+respectively and
+$\Delta \state_{\timeInd} = \state_{\timeInd} - \state_{\timeInd-1}$ is the change in state between time $\timeInd-1$
+and $\timeInd$.
+One of the $\ModeInd$ dynamics modes,
+$\{\mode{\mathbf{g}} : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$ and associated noise models,
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
+$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
+are selected by a discrete mode indicator variable,
+$\alpha_t \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$, at any given time step $t$.
+The nominal dynamics
+$\{\nominalDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+represents our /a priori/ knowledge of the dynamics (i.e. the assumed dynamics)
+and the additive dynamics
+$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+represents the initially unknown dynamics, which are to be learned from observations.
+This work considers systems that are stochastic (i.e. subject to process noise), but
+are not subject to observation noise.
+Thus, the $\mode{\bm\epsilon}$ term solely represents the process noise.
+
+This chapter assumes access to historical data comprising state transitions from $\NumEpisodes$ trajectories
+of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
+The data set has ${N=ET}$ elements
+and we abuse notation by appending the independent trajectories along
+time to get the data set $\mathcal{D}=\{(\state_{\timeInd-1},\control_{\timeInd-1}),\Delta \state_t\}^\NumData_{\timeInd=1}$.
+
+To help with understanding and ease of notation, our modelling only considers a single output dimension,
+i.e. $\stateDomain \subseteq \R$ as $\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain$.
 The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
 To further ease notation, the state-control input domain is denoted
 $\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
@@ -5349,7 +5507,7 @@ the formulation of the gating network
 for the ability to improve identifiability with informative GP priors.
 The main contributions of this paper are twofold. Firstly, we re-formulate a gating network
 based on GPs to improve indentifiability.
-Secondly, we derive a variational lower bound
+Secondly, we derive an evidence lower bound
 which improves on the complexity issues associated with inference when adopting such a gating network.
 Motivated by learning representations of dynamical systems with two regimes we instantiate
 the model with two experts as it is  a special case where the gating network can be calculated
@@ -5504,7 +5662,7 @@ This work formulates a gating network aimed at,
      The GP-based gating network presented here, infers informative geometric structure regarding how the dynamics switches between modes over the input space, whilst providing a principled approach to modelling the epistemic uncertainty associated with the gating functions. This makes the gating network a convenient latent space to project the control problem onto.
 
 This work adopts a GP-based gating network resembling that used in the original
-MoGPE model cite:trespMixtures2000a. The marginal likelihood of this model is given by,
+MoGPE model cite:trespMixtures2000a. Our marginal likelihood is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-marginal-likelihood-assign}
 \evidence &=
@@ -6483,7 +6641,7 @@ p(\GatingFunc(\allInput), \LatentFunc(\allInput) \mid \allInput, \allOutput, \ga
 #+END_EXPORT
 where the denominator is the marginal likelihood from Eq. ref:eq-marginal-likelihood-assign.
 Exact inference in our model is intractable, so we resort to a variational approximation.
-The rich structure of our model makes it hard to construct a variational lower bound that can
+The rich structure of our model makes it hard to construct an ELBO that can
 be evaluated in closed-form, whilst accurately modelling the complex dependencies.
 Further to this, the marginal likelihood is extremely expensive to evaluate,
 as there are $\ModeInd^{\NumData}$ sets of assignments $\allModeVar$ that need to be marginalised.
@@ -6499,7 +6657,7 @@ by utilising stochastic gradient-based optimisation.
 
 Stochastic variational inference (SVI) citep:hoffmanStochastic2013 relies upon having a set of local variables
 factorised across observations and a set of global variables.
-Annoyingly, the marginalisation over the set of expert indicator variables $\allModeVar$
+The marginalisation over the set of expert indicator variables $\allModeVar$
 in cref:eq-np-moe-marginal-likelihood is prohibitive to SVI.
 Following the approach by cite:titsiasVariational2009, the probability space is augmented
 with a set of $\NumInducing$ inducing variables for each GP.
@@ -6507,6 +6665,7 @@ However, instead of collapsing these inducing variables they are explicitly
 represented as variational distributions and used to lower bound
 (and then further bound) the marginal likelihood, similar to
 cite:hensmanGaussian2013,hensmanScalable2015.
+cref:fig-graphical-model-sparse shows the graphical model of our augmented joint probability space.
 
 # The marginal likelihood in Eq. ref:eq-marginal-likelihood-factorised is extremely expensive
 # to evaluate $\mathcal{O}(\ModeInd^2 \NumData^{4})$
@@ -6593,7 +6752,7 @@ cite:hensmanGaussian2013,hensmanScalable2015.
   The observations assigned to expert $\modeInd$ are modelled by the
   inducing points $\{\expertInducingInput, \expertInducingOutput\}_{\modeInd=1}^{\ModeInd}$.
   This model avoids the hard assignment of observations to experts by letting the gating network
-  softly assign them in the variational lower bound.}
+  softly assign them in the ELBO.}
 \label{fig-graphical-model-sparse}
 \end{figure}
 #+END_EXPORT
@@ -6678,7 +6837,7 @@ between the $\numData^{\text{th}}$ training input and its inducing inputs.
 Similarly for the gating network.
 Figure ref:fig-graphical-model-sparse shows the graphical model of this augmented joint probability model.
 
-A central assumption of our work follows from sparse GP methodologies, that assume,
+Our work follows from sparse GP methodologies, that assume,
 given the inducing variables, the latent function values factorise over observations.
 Our approximation assumes that given the inducing points,
 the marginalisation over every possible assignment of data points to experts, can be factorised over data.
@@ -6719,7 +6878,7 @@ This approximation induces a local factorisation over observations and a set of 
 cref:fig-graphical-model-sparse shows the graphical model of this augmented joint probability model.
 This approach can loosely be viewed as parameterising the full nonparametric model
 in cref:eq-np-moe-marginal-likelihood-assign to obtain a desirable
-factorisation for 1) constructing a GP-based gating network and 2) deriving a variational lower bound that can
+factorisation for 1) constructing a GP-based gating network and 2) deriving an ELBO that can
 be optimised with stochastic gradient methods,
 whilst still capturing the complex dependencies between the gating network and experts.
 
@@ -6996,15 +7155,23 @@ Figure ref:fig-graphical-model-sparse shows the graphical model of this augmente
 # This minimises the KL divergence and ensures that $\expertsInducingInput$ are distributed amongst the training
 # inputs $\allInput$ such that ....
 
-*** Variational Lower Bound
+*** Evidence Lower Bounds
 Instead of collapsing the inducing variables as seen in cite:titsiasVariational2009,
 they can be explicitly represented as variational distributions,
 $(\expertsInducingVariational, \gatingsInducingVariational)$
-and used to obtain a variational lower bound.
+and used to obtain a variational lower bound, aka Evidence Lower Bound (ELBO).
+In this section, we derive three ELBOs.
+The first bound is the tightest but requires approximating $\NumInducing$ dimensional integrals
+for each expert and gating function.
+Two further lower bounds which replace some (or all) of the $\NumInducing$ dimensional integrals
+with one dimensional integrals are derived.
+These further bounds offer improved computational properties at the cost of loosening the bound.
+All three of these bounds are evaluated in cref:sec-mcycle-results.
+
 # \newline
 *Tight Lower Bound*
 Following a similar approach to cite:hensmanGaussian2013,hensmanScalable2015,
-a variational lower bound on Eq. ref:eq-augmented-marginal-likelihood can be obtained,
+a lower bound on Eq. ref:eq-augmented-marginal-likelihood can be obtained,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-lower-bound-tight}
 \text{log} \evidence &\geq  \sum_{\numData=1}^\NumData \E_{\gatingsInducingVariational \expertsInducingVariational}
@@ -7031,7 +7198,7 @@ where we parameterise the variational posteriors to be independent Gaussians,
 \end{align}
 #+END_EXPORT
 The bound in cref:eq-lower-bound-tight meets the necessary conditions to perform stochastic gradient methods on
-$\expertsInducingVariational$ and $\gatingsInducingVariational$, as the variational expectation (first term)
+$\expertsInducingVariational$ and $\gatingsInducingVariational$, as the expected log likelihood (first term)
 is written as a sum over input-output pairs.
 However, this expectation cannot be calculated in closed-form and must be approximated.
 The joint distributions over the inducing variables for each expert GP $\expertInducingVariational$
@@ -7041,9 +7208,9 @@ Therefore, each expectation requires an $\NumInducing$ dimensional integral to b
 # integral being approximated is $\NumInducing$ dimensional.
 \todo{add more on why we don't want M dimensional integral}
 
-*Further Lower Bound* Following cite:hensmanScalable2015, the bound in
-Eq. ref:eq-lower-bound-tight ($\tightBound$) can be further bounded to remove the $\NumInducing$ dimensional integrals
-associated with each of the gating functions.
+*Further Lower Bound* Following cite:hensmanScalable2015, these issues can be overcome
+by further bounding the bound in Eq. ref:eq-lower-bound-tight ($\tightBound$).
+This removes the $\NumInducing$ dimensional integrals associated with each of the gating functions.
 Jensen's inequality can be applied to the conditional probability $\singleLatentGatingGivenInducing$,
 obtaining the further bound,
 #+BEGIN_EXPORT latex
@@ -7163,6 +7330,12 @@ The variational expectation in Eq. ref:eq-lower-bound-further still requires app
 however, the integrals are now only one dimensional.
 These integrals are approximated with Gibbs sampling and
 in practice only single samples are used because the added stochasticity helps the optimisation.
+
+The tight lower bound $\tightBound$ is the most accurate lower bound but it is also the most
+computationally expensive.
+The further $\furtherBound$ and the further^2 $\furtherBoundTwo$ lower bounds
+have lower computational complexity at the cost of being looser bounds.
+The performance of these bounds is evaluated in cref:sec-mcycle-results.
 
 *** Optimisation
 #+BEGIN_EXPORT latex
@@ -7333,7 +7506,7 @@ Making predictions with this model involves calculating a density over the outpu
 them using the probabilities obtained from the gating network, i.e. marginalising the expert indicator variable,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-predictive-posterior}
-\predictivePosterior &= \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \underbrace{\predictiveProb}_{\text{gating network posterior}} \underbrace{\predictiveExpert}_{\text{expert } \ModeInd \text{ posterior}}} \\
+\predictivePosterior &= \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \underbrace{\predictiveProb}_{\text{gating network posterior}} \underbrace{\predictiveExpert}_{\text{expert } \ModeInd \text{ posterior}} \\
 &\approx \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \approxPredictiveProb \approxPredictiveExpert
 \end{align}
 #+END_EXPORT
@@ -7902,7 +8075,7 @@ they are calculated as follows,
 where $\predictedSingleOutput$ is the models prediction at $\singleTestInput$.
 Note that all figures in this section show models that were trained on the full data set, i.e. no test/train split.
 
-*** Evaluation on Motorcycle Data Set
+*** Evaluation on Motorcycle Data Set label:sec-mcycle-results
 **** intro :ignore:
 The Motorcycle data set
 (discussed in cite:Silverman1985) contains 133 data points
@@ -7927,7 +8100,7 @@ a Gaussian likelihood.
 # The method is compared to a Sparse Variational Gaussian Process (SVGP) trained with the same
 # number of inducing points and training parameters.
 
-cref:tab-mcycle-metrics summarises the results for the three ELBO's
+cref:tab-mcycle-metrics summarises the results for the three ELBOs
 ($\tightBound$, $\furtherBound$, $\furtherBoundTwo$)
 and compares them to a standard GP regression model
 and a SVGP method instantiated with $\NumInducing=16$ and $\NumInducing=32$ inducing points.
@@ -7995,7 +8168,7 @@ the standard GP regression model achieved the best RMSE, followed by the SVGP mo
 MoSVGPE models.
 It is worth noting that all of the RMSE and MAE scores are very similar.
 Although adding more experts to the MoSVGPE model appears to learn more accurate predictive posteriors, the
-predictive means appear to deteriorate.
+predictive means appear to deteriorate ever so slightly (indicated by higher RMSE/MAE values).
 This is most likely due to bias at the boundaries between the experts,
 resulting from the mixing behaviour arising from our GP-based gating network.
 If the gating functions do not have extremely low lengthscales then they will not be able to immediately switch
@@ -8009,28 +8182,29 @@ the model using the same model and training parameters.
 
 **** two expert y fig :ignore:
 #+BEGIN_EXPORT latex
-\begin{figure}[t!]
+%\begin{figure}[t!]
+\begin{figure}[hbt!]
 \centering
 \begin{minipage}[r]{0.49\textwidth}
 \includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/y_means.pdf}
 %\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
-\subcaption{}
+\subcaption{$\furtherBound$, poseterior mean and data set}
 \label{fig-y-means-mcycle-two-experts-tight}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L3/y_means.pdf}
 %\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
-\subcaption{}
+\subcaption{$\furtherBoundTwo$, poseterior mean and data set}
 \label{fig-y-means-mcycle-two-experts-further}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/y_samples.pdf}
-\subcaption{}
+\subcaption{$\furtherBound$, posterior samples}
 \label{fig-y-samples-mcycle-two-experts-tight}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L3/y_samples.pdf}
-\subcaption{}
+\subcaption{$\furtherBoundTwo$, posterior samples}
 \label{fig-y-samples-mcycle-two-experts-further}
 \end{minipage}
 %\begin{minipage}[r]{0.49\textwidth}
@@ -8049,66 +8223,6 @@ the model using the same model and training parameters.
 #+END_EXPORT
 
 # #+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
-
-**** two expert latent fig :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}[r]{0.49\textwidth}
-\centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L2/experts_f.pdf}
-%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
-\subcaption{}
-\label{fig-expert-gps-mcycle-two-experts-tight}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L3/experts_f.pdf}
-%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
-\subcaption{}
-\label{fig-expert-gps-mcycle-two-experts-further}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L2/gating_gps.pdf}
-%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=2$.}
-\subcaption{}
-\label{fig-gating-gps-mcycle-two-experts-tight}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L3/gating_gps.pdf}
-%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=3$.}
-\subcaption{}
-\label{fig-gating-gps-mcycle-two-experts-further}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L2/gating_mixing_probs.pdf}
-%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=2$.}
-\subcaption{}
-\label{fig-mixing-probs-mcycle-two-experts-tight}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=2_L3/gating_mixing_probs.pdf}
-%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=3$.}
-\subcaption{}
-\label{fig-mixing-probs-mcycle-two-experts-further}
-\end{minipage}
-\caption{Visualisation of the model's latent variables (instantiated with $\ModeInd=2$ experts), after training on the
-Motorcycle data set \citep{Silverman1985}, with $\furtherBound$ (left column)
-and with $\furtherBoundTwo$ (right column).
-(\subref{fig-expert-gps-mcycle-two-experts-tight}-\subref{fig-expert-gps-mcycle-two-experts-further}) show the GP
-posteriors associated with the experts' latent functions $q(\mode{\latentFunc}(\x_*))$,
-where the solid lines show the mean and the shaded regions show the $95\%$ confidence intervals, i.e. $\pm2\sigma$.
-The gating network's GP posteriors $q(h_{k}(\x_*))$ are shown in
-(\subref{fig-gating-gps-mcycle-two-experts-tight}-\subref{fig-gating-gps-mcycle-two-experts-further}) and
-their associated mixing probabilities $\approxPredictiveProb$ in
-(\subref{fig-mixing-probs-mcycle-two-experts-tight}-\subref{fig-mixing-probs-mcycle-two-experts-further}).}
-\label{fig-latent-mcycle-two-experts}
-\end{figure}
-#+END_EXPORT
 
 **** Two Experts
 The two further lower bounds ($\furtherBound$ and $\furtherBoundTwo$) are
@@ -8136,8 +8250,6 @@ The red lines show plus or minus two standard deviations of the SVGP's posterior
 As the MoSVGPE posterior is a Gaussian mixture, it is visualised by drawing samples
 from its posterior, i.e. sample a mode indicator variable $\modeVar_*$ and then draw a sample
 form the corresponding expert.
-The colour of the sample indicates the underlying expert, where
-cyan represents expert one $\ModeInd=1$ and magenta represents expert two $\ModeInd=2$.
 
 *Predictive posteriors* Both MoSVGPE results are capable of modelling the non-stationarity
 at $x \approx -0.7$ better than the sparse variational Gaussian process (SVGP).
@@ -8202,28 +8314,90 @@ assigned it responsibility.
 # This is due to the gating network sharing the responsibility at $x \geq 1.5$ and expert one increasing its
 # noise variance to help explain away the data.
 
+**** two expert latent fig :ignore:
+#+BEGIN_EXPORT latex
+%\begin{figure}[t!]
+\begin{figure}[hbt!]
+\centering
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/experts_f.pdf}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
+\subcaption{$\furtherBound$, experts' GP posteriors}
+\label{fig-expert-gps-mcycle-two-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L3/experts_f.pdf}
+%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
+\subcaption{$\furtherBoundTwo$, experts' GP posteriors}
+\label{fig-expert-gps-mcycle-two-experts-further}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/gating_gps.pdf}
+%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=2$.}
+\subcaption{$\furtherBound$, gating network's GP posteriors}
+\label{fig-gating-gps-mcycle-two-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L3/gating_gps.pdf}
+%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=3$.}
+\subcaption{$\furtherBoundTwo$, gating network's GP posteriors}
+\label{fig-gating-gps-mcycle-two-experts-further}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/gating_mixing_probs.pdf}
+%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=2$.}
+\subcaption{$\furtherBound$, mixing probabilities}
+\label{fig-mixing-probs-mcycle-two-experts-tight}
+\end{minipage}
+\begin{minipage}[r]{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L3/gating_mixing_probs.pdf}
+%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=3$.}
+\subcaption{$\furtherBoundTwo$, mixing probabilities}
+\label{fig-mixing-probs-mcycle-two-experts-further}
+\end{minipage}
+\caption{Visualisation of the model's latent variables (instantiated with $\ModeInd=2$ experts), after training on the
+Motorcycle data set \citep{Silverman1985}, with $\furtherBound$ (left column)
+and with $\furtherBoundTwo$ (right column).
+(\subref{fig-expert-gps-mcycle-two-experts-tight}-\subref{fig-expert-gps-mcycle-two-experts-further}) show the GP
+posteriors associated with the experts' latent functions $q(\mode{\latentFunc}(\x_*))$,
+where the solid lines show the mean and the shaded regions show the $95\%$ confidence intervals, i.e. $\pm2\sigma$.
+The gating network's GP posteriors $q(h_{k}(\x_*))$ are shown in
+(\subref{fig-gating-gps-mcycle-two-experts-tight}-\subref{fig-gating-gps-mcycle-two-experts-further}) and
+their associated mixing probabilities $\approxPredictiveProb$ in
+(\subref{fig-mixing-probs-mcycle-two-experts-tight}-\subref{fig-mixing-probs-mcycle-two-experts-further}).}
+\label{fig-latent-mcycle-two-experts}
+\end{figure}
+\clearpage
+#+END_EXPORT
+
 **** three expert y fig :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}[t!]
 \centering
 \begin{minipage}[r]{0.49\textwidth}
 \includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/y_means.pdf}
-\subcaption{}
+\subcaption{$\furtherBound$, poseterior mean and data set}
 \label{fig-y-means-three-experts-tight}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L3/y_means.pdf}
-\subcaption{}
+\subcaption{$\furtherBoundTwo$, poseterior mean and data set}
 \label{fig-y-means-three-experts-further}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/y_samples.pdf}
-\subcaption{}
+\subcaption{$\furtherBound$, posterior samples}
 \label{fig-y-samples-mcycle-three-experts-tight}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L3/y_samples.pdf}
-\subcaption{}
+\subcaption{$\furtherBoundTwo$, posterior samples}
 \label{fig-y-samples-mcycle-three-experts-further}
 \end{minipage}
 %\begin{minipage}[r]{0.49\textwidth}
@@ -8282,45 +8456,79 @@ assigned it responsibility.
 # \end{figure}
 # #+END_EXPORT
 
+**** Three Experts
+# Given that the two lower bounds lead to different ways for explaining the data
+# at $x \geq 1.5$, it is interesting to consider adding a third expert.
+The model was then instantiated with three experts $\ModeInd=3$ and trained
+following the same procedure as the two experts experiments,
+i.e. same initial model and training parameters.
+The results are show in cref:fig-y-mcycle-three-experts,
+where the top row visualises the predictive mean and
+the bottom row the predictive density, for $\furtherBound$ (left column) and $\furtherBoundTwo$ (right column).
+cref:fig-latent-mcycle-three-experts then visualises the posteriors over the latent variables associated with
+each model/bound combination.
+
+From cref:tab-mcycle-metrics, it is clear that the predictive posterior associated with $\furtherBound$
+is the most accurate as it obtained the highest NLPP score.
+As expected, the two lower bounds explain the data completely differently.
+Instantiating the model with three experts $\ModeInd=3$ and training with $\furtherBound$,
+leads to the extra expert fitting to the data at $x \geq 1.5$ and the gating network assigning responsibility to it
+in this region.
+In contrast, instantiating the model with three experts $\ModeInd=3$ and training with
+$\furtherBoundTwo$, results in the gating network never using the extra expert.
+Similar to the two expert case, the distribution over the expert indicator variable at $x \geq 1.5$
+tends to a uniform distribution (maximum entropy).
+
+In cref:fig-expert-gps-mcycle-three-experts-tight the third expert's posterior returns to the prior at
+$x \geq 1.5$.
+This demonstrates that not only is the gating network turning the experts "on" and "off" in different regions
+but the model is also exhibiting data assignment behaviour.
+That is, each expert appears to only be fitting to the observations in the regions where the gating network
+has assigned it responsibility.
+In our case, this behaviour is achieved via the inducing variables capturing the joint distribution over the
+experts and the set of assignments, i.e. implicitly assigning data points to experts.
+
+# This demonstrates the flexibility of MoSVGPE to assign data points "softly" via the inducing variables.
+
 **** three expert latent fig :ignore:
 #+BEGIN_EXPORT latex
-\begin{figure}[t!]
+\begin{figure}[hbt!]
 \centering
 \begin{minipage}[r]{0.49\textwidth}
 \centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L2/experts_f.pdf}
-\subcaption{}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/experts_f.pdf}
+\subcaption{$\furtherBound$, experts' GP posteriors}
 \label{fig-expert-gps-mcycle-three-experts-tight}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L3/experts_f.pdf}
-\subcaption{}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L3/experts_f.pdf}
+\subcaption{$\furtherBoundTwo$, experts' GP posteriors}
 \label{fig-expert-gps-mcycle-three-experts-further}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L2/gating_gps.pdf}
-\subcaption{}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/gating_gps.pdf}
+\subcaption{$\furtherBound$, gating network's GP posteriors}
 \label{fig-gating-gps-mcycle-three-experts-tight}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L3/gating_gps.pdf}
-\subcaption{}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L3/gating_gps.pdf}
+\subcaption{$\furtherBoundTwo$, gating network's GP posteriors}
 \label{fig-gating-gps-mcycle-three-experts-further}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L2/gating_mixing_probs.pdf}
-\subcaption{}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/gating_mixing_probs.pdf}
+\subcaption{$\furtherBound$, mixing probabilities}
 \label{fig-mixing-probs-mcycle-three-experts-tight}
 \end{minipage}
 \begin{minipage}[r]{0.49\textwidth}
 \centering
-\includegraphics[width=0.8\textwidth]{./images/model/mcycle/K=3_L3/gating_mixing_probs.pdf}
+\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L3/gating_mixing_probs.pdf}
 %\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=3$.}
-\subcaption{}
+\subcaption{$\furtherBoundTwo$, mixing probabilities}
 \label{fig-mixing-probs-mcycle-three-experts-further}
 \end{minipage}
 \caption{Visualisation of the model's latent variables (instantiated with $\ModeInd=3$ experts), after training on the
@@ -8335,45 +8543,8 @@ their associated mixing probabilities $\approxPredictiveProb$ in
 (\subref{fig-mixing-probs-mcycle-three-experts-tight}-\subref{fig-mixing-probs-mcycle-three-experts-further}).}
 \label{fig-latent-mcycle-three-experts}
 \end{figure}
+\clearpage
 #+END_EXPORT
-
-**** Three Experts
-# Given that the two lower bounds lead to different ways for explaining the data
-# at $x \geq 1.5$, it is interesting to consider adding a third expert.
-The model was then instantiated with three experts $\ModeInd=3$ and trained
-following the same procedure as the two exerts experiments,
-i.e. same initial model and training parameters.
-The results are show in cref:fig-y-mcycle-three-experts,
-where the top row visualises the predictive mean and
-the bottom row the predictive density, for $\furtherBound$ (left column) and $\furtherBoundTwo$ (right column).
-The colour of the samples in cref:fig-y-samples-mcycle-three-experts-tight,fig-y-samples-mcycle-three-experts-further
-indicates the underlying expert, where
-cyan represents expert one $\modeInd=1$, magenta represents expert two $\modeInd=2$ and yellow represents
-expert three $\modeInd=3$.
-cref:fig-latent-mcycle-three-experts then visualises the posteriors over the latent variables associated with
-each model/bound combination.
-
-From cref:tab-mcycle-metrics, it is clear that the predictive posterior associated with $\furtherBound$
-is the most accurate.
-As expected, the two lower bounds explain the data completely differently.
-Instantiating the model with three experts $\ModeInd=3$ and training with $\furtherBound$,
-leads to the third expert fitting to the data at $x \geq 1.5$ and the gating network assigning responsibility to it
-in this region.
-In contrast, instantiating the model with three experts $\ModeInd=3$ and training with
-$\furtherBoundTwo$, results in the gating network "turning off" the third expert at $x \geq 1.5$.
-Similar to the two expert case, the distribution over the expert indicator variable at $x \geq 1.5$
-tends to a uniform distribution (maximum entropy).
-
-In cref:fig-expert-gps-mcycle-three-experts-tight the third expert's posterior clearly returns to the prior at
-$x \geq 1.5$.
-This demonstrates that not only is the gating network turning the experts "on" and "off" in different regions
-but the model is also exhibiting data assignment behaviour.
-That is, each expert appears to only be fitting to the observations in the regions where the gating network
-has assigned it responsibility.
-In our case, this behaviour is achieved via the inducing variables capturing the joint distribution over the
-experts and the set of assignments, i.e. implicitly assigning data points to experts.
-
-# This demonstrates the flexibility of MoSVGPE to assign data points "softly" via the inducing variables.
 
 **** Batch Size vs Number of Inducing Points
 # This section provides a brief evaluation on the effect of the number of inducing points and batch size.
@@ -8410,14 +8581,14 @@ As the number of inducing points decreases the model is still able to recover th
 
 \todo{add results for num inducing points leading to worse performance e.g. M=8}
 
-*Evidence LOwer Bounds*
+*Evidence Lower Bounds*
 The tight lower bound $\tightBound$ and further lower bound $\furtherBound$ recovered similar results in
 all experiments.
 This indicates that $\furtherBound$ does not loosen the bound to a point where is loses valuable information.
 In contrast, $\furtherBoundTwo$ is not able to recover the same results.
 This was expected as $\furtherBoundTwo$ corresponds to a further likelihood approximation, where
 the experts' noise models are mixed instead of their full SVGPs.
-$\furtherBound$ offers a rich ELBO for optimising MoSVGPE that achieves similar results to $\tightBound$
+$\furtherBound$ offers a rich ELBO for optimising MoSVGPE that achieves similar results to $\tightBound$,
 whilst having lower computational complexity per evaluation.
 For this reason, the remainder of this dissertation uses $\furtherBound$ for all experiments.
 
@@ -8540,7 +8711,7 @@ For this reason, the remainder of this dissertation uses $\furtherBound$ for all
 \caption{Training curves showing the negative ELBO (- $\furtherBound$) vs step when training
 MoSVGPE (instantiated with two experts $\ModeInd=2$), on the
 Motorcycle data set \citep{Silverman1985} with different numbers of inducing points $M$ and different
-batch sizes $\NumData_b$. All experiments used the Adam optimiser \cite{kingmaAdam2017} with a learning rate
+batch sizes $\NumData_b$. All experiments used the Adam optimiser \citep{kingmaAdam2017} with a learning rate
 of $0.01$ and Squared Exponential kernels for all GPs.}
 \label{fig-mcycle-training-curve}
 \end{figure}
@@ -8559,7 +8730,7 @@ in cref:illustrative_example.
 The data set was collected at the Bristol Robotics Laboratory using
 a velocity controlled DJI Tello quadcopter and a Vicon tracking system.
 A high turbulence dynamics mode was induced by placing a desktop fan at the right side of a room.
-Figure ref:fig-quadcopter-environment shows a diagram of the environment.
+cref:fig-quadcopter-environment shows a diagram of the environment.
 The data set represents samples from a dynamical system with constant controls, i.e.
 $\Delta\state_{\timeInd} = \latentFunc(\state_{\timeInd-1};\control_{\timeInd-1}=\control_*)$.
 The resulting data set has two-dimensional inputs and two-dimensional outputs, making it easy to visualise
@@ -8580,7 +8751,7 @@ the different components of the model.
 \subcaption{Quiver plot showing the data set of state transitions from 9 trajectories flown 7 times.}
 \label{fig-quiver}
 \end{minipage}
-\caption{Illustration of \subref{fig-quadcopter-environment} the environment (a room in the Bristol Robotics Laboratory) and \subref{fig-quiver} the data set of state transitions. A turbulent dynamics mode is induced by a desk top fan at the right hand side of the room and a subset of the enivornment has not been observed.}
+\caption{Illustration of (\subref{fig-quadcopter-environment}) the environment (a room in the Bristol Robotics Laboratory) and (\subref{fig-quiver}) the data set of state transitions. A turbulent dynamics mode is induced by a desk top fan at the right hand side of the room and a subset of the enivornment has not been observed.}
 \end{figure}
 #+END_EXPORT
 
@@ -8616,17 +8787,17 @@ Each trajectory was repeated 7 times to capture the variability (process noise) 
 # from multiple trajectories following the same target trajectory were collected to
 # capture the variability (process noise) in the dynamics.
 
-*Data Processing* The Vicon stream recorded data at 100Hz, which was then processed to
+*Data Processing* The Vicon stream recorded data at 100Hz, which was then down sampled to
 give a time step $\Delta t$ of $0.1s$.
 This reduced the size of the data set and left reasonable lengthscales.
 The data set consists of $\NumData=2081$ state transitions.
 \todo{update data set size}
-Figure ref:fig-quiver is a quiver plot showing the resulting data set.
+cref:fig-quiver is a quiver plot showing the resulting data set.
 
 **** Results
 The model was instantiated with two experts, with the goal of each expert learning a separate dynamics mode and the
 gating network learning a representation of how the underlying dynamics modes vary over the state space.
-The model was trained using the model and training parameters shown in Table ref:tab-params-quadcopter.
+The model was trained using the model and training parameters shown in cref:tab-params-quadcopter.
 
 # #+NAME: fig-gating-mixing-probs-quadcopter-subset
 # #+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
@@ -8642,36 +8813,35 @@ The model was trained using the model and training parameters shown in Table ref
 #+caption: Moment matched predictive posterior $p(\Delta \state_* \mid \x_*)$ after training on the quadcopter data set. Each row corresponds to an output dimension $d$ where the left plot shows the moment matched mean $\E[\Delta \state_d]$ and the right plot shows the moment matched variance $\V[\Delta \state_d]$.
 [[file:./images/model/quadcopter/subset-10/y_moment_matched.pdf]]
 
-#+NAME: fig-experts-f-quadcopter-subset
-#+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
-#+caption: Visualisation of the experts' predictive posteriors $\predictiveExpertsPrior$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(f_{kd}(\singleTestInput))$, corresponding to dimension $d$ of expert $\modeInd$. The mean $\E[f_{kd}(\singleTestInput)]$ is on the left and the variance $\V[f_{kd}(\x_*)]$ is on the right. The noise variances learned by Expert 1 and Expert 2 were $\Sigma_1 = \diag\left([0.259,0.386]]\right)$ and $\Sigma_2 = \diag\left([0.869, 1.243]\right)$.
-[[file:./images/model/quadcopter/subset-10/experts_f.pdf]]
-
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
 \begin{minipage}[r]{1.0\textwidth}
 \centering
 \includegraphics[width=\textwidth]{./images/model/quadcopter/subset-10/gating_mixing_probs.pdf}
-\subcaption{Gating network's predictive mixing probabilties $\predictiveProb$.}
+\subcaption{Posterior over mode indicator variable.}
 \label{fig-gating-mixing-probs-quadcopter-subset}
 \end{minipage}
 \begin{minipage}[r]{1.0\textwidth}
 \includegraphics[width=\textwidth]{./images/model/quadcopter/subset-10/gating_gps.pdf}
-\subcaption{Gating network's predictive posterior $\predictiveGatingPrior$ where each row corresponds to a single GP posterior, $q(h_{k}(\singleTestInput))$, corresponding to expert $k$. The left hand plots show the means $\E[h_{k}(\singleTestInput)]$ and the right hand plots show the variances $\V[h_{k}(\singleTestInput)]$.}
+\subcaption{GP posteriors over gating functions.}
 \label{fig-gating-gps-quadcopter-subset}
 \end{minipage}
-\caption{Visualisation of the gating network after training on the quadcopter data set. The plots in a) show the predictive mixing probabilities $\predictiveProb$ for Expert 1 (left) and Expert 2 (right). The plots in b) show the predictive GP posteriors $q(h_{k}(\singleTestInput))$ associated with Expert 1 (top) and Expert 2 (bottom).}
+\caption{Visualisation of the gating network after training on the quadcopter data set. The plots in (\subref{fig-gating-mixing-probs-quadcopter-subset}) show the predictive mixing probabilities $\predictiveProb$ for Expert 1 (left) and Expert 2 (right). The plots in (\subref{fig-gating-gps-quadcopter-subset}) show the predictive GP posteriors $q(h_{k}(\singleTestInput))$ associated with Expert 1 (top) and Expert 2 (bottom). The left hand plots show the means and the right hand plots show the variances.}
 \label{fig-gating-network-quadcopter-subset}
 \end{figure}
 #+END_EXPORT
+
+#+NAME: fig-experts-f-quadcopter-subset
+#+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
+#+caption: Visualisation of the experts' predictive posteriors $\predictiveExpertsPrior$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(f_{kd}(\singleTestInput))$, corresponding to dimension $d$ of expert $\modeInd$. The mean $\E[f_{kd}(\singleTestInput)]$ is on the left and the variance $\V[f_{kd}(\x_*)]$ is on the right. The noise variances learned by Expert 1 and Expert 2 were $\Sigma_1 = \diag\left([0.259,0.386]]\right)$ and $\Sigma_2 = \diag\left([0.869, 1.243]\right)$.
+[[file:./images/model/quadcopter/subset-10/experts_f.pdf]]
+
 
 # #+NAME: fig-experts-y-quadcopter-subset
 # #+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
 # #+caption: Experts' predictive posterior over the output $q(\Delta\state_{kd} \mid \state_*)$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(\Delta\state_{kd} \mid \state_*)$, corresponding to dimension $d$ of expert $k$. The mean $\E[\Delta\state_{kd}\mid \state_*]$ is on the left and the variance $\V[\Delta\state_{kd} \mid \x_*]$ is on the right.
 # [[file:./images/model/quadcopter/subset/experts_y.pdf]]
-
-
 
 At a new input location $\singleTestInput$ the density over the output,
 $p(\singleTestOutput \mid \singleTestInput)$,
@@ -8690,11 +8860,63 @@ show the predictive variance. It is high where there are no training observation
 indicating that the method has successfully represented the model's /epistemic uncertainty/.
 It is also high in the region in front of the fan, showing that the model has successfully inferred
 the high process noise, associated with the turbulence induced by the fan.
+Let us now visualise the individual experts and the gating network separately.
 # As the data set was assumed to have constant controls, this result aligns with our knowledge of the environment.
 # That is, the dynamics should be constant
 # dynamics should be constant
 
-*Experts* Let us now visualise the individual experts and the gating network separately.
+*Gating Network*
+Figure ref:fig-gating-network-quadcopter-subset shows the gating network after training on the
+data set.
+Figure ref:fig-gating-mixing-probs-quadcopter-subset indicates that the model has assigned responsibility
+to expert 2 in front of the fan, as its mixing probability
+$\Pr(\singleTestModeVar=1 \mid \singleTestInput)$ is high in this region.
+This implies that expert 2 represents the turbulent dynamics mode in front of the fan.
+Figure ref:fig-gating-gps-quadcopter-subset shows the GP posteriors associated with the gating functions.
+The mean of the gating function associated with expert 1 $\E[h_{1}(\singleTestInput)]$ is
+high in the low-turbulence regions and low in the high-turbulence region in front of the fan.
+The posterior variance associated with the gating function GPs is high in the region with no training
+observations. This is a desirable behaviour because it is modelling the /epistemic uncertainty/.
+These results demonstrate that the gating network infers important information regarding how the
+system switches between dynamics modes over the input space.
+# The mean also tends to zero where the model has had no training observations.
+
+*Identifiability*
+These results show that our gating network is capable of turning a single expert
+on in multiple regions of the input space.
+This is a desirable behaviour as it has enabled only two underlying dynamics modes to be identified.
+In contrast, other MoGPE models may have assigned an extra expert to one of the regions modelled by expert 1.
+In particular, the regions at $y>0$ and $y<-1$ may have been assigned to separate experts.
+
+*Latent Spaces for Control*
+The gating network consists of two spaces which are rich with information regarding how the
+system switches between dynamics modes.
+Firstly, the pmf over the expert indicator variable.
+Secondly, the GP posteriors over the gating functions.
+It is worth noting that 1) all MoGPE methods obtain a pmf over the expert indicator variable and 2)
+this space suffers from interpretability issues.
+Consider the meaning of the mixing probabilities tending to a uniform
+distribution ${\Pr(\singleTestModeVarK \mid \singleTestInput)=0.5}$.
+This corresponds to maximum entropy for a categorical distribution and could mean two different things.
+It could mean that,
+1) the model has training data in this region, so can confidently predict, but is unsure which expert is responsible,
+   - perhaps the observations do not belong to any expert and an extra expert is required,
+2) the model does not have training data in this region, so cannot confidently predict which expert is responsible.
+# 2) the model has training data in this region, so can confidently predict and is confident that the observations are generated by an equal mixture of the experts,
+# It could mean that the model is confident that the observations are generated by an equal mixture of the experts,
+# or it could mean that the gating network is not confident making predictions in this region.
+This interpretability issue is overcome by our GP-based gating network, as these two cases are modelled differently.
+Either the gating function(s) are all equal and their posterior variance(s) are low, implying that the gating network
+can predict confidently but is unsure which expert is responsible.
+This could mean that an extra expert is responsible for predicting at this location.
+Alternatively, the gating functions' posterior variance(s) could be high, implying
+that the model is not confident in predicting which expert is responsible at the given input location.
+Importantly, the GP posteriors associated with our gating network, not only infer information regarding the
+mode switching, but also model the gating network's /epistemic uncertainty/.
+These GP posteriors provide convenient latent spaces for control and
+are exploited by the trajectory optimisation algorithms presented in the remainder of this dissertation.
+
+*Experts*
 Figure ref:fig-experts-f-quadcopter-subset shows the predictive posteriors $q(\latentFunc_{kd}(\singleTestInput))$
 associated with each dimension $d$ of each expert $\modeInd$.
 The method has successfully learned a factorised representation of the underlying dynamics, where
@@ -8734,6 +8956,9 @@ It is clear from these results that our likelihood approximation, combined with 
 and variational inference, are capable of modelling the assignment of observations to experts via
 the inducing points.
 
+
+
+
 # *Gating Network*
 # Figure ref:fig-gating-network-quadcopter-subset shows the gating network after training on the
 # data set.
@@ -8769,53 +8994,6 @@ the inducing points.
 
 
 
-*Gating Network*
-Figure ref:fig-gating-network-quadcopter-subset shows the gating network after training on the
-data set.
-Figure ref:fig-gating-mixing-probs-quadcopter-subset indicates that the model has assigned responsibility
-to expert 2 in front of the fan, as its mixing probability
-$\Pr(\singleTestModeVar=1 \mid \singleTestInput)$ is high in this region.
-Figure ref:fig-gating-gps-quadcopter-subset shows the GP posteriors associated with the gating functions.
-The mean of the gating function associated with expert 1 $\E[h_{1}(\singleTestInput)]$ is
-high in the low-turbulence regions and low in high-turbulence region in front of the fan.
-These results clearly demonstrate that the gating network infers important information regarding how the
-system switches between dynamics modes over the input space.
-# The mean also tends to zero where the model has had no training observations.
-
-*Identifiability*
-These results clearly demonstrate that our gating network is capable of turning a single expert
-on in multiple regions of the input space.
-This is desirable behaviour as it has enabled only two underlying dynamics modes to be identified.
-In contrast, other MoGPE models may have assigned an extra expert to one of the regions modelled by expert one.
-In particular, the regions at $y>0$ and $y<-1$ may have been assigned to separate experts.
-
-*Latent Spaces for Control*
-The gating network consists of two spaces which are rich with information regarding how the
-system switches between dynamics modes.
-Firstly, the pmf over the expert indicator variable.
-Secondly, the GP posteriors over the gating functions.
-It is worth noting that 1) all MoGPE methods obtain a pmf over the expert indicator variable and 2)
-this space suffers from interpretability issues.
-Consider the meaning of the mixing probabilities tending to a uniform
-distribution ${\Pr(\singleTestModeVarK \mid \singleTestInput)=0.5}$.
-This corresponds to maximum entropy for a categorical distribution and could mean two different things.
-It could mean that,
-1) the model has training data in this region, so can confidently predict, but is unsure which expert is responsible,
-   - perhaps the observations do not belong to any expert and an extra expert is required,
-2) the model does not have training data in this region, so cannot confidently predict which expert is responsible.
-# 2) the model has training data in this region, so can confidently predict and is confident that the observations are generated by an equal mixture of the experts,
-# It could mean that the model is confident that the observations are generated by an equal mixture of the experts,
-# or it could mean that the gating network is not confident making predictions in this region.
-This interpretability issue is overcome by our GP-based gating network, as these two cases are modelled differently.
-Either the gating function(s) are all equal and their posterior variance(s) are low, implying that the gating network
-can predict confidently but is unsure which expert is responsible.
-This could mean that an extra expert is responsible for predicting at this location.
-Alternatively, the gating functions' posterior variance(s) could be high, implying
-that the model is not confident in predicting which expert is responsible at the given input location.
-Importantly, the GP posteriors associated with our gating network, not only infer information regarding the
-mode switching, but also model the gating network's /epistemic uncertainty/.
-These GP posteriors provide convenient latent spaces for control and
-are exploited by the trajectory optimisation algorithms presented in the remainder of this dissertation.
 
 
 # The posterior variance is high where the model has not observed
@@ -9060,7 +9238,7 @@ the angular (yaw) velocity $\dot{\yaw}$,
 
 
 \newpage
-** Discussion
+** Remarks
 
 *Implicit Data Assignment*
 It is worth noting that in contrast to other MoGPE models, this model does not directly assign observations to experts.
@@ -9100,14 +9278,17 @@ is a challenging problem.
 ** Conclusion
 This chapter has presented a method for learning representations of multimodal dynamical systems using
 a Mixture of Gaussian Process Experts method.
-Motivated by learning latent spaces for control
-and ensuring that the true underlying dynamics modes are identified,
+Motivated by synergising model learning and control, in particular, 1) correctly identify the
+underlying dynamics modes and 2) inferring latent structure that can be exploited for control,
 this work formulated a gating network based on input-dependent gating functions.
 This gating network can be used to constrain the set of admissible functions through the placement of informative
 GP priors on the gating functions.
 This aids the inherent identifiability issues associated with mixture models.
 As we shall see in cref:chap-traj-opt, the GP posteriors over the gating functions provide convenient
 latent spaces for control, as they are rich with information regarding the separation of the underlying dynamics modes.
+# Motivated by learning latent spaces for control
+# and ensuring that the true underlying dynamics modes are identified,
+# this work formulated a gating network based on input-dependent gating functions.
 
 Further to this, this chapter addresses the issue of marginalising over
 every possible set of assignments of observations to experts
@@ -9118,10 +9299,10 @@ with a set of inducing points.
 These inducing points are assumed to be a sufficient statistic for the joint distribution
 over every possible set of assignments to experts.
 This induces a factorisation over data which
-is used to derive three variational lower bounds that provide a nice coupling between the
+is used to derive three ELBOs that provide a nice coupling between the
 optimisation of the experts and the gating network, by efficiently marginalising the expert indicator variable for single
 data points.
-The three different EBLOs are compared on the Motorcycle data set cite:Silverman1985.
+The three different ELBOs are compared on the Motorcycle data set cite:Silverman1985.
 The $\furtherBound$ bound provides the best performance as it balances the accuracy offered by the tight bound $\tightBound$,
 with the computational improvements offered by further bounding the GPs.
 The results demonstrate that our variational inference scheme principally handles uncertainty whilst
