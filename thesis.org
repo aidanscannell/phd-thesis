@@ -9455,7 +9455,7 @@ cannot be predicted confidently due to lack of observations.}
 \end{figure}
 #+END_EXPORT
 cref:fig-point-mass-motivation illustrates the problem that this chapter seeks to solve.
-Given a dynamical system subject to two dynamics mode, the method in cref:chap-dynamics is used to
+Given a dynamical system subject to two dynamics modes, the method in cref:chap-dynamics is used to
 learn a factorised representation of the underlying dynamics modes.
 The goal of this chapter is then to leverage the latent structure of this model, to
 find trajectories from a start state $\state_0$, to a target state $\targetState$,
@@ -9464,16 +9464,65 @@ i.e. have high /epistemic uncertainty/.
 #+BEGIN_EXPORT latex
 \begin{figure}[t!]
 \centering
+\includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-svgp-traj-opt/trajectories_over_desired_gating_mask.pdf}
+\label{eq-traj-opt-over-gating-mask-svgp-baseline}
+\caption{This figure demonstrates the shortcomings of learning a transition dynamics model using a SVGP.
+The SVGP has not been able to learn a representation of the dynamics which is true to the underlying system.
+This is because it cannot model the mulitmodal behaviour present in the state transitions data set,
+i.e. the multimodality of the system.
+The optimised trajectory in the dynamics SVGP (magenta) and in the environment (cyan),
+are overlayed on the gating mask, indicating where each mode governs the dynamics.
+White indicates the turbulent dynamics mode and red indicates the operatable mode.
+The trajectory optimised in the learned SVGP dynamics,
+successfully controls the dynamics from a start state $\state_0$, to a target state $\targetState$.
+However, as the learned SVGP dynamics do not correspond to the true underlying dynamics,
+applying the optimised controls in the environment does not result in the trajectory successfully navigating
+to the target state $\targetState$.}
+\end{figure}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
 \begin{minipage}[r]{\columnwidth}
 \centering
-\includegraphics[width=\textwidth]{./images/traj-opt/baseline-traj-opt/trajectories_over_desired_prob.pdf}
-\subcaption{}
+\includegraphics[width=0.8\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
+\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
 \label{eq-traj-opt-over-prob-baseline}
 \end{minipage}
 \begin{minipage}{1.0\textwidth}
 \centering
-\includegraphics[width=\textwidth]{./images/traj-opt/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
-\subcaption{}
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
+\subcaption{Trajectories overlayed on desired mode's gating function GP.}
+\label{eq-traj-opt-over-svgp-baseline}
+\end{minipage}
+\caption{\label{fig-traj-opt-baseline}
+This figure demonstrates the shortcomings of finding trajectories
+from a start state $\state_0$, to a target state $\targetState$,
+in the system in \cref{fig-point-mass-motivation},
+without avoiding the turbulent dynamics mode.
+To demonstrate the methods shortcomings, the optimised controls are rolled out in the desired mode's GP dynamics (magenta)
+and in the environment (cyan).
+(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).
+It is clear that the trajectory resulting from rolling out the controls in the environment,
+passes through the turbulent dynamics mode and as a result, deviates from the
+trajectory rolled out in the desired mode's dynamics.}
+\end{figure}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_prob.pdf}
+\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
+\label{eq-traj-opt-over-prob-baseline}
+\end{minipage}
+\begin{minipage}{1.0\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
+\subcaption{Trajectories overlayed on desired mode's gating function GP.}
 \label{eq-traj-opt-over-svgp-baseline}
 \end{minipage}
 \caption{\label{fig-traj-opt-baseline}
@@ -9558,6 +9607,7 @@ $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \st
 with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
 $\control \in \controlDomain \subseteq \R^\ControlDim$,
 where $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$,
+denotes the subset of the state space associated with the desired dynamics mode,
 this work seeks to find the optimal controls over a horizon,
 $\TimeInd$, that keeps the dynamics in the desired mode, $\desiredDynamicsFunc$,
 and minimises a cost
@@ -12121,37 +12171,55 @@ This work propagates model uncertainty forwards by cascading such one-step predi
 #+END_EXPORT
 The control as inference algorithm presented in this section was evaluated in a simulated environment.
 The simulation environment models a velocity controlled quadcopter in an environment subject to spatially
-varying wind (and it's associated turbulence).
+varying wind, constituting both drift and diffusion components.
 
-To begin with, $\NumData$ state transitions were sampled from the simulator.
+\todo{add details of sim here?}
+
+*Data Collection* To begin with, $\NumData$ state transitions were sampled from the simulator.
 In contrast to the algorithm presented in cref:sec-traj-opt-geometric, this method learns the full transition
 dynamics model, i.e. it does not assume constant controls.
 A subset of the environment was intentionally not observed.
 This introduced a region of high epistemic uncertainty into the model, i.e. a region of the system where
-the dynamics model cannot predict confidently.
+the dynamics cannot be predict confidently.
 This enabled the trajectory optimisation's performance at achieving Goal 2 to be evaluated.
 
+# *Dynamics Configuration* The model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts, one to
+# represent the operatable dynamics mode and one to represent the mode subject to high levels
+# of wind and associated disturbances.
+# Each mode was instantiated with a simple nominal dynamics function,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-nominal-dynamics-vc}
+# \nominalDynamics(\state_\timeInd, \control_\timeInd) &= \control_\timeInd \deltaTime
+# \end{align}
+# #+END_EXPORT
+# to encode our prior knowledge of the system -- distance = speed $\times$ time.
+# The model is then tasked with learning the unknown errors associated with each dynamics mode.
+# Namely, the drift and process noise induced by the wind.
 *Dynamics Configuration* The model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts, one to
 represent the operatable dynamics mode and one to represent the mode subject to high levels
 of wind and associated disturbances.
-Each mode was instantiated with a simple nominal dynamics function,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-nominal-dynamics-vc}
-\nominalDynamics(\state_\timeInd, \control_\timeInd) &= \control_\timeInd \deltaTime
-\end{align}
-#+END_EXPORT
-to encode our prior knowledge of the system -- distance = speed $\times$ time.
-The model is then tasked with learning the unknown errors associated with each dynamics mode.
-Namely, the drift and process noise induced by the wind.
-
+Each mode was instantiated with a Squared Exponential kernel with automatic relevance determination and
+a zero mean function.
 It was /known a priori/ that the dynamics modes vary spatially over the environment,
 so the gating network was instantiated to depend only on the state
 $\gatingFunc : \stateDomain \rightarrow \R$,
 instead of both the state and control
 $\gatingFunc : \stateDomain \times \controlDomain \rightarrow \R$.
-However, this can easily be modified on an application basis.
+Note that the relevant input dimensions can easily be set in =GPflow=
+by setting the =active_dims= parameter associated with the kernel to only use specific dimensions of the input.
+In this case, only the state dimensions, instead of the entire state-control input.
 
-In all experiments the trajectory optimiser was initialised with a horizon of $\TimeInd=10$.
+In all experiments a $\TimeInd=20$ step horizon was used and the controls were optimised using
+SciPy's Sequential Least Squares Programming (SLSQP) cite:2020SciPy-NMeth.
+
+*Mode Conditioning*
+- compare max entropy vs no max entropy
+
+*Riemannian Energy*
+- compare different covariance weights
+
+*Riemannian Energy*
+- compare different covariance weights
 
 **** Performance Metrics
 In order to evaluate and compare different trajectories, a number of performance metrics were used.
@@ -12210,7 +12278,6 @@ are subject to different dynamics -- leading to different state trajectories $\s
 # Intuitively, environment trajectories deviating from model trajectories indicated that they have
 # left the desired dynamics mode.
 
-
 **** Velocity Controlled Point Mass Simulation
 # **** Velocity Controlled Quadcopter Simulator
 These figures are slices with controls equal zero
@@ -12225,19 +12292,63 @@ no maximum entropy control or mode remaining behaviour.
 It used deterministic controls and the cost function from cref:eq-quadratic-cost-control.
 As such, the controls were optimised w.r.t. the expected cost in cref:eq-expected-quadratic-cost.
 
+The
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mode-conditioning-no-max-entropy/trajectories_over_desired_prob.pdf}
+\subcaption{}
+\label{fig-mode-conditioning-no-max-entropy-traj-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mode-conditioning-no-max-entropy/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{fig-mode-conditioning-no-max-entropy-traj-opt-over-svgp}
+\end{minipage}
+\caption{(\subref{fig-mode-conditioning-no-max-entropy-traj-opt-over-prob}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{fig-mode-conditioning-no-max-entropy-traj-opt-over-svgp}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).}
+\label{fig-mode-conditioning-no-max-entropy-traj-opt}
+\end{figure}
+#+END_EXPORT
 
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
 \begin{minipage}[r]{\columnwidth}
 \centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy/trajectories_over_desired_prob.pdf}
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mode-conditioning-max-entropy/trajectories_over_desired_prob.pdf}
+\subcaption{}
+\label{fig-mode-conditioning-max-entropy-traj-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mode-conditioning-max-entropy/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{fig-mode-conditioning-max-entropy-traj-opt-over-svgp}
+\end{minipage}
+\caption{(\subref{fig-mode-conditioning-max-entropy-traj-opt-over-prob}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{fig-mode-conditioning-max-entropy-traj-opt-over-svgp}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).}
+\label{fig-mode-conditioning-max-entropy-traj-opt}
+\end{figure}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy-1-no-max-entropy/trajectories_over_desired_prob.pdf}
 \subcaption{}
 \label{eq-geometric-traj-opt-over-prob}
 \end{minipage}
 \begin{minipage}[r]{0.99\columnwidth}
 \centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy/trajectories_over_desired_gating_gp.pdf}
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/conditioning-energy-1-no-max-entropy/trajectories_over_desired_gating_gp.pdf}
 \subcaption{}
 \label{eq-geometric-traj-opt-over-svgp}
 \end{minipage}
@@ -12290,6 +12401,9 @@ over the trajectories respectively.}
 #+END_EXPORT
 
 *** Discussion
+
+control constraints to ensure controls stay in region that have been observed
+
 Although the initial trajectory may transition between multiple dynamics modes, the lower bound favours
 trajectories that remain in the desired dynamics mode.
 
