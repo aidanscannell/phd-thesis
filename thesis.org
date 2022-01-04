@@ -1250,19 +1250,31 @@ The system's transition dynamics can be represented by two dynamics modes,
 - Mode 2 :: a /non-turbulent/ mode everywhere else.
 However, the underlying dynamics modes, and how the dynamics switches between them, are \textit{not fully known a priori}.
 Fig. ref:fig-problem-statement shows a graphical representation of this environment.
+# #+BEGIN_EXPORT latex
+# \begin{figure}[!h]
+# \centering
+#   %\includegraphics[width=0.6\columnwidth]{images/quadcopter_bimodal_domain.pdf}
+#   \includegraphics[width=0.9\columnwidth]{images/quadcopter-domain-ppt.png}
+#   \caption{
+#   Diagram showing a top down view of the environment for the 2D quadcopter example.
+#   The quadcopter is subject to two dynamics modes: 1) a \textit{turbulent}
+#   dynamics mode induced by a fan (green), and, 2) a \texit{non-turbulent} dynamics mode everywhere else (blue).}
+# %The goal is learn a factorised representation of the underlying dynamics modes to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
+# %remaining in the non-turbulent mode or prioritise avoiding regions of the learned dynamics
+# %with high epistemic uncertainty due to lack of training observations.}
+# \label{fig-problem-statement}
+# \end{figure}
+# #+END_EXPORT
 #+BEGIN_EXPORT latex
-\begin{figure}[!h]
+\begin{figure}[t!]
 \centering
-  %\includegraphics[width=0.6\columnwidth]{images/quadcopter_bimodal_domain.pdf}
-  \includegraphics[width=0.9\columnwidth]{images/quadcopter-domain-ppt.png}
-  \caption{
-  Diagram showing a top down view of the environment for the 2D quadcopter example.
-  The quadcopter is subject to two dynamics modes: 1) a \textit{turbulent}
-  dynamics mode induced by a fan (green), and, 2) a \texit{non-turbulent} dynamics mode everywhere else (blue).}
-%The goal is learn a factorised representation of the underlying dynamics modes to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$ that either prioritise
-%remaining in the non-turbulent mode or prioritise avoiding regions of the learned dynamics
-%with high epistemic uncertainty due to lack of training observations.}
-\label{fig-problem-statement}
+\includegraphics[width=1.0\textwidth]{./images/point-mass-problem-statement-scenario-4.pdf}
+\caption{\label{fig-problem-statement}
+Diagram showing a top down view of an environment, representing a quadcopter
+subject to two dynamics modes: 1) a turbulent dynamics mode
+induced by a fan (green) and 2) a non-turbulent dynamics mode everywhere else (blue).
+The goal is to find trajectories from a start state $\state_0$, to the target state (red star),
+whilst avoiding the turbulent dynamics mode.}
 \end{figure}
 #+END_EXPORT
 
@@ -4369,19 +4381,29 @@ up inference.
 \newcommand{\expertsInducingInput}{\ensuremath{\bm{\zeta}}}
 %\newcommand{\expertInducingOutput}{\ensuremath{\mode{\inducingOutput}}}
 %\newcommand{\expertsInducingOutput}{\ensuremath{\MakeUppercase{\inducingOutput}}}
-\newcommand{\expertInducingOutput}{\ensuremath{\mode{\hat{\mathbf{\latentFunc}}}}}
-\newcommand{\expertsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertInducingOutput}{\ensuremath{\mode{\hat{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertInducingOutput}{\ensuremath{\mode{\tilde{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertsInducingOutput}{\ensuremath{\tilde{\MakeUppercase{\mathbf{\latentFunc}}}}}
+\newcommand{\expertInducingOutput}{\ensuremath{\mode{\latentFunc}(\expertInducingInput)}}
+\newcommand{\expertsInducingOutput}{\ensuremath{\mathbf{\latentFunc}(\expertsInducingInput)}}
 
 %\newcommand{\gatingInducingInput}{\ensuremath{\hat{\inducingInput}}}
 \newcommand{\gatingInducingInput}{\ensuremath{\bm{\xi}}}
 %\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\hat{\inducingOutput}}}}
 %\newcommand{\gatingsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\inducingOutput}}}}
-\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\hat{\mathbf{\gatingFunc}}}}}
-\newcommand{\gatingsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\hat{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\tilde{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingsInducingOutput}{\ensuremath{\tilde{\MakeUppercase{\mathbf{\gatingFunc}}}}}
+\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\gatingFunc}(\gatingInducingInput)}}
+\newcommand{\gatingsInducingOutput}{\ensuremath{\mathbf{\gatingFunc}(\gatingInducingInput)}}
 
 %\newcommand{\expertInducingPrior}{\ensuremath{p(\mode{\latentFunc}(\expertInducingInput))}}
-\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput \mid \expertInducingInput)}}
-\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput \mid \expertsInducingInput)}}
+%\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput \mid \expertInducingInput)}}
+%\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput \mid \expertsInducingInput)}}
+\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput)}}
+\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput)}}
 %\newcommand{\expertInducingVariational}{\ensuremath{q(\mode{\latentFunc}(\expertInducingInput))}}
 \newcommand{\expertInducingVariational}{\ensuremath{q(\expertInducingOutput)}}
 \newcommand{\expertsInducingVariational}{\ensuremath{q(\expertsInducingOutput)}}
@@ -4396,8 +4418,10 @@ up inference.
 
 
 %\newcommand{\gatingInducingPrior}{\ensuremath{p(\GatingFunc(\gatingInducingInput))}}
-\newcommand{\gatingInducingPrior}{\ensuremath{p(\gatingInducingOutput \mid \gatingInducingInput)}}
-\newcommand{\gatingsInducingPrior}{\ensuremath{p(\gatingsInducingOutput \mid \gatingInducingInput)}}
+%\newcommand{\gatingInducingPrior}{\ensuremath{p(\gatingInducingOutput \mid \gatingInducingInput)}}
+%\newcommand{\gatingsInducingPrior}{\ensuremath{p(\gatingsInducingOutput \mid \gatingInducingInput)}}
+\newcommand{\gatingInducingPrior}{\ensuremath{p(\gatingInducingOutput)}}
+\newcommand{\gatingsInducingPrior}{\ensuremath{p(\gatingsInducingOutput)}}
 %\newcommand{\gatingInducingVariational}{\ensuremath{q(\GatingFunc(\gatingInducingInput))}}
 \newcommand{\gatingInducingVariational}{\ensuremath{q(\gatingInducingOutput)}}
 \newcommand{\gatingsInducingVariational}{\ensuremath{q(\gatingsInducingOutput)}}
@@ -4702,6 +4726,159 @@ With this notation, the regression problem can be written as,
 # is denoted $\fknd = \fkd (\singleInput)$,
 # for all dimensions as $\fkn$ and at all data points as $\Fk$.
 
+** Problem Statement :noexport:
+This work considers /unknown/, or /partially unknown/,  multimodal,
+stochastic, nonlinear dynamical systems,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc}
+\Delta \state_{\timeInd}
+&= \mathbf{g}(\state_{t-1}, \control_{t-1}; \Delta t = t_*) + \bm\epsilon & \nonumber \\
+&= \mode{\mathbf{g}} (\state_{\timeInd-1}, \control_{\timeInd-1} ; \Delta t = t_*) + \mode{\bm\epsilon}
+&\text{if} \quad \modeVar_{\timeInd} = \modeInd \nonumber \\
+&= \underbrace{\nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{nominal mode \modeInd}}
++ \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{unknown error mode \modeInd}}
++ \mode{\bm\epsilon}
+&\text{if} \quad \alpha_{t} = \modeInd,
+\end{align}
+#+END_EXPORT
+with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+$\control \in \controlDomain \subseteq \R^\ControlDim$.
+The state and control at time $t$ are denoted as $\state_t \in \stateDomain$ and $\control_t \in \controlDomain$
+respectively and
+$\Delta \state_{\timeInd} = \state_{\timeInd} - \state_{\timeInd-1}$ is the change in state between time $\timeInd-1$
+and $\timeInd$.
+One of the $\ModeInd$ dynamics modes,
+$\{\mode{\mathbf{g}} : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$ and associated noise models,
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
+$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
+are selected by a discrete mode indicator variable,
+$\alpha_t \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$, at any given time step $t$.
+The nominal dynamics
+$\{\nominalDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+represents our /a priori/ knowledge of the dynamics (i.e. the assumed dynamics)
+and the additive dynamics
+$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+represents the initially unknown dynamics, which are to be learned from observations.
+This work considers systems that are stochastic (i.e. subject to process noise), but
+are not subject to observation noise.
+Thus, the $\mode{\bm\epsilon}$ term solely represents the process noise.
+
+This chapter assumes access to historical data comprising state transitions from $\NumEpisodes$ trajectories
+of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
+The data set has ${N=ET}$ elements
+and we abuse notation by appending the independent trajectories along
+time to get the data set $\mathcal{D}=\{(\state_{\timeInd-1},\control_{\timeInd-1}),\Delta \state_t\}^\NumData_{\timeInd=1}$.
+
+To help with understanding and ease of notation, our modelling only considers a single output dimension,
+i.e. $\stateDomain \subseteq \R$ as $\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain$.
+The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
+To further ease notation, the state-control input domain is denoted
+$\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
+and a single state-control input is dentoed
+$\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
+Given this formulation, our task is to learn the mapping $\unknownDynamics$,
+which switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
+This is a regression problem,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc-regression}
+\underbrace{\Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\singleOutput}}
+= \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
++ \mode{\epsilon}
+\quad \text{if} \quad \modeVarK,
+\end{align}
+#+END_EXPORT
+where both the latent dynamics functions $\unknownDynamics$ and how the system switches between them
+$\modeVar$, must be inferred from observations.
+A single output is denoted as
+$\singleOutput = \Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)$.
+The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
+and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
+With this notation, the regression problem can be written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc-regression-simple}
+\singleOutput
+= \mode{\latentFunc}(\singleInput) + \mode{\epsilon}
+\quad \text{if} \quad \modeVarK.
+\end{align}
+#+END_EXPORT
+
+
+# from inputs $\singleInput$ to
+# outputs $\singleOutput$,
+
+
+# Given this notation, our task is to learn the mapping $\f$, from inputs $\singleInput$ to
+# outputs $\singleOutput$,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-disc}
+# \singleOutput = \mode{\latentFunc} (\singleInput) + \mode{\epsilon}
+# \quad \text{if} \quad \modeVarK,
+# \end{align}
+# #+END_EXPORT
+# where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
+
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+# A time series of observations from time $a$ to time $b$ (inclusive)
+# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+# The concatenation of the state and control domains is
+# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+# A single state-control input is denoted as
+# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+# $\allInput$, and the set of all outputs as $\allOutput$.
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
+# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
+# $\NumTimesteps$ steps per episode.
+# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+
+
+# giving the data set,
+# $~{\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}}$.
+
+# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
+# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
+# $\NumTimesteps$ steps per episode.
+# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
+# We abuse notation (considering time indexing) and denote the data set
+# $\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
+
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
+# where we have abused the time indexing notation.
+
+# This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-disc}
+# \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
+# \quad \text{if} \quad \modeVarK,
+# \end{align}
+# #+END_EXPORT
+# where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
+# at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
+# indicates one of $\ModeInd$ dynamics modes) at time $t$.
+
+# A time series of observations from time $a$ to time $b$ (inclusive)
+# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+# The concatenation of the state and control domains is
+# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+# A single state-control input is denoted as
+# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+# $\allInput$, and the set of all outputs as $\allOutput$.
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
 ** Problem Statement
 This work considers /unknown/, or /partially unknown/,  multimodal,
 stochastic, nonlinear dynamical systems,
@@ -4753,7 +4930,7 @@ $\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
 and a single state-control input is dentoed
 $\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
 Given this formulation, our task is to learn the mapping $\unknownDynamics$,
-where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
+which switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
 This is a regression problem,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-disc-regression}
@@ -4763,7 +4940,7 @@ This is a regression problem,
 \quad \text{if} \quad \modeVarK,
 \end{align}
 #+END_EXPORT
-where both the latent dynamics functions $\unknownDynamicsK$ and how the system switches between them
+where both the latent dynamics functions $\unknownDynamics$ and how the system switches between them
 $\modeVar$, must be inferred from observations.
 A single output is denoted as
 $\singleOutput = \Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)$.
@@ -6776,6 +6953,7 @@ Each expert's inducing points are assumed to be from its GP prior,
 #+END_EXPORT
 where the set of all inducing inputs associated with the experts has been denoted $\expertsInducingInput$
 and the  set of all inducing variables as $\expertsInducingOutput$.
+Note that the dependence on the inducing inputs has dropped for notational conciseness.
 Introducing separate inducing points from each expert's GP can loosely be seen as "partitioning"
 the observations between experts, i.e. the inducing points can be seen as approximating the data partition if
 $\expertInducingOutput \approx \mode{\latentFunc}(\allInputK)$ and $\expertInducingInput \approx \allInputK$.
@@ -6795,6 +6973,7 @@ set of $\NumInducing$ inducing points from its corresponding GP prior,
 #+END_EXPORT
 where  $\gatingInducingOutput = \mode{\gatingFunc}(\gatingInducingInput)$
 are the inducing points associated with the $\modeInd^{\text{th}}$ gating function.
+Again, the dependence on the inducing inputs has been dropped for notational conciseness.
 The set of all inducing variables associated with the gating network has been
 denoted $\gatingsInducingOutput$.
 Partitioning of the data set is not desirable for the gating function GPs as each gating function
@@ -7434,7 +7613,7 @@ The cost of computing the expected likelihood term is dependent on the batch siz
 For each data point in the minibatch, each of the $\ModeInd$ gating function variational posteriors has complexity
 $\mathcal{O}\left( \NumInducing^{2} \right)$ to evaluate.
 For each data point, only a single sample is drawn from each of these distributions.
-Sampling each expert's inducing variational distribution $\expertInducingVariational$
+Sampling each expert's inducing variable distribution $\expertInducingVariational$
 has complexity $\mathcal{O}(\NumInducing^2)$ because
 the covariance is represented as the lower triangular (via the cholesky decomposition).
 In addition to this sampling, calculating each experts conditional $\singleExpertGivenInducing$ given these samples
@@ -9399,20 +9578,27 @@ it can successfully learn a factorised representation of the underlying dynamics
 \renewcommand{\controlCostMatrix}{\ensuremath{\mathbf{R}}}
 #+END_EXPORT
 ** Intro :ignore:
-This chapter is concerned with controlling multimodal dynamical systems, whose transition dynamics
-are represented with the probabilistic dynamics model from Chapter ref:chap-dynamics,
-after training on a historical data set of state transitions $\dataset$.
+This chapter is concerned with controlling /unknown/ or /partially unknown/, multimodal dynamical systems,
+given a historical data set of state transitions $\dataset$, sampled from the system.
 In particular, it is concerned with /mode constrained/ trajectory optimisation, which attempts to
 drive a system from an initial state $\state_0$ -- in a desired dynamics mode -- to a target state $\state_f$,
 whilst remaining in the desired dynamics mode.
-Given the well-calibrated uncertainty estimates from the model in Chapter ref:chap-dynamics,
-this chapter is concerned with *risk-averse* control.
-That is, find trajectories that also avoid entering regions of the transition dynamics that
-cannot be predicted confidently i.e. have high /epistemic uncertainty/.
-For example, if they have not been observed.
-This is because the model cannot be certain whether such a region belongs to the desired dynamics mode
-or not.
-This Chapter introduces two different approaches to performing /mode constrained/ trajectory optimisation.
+
+# This chapter is concerned with controlling multimodal dynamical systems, whose transition dynamics
+# are represented with the probabilistic dynamics model from Chapter ref:chap-dynamics,
+# after training on a historical data set of state transitions $\dataset$.
+# In particular, it is concerned with /mode constrained/ trajectory optimisation, which attempts to
+# drive a system from an initial state $\state_0$ -- in a desired dynamics mode -- to a target state $\state_f$,
+# whilst remaining in the desired dynamics mode.
+
+# Given the well-calibrated uncertainty estimates from the model in Chapter ref:chap-dynamics,
+# this chapter is concerned with *risk-averse* control.
+# That is, find trajectories that also avoid entering regions of the transition dynamics that
+# cannot be predicted confidently i.e. have high /epistemic uncertainty/.
+# For example, if they have not been observed.
+# This is because the model cannot be certain whether such a region belongs to the desired dynamics mode
+# or not.
+# This Chapter introduces two different approaches to performing /mode constrained/ trajectory optimisation.
 
 # trained on this data set $\dataset$, this chapter exploits the
 # well-calibrated uncertainty estimates from the model
@@ -9433,137 +9619,17 @@ This Chapter introduces two different approaches to performing /mode constrained
 # - Goal 2 :: avoid regions of the learned dynamics with high epistemic uncertainty, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
 
 
-Section ref:sec-problem-statement formally states the problem and then Sections ref:sec-traj-opt-geometric
-and ref:sec-traj-opt-inference detail the two trajectory optimisation algorithms.
+This chapter introduces two different approaches to performing /mode constrained/ trajectory optimisation.
+Both approaches are model-based techniques that leverage the dynamics model from cref:chap-dynamics.
+The first method exploits concepts from Riemannian geometry to obtain mode remaining behaviour.
+The second approach extends the control as inference framework to achieve mode remaining behaviour
+via conditioning on the mode indicator variable.
 
-The work in this chapter is implemented in JAX and is available on GitHub
+cref:sec-problem-statement formally states the problem and then cref:sec-traj-opt-geometric,sec-traj-opt-inference
+detail the two trajectory optimisation algorithms.
+The work in this chapter is implemented in JAX and TensorFlow and is available on GitHub
 cite:jax2018github[fn:2:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems and icon{\faGithub}/aidanscannell/vimpc]].].
 \todo{make links work}
-
-** Motivation
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\includegraphics[width=0.8\textwidth]{./images/point-mass-problem-statement-scenario-4.pdf}
-\caption{\label{fig-point-mass-motivation}
-Diagram showing a top down view of a simulated system, representing a quadcopter
-subject to two dynamics modes: 1) a turbulent dynamics mode
-induced by a fan (green) and 2) a non-turbulent dynamics mode everywhere else (blue).
-The goal is to find trajectories from the start state $\state_0$, to the target state
-$\targetState$, whilst avoiding 1) the turbulent dynamics mode and 2) regions of the learned dynamics that
-cannot be predicted confidently due to lack of observations.}
-\end{figure}
-#+END_EXPORT
-cref:fig-point-mass-motivation illustrates the problem that this chapter seeks to solve.
-Given a dynamical system subject to two dynamics modes, the method in cref:chap-dynamics is used to
-learn a factorised representation of the underlying dynamics modes.
-The goal of this chapter is then to leverage the latent structure of this model, to
-find trajectories from a start state $\state_0$, to a target state $\targetState$,
-whilst avoiding both the turbulent dynamics mode and regions of the dynamics that cannot be predicted confidently,
-i.e. have high /epistemic uncertainty/.
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-svgp-traj-opt/trajectories_over_desired_gating_mask.pdf}
-\label{eq-traj-opt-over-gating-mask-svgp-baseline}
-\caption{This figure demonstrates the shortcomings of learning a transition dynamics model using a SVGP.
-The SVGP has not been able to learn a representation of the dynamics which is true to the underlying system.
-This is because it cannot model the mulitmodal behaviour present in the state transitions data set,
-i.e. the multimodality of the system.
-The optimised trajectory in the dynamics SVGP (magenta) and in the environment (cyan),
-are overlayed on the gating mask, indicating where each mode governs the dynamics.
-White indicates the turbulent dynamics mode and red indicates the operatable mode.
-The trajectory optimised in the learned SVGP dynamics,
-successfully controls the dynamics from a start state $\state_0$, to a target state $\targetState$.
-However, as the learned SVGP dynamics do not correspond to the true underlying dynamics,
-applying the optimised controls in the environment does not result in the trajectory successfully navigating
-to the target state $\targetState$.}
-\end{figure}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=0.8\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
-\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
-\label{eq-traj-opt-over-prob-baseline}
-\end{minipage}
-\begin{minipage}{1.0\textwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
-\subcaption{Trajectories overlayed on desired mode's gating function GP.}
-\label{eq-traj-opt-over-svgp-baseline}
-\end{minipage}
-\caption{\label{fig-traj-opt-baseline}
-This figure demonstrates the shortcomings of finding trajectories
-from a start state $\state_0$, to a target state $\targetState$,
-in the system in \cref{fig-point-mass-motivation},
-without avoiding the turbulent dynamics mode.
-To demonstrate the methods shortcomings, the optimised controls are rolled out in the desired mode's GP dynamics (magenta)
-and in the environment (cyan).
-(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on the desired mode's mixing probability
-and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
-mean (left) and posterior variance (right).
-It is clear that the trajectory resulting from rolling out the controls in the environment,
-passes through the turbulent dynamics mode and as a result, deviates from the
-trajectory rolled out in the desired mode's dynamics.}
-\end{figure}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_prob.pdf}
-\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
-\label{eq-traj-opt-over-prob-baseline}
-\end{minipage}
-\begin{minipage}{1.0\textwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
-\subcaption{Trajectories overlayed on desired mode's gating function GP.}
-\label{eq-traj-opt-over-svgp-baseline}
-\end{minipage}
-\caption{\label{fig-traj-opt-baseline}
-This figure demonstrates the shortcomings of finding trajectories
-from a start state $\state_0$, to a target state $\targetState$,
-in the system in \cref{fig-point-mass-motivation},
-without avoiding the turbulent dynamics mode.
-To demonstrate the methods shortcomings, the optimised controls were rolled out in the desired mode's GP dynamics (magenta)
-and in the environment (cyan).
-(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on the desired mode's mixing probability
-and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
-mean (left) and posterior variance (right).
-It is clear that the trajectory resulting from rolling out the controls in the environment,
-passes through the turbulent dynamics mode and as a result, deviates from the
-trajectory rolled out in the desired mode's dynamics.}
-\end{figure}
-#+END_EXPORT
-\todo{update fig-traj-opt-baseline with trajectories which don't use nominal mean function so that they deviate in the region with high epistemic uncertainty.}
-The contour plots in cref:fig-traj-opt-baseline represent the gating network associated with the model from
-cref:chap-dynamics after performing Bayesian inference, given a historical data set of state transitions
-$\dataset$ from the environment in cref:fig-point-mass-motivation.
-Control trajectories were found by minimising the expected cost under the state distribution
-resulting from cascading single-step predictions through the desired mode's ($\modeInd=2$ in this case)
-learned GP dynamics model.
-The cost function consisted of a quadratic integral control cost and a terminal state cost.
-This approach only considered the dynamics of the desired mode, leading to trajectories in the environment deviating
-from those planned in the learned dynamics model.
-The trajectories also pass through regions of the dynamics with high epistemic uncertainty, which is not desirable.
-\todo{finish this para when have trajectory deviating at high epistemic uncertainty}
-
-It is clear from cref:fig-traj-opt-baseline that dynamics mode one $\modeInd=1$ is subject to higher drift in the
-negative $y$ direction. This is due to the wind field created by the fan.
-It is also subject to higher diffusion (or higher process noise) resulting from the turbulence induced by the fan,
-however, this is not visualised in cref:fig-traj-opt-baseline.
-
-    # In particular, trajectories that lead to catastrophic failure or end in far away from the target state $\targetState$.
-
-
-The main goals of the trajectory optimisation in this Chapter can be summarised as,
-- Goal 1 :: remain in a preferred dynamics mode $\desiredMode$ where possible, label:to-goal-mode
-- Goal 2 :: avoid regions of the learned dynamics with high /epistemic uncertainty/, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
 
 ** Problem Statement label:sec-problem-statement
 # One of the $\ModeInd$ dynamics modes,
@@ -9725,6 +9791,161 @@ Guided policy search cite:levineGuided2013
 # appears in Eq ref:eq-2ode.
 # Let us now provide an intuitive and thorough walk-through of the approach detailed above.
 # \todo{move this paragraph}
+
+** Motivation
+# #+BEGIN_EXPORT latex
+# \begin{figure}
+# \centering
+# \includegraphics[width=0.8\textwidth]{./images/point-mass-problem-statement-scenario-4.pdf}
+# \caption{\label{fig-point-mass-motivation}
+# Diagram showing a top down view of an environment, representing a quadcopter
+# subject to two dynamics modes: 1) a turbulent dynamics mode
+# induced by a fan (green) and 2) a non-turbulent dynamics mode everywhere else (blue).
+# The goal is to find trajectories from a start state $\state_0$, to the target state (red star),
+# whilst avoiding 1) the turbulent dynamics mode and 2) regions of the learned dynamics that
+# cannot be predicted confidently due to lack of observations.}
+# \end{figure}
+# #+END_EXPORT
+This chapter is motivated by the illustrative example in cref:illustrative_example, i.e.
+flying the quadcopter from an initial state $\state_0$, to a target state $\state_{f}$.
+Although the turbulent dynamics are not known, they are believed to be difficult to control due to high process
+noise, which may lead to catastrophic failure.
+It is therefore desirable to find trajectories that avoid entering this turbulent dynamics mode.
+Given a historical data set of state transitions from the environment,
+this chapter seeks to find trajectories from a start state $\state_0$, to a target state $\targetState$,
+whilst avoiding the turbulent dynamics mode.
+
+
+# Given a dynamical system subject to two dynamics modes, the method in cref:chap-dynamics is used to
+# learn a factorised representation of the underlying dynamics modes.
+# The goal of this chapter is then to leverage the latent structure of this model, to
+# find trajectories from a start state $\state_0$, to a target state $\targetState$,
+# whilst avoiding both the turbulent dynamics mode and regions of the dynamics that cannot be predicted confidently,
+# i.e. have high /epistemic uncertainty/.
+
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}{1.0\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-svgp-traj-opt/trajectories_over_desired_gating_mask.pdf}
+\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
+\label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
+\end{minipage}
+\begin{minipage}{1.0\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
+\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
+\label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
+\end{minipage}
+\caption{Trajectory optimisation results obtained using a SVGP dynamics model trained on different data sets.
+The optimised control trajectories are rolled out in the SVGP dynamics model (magenta) and in the environment (cyan).
+The state trajectories are overlayed on the gating mask, indicating where each mode governs the dynamics;
+white indicates the turbulent dynamics mode and red indicates the desied (operable) mode.
+The hashed box indicates a subset of the environment that has not been observed.}
+\label{fig-traj-opt-over-gating-mask-svgp-baseline}
+\end{figure}
+#+END_EXPORT
+cref:fig-traj-opt-over-gating-mask-svgp-baseline demonstrates the shortcomings of simply
+learning a transition dynamics model using a standard SVGP.
+cref:fig-traj-opt-over-gating-mask-svgp-all-baseline shows results of performing trajectory optimisation using a SVGP
+dynamics model after training on state transitions sampled from both dynamics modes.
+It shows that the SVGP is not able to learn a representation of the dynamics which is true to the underlying system.
+This is because it cannot model the mulitmodal behaviour present in the environment.
+The optimised controls successfully drive the SVGP dynamics from the start state $\state_0$,
+to the target state $\targetState$.
+However, as the SVGP dynamics model does not correspond to the true underlying dynamics,
+applying the optimised controls in the environment
+does not result in the trajectory successfully navigating to the target state $\targetState$.
+# The optimised controls are rolled out in the SVGP dynamics model (magenta)
+# and in the environment (cyan) to highlight the issues with both approaches.
+
+In contrast,
+cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline shows results after training on state transitions from
+only the desired (operable) dynamics mode.
+It is able to accurately predict state transitions in the desired dynamics mode.
+However, as this approach only considers the dynamics of the desired mode,
+trajectories in the environment deviate from those planned in the learned dynamics model when they pass through the
+turbulent mode.
+
+#+BEGIN_EXPORT latex
+\begin{myquote}
+Following standard methodologies, trajectories were found by minimising the expected cost under the state distribution,
+resulting from cascading single-step predictions through the SVGP dynamics model.
+The cost function consisted of a quadratic integral control cost and a terminal state cost.
+\end{myquote}
+#+END_EXPORT
+\todo{update fig-traj-opt-baseline with trajectories which don't use nominal mean function so that they deviate in the region with high epistemic uncertainty.}
+
+
+This demonstrates some of the difficulties of finding trajectories
+from the start state $\state_0$, to the target state $\targetState$,
+without avoiding the turbulent dynamics mode.
+It is worth noting here that the underlying dynamics modes and how the system switches between them,
+are /not fully known a priori/.
+However, the MoSVGPE method from cref:chap-dynamics can be used to learn a factorised representation of
+the underlying dynamics modes.
+The model also infers informative latent structure that can be used for control.
+
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_prob.pdf}
+\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
+\label{eq-traj-opt-over-prob-baseline}
+\end{minipage}
+\begin{minipage}{1.0\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
+\subcaption{Trajectories overlayed on desired mode's gating function GP.}
+\label{eq-traj-opt-over-svgp-baseline}
+\end{minipage}
+\caption{\label{fig-traj-opt-baseline}
+(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on each mode's mixing probability
+and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).}
+\end{figure}
+#+END_EXPORT
+
+
+
+# The trajectories also pass through regions of the dynamics with high epistemic uncertainty, which is not desirable.
+# In this example the dyn
+
+
+and regions of the dynamics that cannot be predicted confidently,
+i.e. have high /epistemic uncertainty/.
+For example, because they have not been observed.
+
+It is clear from cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline
+that dynamics mode one $\modeInd=1$ is subject to higher drift in the
+negative $y$ direction. This is due to the wind field created by the fan.
+It is also subject to higher diffusion (or higher process noise) resulting from the turbulence induced by the fan,
+however, this is not visualised in cref:fig-traj-opt-baseline.
+In such an environment, it is desirable to find trajectories that avoid entering such regions.
+The main goals of the trajectory optimisation in this Chapter can be summarised as,
+- Goal 1 :: remain in a desired dynamics mode $\desiredMode$ where possible, label:to-goal-mode
+- Goal 2 :: avoid regions of the learned dynamics with high /epistemic uncertainty/, i.e. that cannot be predicted confidently (due to limited training observations). label:to-goal-unc
+
+
+# #+BEGIN_EXPORT latex
+# \begin{figure}[t!]
+# \centering
+# \includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
+# \caption{\label{fig-traj-opt-baseline}
+# Trajectory optimisation results obtained using a SVGP dynamics model trained only on state transitions from the
+# desired (non-turbulent) dynamics mode.
+# To demonstrate the methods shortcomings, the optimised controls are rolled out in the desired
+# mode's GP dynamics (magenta) and in the environment (cyan).
+# The state trajectories are overlayed on the gating mask, indicating where each mode governs the dynamics.
+# White indicates the turbulent dynamics mode and red indicates the operatable mode.
+# The hashed box indicates a subset of the environment that has not been observed.}
+# \end{figure}
+# #+END_EXPORT
+
+
 
 ** Latent Spaces for Control
 *** intro :ignore:
@@ -12281,6 +12502,47 @@ are subject to different dynamics -- leading to different state trajectories $\s
 **** Velocity Controlled Point Mass Simulation
 # **** Velocity Controlled Quadcopter Simulator
 These figures are slices with controls equal zero
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_prob.pdf}
+\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
+\label{eq-traj-opt-over-prob-baseline}
+\end{minipage}
+\begin{minipage}{1.0\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
+\subcaption{Trajectories overlayed on desired mode's gating function GP.}
+\label{eq-traj-opt-over-svgp-baseline}
+\end{minipage}
+\caption{\label{fig-traj-opt-baseline}
+This figure demonstrates the shortcomings of finding trajectories
+from a start state $\state_0$, to a target state $\targetState$,
+in the system in \cref{fig-point-mass-motivation},
+without avoiding the turbulent dynamics mode.
+To demonstrate the methods shortcomings, the optimised controls were rolled out in the desired mode's GP dynamics (magenta)
+and in the environment (cyan).
+(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).
+It is clear that the trajectory resulting from rolling out the controls in the environment,
+passes through the turbulent dynamics mode and as a result, deviates from the
+trajectory rolled out in the desired mode's dynamics.}
+\end{figure}
+#+END_EXPORT
+The contour plots in cref:fig-traj-opt-baseline represent the gating network associated with the model from
+cref:chap-dynamics after performing Bayesian inference, given a historical data set of state transitions
+$\dataset$ from the environment in cref:fig-point-mass-motivation.
+Control trajectories were found by minimising the expected cost under the state distribution
+resulting from cascading single-step predictions through the desired mode's ($\modeInd=2$ in this case)
+learned GP dynamics model.
+The cost function consisted of a quadratic integral control cost and a terminal state cost.
+This approach only considered the dynamics of the desired mode, leading to trajectories in the environment deviating
+from those planned in the learned dynamics model.
+The trajectories also pass through regions of the dynamics with high epistemic uncertainty, which is not desirable.
+\todo{finish this para when have trajectory deviating at high epistemic uncertainty}
 
 cref:fig-traj-opt-baseline shows results for a baseline trajectory optimisation method, where the optimised trajectory
 rolled out in the desired mode's GP dynamics (magenta), passes through the undesired dynamics mode
