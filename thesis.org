@@ -9739,6 +9739,7 @@ it can successfully learn a factorised representation of the underlying dynamics
 \renewcommand{\stateCostMatrix}{\ensuremath{\mathbf{Q}}}
 \renewcommand{\controlCostMatrix}{\ensuremath{\mathbf{R}}}
 \renewcommand{\terminalStateCostMatrix}{\ensuremath{\mathbf{H}}}
+\renewcommand{\approxExpectedCost}{\ensuremath{J(\stateTraj, \controlTraj)}}
 
 \renewcommand{\terminalState}{\ensuremath{\state_{\TimeInd}}}
 
@@ -9818,17 +9819,6 @@ where $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desired
 denotes the subset of the state space associated with the desired dynamics mode.
 Note that the desired mode's transition dynamics $\desiredDynamicsFunc$
 are free to leave the desired mode's state space $\desiredStateDomain$.
-#+BEGIN_EXPORT latex
-\begin{definition}[$\delta$-mode remaining] \label{}
-Let $\controlTraj$ be a sequence of controls with corresponding open-loop system $\controlledDynamicsFunc$.
-Let $\state_0 \in \desiredStateDomain$ and $\delta \in (0,1]$.
-A system is said to be $\delta$-mode remaining under the controls $\controlTraj$ iff:
-\begin{align}
-\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \controlledDynamicsFunc(\state_{\timeInd}) &\in \desiredStateDomain,
-\control_{\timeInd} \in \controlDomain) \geq 1 - \delta
-\end{align}
-\end{definition}
-#+END_EXPORT
 
 Of particular interest in this chapter is the GP posterior over the desired mode's gating function.
 cref:fig-traj-opt-gating-network visualises this GP posterior after training on a historical data set of state
@@ -10501,11 +10491,35 @@ however, calculating the expected cost in cref:eq-mode-soc-problem-geometry-cost
 Given a starting state $\state_0$ and a control trajectory $\controlTraj$,
 the expectation in cref:eq-mode-soc-problem-geometry-cost is taken with respect to the joint
 state-metric distribution over a trajectory, $p(\stateTraj, \metricTensorTraj, \mid \state_0, \controlTraj)$.
-Calculating multi-step predictions in the MoSVSGPE dynamics model cannot be calculated in closed-from.
-This is because the distribution over the state difference after the first time step is a Gaussian mixture and
-propagating Gaussian mixtures through Gaussian processes has no closed-form solution.
+Calculating this expectation is difficult as multi-step predictions in the MoSVSGPE dynamics model
+cannot be calculated in closed-from.
+
 This work adopts a two-stage approximation to obtain a closed-form expression for the expected cost.
+First, multi-step dynamics predictions are approximated to obtain Normally distributed states at
+each time step.
+Given Normally distributed states, calculating the expected quadratic terminal/control cost terms in
+cref:eq-quadratic-cost-with-energy is trivial.
+However, the expected Riemannian energy in cref:eq-quadratic-cost-with-energy has no closed-form expression,
+due to the metric's $\metricTensor$ dependence on the state.
+The second stage approximates the calculation of the expected Riemannain energy under Normally distributed states.
+
 # The following issues arise when calculating this expectation:
+# 1) Calculating multi-step predictions in the MoSVSGPE dynamics model cannot be calculated in closed-from,
+#    - This is because the state difference after the first time step is a Gaussian mixture and
+#      propagating Gaussian mixtures through Gaussian processes has no closed-form solution.
+# 2) Unlike the quadratic terminal/control costs  in cref:eq-quadratic-cost-with-energy, the expected Riemannian energy in cref:eq-trajectory-energy has no closed-form expression under Normally distributed states.
+# This work adopts a two-stage approximation to obtain a closed-form expression for the expected cost.
+# First, multi-step state predictions under the dynamics are approximated to obtain Normally distributed at
+# each time step.
+# Given Normally distributed states, calculating the expected terminal/control cost terms in
+# cref:eq-quadratic-cost-with-energy is trivial.
+# However, the expected Riemannian energy in cref:eq-quadratic-cost-with-energy has no closed-form expression,
+# due to the metric's $\metricTensor$ dependence on the state, via the Jacobian.
+# The second stage approximates the calculation of the expected Riemannain energy under Normally distributed states.
+
+# 1) Simulating the MoSVGPE dynamics model to obtain multi-step predictions is not trivial,
+
+# This work obtains a closed-form expression for the expected cost  by first simplifying the .
 
 *** Approximate Inference for Dynamics Predictions
 #+BEGIN_EXPORT latex
@@ -10530,22 +10544,25 @@ This work adopts a two-stage approximation to obtain a closed-form expression fo
 \newcommand{\singleInputCov}{\ensuremath{\hat{\bm\Sigma}}}
 #+END_EXPORT
 # *Approximate Inference for Dynamics Predictions*
-Constructing approximate closed-form solutions for multi-step predictions using MoSVGPE is difficult,
+Multi-step predictions in the MoSVGPE dynamics model have no closed-form solution  because the state
+difference after the first time step is a Gaussian mixture and
+propagating Gaussian mixtures through Gaussian processes has no closed-form solution.
+Further to this, constructing approximate closed-form solutions is difficult,
 due to the exponential growth in the number of Gaussian components.
 #+BEGIN_EXPORT latex
 \begin{myquote} \label{}
 Consider assuming each of the dynamics modes to be independent.
-Recursively propagating the Gaussian components associated with the state through
+Recursively propagating the Gaussian components associated with the state, through
 all of the modes, over a trajectory of length $N$, would lead to the final state consisting of
 $\ModeInd^N$ Gaussian components.
 \end{myquote}
 #+END_EXPORT
-
-This work sidesteps this issues by assuming that the controlled system remains in the desired dynamics mode.
+This work sidesteps this issue and obtains closed-form multi-step predictions
+by assuming that the controlled system remains in the desired dynamics mode.
 #+BEGIN_EXPORT latex
 \begin{assumption}[Mode Remaining Dynamics] \label{}
-Given a desired dynamics mode $\desiredMode$, defined by its state domain $\desiredStateDomain \subseteq \stateDomain$,
-an inital state $\state_0 \in \desiredStateDomain$, and a sequence of controls $\controlTraj$,
+Let $\desiredMode$ denote a desired dynamics mode, defined by its state domain $\desiredStateDomain \subseteq \stateDomain$.
+Given an inital state $\state_0 \in \desiredStateDomain$, and a sequence of controls $\controlTraj$,
 the controlled system remains in the desired mode
 $\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]$.
 \end{assumption}
@@ -10566,7 +10583,7 @@ using the desired dynamics GP, whose transition density is given by,
 where
 $\mode{\mathbf{A}} = \expertKernel(\singleInput, \expertInducingInput)\left(\expertKernel(\expertInducingInput, \expertInducingInput)\right)^{-1}$.
 Cascading single-step predictions requires recursively mapping uncertain state-control inputs through
-the desired mode's GP dynamics model, i.e. recursively calculating the following integral,
+the desired mode's dynamics GP, i.e. recursively calculating the following integral,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-state-unc-prop}
 p(\state_{\timeInd+1} \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd}=\desiredMode)
@@ -10582,14 +10599,61 @@ This work exploits the moment-matching approximation
 implemented in the =uncertain_conditional= from GPflow citep:GPflow2017.
 For more details on the approximation see Section 7.2.1 of cite:kussGaussian2006.
 
+Making the assumption that the controlled system remains in the desired dynamics mode simplifies
+calculating multi-step predictions and the expected cost in cref:eq-quadratic-cost-with-energy.
+However, this assumption should be enforced, i.e. the controlled system should remain in the desired mode.
+As the dynamics model is learned from observations, this work relaxes the requirement to finding
+mode remaining trajectories with high probability.
+#+BEGIN_EXPORT latex
+\begin{definition}[$\delta$-mode remaining] \label{def-delta-mode-remaining}
+Let $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ denote a dynamical system
+and $\desiredMode$ a desired dynamics mode defined by its state domain $\desiredStateDomain \subseteq \stateDomain$.
+Given an initial state $\state_0 \in \desiredStateDomain$ and $\delta \in (0,1]$,
+a system is said to be $\delta$-mode remaining under the controls $\controlTraj$ iff:
+\begin{align}
+\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \dynamicsFunc(\state_{\timeInd},\control_{\timeInd}) &\in \desiredStateDomain,
+\control_{\timeInd} \in \controlDomain) \geq 1 - \delta
+\end{align}
+\end{definition}
+#+END_EXPORT
+Conveniently, the conditions to be $\delta$ -mode remaining in cref:def-delta-mode-remaining can
+be enforced with chance constraints,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mode-chance-constraint}
+\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \modeVar_{0:\timeInd}=\desiredMode)
+\geq \satisfactionProb \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd].
+\end{align}
+#+END_EXPORT
+These constraints enforce the system to remain in the desired dynamics mode with satisfaction probability
+$\satisfactionProb$, at each time step.
+As the MoSVGPE model assumes that the mode indicator variable $\modeVar$, depends on the state via the gating function,
+this probability is calculated as follows,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-mode-chance-constraint-integral}
+\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \modeVar_{0:\timeInd}=\desiredMode) =
+\int \underbrace{\Pr(\modeVar_{\timeInd} = \desiredMode \mid \GatingFunc(\state_{\timeInd}))}_{\text{Bernoulli/softmax likelihood}}
+\int \underbrace{q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})}_{\text{approx posterior}}
+\underbrace{p(\state_\timeInd \mid \state_{0}, \control_{0:\timeInd-1}, \modeVar_{0:\timeInd-1}=\desiredMode)}_{\text{state dist}}
+\text{d} \state_{\timeInd}
+\text{d} \GatingFunc(\state_{\timeInd})
+\end{align}
+\normalsize
+#+END_EXPORT
+where $q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})$ is the approximate posterior over the
+gating functions from cref:eq-predictive-gating.
+Note the dependence on the state input $\state_{\timeInd}$ is reintroduced here,
+as it becomes a random variable when making multi-step predictions.
+This probability will decrease as the uncertainty in the state increases.
+For example, when a trajectory passes through regions of the desired dynamics GP with high uncertainty.
+This is implied by the marginalisation over $\state_\timeInd$.
+It will also decrease when the trajectory passes through regions of the state space where the gating functions
+are uncertain, indicated by the marginalisation over $\GatingFunc(\state_{\timeInd})$.
+
 *** Approximate Riemannian Energy
-
-2) The expected Riemannian energy in cref:eq-quadratic-cost-with-energy has no closed-form expression,
-   i) Due to the metric's $\metricTensor$ dependence on the state, via the Jacobian.
-
-
-
-The expected Riemannian energy in cref:eq-quadratic-cost-with-energy is given by,
+Given this approach for simulating the MoSVGPE dynamics model, the state at each time step is Normally distributed.
+Unlike the quadratic terminal/control cost terms in cref:eq-quadratic-cost-with-energy, the expected Riemannian
+energy,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-trajectory-riemannian-energy}
 \E_{\stateTraj, \jacTraj} \left[ \text{Energy}(\stateTraj) \right]
@@ -10599,21 +10663,20 @@ The expected Riemannian energy in cref:eq-quadratic-cost-with-energy is given by
  \stateDiff_\timeInd \right],
 \end{align}
 #+END_EXPORT
-which has no closed-form expression, due to the metric's $\metricTensor$ dependence on the state, via the Jacobian.
-Motivated by obtaining a closed-form expression it is possible to approximate the expected energy.
+has no closed-form expression under Normally distributed states.
+This is because the metric tensor $\metricTensor$ depends on the Jacobian, which depends on the state.
+However, it is possible to approximate the expected energy to obtain a closed-form expression.
 
 The distribution over the Jacobian when the input location in Normally distributed
 $\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)$ can be calculated in closed-form when using the
 Squared Exponential kernel.
-However, this work simplifies the problem and approximates the full Jacobian distribution over the trajectory,
-to be along the state mean trajectory, i.e.
-$\Jac_{\state_{\timeInd}} \approx \frac{\partial \manifoldFunction(\state_{\timeInd})}{\partial \stateMean}$
-This approximation
-using  cref:eq-predictive-jacobian-dist,
+However, this work simplifies the problem and calculates the Jacobian at the mean of each state along a trajectory, i.e.
+$\Jac_{\state_{\timeInd}} \approx \frac{\partial \manifoldFunction(\state_{\timeInd})}{\partial \stateMean}$.
+The distribution over the Jacobian given deterministic inputs can be calculated using cref:eq-predictive-jacobian-dist.
 
 Approximating the Jacobian to be independent of the state enables the expected metric tensor to be calculated in
 closed-form with cref:eq-expected-metric-weighting.
-Given this approximation, the Riemannian energy retains a quadratic form so the expectation with respect to
+Given this approximation, the Riemannian energy retains a quadratic form, so the expectation with respect to
 $\stateDiff_{\timeInd} \sim \mathcal{N}(\stateDiffMean, \stateDiffCov)$ can be calculated with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-approximate-trajectory-riemannian-energy}
@@ -10621,15 +10684,13 @@ $\stateDiff_{\timeInd} \sim \mathcal{N}(\stateDiffMean, \stateDiffCov)$ can be c
 \sum_{\timeInd=1}^\TimeInd
 \E_{\stateDiff_{\timeInd}}\left[ \stateDiff_\timeInd^T
 \E_{\Jac_{\state_{\timeInd}}}\left[ \metricTensor_{\state_{\timeInd}} \right]
- \stateDiff_\timeInd \right] \\
+ \stateDiff_\timeInd \right] \nonumber \\
 &= \sum_{\timeInd=1}^\TimeInd \stateDiffMean^T (\muJac \muJac^T + \covJac) \stateDiffMean
 + \text{tr}\left(
 \left(\muJac \muJac^T + \covJac \right)
 \stateDiffCov \right)
 \end{align}
 #+END_EXPORT
-Given this approximation for the expected energy of a trajectory, the only
-
 # It's a bit hacky but we could assumed the Jacobian distribution is given by marginalising the state
 # and moment matching,
 # #+BEGIN_EXPORT latex
@@ -10641,85 +10702,52 @@ Given this approximation for the expected energy of a trajectory, the only
 # \approx \mathcal{N}(\mathbf{J}_{\state_{\timeInd}} \mid \muJac, \covJac)
 # \end{align}
 # #+END_EXPORT
-
-
-As such, the expectation in cref:eq-mode-soc-problem-geometry is taken w.r.t. the joint distribution
-over the state and the metric tensor over a trajectory, $p(\stateTraj, \metricTensor, \mid \state_0, \controlTraj)$
-given controls $\controlTraj$ and starting state $\state_0$.
-
-*** Approximate Inference for Dynamics Predictions :ignore:
 #+BEGIN_EXPORT latex
-\renewcommand{\singleInput}{\ensuremath{\state_\timeInd, \control_\timeInd}}
-\renewcommand{\singleInput}{\ensuremath{\hat{\state}_\timeInd}}
-\renewcommand{\singleOutput}{\ensuremath{\Delta\state_{\timeInd+1}}}
-
-\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput)}}
-\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput)}}
-%\newcommand{\expertInducingVariational}{\ensuremath{q(\mode{\latentFunc}(\expertInducingInput))}}
-\newcommand{\expertInducingVariational}{\ensuremath{q(\expertInducingOutput)}}
-\newcommand{\expertsInducingVariational}{\ensuremath{q(\expertsInducingOutput)}}
-\newcommand{\expertsVariational}{\ensuremath{q(\LatentFunc_\numData)}}
-%\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \mode{\latentFunc}(\expertInducingInput))}}
-\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \expertInducingOutput)}}
-%\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \mode{\latentFunc}(\expertInducingInput))}}
-\renewcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \singleInput, \expertInducingOutput)}}
-
-\renewcommand{\expertVariational}{\ensuremath{q(\mode{\latentFunc}(\singleInput) \mid \singleInput)}}
-
-\newcommand{\singleInputMean}{\ensuremath{\hat{\bm\mu}}}
-\newcommand{\singleInputCov}{\ensuremath{\hat{\bm\Sigma}}}
+\begin{myquote} \label{}
+The expected metric tensor encourages trajectories to 1) follow contours on the desired mode's gating function
+and 2) avoid entering regions with high uncertainty in which mode governs the dynamics.
+The expectation over the state then encourages trajectories to remain in regions of the desired dynamics mode with
+low uncertainty.
+\end{myquote}
 #+END_EXPORT
-*Approximate Inference for Dynamics Predictions*
-As this work is interested in remaining in a single dynamics mode $\desiredMode$,
-multi-step predictions can be made using the single dynamics GP.
-The model in Chapter ref:chap-dynamics represents each mode's dynamics function as a sparse variational GP,
-giving the transition density,
+Given this approximation for the expected Riemannian energy, the expected cost in cref:eq-mode-soc-problem-geometry
+can be calculated in closed-form with,
 #+BEGIN_EXPORT latex
+\begin{align} \label{eq-expected-quadratic-cost-with-energy}
+\approxExpectedCost =
+&\underbrace{\text{tr}(\terminalStateCostMatrix \terminalStateCov) +
+(\terminalStateMean - \targetState)^T \terminalStateCostMatrix (\terminalStateMean - \targetState)}_{\text{expected terminal cost}} \\
+&+ \underbrace{\sum_{\timeInd=1}^{\TimeInd} \stateDiffMean^T (\muJac \muJac^T + \covJac) \stateDiffMean
++ \text{tr}\left( \left(\muJac \muJac^T + \covJac \right)
+\stateDiffCov \right)}_{\text{expected Riemannian energy}} \\
+&+ \underbrace{\sum_{\timeInd=0}^{\TimeInd-1} \text{tr}(\controlCostMatrix \controlCov)
++ \controlMean^T \controlCostMatrix \controlMean}_{\text{expected control cost}}.
+\end{align}
+#+END_EXPORT
+This method then approximately solves the problem in cref:eq-mode-soc-problem-geometry by solving,
+#+BEGIN_EXPORT latex
+\begin{subequations} \label{eq-mode-soc-problem-geometry-approx}
 \begin{align}
-\transitionDistK &= \expertVariational \nonumber \\
-&=
-\mathcal{N} \left( \mode{\latentFunc}(\singleInput) \mid
-\mode{\mathbf{A}} \mode{\mathbf{m}},
-\expertKernel(\singleInput, \singleInput)
-+ (\mode{\mathbf{S}} - \expertKernel(\expertInducingInput,\expertInducingInput))
-\mode{\mathbf{A}}^T
-\right)
-%\nonumber \\
-%\mode{\mathbf{A}} &=
-%\expertKernel(\singleInput, \expertInducingInput)\left(\expertKernel(\expertInducingInput, \expertInducingInput)\right)^{-1}.
+\min_{\controlTraj} &\approxExpectedCost \\
+\text{s.t.}& \quad \cref{eq-state-unc-prop,eq-mode-chance-constraint}
 \end{align}
+\end{subequations}
 #+END_EXPORT
-where $\mode{\mathbf{A}} = \expertKernel(\singleInput, \expertInducingInput)\left(\expertKernel(\expertInducingInput, \expertInducingInput)\right)^{-1}$.
-To obtain long-term predictions, one-step predictions can be cascaded.
-This requires mapping uncertain state-control inputs through the desired mode's GP dynamics model.
-This prediction problem corresponds to recursively calculating the following integral,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-state-unc-prop}
-q(\state_{\timeInd+1} \mid \state_0) = \int \int
-\expertVariational
-q(\control_\timeInd) q(\state_\timeInd)
-\text{d}\state_{\timeInd} \text{d}\control_{\timeInd},
-\end{align}
-#+END_EXPORT
-with $q(\state_0) = \delta(\state_0)$.
-Approximate closed-form solutions exist for propagating Normally distributed states and controls
-through GP models
-citep:girardGaussian2003,kussGaussian2006,quinonero-candelaPropagation2003.
-\todo{correct girard citation}
-This work exploits the moment-matching approximation
-implemented in the =uncertain_conditional= from GPflow citep:GPflow2017.
-For more details on the approximation see Section 7.2.1 of cite:kussGaussian2006.
+using Sequential Least Squares Programming (SLSQP) in SciPy.
+This method obtains closed-form expressions for the expected cost in cref:eq-mode-soc-problem-geometry
+by constraining the system to be $\delta$ -mode remaining (cref:def-delta-mode-remaining).
+Given this constraints on the dynamics, the mode remaining
 
-Given this method for making long term predictions, the distribution over state trajectories is
-given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\stateTraj, \controlTraj \mid \state_0)
-= \prod_{\timeInd=0}^{\TimeInd-1} p(\state_{\timeInd+1} \mid \state_0, \controlTraj).
-\end{align}
-#+END_EXPORT
+However, in practice, the optimisation is performed unconstrained, i.e. without enforcing the chance constraints at
+every iteration.
+This is because the chance constraints are:
+1) expensive to evaluate,
+2) often inhibit the optimisation and prevent it from finding a good trajectory.
+Instead, the trajectory returned from the unconstrained optimisation is checked to ensure that
+it satisfies the chance constraints.
+In most experiments this strategy was far superior than constraining the optimisation at every iteration.
 
-*** Cost Functions :ignore:
+*** Cost Functions :ignore:noexport:
 *Cost Functions*
 This work primarily focuses on quadratic costs, as they are ubiquitous in control and lead
 to closed-form expectations under Normally distributed states
@@ -10762,6 +10790,9 @@ calculated in closed form with,
 #+END_EXPORT
 
 ** Quadcopter Experiments label:sec-traj-opt-results
+This section evaluates the performance of ... using the illustrative example from cref:illustrative_example.
+Due to coronavirus and limited access to the laboratory the methods are tested in a simulator representing the
+environment from cref:fig-problem-statement.
 *** Real-World Quadcopter Experiments label:sec-traj-opt-results
 #+BEGIN_EXPORT latex
 \begin{figure}[!t]
@@ -10925,9 +10956,6 @@ We think that in most scenarios a similar approach could be followed.
 \newcommand{\env}[1]{\ensuremath{\hat{#1}}}
 \newcommand{\modeProbTraj}{\ensuremath{\Pr(\allModeVarK \mid \stateTraj)}}
 #+END_EXPORT
-This section evaluates the performance of ... using the illustrative example from cref:illustrative_example.
-Due to coronavirus and limited access to the laboratory the methods are tested in a simulator representing the
-environment from cref:fig-problem-statement.
 
 **** Experimental Setup
 The simulation environment represents a velocity controlled quadcopter in an environment subject to spatially
@@ -11110,7 +11138,7 @@ the posterior mean (left) and posterior variance (right) associated with desired
 \end{figure}
 #+END_EXPORT
 
-**** Riemannian Energy
+**** Riemannian Energy :noexport:
 Minimising the Riemannian energy of a trajectory  principally encodes both goals
 whilst also providing a mechanism to decouple them.
 Similarly to cref:sec-traj-opt-geometric, the expected metric tensor is augmented with a weight
@@ -13289,435 +13317,6 @@ manifold parameterised by the gating network of the MoGPE model.
 Given a start and end state, the trajectory optimisation can be tuned to find trajectories that either
 prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
 dynamics model with high epistemic uncertainty.
-
-* Trajectory Optimisation in Desired Modes as Probabilistic Inference :noexport:
-** Intro :ignore:noexport:
-#+BEGIN_EXPORT latex
-\newcommand{\timeInd}{\ensuremath{t}}
-\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
-\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
-\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
-\newcommand{\nominalStateTraj}{\ensuremath{\stateTraj_*}}
-\newcommand{\nominalControlTraj}{\ensuremath{\controlTraj_*}}
-
-\newcommand{\utraj}{\ensuremath{\bar{\control}}}
-\newcommand{\policies}{\ensuremath{\Pi}}
-\newcommand{\policy}{\ensuremath{\pi_{\theta}}}
-#+END_EXPORT
-** Differential Flatness of 3D Quadrotor Dynamics :noexport:
-#+BEGIN_EXPORT latex
-\newcommand{\roll}{\ensuremath{\phi}}
-\newcommand{\pitch}{\ensuremath{\theta}}
-\newcommand{\yaw}{\ensuremath{\psi}}
-
-\newcommand{\world}{\ensuremath{w}}
-\newcommand{\body}{\ensuremath{b}}
-\newcommand{\intermediate}{\ensuremath{c}}
-\renewcommand{\frame}{\ensuremath{F}}
-\newcommand{\worldFrame}{\ensuremath{\frame_\world}}
-\newcommand{\bodyFrame}{\ensuremath{\frame_\body}}
-\newcommand{\intermediateFrame}{\ensuremath{\frame_\intermediate}}
-
-\newcommand{\inertiaMatrix}{\ensuremath{J}}
-\newcommand{\zw}{\ensuremath{\mathbf{z}_\world}}
-
-\newcommand{\positions}{\ensuremath{\mathbf{h}}}
-\newcommand{\velocity}{\ensuremath{v}}
-\newcommand{\Velocity}{\ensuremath{\mathbf{\velocity}}}
-
-\newcommand{\rotationMatrix}{\ensuremath{\mathbf{R}}}
-\newcommand{\angularVelocity}{\ensuremath{\bm\omega}}
-\newcommand{\angularVelocityMatrix}{\ensuremath{\bm\Omega}}
-
-\newcommand{\thrust}{\ensuremath{f_z}}
-\newcommand{\torque}{\ensuremath{\tau}}
-#+END_EXPORT
-The quadrotor frames and Euler angles (roll $\roll$, pitch $\pitch$ and yaw $\yaw$) are shown
-in Figure ref:fig-quadcopter-frames.
-The subscripts $\world$, $\body$ and $\intermediate$ are used to denote the world
-$\worldFrame$, body $\bodyFrame$ and intermediate $\intermediateFrame$ (after yaw angle rotation) frames respectively.
-The the 3D nonlinear quadrotor dynamics are described with the quadcopter model from cite:wangSafe2018,zhouVector2014.
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\dot{\Velocity} &= g \zw + \frac{1}{m} \thrust \rotationMatrix \zw \\
-\dot{\rotationMatrix} &= \rotationMatrix \angularVelocityMatrix \\
-\dot{\angularVelocity} &= \inertiaMatrix^{-1} \torque - \inertiaMatrix^{-1} \angularVelocityMatrix \inertiaMatrix \angularVelocity \\
-\dot{\positions} &= \velocity
-\end{align}
-#+END_EXPORT
-where $g=9.81ms^{-2}$ is the acceleration due to gravity, $m$ is the mass, $\zw=[0,0,1]^T$,
-$\positions=[x, y, z]^T$ is the position of the quadrotor in the world frame $\worldFrame$,
-$\Velocity=[\velocity_x, \velocity_y, \velocity_z]^T$ is the
-and velocity of the quadrotor in the world frame $\worldFrame$ respectively.
-The angular velocity of the quadrotor in the body frame $\bodyFrame$ is denoted $\angularVelocity=[p, q ,r]^T$
-and in tensor form $\angularVelocityMatrix=[[0,-p,q];[r,0,-p];[-q,p,0]]$
-
-$\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]$
-
-$\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw]^T$
-$\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
-
-\newpage
-** Safety :noexport:
-#+BEGIN_EXPORT latex
-\newcommand{\controlCost}{\ensuremath{\mathbf{R}}}
-\newcommand{\stateCost}{\ensuremath{\mathbf{Q}}}
-
-\newcommand{\stateDynamics}{\ensuremath{\mathbf{A}}}
-\newcommand{\controlDynamics}{\ensuremath{\mathbf{B}}}
-
-\newcommand{\stateTrajDist}{\ensuremath{p(\stateTraj)}}
-\newcommand{\stateDist}{\ensuremath{p(\state_{\timeInd})}}
-\newcommand{\stateMean}{\ensuremath{\bm\mu}}
-\newcommand{\stateCov}{\ensuremath{\bm\Sigma}}
-\newcommand{\stateDiff}{\ensuremath{\Delta \state}}
-\newcommand{\stateDiffMean}{\ensuremath{\bm\mu_{\stateDiff_\timeInd}}}
-\newcommand{\stateDiffCov}{\ensuremath{\bm\Sigma_{\stateDiff_\timeInd}}}
-
-\newcommand{\metricTensor}{\ensuremath{\mathbf{G}}}
-\newcommand{\jac}{\ensuremath{\mathbf{J}}}
-\newcommand{\jacGivenInput}{\ensuremath{p(\jac(\state_\timeInd) \mid \state_\timeInd)}}
-\newcommand{\jacDist}{\ensuremath{p(\jac(\state_\timeInd))}}
-\newcommand{\jacMean}{\ensuremath{\bm\mu_\jac}}
-\newcommand{\jacCov}{\ensuremath{\bm\Sigma_\jac}}
-
-\newcommand{\safeSet}{\ensuremath{\mathcal{C}}}
-\newcommand{\StateDomain}{\ensuremath{\mathcal{X}}}
-\newcommand{\ControlDomain}{\ensuremath{\mathcal{U}}}
-
-\newcommand{\constraintFunc}{\ensuremath{c}}
-\newcommand{\barrierFunc}{\ensuremath{h}}
-
-\newcommand{\gatingThreshold}{\ensuremath{\delta_\gatingFunc}}
-#+END_EXPORT
-Intuitively, the notion of safety in dynamical systems implies that /bad/ things do not happen.
-However, what exactly are /bad/ things, i.e. what is safety?
-
-*Stability* of an equilibrium point has been considered a property of a safety cite:berkenkampSafe2019.
-Stability is a property of infinitely long trajectories.
-A closed-loop system is said to be stable, if the state remains within some norm-ball around its equilibrium point for
-all time steps, and is asymptotically stable if it eventually converges.
-# For examples, stability can be considered  safety can be  Lyapunov functions
-
-*Invariance* can also be see as a safety property.
-
-*** Lyapunov Stability
-\todo{add section on lyapunov stability}
-
-
-*** Constraint Satisfaction
-Alongside stability, it is common to require constraints on the states $\state$ and controls $\control$
-of a controlled system.
-For example, an autonomous system may wish to remain in a subset of it's state space where it knows its dynamics model
-is valid.
-The system may also be subject to constraints on the controls due to physical limitations, e.g.
-how quickly a quadcopter can accelerate and turn.
-Constraints on this type of safety can be encoded via inequality constraints on the states $\state$
-and controls $\control$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-&\constraintFunc_\state(\state_\timeInd) \geq 0, \forall \timeInd \geq 0, \\
-&\constraintFunc_\control(\control_\timeInd) \geq 0, \forall \timeInd \geq 0.
-\end{align}
-#+END_EXPORT
-The feasible regions of these constraints can be written as sets,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\StateDomain =&\{ \state \in \R^\StateDim \mid \constraintFunc_\state(\state) \geq 0 \}, \\
-\ControlDomain =&\{ \control \in \R^\ControlDim \mid \constraintFunc_\control(\control) \geq 0 \},
-\end{align}
-#+END_EXPORT
-so the constraints can alternatively be written as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\state_\timeInd \in \StateDomain, \control_\timeInd \in \ControlDomain, \forall t \geq 0.
-\end{align}
-#+END_EXPORT
-For a parametric policy $\policy$, the control constraints can be encoded directly into the policy by
-parameterising the policy so that its range is restricted to $\ControlDomain$,
-i.e. $\policy(\state_\timeInd) \in \ControlDomain$, for all $\state \in \R^\StateDomain$.
-The state constraints can be enforced by ensuring that the set $\StateDomain$ is forward invariant.
-#+BEGIN_EXPORT latex
-\begin{definition}
-Given a dynamical system $\dot{\state}(t) = f(\state(t))$ with states $\state(t) \in \StateDomain, \forall t$, then
-a set $\safeSet$ is \textbf{forward invariant}, iff, for every possible initial state in the set $\state(0) \in \safeSet$,
-all future states remain in the set, i.e. $\state(t) \in \safeSet, \forall t$.
-The system is safe with respect to the set $\safeSet$ if the set is \textbf{forward invariant}.
-\end{definition}
-#+END_EXPORT
-There are multiple approaches to enforcing state constraints via invariant sets.
-Namely, Lyapanov functions \todo{cite lyapunov}
-and control barrier functions cite:amesControl2019.
-Lyapanov functions are more restrictive than control barrier functions as they provide stability guarantees
-which are not a necessary condition to render $\StateDomain$ forward invariant.
-
-*** Control Barrier Functions
-In cite:nagumoUber1942 the authors derived the necessary and sufficient conditions for
-set invariance in dynamical systems.
-See cite:abrahamManifolds1988 for a modern proof.
-
-*Barrier Certificates* were introduced in cite:prajnaBarrier2006,prajnaSafety2004 to formally guarantee safety
-in nonlinear and hybrid systems.
-The term /barrier/ is motivated by the optimisation literature where cost functions are augmented with
-barrier functions to avoid undesirable regions.
-#+BEGIN_EXPORT latex
-\begin{theorem}[Nagumo's Theorem]
-Given a dynamical system $\dot{\state} = f(\state)$ with $\state \in \R^\StateDim$ and a safe set $\safeSet$, that is the
-superlevel set of a smooth function $\barrierFunc : \R^\StateDim \rightarrow \R$,
-i.e. $\safeSet = \{ \state \in \R^\StateDim \mid \barrierFunc(\state) \geq 0 \}$ and
-$\frac{\partial \barrierFunc}{\partial \state}(\state) \neq 0, \forall \state \in \R^D$
-then Nagumo's Theorem gives the necessary and sufficient conditions for set invariance,
-\begin{equation} \label{eq-}
-\dot{\barrierFunc}(\state) \geq 0 \quad \forall \state \in \partial \safeSet \quad \implies \safeSet \quad \text{is invariant}
-\end{equation}
-where $\partial\safeSet$ denotes the boundary of the safe set, i.e. $\partial\safeSet = \{\state \in \R^\StateDim \mid \barrierFunc(\state)=  0 \}$.
-\end{theorem}
-#+END_EXPORT
-These conditions have been rediscovered multiple times, in particular
-cite:brezisCharacterization1970 and cite:bonyPrincipe1969.
-
-
-*Control Barrier Certificates*
-Safe sets based on control Lyapunov functions (CLF) can be overly restrictive as they render every
-sub-level set
-
-Compared with Lyapunov sublevel set based safe regions, control barrier certificates offer a more permissive
-notion of safety.
-
-In cite:wangSafe2018 they formulate safety through control barrier certificates.
-#+BEGIN_EXPORT latex
-\begin{equation} \label{eq-}
-\exists \control \quad \text{s.t.} \quad \dot{\barrierFunc}(\state, \control) \geq - \alpha(\barrierFunc(\state))
-\implies \safeSet \quad \text{is invariant}
-\end{equation}
-#+END_EXPORT
-where $\alpha$ is an (extended) class $\kappa$ function.
-
-
-*** Stochastic Safety
-*Chance Constraints* The stochastic MPC formulation provides a principled approach to handling chance constraints
-by imposing a maximum probability of violation.
-The chance constrained, stochastic optimal control problem is then given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-stochastic-mpc}
-\min_{\policies} &\E \left[ l_\TimeInd(\state_\TimeInd, \control_\TimeInd) + \sum_{\timeInd=1}^{\TimeInd-1} l_\timeInd(\state_\timeInd, \control_\timeInd) \right] \\
-\text{s.t.} \quad &\state_{\timeInd+1} = f(\state_\timeInd, \control_\timeInd) \\
-&\control_\timeInd = \pi_\timeInd (\state_\timeInd) \\
-&\Pr \{ \state_\timeInd \in \StateDomain_{\timeInd+1} \} \geq p_{\state} \\
-&\Pr \{ \control_\timeInd \in \ControlDomain_{\timeInd+1} \} \geq p_{\control}
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{definition}[Probabilistic i-step Reachable Set] \label{def-prs}
-A set $\mathcal{R}_\timeInd$ is said to be a probabilistic reachable set ($i$-step PRS) of probability level $p$ if,
-\begin{equation}
-\Pr(e_\timeInd \in \mathcal{R}_\timeInd \mid e_0=0) \geq p.
-\end{equation}
-\end{definition}
-#+END_EXPORT
-
-$\StateDomain_{\timeInd} = \{ \state_\timeInd \in \StateDomain \mid \gatingFunc(\state_t, \control_t) > 0 \}$
-
-linear state feedback controllers,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-policy}
-\pi_\timeInd = \FeedbackGain_\timeInd (\mu^x_i - \state_\timeInd) + \mu^x_i
-\end{align}
-#+END_EXPORT
-
-*** Latent Constraints
-The gating network contains important information regarding our constraints.
-In particular, when aiming to remain in a single desired dynamics mode the corresponding gating function
-should remain high.
-Equivalence of the gating functions in the deterministic setting implies a uniform distribution over
-the mode indicator variable.
-Given a threshold $\gatingThreshold \geq 0$ the safe set associated with the gating function safety constraints
-can be written as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\mathcal{X} &= \{ \state \in \R^\StateDim \mid \gatingFunc(\state) \geq \gatingThreshold \}.
-\end{align}
-#+END_EXPORT
-Given that the gating function is modelled as a Gaussian process
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\Pr(\gatingFunc(\state, \control) \geq \gatingThreshold \mid \state, \control) =
-1 - \Phi\left( \frac{\gatingThreshold - \E\left[\gatingFunc(\state, \control) \right]}{\sqrt{\V\left[\gatingFunc(\state, \control) \right]}} \right)
-\geq p_\state
-\end{align}
-#+END_EXPORT
-
-*** old
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\mathcal{X} &= \{ \state \in \R^\StateDim \mid \gatingFunc(\state) > 0 \} \\
-\mathcal{X} &= \{ \state \in \R^\StateDim \mid \E\left[ \gatingFunc(\state) > 0 \right] \} \\
-\mathcal{X} &= \{ \state \in \R^\StateDim \mid \Pr\left[ \modeVar = k \right] \} \\
-\mathcal{X} &= \{ \state \in \R^\StateDim \mid \V\left[ \gatingFunc(\state) < 0.1 \right] \}
-\end{align}
-#+END_EXPORT
-Use RKHS to get something like -
-#+BEGIN_EXPORT latex
-\begin{lemma}
-Assume that $h$ has bounded RKHS norm $|| h' ||_k \leq B$ and that measurements are corrupted by
-$\sigma$-sub-Gaussian noise. If $\beta_n^{1/2} = B + 4 \sigma \sqrt{I(y_n ; h) + 1 + \text{ln}(1/\delta)}$, then for all
-$a \in \mathcal{A}$ and $n>0$ it holds jointly with probability at least $1-\delta$ that
-$|h'(a) - \mu_n(a)| \leq \beta_n^{1/2} \simga_n(a)$.
-\end{lemma}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{theorem}
-For any $\delta \in (0,1)$, we have with probability at least $1 - \delta$ that $\gatingFunc(\state) > 0$.
-\end{theorem}
-#+END_EXPORT
-
-
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\mathcal{X} &= \{ \state \in \R^\StateDim \mid \gatingFunc(\state) > 0 \}
-\end{align}
-#+END_EXPORT
-
-\newpage
-** Probabilistic Geometries for Quadratic Costs
-*Linear Dynamics*
-Approximate dynamics to be linear around a nominal trajectory
-$(\nominalStateTraj, \nominalControlTraj)$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\state_{\timeInd+1} &= \dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) \\
-&= \stateDynamics \state_{\timeInd} + \controlDynamics \control_{\timeInd}
-\end{align}
-#+END_EXPORT
-where,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\stateDynamics = \frac{\partial \dynamicsFunc}{\partial \state} \quad
-\controlDynamics = \frac{\partial \dynamicsFunc}{\partial \control}
-\end{align}
-#+END_EXPORT
-Given that the mean and covariance functions are twice differentiable
-then $\stateDynamics$ and $\controlDynamics$ are also GPs.
-
-*Quadratic Cost*
-A popular cost function is the quadratic cost given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-J(\traj, \utraj) = \sum_{\timeInd=1}^\TimeInd
-\state_{\timeInd}^T
-\stateCost
-\state_{\timeInd}
-+
-\control_{\timeInd}^T
-\controlCost
-\control_{\timeInd}
-\end{align}
-#+END_EXPORT
-where $\stateCost$ and $\controlCost$ are
-user defined, positive semi-definite and positive
-definite weight matrices respectively.
-If the cost function is not quadratic then a quadratic approximation would be obtained with a Taylor Expansion.
-Importantly, given a state trajectory where each state is
-normally distributed
-$\state_{\timeInd} \sim \mathcal{N}(\stateMean_{\timeInd}, \stateCov_{\timeInd})$
-the expected cost for a trajectory can be calculated in closed-form,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\E_{\stateTrajDist} \left[ J(\traj, \utraj) \right]
-= \sum_{\timeInd=1}^\TimeInd
-\text{tr}(\stateCost \stateCov_\timeInd)
-+
-\stateMean_{\timeInd}^T
-\stateCost
-\stateMean_{\timeInd}
-+
-\control_{\timeInd}^T
-\controlCost
-\control_{\timeInd}
-\end{align}
-#+END_EXPORT
-*Riemannian Cost Function*
-Consider defining the state weight matrix $\stateCost$
-as the Riemannian metric tensor $\metricTensor$ and replacing the state
-\state_{\timeInd} with the state difference
-(\state_{\timeInd} - \state_{\timeInd - 1}) to get the cost,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-J(\traj, \utraj) =& \sum_{\timeInd=1}^\TimeInd
-(\state_{\timeInd} - \state_{\timeInd - 1})^T
-\metricTensor(\state_{\timeInd})
-(\state_{\timeInd} - \state_{\timeInd - 1})
-+ \control_{\timeInd}^T \controlCost \control_{\timeInd} \\
-=& \sum_{\timeInd=1}^\TimeInd
-\stateDiff_{\timeInd}^T
-\metricTensor(\state_{\timeInd})
-\stateDiff_{\timeInd}
-+ \control_{\timeInd}^T \controlCost \control_{\timeInd}.
-\end{align}
-#+END_EXPORT
-This cost function is calculating the length
-of the trajectory on the manifold $\manifold$ endowed with
-the metric $\metricTensor$.
-Note that
-$(\state_{\timeInd} - \state_{\timeInd - 1})^T \metricTensor(\state_{\timeInd}) (\state_{\timeInd} - \state_{\timeInd - 1})$
-is the curve energy but Soren says that minimising this is equivalent
-to minimising the curve length.
-
-Following from the sum and linear transformation rules of normally
-distributed random variable the state difference
-$\stateDiff_\timeInd =\state_{\timeInd} - \state_{\timeInd - 1}$
-is also
-normally distributed,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\stateDiff_\timeInd
-\sim \mathcal{N}(\stateDiffMean, \stateDiffCov),
-\end{align}
-#+END_EXPORT
-where
-$\stateDiffMean=\stateMean_{\timeInd} - \stateMean_{\timeInd-1}$
-and $\stateDiffCov = \stateCov_{\timeInd} + \stateCov_{\timeInd-1}$.
-The expected cost for a trajectory requires an expectation over the Jacobian $\jacGivenInput$
-as well as the state,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\E_{p(\state_\timeInd, \state_{\timeInd-1}, \jac(\state_\timeInd))} \left[ J(\stateTraj, \controlTraj) \right]
-= \sum_{\timeInd=1}^\TimeInd
-\E_{\stateDist}\left[ \stateDiff_\timeInd^T
-\E_{\jacGivenInput}\left[ \jac(\state_\timeInd) \jac(\state_\timeInd)^T \right]
- \stateDiff_\timeInd \right]
-\end{align}
-#+END_EXPORT
-There is no closed-form expression for this expectation due to the Jacobian's dependence on the state.
-However, following a mean-field approximation  the Jacobain can be assumed to be independent of the state,
-resulting in the expected cost being given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\E \left[ J(\stateTraj, \controlTraj) \right] &=
-\sum_{\timeInd=1}^\TimeInd
-\E_{\stateDist}\left[ \stateDiff_\timeInd^T
-\E_{\jacDist}\left[ \jac(\state_\timeInd) \jac(\state_\timeInd)^T \right]
- \stateDiff_\timeInd \right] \\
-&= \sum_{\timeInd=1}^\TimeInd \stateDiffMean^T (\jacMean \jacMean^T + \jacCov) \stateDiffMean
-+ \text{tr}\left(
-\left(\jacMean \jacMean^T + \jacCov\right)
-\stateDiffCov \right)
-\end{align}
-#+END_EXPORT
-It's a bit hacky but we could assumed the Jacobian distribution is given by marginalising the state
-and moment matching,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\mathbf{J}(\state_{\timeInd})) =
-%\int \mathbf{J}(\state_{\timeInd}) \stateDist \text{d}\state_{\timeInd}
-\int p(\mathbf{J}(\state_{\timeInd}) \mid \state_\timeInd)
-\mathcal{N}(\state_{\timeInd} \mid \stateMean_\timeInd, \stateCov_\timeInd)
-\text{d}\state_{\timeInd}
-\approx \mathcal{N}(\mathbf{J}(\state_{\timeInd}) \mid \jacMean, \jacCov)
-\end{align}
-#+END_EXPORT
 
 * Active Learning in Multimodal Dynamical Systems label:chap-active-learning
 #+begin_export latex
