@@ -4838,7 +4838,7 @@ The method presented in this chapter is named
 Following other \acrshort{mogpe} methods, the model and inference are first evaluated on the
 motorcyle data set cite:Silverman1985.
 They are then tested on the real-world quadcopter data set from the illustrative example detailed in cref:illustrative_example.
-The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub[fn:1:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].]
+The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub[fn::Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].]
 cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper.
 
 
@@ -9854,6 +9854,7 @@ it can successfully learn a factorised representation of the underlying dynamics
 \newcommand{\nominalStateTraj}{\ensuremath{\stateTraj_*}}
 \newcommand{\nominalControlTraj}{\ensuremath{\controlTraj_*}}
 \newcommand{\fixedControl}{\ensuremath{\control_{*}}}
+\newcommand{\velocity}{\ensuremath{v}}
 
 \newcommand{\trajectory}{\ensuremath{\bar{\state}}}
 \newcommand{\stateControlTraj}{\ensuremath{\bm\tau}}
@@ -9980,7 +9981,7 @@ encode mode remaining behaviour.
 The first approach is an indirect control method that projects the trajectory optimisation problem onto
 an \acrfull{ode} that implicitly encodes the mode remaining behaviour.
 The second approach is a direct control method that resembles standard Gaussian process control methods
-with a geometric objective function that encodes the mode remaining behaviour.
+with the mode remaining behaviour encoded via a geometric objective function.
 
 The remainder of this chapter is organised as follows.
 cref:sec-problem-statement formally states the problem
@@ -9989,52 +9990,59 @@ probabilistic manifolds.
 cref:sec-traj-opt-collocation,sec-traj-opt-energy
 detail the two trajectory optimisation algorithms.
 The methods are evaluated using the illustrative example from cref:illustrative_example.
-The work in this chapter is implemented in JAX and TensorFlow and is available on GitHub
-cite:jax2018github[fn:2:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems and icon{\faGithub}/aidanscannell/vimpc]].].
-\todo{make links work}
+The work in this chapter is implemented in JAX and TensorFlow and is available on GitHub[fn::Code accompanying
+cref:sec-traj-opt-collocation can be found @
+[[https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems]]
+and code accompanying cref:sec-traj-opt-energy can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]].]
+cite:jax2018github.
+
+# This section first recaps the relevant concepts from Riemannian geometry.
+# It then details two control methods that exploit the geometry of the \acrshort{mosvgpe} model to obtain mode remaining behaviour.
+# The first approach is an indirect control method based on differential flatness and collocation.
+# The second method embeds the mode remaining behaviour into a more conventional Gaussian process
+# control framework.
+# Finally, this section evaluates the two approaches using the illustrative example from cref:illustrative_example.
+
+
 \todo{cite ICRA paper}
 
 ** Problem Statement label:sec-problem-statement
+# #+BEGIN_EXPORT latex
+# \begin{align}
+# \mode{\latentFunc} : \stateDomain \times \controlDomain \rightarrow \stateDomain \quad \text{if} \quad \modeVar=\modeInd,
+# \end{align}
+# #+END_EXPORT
+# $\stateDomain = \bigcup_{\modeInd \in \modeVarDomain} \mode{\stateDomain} = \{ \state \subseteq \stateDomain \mid \modeInd \in \modeVarDomain \}$.
+# $\stateDomain = \bigcup_{\modeInd=1}^{\ModeInd} \mode{\stateDomain}$.
+This chapter considers multimodal dynamical systems where the dynamics modes are defined by disjoint
+state domains.
+That is, each dynamics mode is defined by its state domain
+$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
+and
+$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset \quad \text{for} \quad i \neq j$.
+Each mode's dynamics are then given by,
 #+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mosvgpe/desired_gating_gp_no_traj.pdf}
-\label{eq-traj-opt-gating-network-gp}
-\caption{
-Visualisation of the GP posterior mean (left) and posterior variance (right), associated with the
-desired mode's gating function after training the \acrshort{mosvgpe}
-(with $\ModeInd=2$ experts) on the historical data set of state transitions from the 2D quadcopter environment
-in the illustrative example from \cref{illustrative_example}.}
-\end{figure}
+\begin{align}
+\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain.
+\end{align}
 #+END_EXPORT
-The work in this chapter first uses the \acrshort{mosvgpe} method from cref:chap-dynamics to learn a factorised
-representation of the underlying dynamics modes.
+Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
+and enter another mode.
+Ideally, this work seeks to enforce the controlled system to remain in a given mode at every time step.
 #+BEGIN_EXPORT latex
-\begin{assumption} \label{}
-A data set $\dataset$ of state transitions have previously been sampled from the
-system (at constant frequency) and used to train a single-step dynamics model using
-the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
-\end{assumption}
+\begin{definition}[Mode Remaining] \label{def-mode-remaining}
+Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
+Given an inital state $\state_0 \in \mode{\stateDomain}$, and a sequence of controls $\controlTraj=\control_{0:\TimeInd-1}$,
+the controlled system is said to be mode-remaining iff:
+\begin{align} \label{eq-mode-remaining-def}
+\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \mode{\stateDomain} \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
+\end{align}
+\end{definition}
 #+END_EXPORT
-Further to this, it assumes that a desired dynamics mode $\desiredMode$ is /known a priori/.
-The desired mode's transition dynamics are given by
-$\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
-with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-$\control \in \controlDomain \subseteq \R^\ControlDim$,
-where $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$
-denotes the subset of the state space associated with the desired dynamics mode.
-Note that the desired mode's transition dynamics $\desiredDynamicsFunc$
-are free to leave the desired mode's state space $\desiredStateDomain$.
-
-Of particular interest in this chapter is the GP posterior over the desired mode's gating function.
-cref:fig-traj-opt-gating-network visualises this GP posterior after training on a historical data set of state
-transitions from a simulator of the illustrative example in cref:illustrative_example.
-# This chapter explores different mechanisms for encoding mode remaining behaviour.
-
-
-# $\controlledDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \desiredStateDomain$,
-Given this model, this work seeks to find a control trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
-to navigate from an initial state $\state_{0}$, to a target state $\targetState$,
+Given a desired dynamics mode $\desiredMode$, this work seeks to find a control
+trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
+to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
+target state $\targetState \in \desiredStateDomain$,
 over a horizon $\TimeInd$,
 whilst minimising a cost function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$
 and keeping the system in the desired dynamics mode $\desiredMode$.
@@ -10046,28 +10054,162 @@ Formally, this problem is given by,
 \sum_{\timeInd=0}^{\TimeInd} &\costFunc(\state_\timeInd, \control_\timeInd) \Bigg] \\
 \text{s.t.} \quad \state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
 \quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
-\state_{\timeInd} &\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\cref{eq-mode-remaining-def} \\
+%\state_{\timeInd} &\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
 \state_\TimeInd &= \targetState,
 \end{align}
 \end{subequations}
 #+END_EXPORT
-where the expectation is taken w.r.t. the distribution over state-control
-trajectories under policy $\policy$,
+where the expectation is taken w.r.t. the distribution over state
+trajectories,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-trajectory-dist}
-\controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
+%\controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
+p(\stateTraj \mid \state_0, \controlTraj) =
 \prod_{\timeInd=0}^{\TimeInd-1}
-p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
-\policy(\control_\timeInd).
+p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd).
 \end{align}
 #+END_EXPORT
 To simplify notation, the state and control trajectories are denoted
 as $\stateTraj = \state_{1:T}$ and $\controlTraj = \control_{0:T-1}$ respectively.
-
-The novelty of this problem, arises from the mode remaining behaviour.
+The novelty of this problem arises from the mode remaining behaviour.
 To the best of our knowledge, there is no prior work addressing how to find
 trajectories that remain in a desired dynamics mode,
 when knowledge of how the system switches between the dynamics modes is /not known a priori/.
+
+# where the expectation is taken w.r.t. the distribution over state-control
+# trajectories under controller $\policy$,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-trajectory-dist}
+# \controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
+# \prod_{\timeInd=0}^{\TimeInd-1}
+# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
+# \policy(\control_\timeInd).
+# \end{align}
+# #+END_EXPORT
+
+
+This chapter assumes prior access to the environment, enabling a data set of state transitions to be collected.
+This data set is used to learn a factorised representation of the underlying dynamics modes
+with the \acrshort{mosvgpe} method from cref:chap-dynamics.
+# This method correctly identifies the underlying dynamics modes and provides informative latent spaces that
+# can be used to encode mode remaining behaviour into control strategies.
+# In particular, the GP-based gating network infers informative latent structure.
+# cref:fig-traj-opt-gating-network-gp shows the GP posterior associated with the desired mode's gating function
+# after training
+# \acrshort{mosvgpe} on the historical data set of state transitions from the quadcopter experiment in cref:illustrative_example.
+#+BEGIN_EXPORT latex
+\begin{assumption} \label{}
+A single-step dynamics model has been learned using
+the \acrshort{mosvgpe} method from \cref{chap-dynamics} and a data set $\dataset$ of state transitions
+from the system.
+\end{assumption}
+#+END_EXPORT
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# A data set $\dataset$ of state transitions have previously been sampled from the
+# system (at constant frequency) and used to train a single-step dynamics model using
+# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
+# \end{assumption}
+# #+END_EXPORT
+
+Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
+This is a realistic assumption as the parameters associated with each dynamics GP can be used to identify
+different behaviours.
+For example, the noise variance associated with each mode's dynamics GP models its process noise.
+If it is desirable to avoid modes with high process noise, then they can easily be identified by their noise
+variances.
+#+BEGIN_EXPORT latex
+\begin{assumption} \label{}
+A desired dynamics mode $\desiredMode$ is known.
+\end{assumption}
+#+END_EXPORT
+Given a learned dynamics model and a desired dynamics mode $\desiredMode$,
+the goals of the trajectory optimisation in this Chapter can be summarised as follows,
+# - Goal 1 :: Remain in a desired dynamics mode $\desiredMode$,
+# - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/.
+- Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
+- Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
+  - in the desired dynamic mode.
+  - in the gating network,
+The second goal arises due to learning the dynamics model from observations.
+The learned model may not be able to confidently predict which mode governs the dynamics at any given region.
+This is due to lack of training observations and is known as /epistemic uncertainty/.
+It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
+
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# The system has previously been observed to obtain a data set $\dataset$ of state transitions sampled at constant frequency.
+# \end{assumption}
+# #+END_EXPORT
+# Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
+# This is a realistic assumption as the parameters associated with each dynamics GP represent different
+# characteristics of the system.
+# For example, the noise variance associated with each mode's dynamics GP models the process noise that the mode
+# is subject to.
+# A high noise variance can therefore be used to identify dynamics modes that are undesirable.
+
+
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# A desired dynamics mode $\desiredMode$  is known.
+# Moreover, its transition dynamics are given by
+# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$.
+# \end{assumption}
+# #+END_EXPORT
+# the \acrshort{mosvgpe} method from cref:chap-dynamics to learn a factorised
+# representation of the underlying dynamics modes.
+
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# Further to this, it is assumed that the mode switching behaviour is governed by the state space, i.e.
+# each dynamics modes is governed by its state domain
+# $\stateDomain_{\modeInd} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
+# giving each mode's dynamics,
+# $\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain$.
+
+# The system switches between its dynamics modes over the systems state space, i.e.
+# each dynamics modes is governed by its state domain
+# $\stateDomain_{\modeInd} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
+# giving each mode's dynamics,
+# $\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain$.
+# \end{assumption}
+# #+END_EXPORT
+
+# and used to train a single-step dynamics model using
+# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
+
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# A data set $\dataset$ of state transitions have previously been sampled from the
+# system (at constant frequency) and used to train a single-step dynamics model using
+# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
+# \end{assumption}
+# #+END_EXPORT
+# Further to this, it assumes that a desired dynamics mode $\desiredMode$ is /known a priori/.
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# Let $\desiredMode$ denote the desired dynamics mode governed
+# by its state domain
+# $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$.
+# The desired mode's transition dynamics are given by
+# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
+# with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+# $\control \in \controlDomain \subseteq \R^\ControlDim$.
+# \end{assumption}
+# #+END_EXPORT
+
+# The desired mode's transition dynamics are given by
+# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
+# with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+# $\control \in \controlDomain \subseteq \R^\ControlDim$,
+# where $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$
+# denotes the subset of the state space associated with the desired dynamics mode.
+# Note that the desired mode's transition dynamics $\desiredDynamicsFunc$
+# are free to leave the desired mode's state space $\desiredStateDomain$.
+
+
+
 
 
 
@@ -10076,8 +10218,31 @@ when knowledge of how the system switches between the dynamics modes is /not kno
 
 
 
-One approach to encoding mode remaining behaviour is to consider the geometry of the latent gating functions.
-cref:eq-traj-opt-gating-network-gp shows the GP posterior associated with the desired mode's gating function
+# Of particular interest in this chapter is the GP posterior over the desired mode's gating function.
+# cref:fig-traj-opt-gating-network-gp visualises this GP posterior after training on the historical data set of state
+# transitions from the illustrative example in cref:illustrative_example.
+# One approach to encoding mode remaining behaviour is to consider the geometry of the latent gating functions.
+
+** Concepts from Riemannian Geometry label:sec-geometry-recap
+*** intro :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mosvgpe/desired_gating_gp_no_traj.pdf}
+\caption{
+Visualisation of the GP posterior mean (left) and posterior variance (right), associated with the
+desired mode's gating function after training the \acrshort{mosvgpe}
+(with $\ModeInd=2$ experts) on the historical data set of state transitions from the 2D quadcopter environment
+in the illustrative example from \cref{illustrative_example}.}
+\label{fig-traj-opt-gating-network-gp}
+\end{figure}
+#+END_EXPORT
+# cref:fig-traj-opt-gating-network-gp shows the GP posterior associated with the desired mode's gating function
+# after training
+# \acrshort{mosvgpe} on the historical data set of state transitions from the quadcopter experiment in cref:illustrative_example.
+The \acrshort{mosvgpe} model correctly identifies the underlying dynamics modes and infers informative
+latent spaces that can be used to encode mode remaining behaviour.
+cref:fig-traj-opt-gating-network-gp shows the GP posterior associated with the desired mode's gating function
 after training
 \acrshort{mosvgpe} on the historical data set of state transitions from the quadcopter experiment in cref:illustrative_example.
 Goal 1 can be encoded as finding length minimising trajectories on the desired mode's gating function.
@@ -10085,24 +10250,16 @@ Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on
 manifold given by the desired mode's gating function,
 increases when it passes over the contours; analogous to climbing a hill.
 Given appropriate scaling of the gating function, shortest trajectories between two locations are
-those that attempt to follow the contours, i.e. remain in a single mode by not climbing up or down any hills.
+those that attempt to follow the contours, and as a result,
+remain in a single mode by not climbing up or down any hills.
+The relevant concepts from Riemannian geometry, that are needed to formalise this intuition, are now introduced.
 
-This section first recaps the relevant concepts from Riemannian geometry.
-It then details two control methods that exploit the geometry of the \acrshort{mosvgpe} model to obtain mode remaining behaviour.
-The first approach is an indirect control method based on differential flatness and collocation.
-The second method embeds the mode remaining behaviour into a more conventional Gaussian process
-control framework.
-Finally, this section evaluates the two approaches using the illustrative example from cref:illustrative_example.
-
-** Concepts from Riemannian Geometry label:sec-geometry-recap
-*** intro :ignore:
 # Now that the relevant concepts from Riemannian geometry have been introduced, the objective function
 # for the first trajectory optimisation can be detailed.
 # The geometry of the latent gating functions can be used to formulate a cost term
 # that favours trajectories remaining in a preferred dynamics mode.
 # One approach is to obtaining mode remaining behaviour is to consider the geometry of the latent gating functions.
 # Let us quickly recap how to calculate lengths on Riemannian manifolds.
-The relevant concepts from Riemannian geometry are now introduced.
 
 #+BEGIN_EXPORT latex
 \begin{myquote}
@@ -10400,6 +10557,7 @@ The distribution over the Jacobian is then obtained via a Gaussian convolution,
 #+END_EXPORT
 
 ** Indirect Control via Latent Geodesics label:sec-traj-opt-collocation
+*** intro :ignore:
 This section presents an indirect trajectory optimisation algorithm that exploits the fact that
 length minimising trajectories on the manifold endowed with the expected metric from cref:eq-expected-metric,
 encodes both of our goals.
@@ -10452,8 +10610,8 @@ satisfy a continuous-time $2^{\text{nd}}$ order \acrshort{ode}, given by,
 #+END_EXPORT
 where $\operatorname{vec}[\metricTensor(\manifoldInput(t)])$ stacks the columns of $\metricTensor(\manifoldInput(t))$
 and $\otimes$ denotes the Kronecker product.
-The implication of cref:eq-geodesic,eq-2ode is that trajectories that are solutions
-to the $2^{\text{nd}}$ order \acrshort{ode} in Eq. ref:eq-2ode implicitly minimise the objective
+The implication of cref:eq-geodesic,eq-2ode, is that trajectories that are solutions
+to the $2^{\text{nd}}$ order \acrshort{ode} in Eq. ref:eq-2ode, implicitly minimise the objective
 in cref:eq-manifold-length-G.
 Given this observation, computing geodesics involves finding a solution to Eq. ref:eq-2ode
 with $\manifoldInput(t_0) = \manifoldInput_0$ and $\manifoldInput(t_f) = \manifoldInput_f$.
@@ -10478,7 +10636,7 @@ dynamics constraints.
 Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode cannot
 be solved with simple forward or backward integration.
 Instead, the problem is transcribed using the approach of differential
-flatness cite:milamNew2000,rossPseudospectral2004.
+flatness citep:milamNew2000,rossPseudospectral2004.
 A set of outputs $\mathbf{z}(t)$ are defined such that the
 states $\mathbf{x}(t)$ and controls $\mathbf{u}(t)$ can be
 expressed in terms of the flat output $\mathbf{z}(t)$ and a finite number of its derivatives,
@@ -10502,7 +10660,7 @@ for $t \in [t_0, t_f]$ subject to the boundary conditions and the geodesic \acrs
 #+END_EXPORT
 *Collocation*
 Collocation methods are used to transcribe continuous-time trajectory optimisation problems into
-nonlinear programs, i.e. constrained parameter optimisation cite:kellyIntroduction2017,fahrooDirect2000  .
+nonlinear programs, i.e. constrained parameter optimisation citep:kellyIntroduction2017,fahrooDirect2000  .
 The expected metric in cref:eq-expected-metric is substituted into
 cref:eq-diff-flat-ode and solved via collocation.
 This work implements a simple Hermite-Simpson collocation method that enforces the state
@@ -10528,11 +10686,11 @@ The nonlinear program that this method solves is given by,
 \control(\mathbf{z}(\timeInd), \dot{\mathbf{z}}(\timeInd))) \text{d}t \\
 &\text{s.t. }\text{\cref{eq-defect}}  \\
 \mathbf{x}&\left(\mathbf{z}(t_0), \dot{\mathbf{z}}(t_0) \right) = \mathbf{x}_0 \\
-\mathbf{x}&(\mathbf{z}(t_f),\dot{\mathbf{z}}(t_f)) = \mathbf{x}_f
+\mathbf{x}&(\mathbf{z}(t_f),\dot{\mathbf{z}}(t_f)) = \mathbf{x}_f.
 \end{align}
 \end{subequations}
 #+END_EXPORT
-and solved using Sequential Least Squares Programming (SLSQP) in SciPy.
+It is solved using Sequential Least Squares Programming (SLSQP) in SciPy citep:2020SciPy-NMeth.
 Although this method provides an elegant solution to finding trajectories that satisfy Goals 1 and 2,
 it is not without its limitations.
 
@@ -10553,23 +10711,24 @@ it is not without its limitations.
 # [[file:./images/geometric-traj-opt-over-svgp.pdf]]
 
 *** Remarks :ignore:
-#+BEGIN_EXPORT latex
-\begin{remark}[Dynamics Constraints]
-This approach does do not necessarily find trajectories that satisfy the dynamics constraints,
+First of all, this approach does do not necessarily find trajectories that satisfy the dynamics constraints,
 as it projects the problem onto the geodesic \acrshort{ode}.
-\end{remark}
-#+END_EXPORT
 #+BEGIN_EXPORT latex
-\begin{remark}[Stochasticity]
-This algorithm ignores much of the stochasticity inherent in the problem.
+\begin{remark}
+Dynamics constraints not guaranteed to be satisfied.
 \end{remark}
 #+END_EXPORT
-It does not consider the full distribution over state-control trajectories.
+Secondly, it does not consider the full distribution over state-control trajectories.
 Without the inclusion of the full probabilistic dynamics model, it is impossible
 to consider the full distribution over state-control trajectories.
 Although propagating uncertainty through a single GP dynamics mode is straight forward,
 how to handle the collocation constraints is not immediately clear.
 This is because the geodesic \acrshort{ode} will become a Stochastic Differential Equation (SDE).
+#+BEGIN_EXPORT latex
+\begin{remark}
+Ignores much of the stochasticity inherent in the problem.
+\end{remark}
+#+END_EXPORT
 
 # Firstly, this approach does do not necessarily find trajectories that satisfy the dynamics constraints,
 # as it projects the problem onto the geodesic \acrshort{ode}.
@@ -10580,13 +10739,16 @@ This is because the geodesic \acrshort{ode} will become a Stochastic Differentia
 # Although propagating uncertainty through a single GP dynamics mode is straight forward,
 # how to handle the collocation constraints is not immediately clear.
 # This is because the geodesic \acrshort{ode} will become a Stochastic Differential Equation (SDE).
+
+Perhaps the biggest limitation of this method, is its dependence on the
+differential flatness property, which is used to obtain the controls from the
+optimised state trajectory and geodesic \acrshort{ode}.
 #+BEGIN_EXPORT latex
-\begin{remark}[Differential Flatness]
-This method is only applicable in systems where the state and control can be expressed in terms of a flat output.
+\begin{remark}
+Requires the state and control to be expressable in terms of a flat output.
+%Only applicable in systems where the state and control can be expressed in terms of a flat output.
 \end{remark}
 #+END_EXPORT
-Perhaps the biggest limitation of this method, is its dependence on
-differential flatness to obtain the controls from the optimised state trajectory and geodesic \acrshort{ode}.
 The trajectory optimisation algorithm presented in the next section attempts to address these issues.
 # This dependence makes this algorithm only applicable in systems where the state and control can be expressed in terms
 # of a flat output.
@@ -10604,7 +10766,7 @@ The trajectory optimisation algorithm presented in the next section attempts to 
 *** intro :ignore:
 This section details a direct control approach which embeds the mode remaining behaviour directly into the
 SOC problem in cref:eq-mode-soc-problem, via a geometric objective function.
-In contrast to the previous approach, this method
+In contrast to the previous approach, this method:
 1) is not limited to dynamical systems which are differentially flat,
 2) guarantees trajectories satisfy the dynamics constraints,
 3) principally handles the uncertainty associated with the dynamics.
@@ -10690,7 +10852,7 @@ cannot be calculated in closed-from.
 This work adopts a two-stage approximation to obtain a closed-form expression for the expected cost.
 First, multi-step dynamics predictions are approximated to obtain Normally distributed states at
 each time step.
-Given Normally distributed states, calculating the expected quadratic terminal/control cost terms in
+Given Normally distributed states, calculating the expected terminal and control cost terms in
 cref:eq-quadratic-cost-with-energy is trivial.
 However, the expected Riemannian energy in cref:eq-quadratic-cost-with-energy has no closed-form expression,
 due to the metric's $\metricTensor$ dependence on the state.
@@ -10738,7 +10900,7 @@ The second stage approximates the calculation of the expected Riemannain energy 
 #+END_EXPORT
 # *Approximate Inference for Dynamics Predictions*
 Multi-step predictions in the \acrshort{mosvgpe} dynamics model have no closed-form solution  because the state
-difference after the first time step is a Gaussian mixture and
+difference after the first time step is a Gaussian mixture, and
 propagating Gaussian mixtures through Gaussian processes has no closed-form solution.
 Further to this, constructing approximate closed-form solutions is difficult,
 due to the exponential growth in the number of Gaussian components.
@@ -10746,8 +10908,8 @@ due to the exponential growth in the number of Gaussian components.
 \begin{myquote} \label{}
 Consider assuming each of the dynamics modes to be independent.
 Recursively propagating the Gaussian components associated with the state, through
-all of the modes, over a trajectory of length $N$, would lead to the final state consisting of
-$\ModeInd^N$ Gaussian components.
+all of the modes, over a trajectory of length $\TimeInd$, would lead to the final state consisting of
+$\ModeInd^{\TimeInd}$ Gaussian components.
 \end{myquote}
 #+END_EXPORT
 This work sidesteps this issue and obtains closed-form multi-step predictions
@@ -10779,8 +10941,8 @@ Cascading single-step predictions requires recursively mapping uncertain state-c
 the desired mode's dynamics GP, i.e. recursively calculating the following integral,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-state-unc-prop}
-p(\state_{\timeInd+1} \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd}=\desiredMode)
-&= \int \transitionDistK p(\state_\timeInd \mid \state_{0}, \control_{0:\timeInd-1}, \modeVar_{0:\timeInd-1}=\desiredMode) \text{d}\state_{\timeInd}
+p(\state_{\timeInd+1} \mid \state_0, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd}=\desiredMode)
+&= \int \transitionDistK p(\state_\timeInd \mid \state_{0}, \control_{0:\timeInd-1}, \bm\modeVar_{0:\timeInd-1}=\desiredMode) \text{d}\state_{\timeInd}
 \end{align}
 #+END_EXPORT
 with $p(\state_0) = \delta(\state_0)$.
@@ -10809,25 +10971,26 @@ a system is said to be $\delta$-mode remaining under the controls $\controlTraj$
 \end{align}
 \end{definition}
 #+END_EXPORT
-Conveniently, the conditions to be $\delta$ -mode remaining in cref:def-delta-mode-remaining can
+The conditions to be $\delta-\text{mode remaining}$ in cref:def-delta-mode-remaining can
 be enforced with chance constraints,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mode-chance-constraint}
-\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \modeVar_{0:\timeInd}=\desiredMode)
-\geq \satisfactionProb \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd].
+\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd}=\desiredMode)
+\geq 1-\delta \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd].
+%\geq \satisfactionProb \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd].
 \end{align}
 #+END_EXPORT
 These constraints enforce the system to remain in the desired dynamics mode with satisfaction probability
-$\satisfactionProb$, at each time step.
+$\satisfactionProb=1-\delta$, at each time step.
 As the \acrshort{mosvgpe} model assumes that the mode indicator variable $\modeVar$, depends on the state via the gating function,
 this probability is calculated as follows,
 #+BEGIN_EXPORT latex
 \small
 \begin{align} \label{eq-mode-chance-constraint-integral}
-\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \modeVar_{0:\timeInd}=\desiredMode) =
+\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd}=\desiredMode) =
 \int \underbrace{\Pr(\modeVar_{\timeInd} = \desiredMode \mid \GatingFunc(\state_{\timeInd}))}_{\text{Bernoulli/softmax likelihood}}
 \int \underbrace{q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})}_{\text{approx posterior}}
-\underbrace{p(\state_\timeInd \mid \state_{0}, \control_{0:\timeInd-1}, \modeVar_{0:\timeInd-1}=\desiredMode)}_{\text{state dist}}
+\underbrace{p(\state_\timeInd \mid \state_{0}, \control_{0:\timeInd-1}, \bm\modeVar_{0:\timeInd-1}=\desiredMode)}_{\text{state dist}}
 \text{d} \state_{\timeInd}
 \text{d} \GatingFunc(\state_{\timeInd})
 \end{align}
@@ -10845,7 +11008,7 @@ are uncertain, indicated by the marginalisation over $\GatingFunc(\state_{\timeI
 
 *** Approximate Riemannian Energy
 Given this approach for simulating the \acrshort{mosvgpe} dynamics model, the state at each time step is Normally distributed.
-Unlike the quadratic terminal/control cost terms in cref:eq-quadratic-cost-with-energy, the expected Riemannian
+Unlike the terminal and control cost terms in cref:eq-quadratic-cost-with-energy, the expected Riemannian
 energy,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-trajectory-riemannian-energy}
@@ -10863,7 +11026,8 @@ However, it is possible to approximate the expected energy to obtain a closed-fo
 The distribution over the Jacobian when the input location in Normally distributed
 $\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)$ can be calculated in closed-form when using the
 Squared Exponential kernel.
-However, this work simplifies the problem and calculates the Jacobian at the mean of each state along a trajectory, i.e.
+However, this work simplifies the problem and calculates the Jacobian at the state mean of each time step
+along a trajectory, i.e.
 $\Jac_{\state_{\timeInd}} \approx \frac{\partial \manifoldFunction(\state_{\timeInd})}{\partial \stateMean}$.
 The distribution over the Jacobian given deterministic inputs can be calculated using cref:eq-predictive-jacobian-dist.
 
@@ -10898,8 +11062,8 @@ $\stateDiff_{\timeInd} \sim \mathcal{N}(\stateDiffMean, \stateDiffCov)$ can be c
 #+BEGIN_EXPORT latex
 \begin{myquote} \label{}
 The expected metric tensor encourages trajectories to 1) follow contours on the desired mode's gating function
-and 2) avoid entering regions with high uncertainty in which mode governs the dynamics.
-The expectation over the state then encourages trajectories to remain in regions of the desired dynamics mode with
+and 2) avoid entering regions where it is uncertain which mode governs the dynamics.
+The expectation over the state difference then encourages trajectories to remain in regions of the desired dynamics mode with
 low uncertainty.
 \end{myquote}
 #+END_EXPORT
@@ -10917,16 +11081,16 @@ can be calculated in closed-form with,
 + \controlMean^T \controlCostMatrix \controlMean}_{\text{expected control cost}}.
 \end{align}
 #+END_EXPORT
-This method then approximately solves the problem in cref:eq-mode-soc-problem-geometry by solving,
+This work then approximately solves the problem in cref:eq-mode-soc-problem-geometry by solving,
 #+BEGIN_EXPORT latex
 \begin{subequations} \label{eq-mode-soc-problem-geometry-approx}
 \begin{align}
 \min_{\controlTraj} &\approxExpectedCost \\
-\text{s.t.}& \quad \cref{eq-state-unc-prop,eq-mode-chance-constraint}
+\text{s.t.}& \quad \cref{eq-state-unc-prop,eq-mode-chance-constraint},
 \end{align}
 \end{subequations}
 #+END_EXPORT
-using Sequential Least Squares Programming (SLSQP) in SciPy.
+using Sequential Least Squares Programming (SLSQP) in SciPy cite:2020SciPy-NMeth.
 This method obtains closed-form expressions for the expected cost in cref:eq-mode-soc-problem-geometry
 by constraining the system to be $\delta$ -mode remaining (cref:def-delta-mode-remaining).
 # Given this constraints on the dynamics, the mode remaining
@@ -10998,21 +11162,23 @@ using the illustrative example from cref:illustrative_example, i.e.
 flying a quadcopter from an initial state $\state_0$, to a target state $\state_{f}$, whilst avoiding the turbulent
 dynamics mode.
 See cref:fig-problem-statement for a schematic of the environment and details of the problem.
-The turbulent dynamics mode is subject to higher drift in the negative $y$ direction due to the
+The turbulent dynamics mode is subject to higher drift in the negative $y$ direction, due to the
 wind field created by the fan.
 It is also subject to higher diffusion (aka process noise) resulting from the turbulence induced by the fan.
 Although the exact turbulent dynamics are not known, they are believed to be difficult to control.
-This is due to high process noise which may lead to catastrophic failure.
+This is due to the high process noise which may lead to catastrophic failure.
 It is therefore desirable to find trajectories that avoid entering this turbulent dynamics mode.
 
-This section evaluates the trajectory optimisation algorithms' performance at achieving the two goals:
-- Goal 1 :: Remain in the desired operable dynamics mode,
-- Goal 2 :: Avoid regions of the gating network with high epistemic uncertainty.
-To test their ability to avoid regions of high epistemic uncertainty a subset of the environment was intentionally
-not observed. The trajectories are evaluated using two metrics.
-The desired mode's ($\modeVar=1$) mixing probability and the
-posterior variance associated with its gating function \acrshort{gp}.
-Intuitively, the goal is to maximise the probability of being in the desired mode
+This section evaluates the performance of the two algorithms at achieving the goals:
+- Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
+- Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
+  - in the desired dynamic mode.
+  - in the gating network,
+To test their ability at avoiding regions of high epistemic uncertainty, a subset of the environment was intentionally
+not observed. The trajectories are evaluated using two performance indicators:
+1. The desired mode's ($\modeVar=1$) mixing probability,
+2. The posterior variance associated with its gating function \acrshort{gp}.
+Intuitively, the goal is to maximise the probability of being in the desired mode,
 whilst minimising the variance accumulated over a trajectory.
 
 The indirect geodesic control method from cref:sec-traj-opt-collocation is evaluated on the real-world
@@ -11033,6 +11199,13 @@ The controls consist of the speed in each direction, given by $\control = (\velo
 
 *** Real-World Quadcopter Experiments label:sec-traj-opt-results-collocation
 **** intro :ignore:
+The trajectory optimisation presented in cref:sec-traj-opt-collocation is evaluated on the real-world quadcopter
+control problem detailed in cref:sec-brl-experiment.
+This method recovers the controls via differential flatness citep:rossPseudospectral2004,
+so the controls were kept constant during data collection, reducing the dynamics to
+$\Delta \state_{\timeInd+1} = \dynamicsFunc(\state_{\timeInd}; \control_{\timeInd}=\fixedControl)$.
+
+**** results figs :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}[!t]
 \centering
@@ -11058,20 +11231,13 @@ overlayed on the desired mode's (\subref{fig-geometric-traj-opt-over-prob}) mixi
 \label{fig-geometric-traj-opt}
 \end{figure}
 #+END_EXPORT
-The trajectory optimisation presented in cref:sec-traj-opt-collocation is evaluated on the real-world quadcopter
-control problem detailed in cref:sec-brl-experiment.
-This method recovers the controls via differential flatness citep:rossPseudospectral2004,
-so the controls were kept constant during data collection, reducing the dynamics to
-$\Delta \state_{\timeInd+1} = \dynamicsFunc(\state_{\timeInd}; \control_{\timeInd}=\fixedControl)$.
-
 **** Model Learning
 \todo{Add comment about older ELBO?}
 The model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts and trained on
 the data collected from the velocity controlled quadcopter experiment.
-Each \acrshort{gp} associated with the dynamics modes used a squared exponential kernel
-with \acrfull{ard} and a constant mean function.
+Each mode's dynamics \acrshort{gp} used a Squared Exponential kernel with \acrfull{ard} and a constant mean function.
 The gating network used a single gating function with a Bernoulli likelihood.
-Its \acrshort{gp} prior utilised a squared exponential kernel with \acrshort{ard} and a zero mean function.
+Its \acrshort{gp} prior utilised a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
 
 cref:fig-geometric-traj-opt shows the gating network posterior where the model has clearly learned
 two dynamics modes, characterised by the drift and process noise induced by the fan.
@@ -11079,13 +11245,14 @@ Mode 1 represents the operable dynamics mode whilst mode 2 represents the inoper
 This is illustrated in cref:fig-geometric-traj-opt-over-prob which shows the probability that
 the desired mode ($\modeVar = 1$) is responsible for predicting over the domain.
 cref:fig-geometric-traj-opt-over-svgp shows the \acrshort{gp} posterior mean (left) and variance (right) of the
-gating function $\gatingFunc_1$ associated with the desired dynamics mode ($\modeVar 1$).
+gating function $\gatingFunc_1$ associated with the desired dynamics mode ($\modeVar=1$).
 The mean is high where the model believes the desired mode is responsible for predicting, low where it
 believes another mode is responsible and zero where it is uncertain.
 The variance (right) has also clearly captured information regrading the epistemic uncertainty,
 i.e. where the model is uncertain which mode governs the dynamics.
 
 **** Indirect Control via Latent Geodesics
+
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -11101,16 +11268,14 @@ i.e. where the model is uncertain which mode governs the dynamics.
 \subcaption{Posterior variance associated with the desied mode's (\modeVar=1) gating function over the trajectories.}
 \label{fig-epistemic_var_vs_time}
 \end{minipage}
-\caption{\label{fig-metric-vs-time}Comparision of the intial and optimised trajectories' performance -- for two
+\caption{\textbf{Indirect Geodesic Control} Comparision of the intial and optimised trajectories' performance -- for two
 settings of $\lambda$ -- at a) staying in the desired mode and b) avoiding regions of the gating network
 high epistemic uncertainty.}
+\label{fig-metric-vs-time}
 \end{figure}
 #+END_EXPORT
 The indirect geodesic control method projects the trajectory optimisation onto the gating function associated with
 the desired mode.
-It seeks to find trajectories between $\mathbf{x}_0$ and $\mathbf{x}_f$
-that 1) remain in the desired operable mode and 2) avoid regions of the gating network with high epistemic uncertainty.
-
 These experiments adopted a quadratic cost function to regularise the controls,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-quadratic-cost-control}
@@ -11119,18 +11284,11 @@ These experiments adopted a quadratic cost function to regularise the controls,
 = \sum_{\timeInd=0}^{\TimeInd-1} \left\| \control_\timeInd \right\|_{\controlCostMatrix},
 \end{align}
 #+END_EXPORT
-where $\controlCostMatrix$ is a user defined, real symmetric positive definite weight matrix.
-It is common to use this cost function as it encodes minimising the expenditure of control effort.
-For example, minimising the total expenditure of fuel, or minimising the energy dissipated from the system.
-
-The initial (cyan) trajectory in Fig. ref:fig-geometric-traj-opt-over-svgp is initialised with
-$10$ collocation points indicated by the crosses.
-Table ref:tab-results compares the initial trajectory to the results obtained
-with two settings of the $\lambda$ parameter from cref:eq-expected-metric-weighting.
+**** Table :ignore:
 #+LABEL: tab-results
 #+CAPTION: *Indirect Geodesic Control* Comparison of performance with different settings of $\lambda$.
 #+CAPTION: The performance measures are summed over collocation points.
-#+attr_latex: :placement [!t]
+#+attr_latex: :placement [!b]
 |-------------------------+--------------------------------------------------+----------------------------------------------------------|
 | Trajectory              | Mixing Probability                               | Epistemic Uncertainty                                    |
 |                         | $\sum_{i=1}^{I} \Pr(\modeVar_i=1 \mid \state_i)$ | $\sum_{i=1}^{I} \mathbb{V}[\gatingFunc^{(1)}(\state_i)]$ |
@@ -11138,22 +11296,31 @@ with two settings of the $\lambda$ parameter from cref:eq-expected-metric-weight
 | Initial                 | $7.480$                                          | $1.345$                                                  |
 | Optimised $\lambda=20$  | $6.091$                                          | $\mathbf{1.274}$                                         |
 | Optimised $\lambda=0.5$ | $\mathbf{8.118}$                                 | $1.437}$                                                 |
-It is clear from Fig. ref:fig-geometric-traj-opt-over-svgp (left) and Fig. ref:fig-mixing_prob_vs_time
+**** After Table :ignore:
+
+where $\controlCostMatrix$ is a user defined, real symmetric positive definite weight matrix.
+It is common to use this cost function as it encodes minimising the expenditure of control effort.
+For example, minimising the total expenditure of fuel, or minimising the energy dissipated from the system.
+
+The initial (cyan) trajectory in cref:fig-geometric-traj-opt-over-svgp is initialised with
+$10$ collocation points indicated by the crosses.
+cref:tab-results compares the initial trajectory to the results obtained
+with two settings of the $\lambda$ parameter from cref:eq-expected-metric-weighting.
+It is clear from cref:fig-geometric-traj-opt,fig-metric-vs-time
 that for $\lambda=0.5$,
 trajectories favour remaining in the desired mode at the cost of entering regions of the gating network
-with high epistemic uncertainty (shown in Fig. ref:fig-epistemic_var_vs_time).
+with high epistemic uncertainty.
 For $\lambda=20$, the trajectory initially remains in the desired mode
 but then sacrifices entering the turbulent mode in favour of avoiding the area of high epistemic
 uncertainty.
 These results confirm the intended behaviour of the user tunable $\lambda$ parameter.
 
-The collocation solver guarantees that trajectories will end at the target state.
+The collocation solver guarantees that trajectories end at the target state.
 However, trajectories are not guaranteed to remain in a desired dynamics, nor are they guaranteed to
 satisfy the systems dynamics.
 Further to this, the mode remaining behaviour is sensitive to the tolerance on the collocation constraints.
 Setting the tolerance too small can result in the solver failing to converge, whilst setting the tolerance too
 large often omits any mode remaining behaviour.
-
 *** Simulated Quadcopter Experiments label:sec-traj-opt-results-energy
 **** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -11161,35 +11328,38 @@ large often omits any mode remaining behaviour.
 \newcommand{\env}[1]{\ensuremath{\hat{#1}}}
 \newcommand{\modeProbTraj}{\ensuremath{\Pr(\allModeVarK \mid \stateTraj)}}
 
-\newcommand{\velocity}{\ensuremath{v}}
-
 \newcommand{\windDrift}[1]{\ensuremath{\bm\omega_{#1}}}
 \newcommand{\windTurbulence}[1]{\ensuremath{\epsilon_{#1}}}
 \newcommand{\windTurbulenceNoise}[1]{\ensuremath{\bm\Sigma_{\windTurbulence{#1}}}}
 #+END_EXPORT
 **** intro :ignore:
-The direct control algorithm
+The direct control algorithm in cref:sec-traj-opt-results-energy is evaluated in a simulator representing
+the environment from cref:illustrative_example.
 The simulation environment represents a velocity controlled quadcopter in an environment subject to spatially
 varying wind, constituting both drift and diffusion components.
 
 **** Simulator Setup
 The simulated environment has $\ModeInd=2$ modes, $\modeVar \in \{1, 2\}$, whose
 underlying dynamics are given by simple Newtonian mechanics (velocity times time).
-The two dynamics modes are governed by different "wind fields" which are implemented using different
-drift $\windDrift{\modeVar}$ and process noise $\windTurbulence{\modeVar}$ terms.
+The two dynamics modes are governed by different wind fields which are characterised by their
+drift $\windDrift{\modeInd}$ and process noise $\windTurbulence{\modeInd}$ terms.
 Each mode's dynamics are given by,
 #+BEGIN_EXPORT latex
 \begin{align}
-\dynamicsFunc_{\modeVar}(\state_\timeInd, \control_\timeInd; \Delta\timeInd=0.25)
-&= \control_{\timeInd} \times \Delta\timeInd + \windDrift{\modeVar} + \windTurbulence{\modeVar}
-\quad \text{if} \quad \modeVar_\timeInd = \modeInd \\
-\windTurbulence{\modeVar} &\sim \mathcal{N}(\bm0, \windTurbulenceNoise{\modeVar}),
+\mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd; \Delta\timeInd=0.25)
+&= \control_{\timeInd} \times \Delta\timeInd + \windDrift{\modeInd} + \windTurbulence{\modeInd} \\
+%\quad \text{if} \quad \modeVar_\timeInd = \modeInd \\
+\windTurbulence{\modeInd} &\sim \mathcal{N}(\bm0, \windTurbulenceNoise{\modeInd}),
 \end{align}
 #+END_EXPORT
 with
 $\windDrift{1} = \{0.4, 0.02\}$, $\windDrift{2} = \{0.4, -2.0\}$,
 $\windTurbulenceNoise{1} = \diag\left([0.0001, 0.0002]\right)$ and
 $\windTurbulenceNoise{2} = \diag\left([0.05, 0.2]\right)$.
+The modes have the same $x$ drift but Mode 2 has 100 times higher drift in the negative $y$.
+Further to this, Mode 2 is subject to much higher process noise.
+As such, Mode 1 represents the operable dynamics mode and Mode 2 represents the turbulent dynamics mode.
+
 The mode indicator variable $\modeVar \in \{1, 2\}$, determines where each mode governs the dynamics.
 The simulated environment is instantiated with the gating mask in cref:fig-gating-mask-scenrio-5,
 where the red region indicates the desired (operable) dynamics mode $\modeVar=1$ and the white region
@@ -11209,9 +11379,12 @@ control domain to $\velocity_x, \velocity_y \in [-5, 5]$.
 
 **** Model Learning
 To begin with, $\NumData$ state transitions were sampled from the simulator with $\Delta \timeInd = 0.25s$.
-The model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts, one to
+Following the experiments in cref:sec-traj-opt-results-collocation,
+the model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts, one to
 represent the operable dynamics mode and one to represent the turbulent dynamics mode.
-Each mode's dynamics GP used a squared exponential kernel with \acrshort{ard} and a zero mean function.
+Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
+The gating network used a single gating function (with a Bernoulli likelihood) with
+a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
 
 In contrast to the algorithm presented in cref:sec-traj-opt-energy, this method learns the full transition
 dynamics model, i.e. it does not assume constant controls.
@@ -11229,9 +11402,7 @@ depends on both the state and control.
 Note that the relevant input dimensions can easily be set in =GPflow=,
 by setting the kernel's =active_dims= property.
 In this case, only the state dimensions, instead of the entire state-control input.
-
-All experiments used a $\TimeInd=20$ step horizon and the controls were optimised using
-SciPy's Sequential Least Squares Programming (SLSQP) citep:2020SciPy-NMeth.
+cref:fig-riemannian-energy-low-traj-opt shows the gating network posterior after training th model.
 
 **** Baseline Prob :ignore:noexport:
 #+BEGIN_EXPORT latex
@@ -11384,7 +11555,25 @@ All plots show a slice of the input space with constant zero controls.}
 \end{figure}
 #+END_EXPORT
 
+**** Table :ignore:
+#+LABEL: tab-results
+#+CAPTION: *Direct Control via Riemannian Energy* Comparison of performance with different settings of $\lambda$.
+#+CAPTION: The performance measures are summed over each time step in the horizon.
+#+attr_latex: :placement [!b]
+|--------------------------+------------------------------------------------------------------------------+-------------------------------------------------------------------------------|
+| Trajectory               | Mixing Probability                                                           | Epistemic Uncertainty                                                         |
+|                          | $\sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=1 \mid \state_\timeInd)$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\gatingFunc^{(1)}(\state_\timeInd)]$ |
+|--------------------------+------------------------------------------------------------------------------+-------------------------------------------------------------------------------|
+| Optimised $\lambda=0.1$  | $$                                                                           | $$                                                                            |
+| Optimised $\lambda=1.0$  | $$                                                                           | $$                                                                            |
+| Optimised $\lambda=10.0$ | $$                                                                           | $$                                                                            |
 **** Direct Control via Riemannian Energy
+All experiments presented here used a $\TimeInd=20$ step horizon.
+For comparison, the optimised controls are rolled out in the desired mode's dynamics GP (magenta) and in the
+environment (cyan).
+# and the controls were optimised using
+# SciPy's Sequential Least Squares Programming (SLSQP) citep:2020SciPy-NMeth.
+
 cref:fig-riemannian-energy-low-traj-opt,fig-riemannian-energy-traj-opt,fig-riemannian-energy-high-traj-opt
 show results after performing trajectory optimisation using this learned model and the method
 in cref:sec-traj-opt-results-energy.
@@ -11399,25 +11588,25 @@ following the contours of the posterior mean associated with the desired mode's 
 With this $\lambda$ setting, trajectories appear to be completely dominated by the contour following term and
 do not avoid the region of high posterior variance.
 This is the desired behaviour when setting $\lambda$ to be small.
-For example, in a scenario where the main goal is to remain in the desired dynamics mode and avoiding regions of high
-epistemic uncertainty is a secondary goal.
+For example, in scenarios where avoiding regions of high epistemic uncertainty is a secondary goal.
 However, this is not desirable in a risk-averse setting.
 
 cref:fig-riemannian-energy-traj-opt-over-svgp,fig-riemannian-energy-high-traj-opt-over-svgp
 show the results using $\lambda=1.0$ and $\lambda=10.0$ respectively.
 These $\labmda$ settings should avoid regions of high epistemic uncertainty to different degrees.
-However, this is not desirable in a risk-averse setting.
-The right plots show the trajectories avoiding regions of high posterior covariance.
+The right plots show the trajectories avoiding regions of high posterior variance associated with the desired
+mode's gating function.
 Note that the Riemannian energy contains the covariance of the gating function's Jacobian, not the
 covariance associated with the gating function \acrshort{gp}.
 Both of these $\lambda$ settings find trajectories that successfully avoid the region of high uncertainty in the
 gating network.
-They appear to initially avoid the region of high posterior covariance and then attempt to follow the
-posterior mean's contours, once passed the uncertain region.
-As a results, the trajectories successfully remain in the desired dynamics mode.
+They appear to initially avoid the region of high uncertainty and then attempt to follow the
+posterior mean's contours, once they have passed the uncertain region.
+As a result, the trajectories successfully remain in the desired dynamics mode.
 In this example, setting $\lambda=10.0$ is overly cautious with respect to Goal 2.
 This is because the trajectory has a lot of clearance from the region of high epistemic uncertainty
-which lead to the clearance from the turbulent dynamics mode reducing significantly.
+which has reduced its clearance from the turbulent dynamics mode.
+\todo{could be a good place to compare mode prob after marginalsing h and x}
 
 Minimising the approximated expected Riemannian energy in cref:eq-approximate-trajectory-riemannian-energy
 principally encodes both goals, whilst also decoupling them via the $\lambda$ parameter.
@@ -11427,7 +11616,7 @@ In practice, all trajectories that were optimised subject to the expected Rieman
 satisfied the chance constraints in cref:eq-mode-chance-constraint.
 However, this may not always be the case.
 In these cases, the $\lambda$ parameter can be tuned until the constraints are satisfied.
-Remember that chance constraints are governed by the desired mode's mixing probability,
+Remember that the chance constraints are governed by the desired mode's mixing probability,
 which decreases in regions with:
 - high uncertainty in the desired gating function,
 - high uncertainty in the state, resulting from high uncertainty in the desired dynamics mode.
@@ -11436,108 +11625,106 @@ can be increased to try and avoid entering these regions.
 In turn, this will increase the probability of remaining in the desired dynamics mode, as indicated by the
 marginalisation of the gating functions in cref:eq-mode-chance-constraint-integral.
 
-It is worth noting that it might not be possible to find a trajectory
-between a given start state $\state_0$, and a target state $\targetState$, that satisfies the chance constraints.
-Again, this may be due to either the desired dynamics mode being uncertain, or the gating network being
-uncertain.
-In this scenario, it is desirable to explore the environment and update the learned dynamics mode
-with this new experience.
-This will reduce the epistemic uncertainty in the model, increasing the likelihood of being able to find
-trajectories that satisfy the chance constraints.
-This motivates the work in cref:chap-active-learning, which addresses active learning in
-multimodal dynamical systems whilst attempting to remain in a desired dynamics mode.
-
 ** Discussion & Future Work
+This section compares the two control methods presented in this chapter and suggests future
+work to address their limitations.
+cref:tab-geometry-control-comparison offers a succinct comparison of the two approaches.
+The main drawbacks of the indirect control method are:
+1. the fact it does not enforce the dynamics constraints,
+2. its limitation to systems that are differentially flat.
+
+*Dynamics constraints*
+The direct control method ensures trajectories satisfy the learned dynamics.
+It achieves this by enforcing the distribution over state trajectories,
+to match the distribution from cascading single-step predictions through the desired mode's dynamics \acrshort{gp}.
+This can be seen as a method for approximating the integration of the controlled dynamics with respect to time, whilst
+considering the epistemic uncertainty associated with learning from observations.
+The chance constraints enforce that the controlled system is $\delta$ - mode remaining,
+ensuring this approximate dynamics integration is valid.
+In contrast, the indirect control method does not find trajectories that are guaranteed to satisfy the dynamics
+constraints.
+This is a limiting factor that makes the direct control method more appealing.
+However, future work could attempt to enforce the dynamics constraints in the indirect methods collocation solver.
+
+# Future work could consider extending the indirect control method to enforce the dynamics constraints.
+# Further to this,
+*Uncertainty aware*
+For the direct control method, the combination of approximate dynamics integration and chance constraints
+leads to closed-form expressions for the expected cost.
+This expression considers the epistemic uncertainty associated with the learned dynamics model,
+both in the desired dynamics mode and in the gating network.
+In contrast, the indirect control method ignores the uncertainty accumulated by cascading single-step predictions through
+the learned dynamics model.
+# It models the state at each time step to be deterministic and approximates the full geodesic \acrshort{sde}
+# to be deterministic.
+# As as result, the cost function will not keep the state trajectory in regions of low uncertainty.
+
+# Note that the uncertainty in the gating network may be low in these regions.
+# This is undesirable behaviour in a risk-averse setting.
+# It approximates the geodesic \acrshort{sde} by replacing the random variable associated with the Riemannain metric
+# tensor with its expected value.
+# In combination with the deterministic state approximation, this reduces the geodesic \acrshort{sde} to an \acrshort{ode}.
+
+# As as result, trajectories may pass through regions of the desired dynamics mode which are uncertain.
+# Note that the uncertainty in the gating network may be low in these regions.
+# This is undesirable behaviour in a risk-averse setting.
+
 #+begin_table
 #+LATEX: \caption{Comparison of the Indirect Control via Latent Geodesics method from \cref{sec-traj-opt-collocation} and the Direct Control via Riemannian Energy method from \cref{sec-traj-opt-energy}.}
 #+LATEX: \label{tab-geometry-control-comparison}
 #+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center t :placement [!t]
-|                                    | Indirect Control | Direct Control | Comments |
-|------------------------------------+------------------+----------------+----------|
-| Dynamics Constraints               | \times           | \checkmark     |          |
-| Decouple Goals                     | \checkmark       | \checkmark     |          |
-| Boundary Conditions Guaranteed     | \checkmark       | \times         |          |
-| Non Differential Flat Systems      | \times           | \checkmark     |          |
-| Mode Chance Constraints Guaranteed | \times           | \times         |          |
-| Remain in *multiple* modes         | \times           | \times         |          |
+|                                                    | Indirect Control | Direct Control |
+|----------------------------------------------------+------------------+----------------|
+| Dynamics constraints guaranteed?                   | \times           | \checkmark     |
+| Considers epistemic uncertainty in dynamics?       | \times           | \checkmark     |
+| Considers epistemic uncertainty in gating network? | \checkmark       | \checkmark     |
+| Applicable in non differentially flat systems?     | \times           | \checkmark     |
+| Decouples goals?                                   | \checkmark       | \checkmark     |
+| Can remain in *multiple* modes?                    | \times           | \times         |
+| Boundary conditions guaranteed?                    | \checkmark       | \times         |
+| $\delta-\text{mode remaining}$?                    | \times           | \checkmark     |
+| Continuous time trajectory?                        | \checkmark       | \times         |
 #+LATEX: }
 #+end_table
 
-This section compares the two control methods presented in this chapter and suggests future
-work to address their limitations.
-cref:tab-geometry-control-comparison offers a succinct comparison of the two approaches.
-The main drawbacks of the indirect control method that motivated the direct control method, are 1) its limitation
-to systems that are diffentially flat and 2) the fact it does not enforce the dynamics constraints.
-
-*Differential Flatness*
+*Differential flatness*
 The indirect control method is only applicable to systems that are differentially flat.
 For example, it is not applicable to thrust/torque controlled quadcopters.
 Further to this, it relies upon learning a slice of the transition dynamics with constant controls.
 In practice, collecting a data set with constant controls is awkward.
-In contrast, the direct control method does not make assumptions on the data collection process
-and it is applicable in systems which are not differentially flat.
-
-*Dynamics Constraints Satisfaction*
-The direct control method also ensures trajectories satisfy the learned dynamics.
-It achieves this by enforcing the distribution over state trajectories,
-to match the distribution from cascading single-step predictions through the desired mode's dynamics \acrshort{gp}.
-This can be seen as a method for approximating the integration of the controlled dynamics with respect to time, whilst
-considering the epistemic uncertainty associated with learning from observations.
-The chance constraints ensure that the controlled system is $\delta$ - mode remaining,
-which makes this approximate dynamics integration valid.
-
-# Future work could consider extending the indirect control method to enforce the dynamics constraints.
-Further to this, the combination of approximate dynamics integration and chance constraints
-leads to closed-form expressions for the expected cost.
-This expression considers all of the epistemic uncertainty associated with the learned dynamics model.
-Both the uncertainty in the desired dynamics mode and the uncertainty in the gating network.
-In contrast, the indirect control method ignores the uncertainty accumulated by cascading single-step predictions through
-the learned dynamics model.
-It models the state at each time step to be deterministic and approximates the full geodesic \acrshort{sde}
-to be deterministic.
-It approximates the geodesic \acrshort{sde} by replacing the random variable associated with the Riemannain metric
-tensor with its expected value.
-In combination with the deterministic state approximation, this reduces the geodesic \acrshort{sde} to an \acrshort{ode}
-As as result the expected
-in place
-
-As as result, trajectories may pass through regions of the desired dynamics mode which are uncertain.
-Note that the uncertainty in the gating network may be low in these regions.
-This is undesirable behaviour in a risk-averse setting.
-# In this case the uncertainty in the gating network may be low,
-# the expected
-
-Algorithm 2 considers uncertainty in dynamics. Algorithm 1 approximates geodesic SDE to be deterministic.
-
-*Multiple desired modes*
-The trajectory optimisation algorithms presented in this chapter successfully find trajectories that
-remain in a desired dynamics mode.
-However, the main goal is to avoid entering the inoperable dynamics mode.
-As such, an interesting direction for future work, is to develop control methods that can remain in a set of
-dynamics modes.
-
-Although not tested, the approach is theoretically sound and should be applicable in systems
-with more than two dynamics modes.
-However, it is interesting to consider if this is even necessary given our goals.
-For example, in the quadcopter experiment, the transition dynamics model was intentionally instantiated
-with two dynamics modes, even though there could be more in reality.
-The desired dynamics mode was engineered to have a noise variance that we deemed operable.
-The other dynamics mode was then used to explain away all of the inoperable modes.
-In most scenarios a similar approach could be followed.
+In contrast, the direct control method does not make such assumptions and is applicable in a much larger range of systems.
 
 *Decouple goals*
-Both approaches also provide a mechanism to set the relevance of each goal, i.e. it decouples them.
-This is achieved by augmenting the expected Riemannian metric tensor with a user-tunable weight
+Both approaches provide a mechanism to set the relevance of each goal, i.e. to decouple them.
+This is achieved by augmenting the expected Riemannian metric tensor with the user-tunable weight
 parameter $\lambda$, that can be adjusted to determine the relevance of the covariance term.
 
-*Invariant sets*
+*Multiple desired modes*
+Although not tested, the approaches are theoretically sound and should be applicable in systems with more
+than two dynamics modes.
+However, it is interesting to consider if this is even necessary given the goals.
+For example, in the quadcopter experiment, the transition dynamics model was intentionally instantiated
+with two dynamics modes, even though there could be more in reality.
+The desired dynamics mode was engineered to have a noise variance that was deemed operable.
+The other dynamics mode was then used to explain away all of the inoperable modes.
+In most scenarios a similar approach could be followed.
+Nevertheless, it is interesting to consider systems with more than two modes.
+This is because the main goal is to avoid entering the inoperable dynamics mode, not just remain in a desired
+dynamics mode.
+As such, an interesting direction for future work, is to develop control methods that can remain in a set of
+dynamics modes, as opposed to just one.
+
+*Mode remaining guarantee*
+Neither method provides theoretical guarantees that the controlled system will remain in the desired dynamics mode.
+However, the direct control approach does provide chance constraints that can be evaluated to check if a
+trajectory is $\delta-\text{mode remaining}$.
 Recent work by
-cite:berkenkampSafe2019,berkenkampSafe2017,berkenkampSafe2015,kollerLearningBased2018
-considers the use of invariant sets to synthesise closed-loop controllers that are guaranteed to remain in
-given set of states.
+cite:berkenkampSafe2019,berkenkampSafe2017,kollerLearningBased2018
+considers the use of invariant sets to synthesise closed-loop controllers/policies that are guaranteed to
+remain in a given set of states.
 Their work considers safe sets defined by Lyapanov stability but it would be interesting to extend their
-concepts to synthesise $\delta$ -mode remaining controllers
+concepts to synthesise $\delta-\text{mode remaining}$ controllers
 $\pi_{\desiredMode} : \desiredStateDomain  \rightarrow \controlDomain$,
 with theoretical guarantees of the form,
 #+BEGIN_EXPORT latex
@@ -11546,34 +11733,90 @@ with theoretical guarantees of the form,
 \end{align}
 #+END_EXPORT
 
-*Continuous Time*
-The direct control method considered in this dissertation consider
-required control regularisation to prevent the controls leading to state transitions that
+*Continuous time trajectories*
+The direct control method required control regularisation to prevent state transitions that
 "jump" over the undesired mode.
-That is, trajectories whose discrete time steps appear to satisfy the constraints/cost but the actual continuous time
-trajectory passes through the undesired mode.
+That is, the discrete time steps of the trajectory appear to satisfy the constraints and minimise the cost,
+but the actual continuous time trajectory passes through the undesired mode.
+This is a general problem that arises with discrete time solvers.
+In contrast, the indirect control method uses a collocation solver where the cost can be evaluated at arbitrary
+points along the continuous time trajectory.
+An interesting direction for future work is to extend the direct control method to find trajectories in continuous time.
+# This is because they can be used to enforce the dynamics and interpolate the cost with higher resolution.
+# Stochastic collocation methods may offer
 
-Methods for learning continuous time controls that can be used to interpolate cost over trajectory
-to get higher resolution.
-For example a Gaussian process over controls instead of Gaussian.
-Or stochastic collocation.
+# the single-step dynamics models time step.
+
+# This is an artifact of solving the trajectory optimisation problem in discrete time and can be solved by decreasing
+# the single-step dynamics models time step.
+# Alternatively, an interesting direction for future work is to consider methods that optimise continuous time controls
+# that can be used to interpolate cost over trajectory to get higher resolution.
+# For example a Gaussian process over controls instead of Gaussian.
+# Or stochastic collocation.
+
+
+*Infeasible trajectories*
+It is worth noting that it might not be possible to find a trajectory
+between a given start state $\state_0$, and a target state $\targetState$, that satisfies the chance constraints.
+This may be due to either the desired dynamics mode being uncertain, or the gating network being uncertain.
+In this scenario, it is desirable to explore the environment and update the learned dynamics mode with this new experience.
+This will reduce the epistemic uncertainty in the model, increasing the likelihood of being able to find
+trajectories that satisfy the chance constraints.
+This motivates the work in cref:chap-active-learning, which addresses exploration of
+multimodal dynamical systems, whilst attempting to remain in a desired dynamics mode.
+
+*Real-time control*
+Whilst real-time control requires efficient inference algorithms,
+"offline" trajectory optimisation can trade in computational cost for greater accuracy.
+This work is primarily interested in finding trajectories that attempt to remain in a
+desired dynamics mode.
+For the sake of simplicity, it has considered the "offline" trajectory optimisation setting.
+The increased computational time may hinder
+its suitability to obtain a closed-loop controller via MPC citep:eduardof.Model2007.
+However, it can be used "offline" to generate reference trajectories for a tracking controller,
+or for guided policy search in a model-based RL setting citep:levineGuided2013.
+Alternatively, future work could investigate approximate inference methods for efficient state estimation
+to aid with real-time control, e.g. iLQG/DDP.
 
 ** Conclusion
-This chapter has shown that the geometry of the gating network from the \acrshort{mosvgpe} model from cref:chap-dynamics
-infers valuable information regarding how a system switches between its underlying modes.
-Further to this, it has detailed two trajectory optimisation algorithms that encode the goals via this
-latent geometry.
-That is, the algorithms find trajectories that remain in a desired dynamics mode,
-whilst also avoiding regions of high epistemic uncertainty.
-
-This chapter has presented a method for performing trajectory optimisation in
-multimodal dynamical systems with the transition dynamics modelled as a
-\acrshort{mogpe} method.
-The trajectory optimisation is projected onto a probabilistic Riemannian
-manifold parameterised by the gating network of the \acrshort{mogpe} model.
-Given a start and end state, the trajectory optimisation can be tuned to find trajectories that either
-prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
+This chapter has shown how the geometry of the \acrshort{mosvgpe} gating network
+infers valuable information regarding how a multimodal dynamical system switches between its underlying modes.
+Moreover, it has shown how this latent geometry can be leveraged to encode both mode remaining
+and risk-sensitive behaviour into control strategies.
+Given a start and end state, both of the methods presented in this chapter can be tuned to find trajectories that either
+prioritise remaining in a desired dynamics mode, or prioritise avoiding regions of the learned
 dynamics model with high epistemic uncertainty.
+Both methods are evaluated on a quadcopter navigation problem.
+Overall, the direct control approach offers superior performance, as it finds trajectories that do not violate
+the dynamics constraints, whilst ensuring controlled trajectories are $\delta-\text{mode remaining}$.
+
+# The direct control algorithm from cref:sec-traj-opt-energy and the mode chance constraints from
+# cref:eq-mode-chance-constraint are used in cref:chap-active-learning
+
+# The control algorithms find trajectories from an initial state
+# $\state_0$, to a target state $\targetState$, whilst remaining in a desired dynamics mode.
+
+# The methods leverage the \acrshort{mosvgpe} model from cref:chap-dynamics to first learn a single-step dynamics model.
+# This chapter has shown that the geometry of the \acrshort{mosvgpe} gating network
+# infers valuable information regarding how a system switches between its underlying modes.
+# Moreover, it has shown how this latent geometry can be leveraged to encode both mode remaining
+# and risk-sensitive behaviour into control strategies.
+
+# This chapter has shown that the geometry of the gating network from the \acrshort{mosvgpe} model from cref:chap-dynamics
+# infers valuable information regarding how a system switches between its underlying modes.
+# Further to this, it has detailed two trajectory optimisation algorithms that encode the goals via this
+# latent geometry.
+# That is, the algorithms find trajectories that remain in a desired dynamics mode,
+# whilst also avoiding regions of high epistemic uncertainty.
+
+# This chapter has presented a method for performing trajectory optimisation in
+# multimodal dynamical systems with the transition dynamics modelled as a
+# \acrshort{mogpe} method.
+# The trajectory optimisation is projected onto a probabilistic Riemannian
+# manifold parameterised by the gating network of the \acrshort{mogpe} model.
+# Given a start and end state, the trajectory optimisation can be tuned to find trajectories that either
+# prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
+# dynamics model with high epistemic uncertainty.
 
 * Multimodal Model-Based Control Probabilistic Inference label:chap-traj-opt-inference
 ** Maths :ignore:
@@ -13456,7 +13699,7 @@ Given a start and end state, the trajectory optimisation can be tuned to find tr
 prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
 dynamics model with high epistemic uncertainty.
 
-* Mode Constrained Active Learning in Multimodal Dynamical Systems label:chap-active-learning
+* Mode Constrained Exploration for Model-Based Reinforcement Learning label:chap-active-learning
 #+begin_export latex
 \epigraph{Real knowledge is to know the extent of one’s ignorance.”}{\textit{Confucius (Philosopher, 551–479BC).}}
 #+end_export
