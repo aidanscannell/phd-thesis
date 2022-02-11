@@ -11627,17 +11627,23 @@ All plots show a slice of the input space with constant zero controls.}
 #+END_EXPORT
 
 **** Table :ignore:
-#+LABEL: tab-results-energy
+#+begin_table
 #+CAPTION: *Direct Control via Riemannian Energy* Comparison of performance with different settings of $\lambda$.
-#+CAPTION: The performance measures are summed over each time step in the horizon.
-#+attr_latex: :placement [!b]
-|--------------------------+------------------------------------------------------------------------------+-------------------------------------------------------------------------------|
-| Trajectory               | Mixing Probability                                                           | Epistemic Uncertainty                                                         |
-|                          | $\sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=1 \mid \state_\timeInd)$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\gatingFunc^{(1)}(\state_\timeInd)]$ |
-|--------------------------+------------------------------------------------------------------------------+-------------------------------------------------------------------------------|
-| Optimised $\lambda=0.1$  | $$                                                                           | $$                                                                            |
-| Optimised $\lambda=1.0$  | $$                                                                           | $$                                                                            |
-| Optimised $\lambda=10.0$ | $$                                                                           | $$                                                                            |
+#+CAPTION: The performance measures are summed over each time step in the horizon.}
+#+LATEX: \label{tab-results-energy}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center t :placement [!b]
+|----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
+| Trajectory     | Mode Probability                                                                                        | State Uncertainty                                          | Gating Function Uncertainty                                                            | Riemannian Energy |
+|                | $\sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\state_\timeInd]$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\gatingFunc_{\desiredMode}(\state_\timeInd)]$ |                   |
+|----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
+| Baseline       | $17.06$                                                                                                 | $0.00620$                                                  | $93.62$                                                                                |                   |
+| $\lambda=0.1$  | $20.91$                                                                                                 | $0.00300$                                                  | $292.42$                                                                               | $41.64$           |
+| $\lambda=1.0$  | $\mathbf{20.98}$                                                                                        | $0.00920$                                                  | $54.21$                                                                                | $39.26$           |
+| $\lambda=10.0$ | $20.83$                                                                                                 | $\mathbf{0.00198}$                                         | $\mathbf{31.51}$                                                                       | $50.34$           |
+#+LATEX: }
+#+end_table
+
 **** Direct Control via Riemannian Energy
 All experiments presented here used a $\TimeInd=20$ step horizon.
 For comparison, the optimised controls are rolled out in the desired mode's dynamics GP (magenta) and in the
