@@ -5331,8 +5331,9 @@ The state and control at time $t$ are denoted as $\state_t \in \stateDomain$ and
 respectively and
 $\Delta \state_{\timeInd} = \state_{\timeInd} - \state_{\timeInd-1}$ denotes the change in state between time $\timeInd-1$
 and $\timeInd$.
-At any given time step $t$, one of the $\ModeInd$ dynamics modes,
-$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$ and associated noise models,
+At any given time step $t$, one of the $\ModeInd$ dynamics modes
+$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
+and associated noise models
 $\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
 $\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
 are selected by a discrete mode indicator variable,
@@ -5570,7 +5571,7 @@ This approach is problematic because the trajectory passes through the turbulent
 which may lead to catastrophic failure.
 Further to this, the trajectory does not reach the target state $\targetState$.
 Without inferring information regarding how the system switches between its underlying dynamics modes, it is not
-obvious how the notion of mode remaining/avoiding can be encoded into control algorithms.
+obvious how mode remaining/avoiding behaviour can be encoded into control algorithms.
 #+BEGIN_EXPORT latex
 \begin{remark}
 As the underlying dynamics modes and how the system switches between them,
@@ -5648,13 +5649,13 @@ learn /latent spaces/ which provide convenient spaces for planning.
 \marginpar{latent spaces for control}
 cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline highlights the need for learning
 informative latent variables representing how the system switches between the underlying dynamics modes.
-Without such information, it is not obvious how to encode the notion of mode remaining/avoiding behaviour.
+Without such information, it is not possible to encode the notion of mode remaining/avoiding behaviour.
 As such, this work is interested in learning /latent spaces/
 that are rich with information regarding how a system switches between its underlying dynamics modes.
 
 With this in mind, the main goals of this chapter are to construct a model which,
 1. can accurately /identify/ the true underlying dynamics modes,
-2. has a convenient /latent space/ for planning/control,
+2. has convenient /latent spaces/ for planning/control,
    - rich with information regarding the mode switching behaviour.
    # - this could be achieved by providing handles for encoding informative domain knowledge, in turn, constraining the set of admissible functions,
 
