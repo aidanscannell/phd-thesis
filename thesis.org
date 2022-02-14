@@ -374,7 +374,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 
 # All inputs set/vector/tensor notation
 #+LATEX_HEADER: \newcommand{\GatingFunc}{\ensuremath{\mathbf{\gatingFunc}}}
-#+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\MakeUppercase\GatingFunc}}}}
+#+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\MakeUppercase\GatingFunc}}
 #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\Nk{\GatingFunc}}}
 # #+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\allData{\GatingFunc}}}
 # #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\allData{\mode{\GatingFunc}}}}
