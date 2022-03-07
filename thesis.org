@@ -6047,6 +6047,7 @@ With this notation, the regression problem can be written as,
 # for all dimensions as $\fkn$ and at all data points as $\Fk$.
 
 ** Problem Statement
+\todo{change t-1 to t and t to t+1 to be consistent with control section}
 This work considers /unknown/, or /partially unknown/,  multimodal,
 stochastic, nonlinear dynamical systems,
 #+BEGIN_EXPORT latex
@@ -10817,7 +10818,7 @@ The relevant concepts from Riemannian geometry, that are needed to formalise thi
 
 #+BEGIN_EXPORT latex
 \begin{myquote}
-\textbf{Riemannian Manifolds}
+\textbf{Riemannian manifolds}
 In this dissertation if suffices to consider manifolds $\manifold$ defined by a mapping,
 %#+BEGIN_EXPORT latex
 \begin{equation} \label{eq-manifold-function}
@@ -10853,11 +10854,13 @@ globally defined differentiable structure.
 
 *** Lengths in Euclidean Spaces :ignore:
 \newline
-*Lengths in Euclidean Spaces*
+*Lengths in Euclidean spaces*
 The $l^2$ norm (aka Euclidean norm) provides an intuitive notion for the length of a
-vector $\manifoldInput \in \manifoldDomain \subseteq \R^\manifoldDomainDim$
-in a Euclidean space. Under the $l^2$ norm, the length of a trajectory
-${\trajectory = \{\manifoldInput(t) \in \manifoldDomain \mid \forall t \in [t_0, t_f]\}}$ is given by,
+vector $\manifoldInput \in \manifoldDomain \subseteq \R^{\manifoldDomainDim}$
+in a Euclidean space.
+Overloading notation, a continuous time trajectory is also denoted $\trajectory$ and corresponds to
+${\trajectory: [t_0, t_f] \rightarrow \manifoldDomain$.
+Under the $l^2$ norm, the length of a trajectory $\trajectory$ is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-euclidean-length}
 \text{Length}\left(\trajectory\right)
@@ -10872,9 +10875,12 @@ calculate lengths of trajectories on manifolds endowed with an inner product.
 # Remembering that a norm can be expressed for any space endowed with an inner product,
 # provides us with the tools to for calculating lengths on manifolds.
 
+# Under the $l^2$ norm, the length of a trajectory
+# ${\trajectory = \{\manifoldInput(t) \in \manifoldDomain \mid \forall t \in [t_0, t_f]\}}$ is given by,
+
 *** Lengths on Riemannian Manifolds :ignore:
 
-*Lengths on Riemannian Manifolds*
+*Lengths on Riemannian manifolds*
 The length of a trajectory $\trajectory$ on a manifold $\manifold$, can be calculated
 by mapping it through the function $\manifoldFunction$ and
 using Eq. ref:eq-euclidean-length,
@@ -11008,7 +11014,7 @@ Eq. \ref{eq-predictive-jacobian-dist} is a $\GatingDim\text{-dimensional}$ multi
 \end{myquote}
 #+END_EXPORT
 
-Therefore, the metric tensor $\desiredMetricTensor$ in Eq. ref:eq-desired-metric-tensor is the outer product of
+Therefore, the metric tensor $\desiredMetricTensor$ in cref:eq-desired-metric-tensor is the outer product of
 two Normally distributed random variables.
 As such, the metric tensor $\desiredMetricTensor$ is also a random variable, following
 a non-central Wishart distribution citep:andersonNonCentral1946,
@@ -11186,7 +11192,7 @@ necessary conditions for optimality are encoded via the geodesic \acrshort{ode}.
 However, it is worth noting that solutions to the geodesic \acrshort{ode} are not guaranteed to satisfy the
 dynamics constraints.
 
-*Differential Flatness*
+*Differential flatness*
 Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode cannot
 be solved with simple forward or backward integration.
 Instead, the problem is transcribed using the approach of differential
@@ -11223,7 +11229,7 @@ at the midpoints between a set of $I$ collocation points
 $\{\mathbf{z}_i\}_{i=1}^I$. This is achieved through the collocation defects,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-defect}
-\Delta_{i+\frac{1}{2}} &= \ddot{\mathbf{z}}_{i+\frac{1}{2}} - f_G(t_{i+\frac{1}{2}}, \dot{\mathbf{z}}_{i+\frac{1}{2}},\mathbf{z}_{i+\frac{1}{2}})
+\Delta_{i+\frac{1}{2}} &= \ddot{\mathbf{z}}_{i+\frac{1}{2}} - f_G(t_{i+\frac{1}{2}}, \mathbf{z}_{i+\frac{1}{2}}, \dot{\mathbf{z}}_{i+\frac{1}{2}})
 \end{align}
 #+END_EXPORT
 where $\ddot{\mathbf{z}}_{i+\frac{1}{2}}, \dot{\mathbf{z}}_{i+\frac{1}{2}}, \mathbf{z}_{i+\frac{1}{2}}$
@@ -12225,13 +12231,285 @@ All plots show a slice of the input space with constant zero controls.}
 
 **** Table :ignore:
 #+begin_table
-#+CAPTION: *Direct Control via Riemannian Energy* Comparison of performance with different settings of $\lambda$.
+#+CAPTION: *Direct control via Riemannian energy* Comparison of performance with different settings of $\lambda$.
 #+CAPTION: The performance measures are summed over each time step in the horizon.}
 #+LATEX: \label{tab-results-energy}
 #+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center t :placement [!b]
 |----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
-| Trajectory     | Mode Probability                                                                                        | State Uncertainty                                          | Gating Function Uncertainty                                                            | Riemannian Energy |
+| Trajectory     | Mode probability                                                                                        | State uncertainty                                          | Gating function uncertainty                                                            | Riemannian energy |
+|                | $\sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\state_\timeInd]$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\gatingFunc_{\desiredMode}(\state_\timeInd)]$ |                   |
+|----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
+| Baseline       | $17.06$                                                                                                 | $0.00620$                                                  | $93.62$                                                                                |                   |
+| $\lambda=0.1$  | $20.91$                                                                                                 | $0.00300$                                                  | $292.42$                                                                               | $41.64$           |
+| $\lambda=1.0$  | $\mathbf{20.98}$                                                                                        | $0.00920$                                                  | $54.21$                                                                                | $39.26$           |
+| $\lambda=10.0$ | $20.83$                                                                                                 | $\mathbf{0.00198}$                                         | $\mathbf{31.51}$                                                                       | $50.34$           |
+#+LATEX: }
+#+end_table
+
+**** Direct Control via Riemannian Energy
+All experiments presented here used a $\TimeInd=20$ step horizon.
+For comparison, the optimised controls are rolled out in the desired mode's dynamics GP (magenta) and in the
+environment (cyan).
+# and the controls were optimised using
+# SciPy's Sequential Least Squares Programming (SLSQP) citep:2020SciPy-NMeth.
+
+cref:fig-riemannian-energy-low-traj-opt,fig-riemannian-energy-traj-opt,fig-riemannian-energy-high-traj-opt
+show results after performing trajectory optimisation using this learned model and the method
+in cref:sec-traj-opt-results-energy.
+The results compare three different settings of the tuneable $\lambda$ parameter,
+which determines the relevance of the covariance term in the expected Riemannian metric.
+
+cref:fig-riemannian-energy-low-traj-opt shows results with $\lambda=0.1$ -- low covariance relevance --
+where trajectories should prioritise remaining in the desired dynamics mode over avoiding regions of high
+epistemic uncertainty.
+The left plot in cref:fig-riemannian-energy-low-traj-opt-over-svgp shows the trajectories
+following the contours of the posterior mean associated with the desired mode's gating function.
+With this $\lambda$ setting, trajectories appear to be completely dominated by the contour following term and
+do not avoid the region of high posterior variance.
+This is the desired behaviour when setting $\lambda$ to be small.
+For example, in scenarios where avoiding regions of high epistemic uncertainty is a secondary goal.
+However, this is not desirable in a risk-averse setting.
+
+cref:fig-riemannian-energy-traj-opt-over-svgp,fig-riemannian-energy-high-traj-opt-over-svgp
+show the results using $\lambda=1.0$ and $\lambda=10.0$ respectively.
+These $\labmda$ settings should avoid regions of high epistemic uncertainty to different degrees.
+The right plots show the trajectories avoiding regions of high posterior variance associated with the desired
+mode's gating function.
+Note that the Riemannian energy contains the covariance of the gating function's Jacobian, not the
+covariance associated with the gating function \acrshort{gp}.
+Both of these $\lambda$ settings find trajectories that successfully avoid the region of high uncertainty in the
+gating network.
+They appear to initially avoid the region of high uncertainty and then attempt to follow the
+posterior mean's contours, once they have passed the uncertain region.
+As a result, the trajectories successfully remain in the desired dynamics mode.
+In this example, setting $\lambda=10.0$ is overly cautious with respect to Goal 2.
+This is because the trajectory has a lot of clearance from the region of high epistemic uncertainty
+which has reduced its clearance from the turbulent dynamics mode.
+\todo{could be a good place to compare mode prob after marginalsing h and x}
+
+Minimising the approximated expected Riemannian energy in cref:eq-approximate-trajectory-riemannian-energy
+principally encodes both goals, whilst also decoupling them via the $\lambda$ parameter.
+
+*Chance Constraints*
+In practice, all trajectories that were optimised subject to the expected Riemannain energy,
+satisfied the chance constraints in cref:eq-mode-chance-constraint.
+However, this may not always be the case.
+In these cases, the $\lambda$ parameter can be tuned until the constraints are satisfied.
+Remember that the chance constraints are governed by the desired mode's mixing probability,
+which decreases in regions with:
+- high uncertainty in the desired gating function,
+- high uncertainty in the state, resulting from high uncertainty in the desired dynamics mode.
+Therefore, if the uncertainty in the gating network is very high, the $\lambda$ parameter
+can be increased to try and avoid entering these regions.
+In turn, this will increase the probability of remaining in the desired dynamics mode, as indicated by the
+marginalisation of the gating functions in cref:eq-mode-chance-constraint-integral.
+
+*** Simulated Quadcopter Experiments label:sec-traj-opt-results-energy
+The simulated environment is instantiated with the gating mask in cref:fig-gating-mask-scenrio-5,
+where the red region indicates the desired (operable) dynamics mode $\modeVar=1$ and the white region
+indicates the turbulent dynamics mode $\modeVar=2$.
+#+BEGIN_EXPORT latex
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/env/gating_mask_with_start_end_pos.pdf}
+\caption{\textbf{Gating Mask} - indicating where each mode governs the simulator's dynamics;
+(white) turbulent dynamics mode and (red) desired (operable) dynamics mode.
+The hashed box indicates a subset of the environment that is not observed.}
+\label{fig-gating-mask-scenrio-5}
+\end{figure}
+#+END_EXPORT
+The state domain is constrained to $x, y \in [-3, 3]$ and min/max controls are implemented by constraining the
+control domain to $\velocity_x, \velocity_y \in [-5, 5]$.
+
+**** Model Learning
+To begin with, $\NumData$ state transitions were sampled from the simulator with $\Delta \timeInd = 0.25s$.
+Following the experiments in cref:sec-traj-opt-results-collocation,
+the model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts, one to
+represent the desired dynamics mode and one to represent the turbulent dynamics mode.
+Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
+The gating network used a single gating function (with a Bernoulli likelihood) with
+a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
+In contrast to the algorithm presented in cref:sec-traj-opt-energy, this method learns the full transition
+dynamics model, i.e. it does not assume constant controls.
+cref:fig-riemannian-energy-low-traj-opt shows the gating network posterior after training the model.
+
+# In this example, it is /known a priori/ that the dynamics modes vary spatially.
+# For this reason, the gating network was formulated to only depend on the state
+# $\gatingFunc : \stateDomain \rightarrow \R$,
+# instead of both the state and control
+# $\gatingFunc : \stateDomain \times \controlDomain \rightarrow \R$.
+# #+BEGIN_EXPORT latex
+# \begin{remark}
+# The direct control method in \cref{sec-traj-opt-energy} is applicable in systems where the gating network
+# depends on both the state and control.
+# \end{remark}
+# #+END_EXPORT
+# Note that the relevant input dimensions can easily be set in =GPflow=,
+# by setting the kernel's =active_dims= property.
+# In this case, only the state dimensions, instead of the entire state-control input.
+# cref:fig-riemannian-energy-low-traj-opt shows the gating network posterior after training th model.
+
+**** Baseline Prob :ignore:noexport:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_prob.pdf}
+\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
+\label{eq-traj-opt-over-prob-baseline}
+\end{minipage}
+\begin{minipage}{1.0\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
+\subcaption{Trajectories overlayed on desired mode's gating function GP.}
+\label{eq-traj-opt-over-svgp-baseline}
+\end{minipage}
+\caption{\label{fig-traj-opt-baseline}
+This figure demonstrates the shortcomings of finding trajectories
+from a start state $\state_0$, to a target state $\targetState$,
+in the system in \cref{fig-point-mass-motivation},
+without avoiding the turbulent dynamics mode.
+To demonstrate the methods shortcomings, the optimised controls were rolled out in the desired mode's GP dynamics (magenta)
+and in the environment (cyan).
+(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on the desired mode's mixing probability
+and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
+mean (left) and posterior variance (right).
+It is clear that the trajectory resulting from rolling out the controls in the environment,
+passes through the turbulent dynamics mode and as a result, deviates from the
+trajectory rolled out in the desired mode's dynamics.}
+\end{figure}
+#+END_EXPORT
+***** Discussion Baseline Prob :ignore:noexport:
+The contour plots in cref:fig-traj-opt-baseline represent the gating network associated with the model from
+cref:chap-dynamics after performing Bayesian inference, given a historical data set of state transitions
+$\dataset$ from the environment in cref:fig-point-mass-motivation.
+Control trajectories were found by minimising the expected cost under the state distribution
+resulting from cascading single-step predictions through the desired mode's ($\modeInd=2$ in this case)
+learned GP dynamics model.
+The cost function consisted of a quadratic integral control cost and a terminal state cost.
+This approach only considered the dynamics of the desired mode, leading to trajectories in the environment deviating
+from those planned in the learned dynamics model.
+The trajectories also pass through regions of the dynamics with high epistemic uncertainty, which is not desirable.
+\todo{finish this para when have trajectory deviating at high epistemic uncertainty}
+
+***** Discussion Baseline Prob :ignore:noexport:
+cref:fig-traj-opt-baseline shows results for a baseline trajectory optimisation method, where the optimised trajectory
+rolled out in the desired mode's GP dynamics (magenta), passes through the undesired dynamics mode
+(mode one $\modeVar = 1$ in this case).
+This trajectory rolled out in the simulated environment (cyan),
+clearly deviates from the models predicted trajectory, when it passes through the undesired dynamics mode.
+This trajectory was obtained from a standard form of control in GP dynamics models, with
+no maximum entropy control or mode remaining behaviour.
+It used deterministic controls and the cost function from cref:eq-quadratic-cost-control.
+As such, the controls were optimised w.r.t. the expected cost in cref:eq-expected-quadratic-cost.
+
+**** Riemannian energy 0.1 :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-low/trajectories_over_desired_prob}.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-low-traj-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-low/trajectories_over_desired_gating_gp}.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-low-traj-opt-over-svgp}
+\end{minipage}
+\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=0.1}$
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$,
+with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
+with $\labmda=0.1$
+and deterministic controls (no maximum entropy control).
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-riemannian-energy-low-traj-opt-over-prob})
+each mode's mixing probability
+and (\subref{fig-riemannian-energy-low-traj-opt-over-svgp})
+the posterior mean (left) and variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-riemannian-energy-low-traj-opt}
+\end{figure}
+#+END_EXPORT
+
+**** Riemannian energy 1 :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/riemannian-energy/trajectories_over_desired_prob.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-traj-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/riemannian-energy/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-traj-opt-over-svgp}
+\end{minipage}
+\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=1.0}$
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$,
+with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
+with $\labmda=1.0$
+and deterministic controls (no maximum entropy control).
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-riemannian-energy-traj-opt-over-prob})
+each mode's mixing probability
+and (\subref{fig-riemannian-energy-traj-opt-over-svgp})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-riemannian-energy-traj-opt}
+\end{figure}
+#+END_EXPORT
+
+**** Riemannian energy 10 :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-high/trajectories_over_desired_prob}.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-high-traj-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-high/trajectories_over_desired_gating_gp}.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-high-traj-opt-over-svgp}
+\end{minipage}
+\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=10.0}$
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$,
+with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
+with $\labmda=10.0$
+and deterministic controls (no maximum entropy control).
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-riemannian-energy-high-traj-opt-over-prob})
+each mode's mixing probability
+and (\subref{fig-riemannian-energy-high-traj-opt-over-svgp})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-riemannian-energy-high-traj-opt}
+\end{figure}
+#+END_EXPORT
+
+**** Table :ignore:
+#+begin_table
+#+CAPTION: *Direct control via Riemannian energy* Comparison of performance with different settings of $\lambda$.
+#+CAPTION: The performance measures are summed over each time step in the horizon.}
+#+LATEX: \label{tab-results-energy}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center t :placement [!b]
+|----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
+| Trajectory     | Mode probability                                                                                        | State uncertainty                                          | Gating function uncertainty                                                            | Riemannian energy |
 |                | $\sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\state_\timeInd]$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\gatingFunc_{\desiredMode}(\state_\timeInd)]$ |                   |
 |----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
 | Baseline       | $17.06$                                                                                                 | $0.00620$                                                  | $93.62$                                                                                |                   |
