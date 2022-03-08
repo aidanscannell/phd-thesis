@@ -10378,6 +10378,8 @@ it can successfully learn a factorised representation of a real-world, multimoda
 \newcommand{\jacTraj}{\ensuremath{\bar{\mathbf{J}}}}
 \renewcommand{\modeVarTraj}{\ensuremath{\modeVar_{0:\TimeInd}=\desiredMode}}
 
+\renewcommand{\stateDiffTraj}{\ensuremath{\Delta \stateTraj}}
+
 %\renewcommand{\modeInd}{\ensuremath{\modeVar}}
 
 \newcommand{\desiredMode}{\ensuremath{\modeInd^{*}}}
@@ -11187,73 +11189,97 @@ any BVP solver, e.g. (multiple) shooting and collocation methods.
 *** Implicit Trajectory Optimisation
 Solving the 2^{nd} order \acrshort{ode} in cref:eq-2ode with the expected metric from cref:eq-expected-metric-weighting,
 is equivalent to solving our trajectory optimisation problem subject to the same boundary conditions.
-This resembles indirect control methods as it is based on an observation that the
+This resembles an indirect control method as it is based on an observation that the
 necessary conditions for optimality are encoded via the geodesic \acrshort{ode}.
 However, it is worth noting that solutions to the geodesic \acrshort{ode} are not guaranteed to satisfy the
 dynamics constraints.
 
-*Differential flatness*
-Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode cannot
-be solved with simple forward or backward integration.
-Instead, the problem is transcribed using the approach of differential
-flatness citep:milamNew2000,rossPseudospectral2004.
-A set of outputs $\mathbf{z}(t)$ are defined such that the
-states $\mathbf{x}(t)$ and controls $\mathbf{u}(t)$ can be
-expressed in terms of the flat output $\mathbf{z}(t)$ and a finite number of its derivatives,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\mathbf{x}(t) &= A(\mathbf{z}(t), \dot{\mathbf{z}}(t), \ldots) \\
-\mathbf{u}(t) &= B(\mathbf{z}(t), \dot{\mathbf{z}}(t), \ldots).
-\end{align}
-#+END_EXPORT
-In the velocity-controlled quadcopter example, the flat output is the
-state $\mathbf{z}(t) = \mathbf{x}(t)$
-and the control is simply the state derivative
-$\mathbf{u}(t) &= \dot{\mathbf{z}}(t)$.
-The original trajectory optimisation problem can then be converted to finding $\mathbf{z}(t)$
-for $t \in [t_0, t_f]$ subject to the boundary conditions and the geodesic \acrshort{ode},
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-diff-flat-ode}
-\ddot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t))
-&= f_G(t, \mathbf{x}(\mathbf{z}(t), \dot{\mathbf{z}}(t)), \dot{\mathbf{x}}(\mathbf{z}(t), \dot{\mathbf{z}}(t))).
-\end{align}
-#+END_EXPORT
+
+# The original trajectory optimisation problem can be converted to finding $\state(t)$
+# for $t \in [t_0, t_f]$ subject to the boundary conditions and the geodesic \acrshort{ode},
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-diff-flat-ode}
+# \ddot{\mathbf{x}}
+# &= f_G(t, \mathbf{x}(t), \dot{\mathbf{x}}(t)).
+# \end{align}
+# #+END_EXPORT
 *Collocation*
+Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode cannot
+be solved with simple forward-backward integration.
+Instead, the problem is transcribed using collocation.
 Collocation methods are used to transcribe continuous-time trajectory optimisation problems into
-nonlinear programs, i.e. constrained parameter optimisation citep:kellyIntroduction2017,fahrooDirect2000  .
-The expected metric in cref:eq-expected-metric is substituted into
-cref:eq-diff-flat-ode and solved via collocation.
+nonlinear programs, i.e. constrained parameter optimisation citep:kellyIntroduction2017,fahrooDirect2000.
+The expected metric in cref:eq-expected-metric is substituted into cref:eq-2ode and solved via collocation.
 This work implements a simple Hermite-Simpson collocation method that enforces the state
 derivative interpolated by the polynomials to equal the geodesic \acrshort{ode} $f_G$
 at the midpoints between a set of $I$ collocation points
-$\{\mathbf{z}_i\}_{i=1}^I$. This is achieved through the collocation defects,
+$\{\state_i\}_{i=1}^I$. This is achieved through the collocation defects,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-defect}
-\Delta_{i+\frac{1}{2}} &= \ddot{\mathbf{z}}_{i+\frac{1}{2}} - f_G(t_{i+\frac{1}{2}}, \mathbf{z}_{i+\frac{1}{2}}, \dot{\mathbf{z}}_{i+\frac{1}{2}})
+\Delta_{i+\frac{1}{2}} &= \ddot{\state}_{i+\frac{1}{2}} - f_G(t_{i+\frac{1}{2}}, \state_{i+\frac{1}{2}}, \dot{\state}_{i+\frac{1}{2}})
 \end{align}
 #+END_EXPORT
-where $\ddot{\mathbf{z}}_{i+\frac{1}{2}}, \dot{\mathbf{z}}_{i+\frac{1}{2}}, \mathbf{z}_{i+\frac{1}{2}}$
-are obtained by interpolating between $\mathbf{z}_i$ and $\mathbf{z}_{i+1}$.
-cref:eq-defect defines a set of constraints ensuring trajectories are solutions
+where $\ddot{\state}_{i+\frac{1}{2}}, \dot{\state}_{i+\frac{1}{2}}, \state_{i+\frac{1}{2}}$
+are obtained by interpolating between $\state_i$ and $\state_{i+1}$.
+cref:eq-defect defines a set of constraints that ensure trajectories are solutions
 to the geodesic \acrshort{ode} $f_G$.
 The nonlinear program that this method solves is given by,
 #+BEGIN_EXPORT latex
 \begin{subequations} \label{eq-collocation-problem}
 \begin{align}
-%\min_{\mathbf{z}(t), \dot{\mathbf{z}}(t)}& \int_{t_0}^{t_f} \costFunc(\state(\timeInd), \control(\timeInd)) \text{d}t \\
-\min_{\mathbf{z}(t), \dot{\mathbf{z}}(t)}& \int_{t_0}^{t_f}
-\costFunc(\state(\mathbf{z}(\timeInd), \dot{\mathbf{z}}(\timeInd)),
-\control(\mathbf{z}(\timeInd), \dot{\mathbf{z}}(\timeInd))) \text{d}t \\
+\min_{\state(t), \dot{\state}(t)}& \int_{t_0}^{t_f}
+\costFunc(\state(\timeInd), \dot{\state}(\timeInd)) \text{d}t \\
 &\text{s.t. }\text{\cref{eq-defect}}  \\
-\mathbf{x}&\left(\mathbf{z}(t_0), \dot{\mathbf{z}}(t_0) \right) = \mathbf{x}_0 \\
-\mathbf{x}&(\mathbf{z}(t_f),\dot{\mathbf{z}}(t_f)) = \mathbf{x}_f.
+\mathbf{x}&(t_0) = \mathbf{x}_0 \\
+\mathbf{x}&(t_f) = \targetState.
 \end{align}
 \end{subequations}
 #+END_EXPORT
 It is solved using Sequential Least Squares Programming (SLSQP) in SciPy citep:2020SciPy-NMeth.
 
-
-# this work adopts a quadratic cost function on the controls,
+This nonlinear program returns a continuous-time state trajectory, however, it does not return the
+control trajectory.
+Inspired by differential flatness, the control trajectory is recovered from the state trajectory by performing
+inference in the probabilistic dynamics model.
+The state difference outputs $\stateDiffTraj = \{\stateDiff_{\timeInd}\}_{\timeInd=0}^{\TimeInd-1}$ are first
+calculated from the state trajectory $\stateTraj = \{\state_{\timeInd}\}_{\timeInd=0}^{\TimeInd-1}$.
+The control trajectory $\controlTraj$ is then inferred from the state trajectory by extending
+the ELBO for a single SVGP expert to latent variable inputs.
+Following cite:hensmanGaussian2013, the ELBO for a single SVGP expert is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-control-elbo-svgp}
+\log p(\stateDiffTraj \mid \stateTraj, \controlTraj) \geq
+\E_{q(\mode{\latentFunc}(\stateTraj, \controlTraj))} \left[ \nonumber
+&\log p(\stateDiffTraj \mid \mode{\latentFunc}(\stateTraj, \controlTraj)) \right] \\
+&- \text{KL}\left(q(\mode{\latentFunc}(\expertInducingInput)) \mid p(\mode{\latentFunc}(\expertInducingInput))) \right)
+\coloneqq \mathcal{L}_{\text{SVGP}},
+\end{align}
+#+END_EXPORT
+where the variational posterior is given by
+$q(\mode{\latentFunc}(\stateTraj, \controlTraj)) &= \int p(\mode{\latentFunc}(\stateTraj, \controlTraj) \mid \mode{\latentFunc}(\expertInducingInput)) q(\mode{\latentFunc}(\expertInducingInput)) \text{d} \mode{\latentFunc}(\expertInducingInput)$.
+The control inputs $\controlTraj$ are recovered by treating them as latent variables and extending the lower bound,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-control-elbo}
+\log p(\stateDiffTraj \mid \stateTraj) &= \log \int p(\stateDiffTraj \mid \stateTraj, \controlTraj) p(\controlTraj) \text{d}\controlTraj \\
+&\geq q(\controlTraj) \left( \mathcal{L}_{\text{SVGP}} + \log p(\controlTraj) - \log q(\controlTraj) \right) \text{d}\controlTraj,
+\end{align}
+#+END_EXPORT
+where the latent controls are assumed to be Normally distributed,
+#+BEGIN_EXPORT latex
+\begin{align}
+p(\controlTraj) = \prod_{\timeInd=0}^{\TimeInd-1} \mathcal{N}(\control_{\timeInd} \mid \mathbf{0}, \mathbf{I}),
+\end{align}
+#+END_EXPORT
+and the variational posterior over the latent control trajectory is given by,
+#+BEGIN_EXPORT latex
+\begin{align}
+q(\controlTraj) = \prod_{\timeInd=0}^{\TimeInd-1} \mathcal{N}(\control_{\timeInd} \mid \mathbf{m}_{\timeInd}, \mathbf{S}_{\timeInd}).
+\end{align}
+#+END_EXPORT
+The posterior over the latent control trajectory $q(\controlTraj) \approx p(\controlTraj \mid \stateTraj, \stateDiffTraj)$
+is obtained by finding the variational parameters
+$\{\mathbf{m}_{\timeInd}, \mathbf{S}_{\timeInd}\}_{\timeInd=0}^{\TimeInd-1}$ that maximise the ELBO in
+cref:eq-control-elbo.
 
 # This objective regularises the control trajectory under the L2 norm.
 # The meaning of minimum control effort depends upon the specific problem.
@@ -11271,7 +11297,7 @@ It is solved using Sequential Least Squares Programming (SLSQP) in SciPy citep:2
 *** Remarks :ignore:
 Although this method provides an elegant solution to finding trajectories that satisfy Goals 1 and 2,
 it is not without its limitations.
-First of all, this approach does do not necessarily find trajectories that satisfy the dynamics constraints,
+First of all, this approach does not necessarily find trajectories that satisfy the dynamics constraints,
 as it projects the problem onto the geodesic \acrshort{ode}.
 #+BEGIN_EXPORT latex
 \begin{remark}
@@ -11325,6 +11351,7 @@ As such, this method cannot validate that trajectories are $\delta-\text{mode re
 Cannot validate that trajectories are $\delta-\text{mode remaining}$.
 \end{remark}
 #+END_EXPORT
+The trajectory optimisation algorithm presented in the next section attempts to address these issues.
 
 
 # Firstly, this approach does do not necessarily find trajectories that satisfy the dynamics constraints,
@@ -11337,16 +11364,15 @@ Cannot validate that trajectories are $\delta-\text{mode remaining}$.
 # how to handle the collocation constraints is not immediately clear.
 # This is because the geodesic \acrshort{ode} will become a Stochastic Differential Equation (SDE).
 
-Perhaps the biggest limitation of this method, is its dependence on the
-differential flatness property, which is used to obtain the controls from the
-optimised state trajectory and geodesic \acrshort{ode}.
-#+BEGIN_EXPORT latex
-\begin{remark}
-Requires the state and control to be expressable in terms of a flat output.
-%Only applicable in systems where the state and control can be expressed in terms of a flat output.
-\end{remark}
-#+END_EXPORT
-The trajectory optimisation algorithm presented in the next section attempts to address these issues.
+# Perhaps the biggest limitation of this method, is its dependence on the
+# differential flatness property, which is used to obtain the controls from the
+# optimised state trajectory and geodesic \acrshort{ode}.
+# #+BEGIN_EXPORT latex
+# \begin{remark}
+# Requires the state and control to be expressable in terms of a flat output.
+# %Only applicable in systems where the state and control can be expressed in terms of a flat output.
+# \end{remark}
+# #+END_EXPORT
 # This dependence makes this algorithm only applicable in systems where the state and control can be expressed in terms
 # of a flat output.
 
@@ -11364,10 +11390,9 @@ The trajectory optimisation algorithm presented in the next section attempts to 
 This section details a direct control approach which embeds the mode remaining behaviour directly into the
 SOC problem in cref:eq-mode-soc-problem, via a geometric objective function.
 In contrast to the previous approach, this method:
-1) is not limited to dynamical systems which are differentially flat,
-2) guarantees trajectories satisfy the dynamics constraints,
-3) principally handles the uncertainty associated with the dynamics,
-4) can validate that trajectories are $\delta-\text{mode remaining}$.
+1) guarantees trajectories satisfy the dynamics constraints,
+2) principally handles the uncertainty associated with the dynamics,
+3) can validate that trajectories are $\delta-\text{mode remaining}$.
 This approach is a shooting method that enforces the dynamics constraints through simulation, i.e.
 the state trajectory is enforced to match the integral of the dynamics with respect to time.
 
@@ -11985,6 +12010,189 @@ large often omits any mode remaining behaviour.
 \newcommand{\modeProbTraj}{\ensuremath{\Pr(\allModeVarK \mid \stateTraj)}}
 
 \newcommand{\windDrift}[1]{\ensuremath{\bm\omega_{#1}}}
+\newcommand{\windTurbulence}[1]{\ensuremath{\bm\epsilon_{#1}}}
+\newcommand{\windTurbulenceNoise}[1]{\ensuremath{\bm\Sigma_{\windTurbulence{#1}}}}
+#+END_EXPORT
+**** intro :ignore:
+The constant control data set in cref:sec-brl-experiment cannot be used for the
+method in cref:sec-traj-opt-energy as it requires a data set with controls.
+Due to COVID-19 and limited access to the laboratory, the direct control method in cref:sec-traj-opt-energy
+was tested in a simulated version of the illustrative example from cref:illustrative_example.
+
+Both control methods are tested in the simulated environment so that they can be compared.
+To aid comparison to the real-world experiments, the layout of the environment was kept consistent
+with the real-world experiments.
+
+# This is because the data set in cref:sec-brl-experiment was collected with constant controls and
+# the method in cref:sec-traj-opt-energy requires a data set with controls.
+
+# To aid with comparison, the two control methods are tested and evaluated in a simulated environment.
+# The simulation environment represents the velocity controlled quadcopter in an environment subject to spatially
+# varying wind, constituting both drift and diffusion components.
+
+**** Simulator Setup
+The simulated environment has $\ModeInd=2$ modes, $\modeVar \in \{1, 2\}$, whose
+underlying dynamics are given by simple Newtonian dynamics (velocity times time).
+The two dynamics modes are governed by different wind fields which are characterised by their
+drift $\windDrift{\modeInd}$ and process noise $\windTurbulence{\modeInd}$ terms.
+Each mode's dynamics are given by,
+#+BEGIN_EXPORT latex
+\begin{align}
+\mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd; \Delta\timeInd=0.25)
+&= \control_{\timeInd} \times \Delta\timeInd + \windDrift{\modeInd} + \windTurbulence{\modeInd} \\
+%\quad \text{if} \quad \modeVar_\timeInd = \modeInd \\
+\windTurbulence{\modeInd} &\sim \mathcal{N}(\bm0, \windTurbulenceNoise{\modeInd}),
+\end{align}
+#+END_EXPORT
+with
+$\windDrift{1} = \{0.02, 0.4\}$, $\windDrift{2} = \{-2.0, -0.4\}$,
+$\windTurbulenceNoise{1} = \diag\left([0.0001, 0.0002]\right)$ and
+$\windTurbulenceNoise{2} = \diag\left([0.2, 0.05]\right)$.
+The modes have the same $y$ drift but Mode 2 has 100 times higher drift in the negative $x$.
+Further to this, Mode 2 is subject to much higher process noise.
+As such, Mode 1 represents the operable, desired dynamics mode and Mode 2 represents the turbulent dynamics mode.
+
+# The mode indicator variable $\modeVar \in \{1, 2\}$, determines where each mode governs the dynamics.
+
+# The simulated environment is instantiated with the gating mask in cref:fig-dataset-scenrio-7,
+# where the red region indicates the desired (operable) dynamics mode $\modeVar=1$ and the white region
+# indicates the turbulent dynamics mode $\modeVar=2$.
+#+BEGIN_EXPORT latex
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.9\textwidth]{./images/mode-opt-traj-opt/scenario_7/trajectory_optimisation/env/env_with_dataset_start_end_pos.pdf}
+\caption{\textbf{State transition data set} visualised as a quiver plot with
+the start/end states and the mode boundary overlayed.}
+\label{fig-dataset-scenrio-7}
+\end{figure}
+#+END_EXPORT
+$\NumData$ state transitions were sampled from the simulator with $\Delta \timeInd = 0.25s$.
+cref:fig-dataset-scenrio-7 shows the state transition data set and also indicates the separation of the modes.
+The state domain is constrained to $x, y \in [-3, 3]$ and min/max controls are implemented by constraining the
+control domain to $\velocity_x, \velocity_y \in [-5, 5]$.
+
+**** Riemannian energy 1 :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/mode-opt-traj-opt/scenario_7/trajectory_optimisation/riemannian-energy/trajectories_over_mixing_probs.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-traj-opt-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/mode-opt-traj-opt/scenario_7/trajectory_optimisation/riemannian-energy/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-traj-opt-over-svgp-7}
+\end{minipage}
+\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=1.0}$
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$,
+with the approximate Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
+with $\lambda=1.0$.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-riemannian-energy-traj-opt-over-prob-7})
+each mode's mixing probability
+and (\subref{fig-riemannian-energy-traj-opt-over-svgp-7})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-riemannian-energy-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+**** Riemannian energy 0.5 :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/mode-opt-traj-opt/scenario_7/trajectory_optimisation/riemannian-energy-low/trajectories_over_mixing_probs.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-low-traj-opt-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/mode-opt-traj-opt/scenario_7/trajectory_optimisation/riemannian-energy-low/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-low-traj-opt-over-svgp-7}
+\end{minipage}
+\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=0.5}$
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$,
+with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
+with $\lambda=0.5$
+and deterministic controls (no maximum entropy control).
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-riemannian-energy-low-traj-opt-over-prob-7})
+each mode's mixing probability
+and (\subref{fig-riemannian-energy-low-traj-opt-over-svgp-7})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-riemannian-energy-low-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+**** Riemannian energy 40 :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/mode-opt-traj-opt/scenario_7/trajectory_optimisation/riemannian-energy-high/trajectories_over_mixing_probs.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-low-traj-opt-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{0.99\columnwidth}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/mode-opt-traj-opt/scenario_7/trajectory_optimisation/riemannian-energy-high/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-high-traj-opt-over-svgp-7}
+\end{minipage}
+\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=40.0}$
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$,
+with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
+with $\lambda=40.0$
+and deterministic controls (no maximum entropy control).
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-riemannian-energy-high-traj-opt-over-prob-7})
+each mode's mixing probability
+and (\subref{fig-riemannian-energy-high-traj-opt-over-svgp-7})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-riemannian-energy-high-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+**** Model Learning
+# To begin with, $\NumData$ state transitions were sampled from the simulator with $\Delta \timeInd = 0.25s$.
+Following the experiments in cref:sec-traj-opt-results-collocation,
+the model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts, one to
+represent the desired dynamics mode and one to represent the turbulent dynamics mode.
+Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
+The gating network used a single gating function (with a Bernoulli likelihood) with
+a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
+In contrast to the real-world experiments, the simulated experiments presented here learn the full transition
+dynamics model, i.e. it does not assume constant controls.
+cref:fig-riemannian-energy-traj-opt-7 shows the gating network posterior after training the model.
+
+**** Direct Control via Riemannian Energy
+All experiments presented here used a $\TimeInd=20$ step horizon.
+For comparison, the optimised controls are rolled out in the desired mode's dynamics GP (magenta) and in the
+environment (cyan).
+In the geodesic collocation experiments, the yellow trajectory represents the state trajectory found by the
+collocation solver.
+
+*** Simulated Quadcopter Experiments label:sec-traj-opt-results-energy :noexport:
+**** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\deltaTime}{\ensuremath{\Delta \timeInd}}
+\newcommand{\env}[1]{\ensuremath{\hat{#1}}}
+\newcommand{\modeProbTraj}{\ensuremath{\Pr(\allModeVarK \mid \stateTraj)}}
+
+\newcommand{\windDrift}[1]{\ensuremath{\bm\omega_{#1}}}
 \newcommand{\windTurbulence}[1]{\ensuremath{\epsilon_{#1}}}
 \newcommand{\windTurbulenceNoise}[1]{\ensuremath{\bm\Sigma_{\windTurbulence{#1}}}}
 #+END_EXPORT
@@ -12034,278 +12242,6 @@ Further to this, Mode 2 is subject to much higher process noise.
 As such, Mode 1 represents the operable, desired dynamics mode and Mode 2 represents the turbulent dynamics mode.
 
 The mode indicator variable $\modeVar \in \{1, 2\}$, determines where each mode governs the dynamics.
-The simulated environment is instantiated with the gating mask in cref:fig-gating-mask-scenrio-5,
-where the red region indicates the desired (operable) dynamics mode $\modeVar=1$ and the white region
-indicates the turbulent dynamics mode $\modeVar=2$.
-#+BEGIN_EXPORT latex
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/env/gating_mask_with_start_end_pos.pdf}
-\caption{\textbf{Gating Mask} - indicating where each mode governs the simulator's dynamics;
-(white) turbulent dynamics mode and (red) desired (operable) dynamics mode.
-The hashed box indicates a subset of the environment that is not observed.}
-\label{fig-gating-mask-scenrio-5}
-\end{figure}
-#+END_EXPORT
-The state domain is constrained to $x, y \in [-3, 3]$ and min/max controls are implemented by constraining the
-control domain to $\velocity_x, \velocity_y \in [-5, 5]$.
-
-**** Model Learning
-To begin with, $\NumData$ state transitions were sampled from the simulator with $\Delta \timeInd = 0.25s$.
-Following the experiments in cref:sec-traj-opt-results-collocation,
-the model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts, one to
-represent the desired dynamics mode and one to represent the turbulent dynamics mode.
-Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
-The gating network used a single gating function (with a Bernoulli likelihood) with
-a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
-In contrast to the algorithm presented in cref:sec-traj-opt-energy, this method learns the full transition
-dynamics model, i.e. it does not assume constant controls.
-cref:fig-riemannian-energy-low-traj-opt shows the gating network posterior after training the model.
-
-# In this example, it is /known a priori/ that the dynamics modes vary spatially.
-# For this reason, the gating network was formulated to only depend on the state
-# $\gatingFunc : \stateDomain \rightarrow \R$,
-# instead of both the state and control
-# $\gatingFunc : \stateDomain \times \controlDomain \rightarrow \R$.
-# #+BEGIN_EXPORT latex
-# \begin{remark}
-# The direct control method in \cref{sec-traj-opt-energy} is applicable in systems where the gating network
-# depends on both the state and control.
-# \end{remark}
-# #+END_EXPORT
-# Note that the relevant input dimensions can easily be set in =GPflow=,
-# by setting the kernel's =active_dims= property.
-# In this case, only the state dimensions, instead of the entire state-control input.
-# cref:fig-riemannian-energy-low-traj-opt shows the gating network posterior after training th model.
-
-**** Baseline Prob :ignore:noexport:
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_prob.pdf}
-\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
-\label{eq-traj-opt-over-prob-baseline}
-\end{minipage}
-\begin{minipage}{1.0\textwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
-\subcaption{Trajectories overlayed on desired mode's gating function GP.}
-\label{eq-traj-opt-over-svgp-baseline}
-\end{minipage}
-\caption{\label{fig-traj-opt-baseline}
-This figure demonstrates the shortcomings of finding trajectories
-from a start state $\state_0$, to a target state $\targetState$,
-in the system in \cref{fig-point-mass-motivation},
-without avoiding the turbulent dynamics mode.
-To demonstrate the methods shortcomings, the optimised controls were rolled out in the desired mode's GP dynamics (magenta)
-and in the environment (cyan).
-(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on the desired mode's mixing probability
-and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
-mean (left) and posterior variance (right).
-It is clear that the trajectory resulting from rolling out the controls in the environment,
-passes through the turbulent dynamics mode and as a result, deviates from the
-trajectory rolled out in the desired mode's dynamics.}
-\end{figure}
-#+END_EXPORT
-***** Discussion Baseline Prob :ignore:noexport:
-The contour plots in cref:fig-traj-opt-baseline represent the gating network associated with the model from
-cref:chap-dynamics after performing Bayesian inference, given a historical data set of state transitions
-$\dataset$ from the environment in cref:fig-point-mass-motivation.
-Control trajectories were found by minimising the expected cost under the state distribution
-resulting from cascading single-step predictions through the desired mode's ($\modeInd=2$ in this case)
-learned GP dynamics model.
-The cost function consisted of a quadratic integral control cost and a terminal state cost.
-This approach only considered the dynamics of the desired mode, leading to trajectories in the environment deviating
-from those planned in the learned dynamics model.
-The trajectories also pass through regions of the dynamics with high epistemic uncertainty, which is not desirable.
-\todo{finish this para when have trajectory deviating at high epistemic uncertainty}
-
-***** Discussion Baseline Prob :ignore:noexport:
-cref:fig-traj-opt-baseline shows results for a baseline trajectory optimisation method, where the optimised trajectory
-rolled out in the desired mode's GP dynamics (magenta), passes through the undesired dynamics mode
-(mode one $\modeVar = 1$ in this case).
-This trajectory rolled out in the simulated environment (cyan),
-clearly deviates from the models predicted trajectory, when it passes through the undesired dynamics mode.
-This trajectory was obtained from a standard form of control in GP dynamics models, with
-no maximum entropy control or mode remaining behaviour.
-It used deterministic controls and the cost function from cref:eq-quadratic-cost-control.
-As such, the controls were optimised w.r.t. the expected cost in cref:eq-expected-quadratic-cost.
-
-**** Riemannian energy 0.1 :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-low/trajectories_over_desired_prob}.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-low-traj-opt-over-prob}
-\end{minipage}
-\begin{minipage}[r]{0.99\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-low/trajectories_over_desired_gating_gp}.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-low-traj-opt-over-svgp}
-\end{minipage}
-\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=0.1}$
-Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$,
-with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
-with $\labmda=0.1$
-and deterministic controls (no maximum entropy control).
-The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
-The state trajectories are overlayed on (\subref{fig-riemannian-energy-low-traj-opt-over-prob})
-each mode's mixing probability
-and (\subref{fig-riemannian-energy-low-traj-opt-over-svgp})
-the posterior mean (left) and variance (right) associated with the desired mode's gating function.
-All plots show a slice of the input space with constant zero controls.}
-\label{fig-riemannian-energy-low-traj-opt}
-\end{figure}
-#+END_EXPORT
-
-**** Riemannian energy 1 :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/riemannian-energy/trajectories_over_desired_prob.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-traj-opt-over-prob}
-\end{minipage}
-\begin{minipage}[r]{0.99\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/riemannian-energy/trajectories_over_desired_gating_gp.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-traj-opt-over-svgp}
-\end{minipage}
-\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=1.0}$
-Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$,
-with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
-with $\labmda=1.0$
-and deterministic controls (no maximum entropy control).
-The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
-The state trajectories are overlayed on (\subref{fig-riemannian-energy-traj-opt-over-prob})
-each mode's mixing probability
-and (\subref{fig-riemannian-energy-traj-opt-over-svgp})
-the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
-All plots show a slice of the input space with constant zero controls.}
-\label{fig-riemannian-energy-traj-opt}
-\end{figure}
-#+END_EXPORT
-
-**** Riemannian energy 10 :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-high/trajectories_over_desired_prob}.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-high-traj-opt-over-prob}
-\end{minipage}
-\begin{minipage}[r]{0.99\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-high/trajectories_over_desired_gating_gp}.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-high-traj-opt-over-svgp}
-\end{minipage}
-\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=10.0}$
-Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$,
-with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
-with $\labmda=10.0$
-and deterministic controls (no maximum entropy control).
-The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
-The state trajectories are overlayed on (\subref{fig-riemannian-energy-high-traj-opt-over-prob})
-each mode's mixing probability
-and (\subref{fig-riemannian-energy-high-traj-opt-over-svgp})
-the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
-All plots show a slice of the input space with constant zero controls.}
-\label{fig-riemannian-energy-high-traj-opt}
-\end{figure}
-#+END_EXPORT
-
-**** Table :ignore:
-#+begin_table
-#+CAPTION: *Direct control via Riemannian energy* Comparison of performance with different settings of $\lambda$.
-#+CAPTION: The performance measures are summed over each time step in the horizon.}
-#+LATEX: \label{tab-results-energy}
-#+LATEX: \resizebox{\textwidth}{!}{
-#+ATTR_LATEX: :center t :placement [!b]
-|----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
-| Trajectory     | Mode probability                                                                                        | State uncertainty                                          | Gating function uncertainty                                                            | Riemannian energy |
-|                | $\sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\state_\timeInd]$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\gatingFunc_{\desiredMode}(\state_\timeInd)]$ |                   |
-|----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
-| Baseline       | $17.06$                                                                                                 | $0.00620$                                                  | $93.62$                                                                                |                   |
-| $\lambda=0.1$  | $20.91$                                                                                                 | $0.00300$                                                  | $292.42$                                                                               | $41.64$           |
-| $\lambda=1.0$  | $\mathbf{20.98}$                                                                                        | $0.00920$                                                  | $54.21$                                                                                | $39.26$           |
-| $\lambda=10.0$ | $20.83$                                                                                                 | $\mathbf{0.00198}$                                         | $\mathbf{31.51}$                                                                       | $50.34$           |
-#+LATEX: }
-#+end_table
-
-**** Direct Control via Riemannian Energy
-All experiments presented here used a $\TimeInd=20$ step horizon.
-For comparison, the optimised controls are rolled out in the desired mode's dynamics GP (magenta) and in the
-environment (cyan).
-# and the controls were optimised using
-# SciPy's Sequential Least Squares Programming (SLSQP) citep:2020SciPy-NMeth.
-
-cref:fig-riemannian-energy-low-traj-opt,fig-riemannian-energy-traj-opt,fig-riemannian-energy-high-traj-opt
-show results after performing trajectory optimisation using this learned model and the method
-in cref:sec-traj-opt-results-energy.
-The results compare three different settings of the tuneable $\lambda$ parameter,
-which determines the relevance of the covariance term in the expected Riemannian metric.
-
-cref:fig-riemannian-energy-low-traj-opt shows results with $\lambda=0.1$ -- low covariance relevance --
-where trajectories should prioritise remaining in the desired dynamics mode over avoiding regions of high
-epistemic uncertainty.
-The left plot in cref:fig-riemannian-energy-low-traj-opt-over-svgp shows the trajectories
-following the contours of the posterior mean associated with the desired mode's gating function.
-With this $\lambda$ setting, trajectories appear to be completely dominated by the contour following term and
-do not avoid the region of high posterior variance.
-This is the desired behaviour when setting $\lambda$ to be small.
-For example, in scenarios where avoiding regions of high epistemic uncertainty is a secondary goal.
-However, this is not desirable in a risk-averse setting.
-
-cref:fig-riemannian-energy-traj-opt-over-svgp,fig-riemannian-energy-high-traj-opt-over-svgp
-show the results using $\lambda=1.0$ and $\lambda=10.0$ respectively.
-These $\labmda$ settings should avoid regions of high epistemic uncertainty to different degrees.
-The right plots show the trajectories avoiding regions of high posterior variance associated with the desired
-mode's gating function.
-Note that the Riemannian energy contains the covariance of the gating function's Jacobian, not the
-covariance associated with the gating function \acrshort{gp}.
-Both of these $\lambda$ settings find trajectories that successfully avoid the region of high uncertainty in the
-gating network.
-They appear to initially avoid the region of high uncertainty and then attempt to follow the
-posterior mean's contours, once they have passed the uncertain region.
-As a result, the trajectories successfully remain in the desired dynamics mode.
-In this example, setting $\lambda=10.0$ is overly cautious with respect to Goal 2.
-This is because the trajectory has a lot of clearance from the region of high epistemic uncertainty
-which has reduced its clearance from the turbulent dynamics mode.
-\todo{could be a good place to compare mode prob after marginalsing h and x}
-
-Minimising the approximated expected Riemannian energy in cref:eq-approximate-trajectory-riemannian-energy
-principally encodes both goals, whilst also decoupling them via the $\lambda$ parameter.
-
-*Chance Constraints*
-In practice, all trajectories that were optimised subject to the expected Riemannain energy,
-satisfied the chance constraints in cref:eq-mode-chance-constraint.
-However, this may not always be the case.
-In these cases, the $\lambda$ parameter can be tuned until the constraints are satisfied.
-Remember that the chance constraints are governed by the desired mode's mixing probability,
-which decreases in regions with:
-- high uncertainty in the desired gating function,
-- high uncertainty in the state, resulting from high uncertainty in the desired dynamics mode.
-Therefore, if the uncertainty in the gating network is very high, the $\lambda$ parameter
-can be increased to try and avoid entering these regions.
-In turn, this will increase the probability of remaining in the desired dynamics mode, as indicated by the
-marginalisation of the gating functions in cref:eq-mode-chance-constraint-integral.
-
-*** Simulated Quadcopter Experiments label:sec-traj-opt-results-energy
 The simulated environment is instantiated with the gating mask in cref:fig-gating-mask-scenrio-5,
 where the red region indicates the desired (operable) dynamics mode $\modeVar=1$ and the white region
 indicates the turbulent dynamics mode $\modeVar=2$.
