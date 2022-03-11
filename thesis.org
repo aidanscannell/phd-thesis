@@ -5568,484 +5568,6 @@ citep:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper.
 # The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub
 # cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper[fn:1:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].].
 
-** Problem Statement :noexport:
-This work is interested in learning /unknown/, or /partially unknown/  multimodal,
-stochastic, nonlinear dynamical systems,
-with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-$\control \in \controlDomain \subseteq \R^\ControlDim$, given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-cont}
-\dot{\state}(t) &=
-\mathbf{g}(\state(t), \control(t)) + \bm\epsilon(t) & \nonumber \\
-&= \mode{\mathbf{g}}(\state(t), \control(t)) + \mode{\bm\epsilon}(t)
-\quad &\text{if} \quad \alpha(t)=\modeInd, \nonumber \\
-%&= \underbrace{\nominalDynamics(\state(t), \control(t))}_{\text{nominal}}
-%+ \underbrace{\unknownDynamics(\state(t), \control(t))}_{\text{unknown}}
-%+ \underbrace{\bm\epsilon(t)}_{\text{process noise}} \\
-% &= \fk(\state(t), \control(t)) + \mode{\bm\epsilon}(t)
-&= \underbrace{\nominalDynamicsK(\state(t), \control(t))}_{\text{nominal mode \modeInd}}
-+ \underbrace{\unknownDynamicsK(\state(t), \control(t))}_{\text{unknown error mode \modeInd}}
-+ \mode{\bm\epsilon}(t)
-\quad &\text{if} \quad \alpha(t)=\modeInd,
-%\bm\mode{\epsilon}(t) &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\epsilon}} \right),
-\end{align}
-#+END_EXPORT
-where $\dot{\state}$ denotes the state derivative w.r.t. time, i.e. Newton's dot notation.
-One of the $\ModeInd$ dynamics modes,
-$\{\mode{\mathbf{g}} : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$ and associated noise models,
-$\mode{\bm\epsilon}(t) &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
-$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
-are selected by a discrete mode indicator variable,
-$\alpha(t) \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$, at any given time $t$.
-The nominal dynamics
-$\{\nominalDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
-represents the known dynamics and the additive dynamics
-$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
-represents the initially unknown dynamics, which are to be learned from observations.
-This work considers systems that are stochastic (i.e. subject to process noise), but
-are not subject to observation noise.
-Thus, the $\mode{\bm\epsilon}$ term solely represents the process noise.
-
-This chapter assumes access to historical data comprising state transitions from $\NumEpisodes$ trajectories
-of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
-The data set has ${N=ET}$ elements
-and we abuse notation by appending the independent trajectories along
-time to get the data set $\mathcal{D}=\{(\state_{\timeInd-1},\control_{\timeInd-1}),\Delta \state_t\}^\NumData_{\timeInd=1}$.
-The discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont, corresponding to this data set,
-is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc}
-\Delta \state_{\timeInd} &= \mode{\mathbf{g}} (\state_{\timeInd-1}, \control_{\timeInd-1} ; \Delta t = t_*) + \mode{\bm\epsilon}
-&\text{if} \quad \modeVar_{\timeInd} = \modeInd \nonumber \\
-&= \underbrace{\nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{nominal mode \modeInd}}
-+ \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{unknown error mode \modeInd}}
-+ \mode{\bm\epsilon}
-&\text{if} \quad \alpha_{t} = \modeInd,
-\end{align}
-#+END_EXPORT
-where
-$\Delta \state_{\timeInd} = \state_{\timeInd} - \state_{\timeInd-1}$ is the change in state between time $\timeInd-1$
-and $\timeInd$ and
-$\state_t \in \stateDomain$, $\control_t \in \controlDomain$ and $\alpha_t \in \modeDomain$
-are the state, control and mode indicator variable at time, $t$, respectively.
-
-To help with understanding and ease of notation, our modelling only considers a single output dimension,
-i.e. $\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain$ is assumed to
-be $\mode{\latentFunc} : \R \times \controlDomain \rightarrow \R$.
-The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
-To further ease notation, the state-control input domain is denoted
-$\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
-and a single state-control input is dentoed
-$\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
-Given this formulation, our task is to learn the mapping $\unknownDynamics$,
-where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
-This is a regression problem,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc-regression}
-\underbrace{\Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\singleOutput}}
-= \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
-+ \mode{\epsilon}
-\quad \text{if} \quad \modeVarK,
-\end{align}
-#+END_EXPORT
-where both the latent dynamics functions $\unknownDynamicsK$ and how the system switches between them
-$\modeVar$, must be inferred from observations.
-A single output is denoted as
-$\singleOutput = \Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)$.
-The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
-and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
-With this notation, the regression problem can be written as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc-regression-simple}
-\singleOutput
-= \mode{\latentFunc}(\singleInput) + \mode{\epsilon}
-\quad \text{if} \quad \modeVarK.
-\end{align}
-#+END_EXPORT
-
-
-# from inputs $\singleInput$ to
-# outputs $\singleOutput$,
-
-
-# Given this notation, our task is to learn the mapping $\f$, from inputs $\singleInput$ to
-# outputs $\singleOutput$,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-multimodal-dynamics-disc}
-# \singleOutput = \mode{\latentFunc} (\singleInput) + \mode{\epsilon}
-# \quad \text{if} \quad \modeVarK,
-# \end{align}
-# #+END_EXPORT
-# where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
-
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-# A time series of observations from time $a$ to time $b$ (inclusive)
-# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-# The concatenation of the state and control domains is
-# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
-# A single state-control input is denoted as
-# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
-# $\allInput$, and the set of all outputs as $\allOutput$.
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
-# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
-# $\NumTimesteps$ steps per episode.
-# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
-
-
-# giving the data set,
-# $~{\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}}$.
-
-# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
-# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
-# $\NumTimesteps$ steps per episode.
-# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
-# We combine the independent episodes to get the data set
-# $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
-# We abuse notation (considering time indexing) and denote the data set
-# $\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
-
-# We combine the independent episodes to get the data set
-# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
-# where we have abused the time indexing notation.
-
-# This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-multimodal-dynamics-disc}
-# \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
-# \quad \text{if} \quad \modeVarK,
-# \end{align}
-# #+END_EXPORT
-# where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
-# at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
-# indicates one of $\ModeInd$ dynamics modes) at time $t$.
-
-# A time series of observations from time $a$ to time $b$ (inclusive)
-# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-# The concatenation of the state and control domains is
-# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
-# A single state-control input is denoted as
-# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
-# $\allInput$, and the set of all outputs as $\allOutput$.
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-** Problem Statement :noexport:
-This work considers /unknown/, or /partially unknown/,  multimodal,
-stochastic, nonlinear dynamical systems,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc}
-\Delta \state_{\timeInd}
-&= \mathbf{g}(\state_{t-1}, \control_{t-1}; \Delta t = t_*) + \bm\epsilon & \nonumber \\
-&= \mode{\mathbf{g}} (\state_{\timeInd-1}, \control_{\timeInd-1} ; \Delta t = t_*) + \mode{\bm\epsilon}
-&\text{if} \quad \modeVar_{\timeInd} = \modeInd \nonumber \\
-&= \underbrace{\nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{nominal mode \modeInd}}
-+ \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{unknown error mode \modeInd}}
-+ \mode{\bm\epsilon}
-&\text{if} \quad \alpha_{t} = \modeInd,
-\end{align}
-#+END_EXPORT
-with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-$\control \in \controlDomain \subseteq \R^\ControlDim$.
-The state and control at time $t$ are denoted as $\state_t \in \stateDomain$ and $\control_t \in \controlDomain$
-respectively and
-$\Delta \state_{\timeInd} = \state_{\timeInd} - \state_{\timeInd-1}$ is the change in state between time $\timeInd-1$
-and $\timeInd$.
-One of the $\ModeInd$ dynamics modes,
-$\{\mode{\mathbf{g}} : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$ and associated noise models,
-$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
-$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
-are selected by a discrete mode indicator variable,
-$\alpha_t \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$, at any given time step $t$.
-The nominal dynamics
-$\{\nominalDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
-represents our /a priori/ knowledge of the dynamics (i.e. the assumed dynamics)
-and the additive dynamics
-$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
-represents the initially unknown dynamics, which are to be learned from observations.
-This work considers systems that are stochastic (i.e. subject to process noise), but
-are not subject to observation noise.
-Thus, the $\mode{\bm\epsilon}$ term solely represents the process noise.
-
-This chapter assumes access to historical data comprising state transitions from $\NumEpisodes$ trajectories
-of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
-The data set has ${N=ET}$ elements
-and we abuse notation by appending the independent trajectories along
-time to get the data set $\mathcal{D}=\{(\state_{\timeInd-1},\control_{\timeInd-1}),\Delta \state_t\}^\NumData_{\timeInd=1}$.
-
-To help with understanding and ease of notation, our modelling only considers a single output dimension,
-i.e. $\stateDomain \subseteq \R$ as $\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain$.
-The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
-To further ease notation, the state-control input domain is denoted
-$\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
-and a single state-control input is dentoed
-$\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
-Given this formulation, our task is to learn the mapping $\unknownDynamics$,
-which switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
-This is a regression problem,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc-regression}
-\underbrace{\Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\singleOutput}}
-= \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
-+ \mode{\epsilon}
-\quad \text{if} \quad \modeVarK,
-\end{align}
-#+END_EXPORT
-where both the latent dynamics functions $\unknownDynamics$ and how the system switches between them
-$\modeVar$, must be inferred from observations.
-A single output is denoted as
-$\singleOutput = \Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)$.
-The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
-and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
-With this notation, the regression problem can be written as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc-regression-simple}
-\singleOutput
-= \mode{\latentFunc}(\singleInput) + \mode{\epsilon}
-\quad \text{if} \quad \modeVarK.
-\end{align}
-#+END_EXPORT
-
-
-# from inputs $\singleInput$ to
-# outputs $\singleOutput$,
-
-
-# Given this notation, our task is to learn the mapping $\f$, from inputs $\singleInput$ to
-# outputs $\singleOutput$,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-multimodal-dynamics-disc}
-# \singleOutput = \mode{\latentFunc} (\singleInput) + \mode{\epsilon}
-# \quad \text{if} \quad \modeVarK,
-# \end{align}
-# #+END_EXPORT
-# where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
-
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-# A time series of observations from time $a$ to time $b$ (inclusive)
-# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-# The concatenation of the state and control domains is
-# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
-# A single state-control input is denoted as
-# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
-# $\allInput$, and the set of all outputs as $\allOutput$.
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
-# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
-# $\NumTimesteps$ steps per episode.
-# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
-
-
-# giving the data set,
-# $~{\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}}$.
-
-# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
-# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
-# $\NumTimesteps$ steps per episode.
-# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
-# We combine the independent episodes to get the data set
-# $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
-# We abuse notation (considering time indexing) and denote the data set
-# $\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
-
-# We combine the independent episodes to get the data set
-# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
-# where we have abused the time indexing notation.
-
-# This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-multimodal-dynamics-disc}
-# \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
-# \quad \text{if} \quad \modeVarK,
-# \end{align}
-# #+END_EXPORT
-# where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
-# at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
-# indicates one of $\ModeInd$ dynamics modes) at time $t$.
-
-# A time series of observations from time $a$ to time $b$ (inclusive)
-# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-# The concatenation of the state and control domains is
-# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
-# A single state-control input is denoted as
-# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
-# $\allInput$, and the set of all outputs as $\allOutput$.
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-** Problem Statement :noexport:
-This work considers /unknown/, or /partially unknown/,  multimodal,
-stochastic, nonlinear dynamical systems,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc}
-\Delta \state_{\timeInd}
-&= \mathbf{g}(\state_{t-1}, \control_{t-1}; \Delta t = t_*) + \bm\epsilon & \nonumber \\
-&= \mode{\mathbf{g}} (\state_{\timeInd-1}, \control_{\timeInd-1} ; \Delta t = t_*) + \mode{\bm\epsilon}
-&\text{if} \quad \modeVar_{\timeInd} = \modeInd \nonumber \\
-&= \underbrace{\nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{nominal mode \modeInd}}
-+ \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{unknown error mode \modeInd}}
-+ \mode{\bm\epsilon}
-&\text{if} \quad \alpha_{t} = \modeInd,
-\end{align}
-#+END_EXPORT
-with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-$\control \in \controlDomain \subseteq \R^\ControlDim$.
-The state and control at time $t$ are denoted as $\state_t \in \stateDomain$ and $\control_t \in \controlDomain$
-respectively and
-$\Delta \state_{\timeInd} = \state_{\timeInd} - \state_{\timeInd-1}$ is the change in state between time $\timeInd-1$
-and $\timeInd$.
-One of the $\ModeInd$ dynamics modes,
-$\{\mode{\mathbf{g}} : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$ and associated noise models,
-$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
-$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
-are selected by a discrete mode indicator variable,
-$\alpha_t \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$, at any given time step $t$.
-The nominal dynamics
-$\{\nominalDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
-represents our /a priori/ knowledge of the dynamics (i.e. the assumed dynamics)
-and the additive dynamics
-$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
-represents the initially unknown dynamics, which are to be learned from observations.
-This work considers systems that are stochastic (i.e. subject to process noise), but
-are not subject to observation noise.
-Thus, the $\mode{\bm\epsilon}$ term solely represents the process noise.
-
-This chapter assumes access to historical data comprising state transitions from $\NumEpisodes$ trajectories
-of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
-The data set has ${N=ET}$ elements
-and we abuse notation by appending the independent trajectories along
-time to get the data set $\mathcal{D}=\{(\state_{\timeInd-1},\control_{\timeInd-1}),\Delta \state_t\}^\NumData_{\timeInd=1}$.
-
-To help with understanding and ease of notation, our modelling only considers a single output dimension,
-i.e. $\stateDomain \subseteq \R$ as $\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain$.
-The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
-To further ease notation, the state-control input domain is denoted
-$\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
-and a single state-control input is dentoed
-$\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
-Given this formulation, our task is to learn the mapping $\unknownDynamics$,
-which switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
-This is a regression problem,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc-regression}
-\underbrace{\Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\singleOutput}}
-= \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
-+ \mode{\epsilon}
-\quad \text{if} \quad \modeVarK,
-\end{align}
-#+END_EXPORT
-where both the latent dynamics functions $\unknownDynamics$ and how the system switches between them
-$\modeVar$, must be inferred from observations.
-A single output is denoted as
-$\singleOutput = \Delta \state_t - \nominalDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)$.
-The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
-and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
-With this notation, the regression problem can be written as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-multimodal-dynamics-disc-regression-simple}
-\singleOutput
-= \mode{\latentFunc}(\singleInput) + \mode{\epsilon}
-\quad \text{if} \quad \modeVarK.
-\end{align}
-#+END_EXPORT
-
-
-# from inputs $\singleInput$ to
-# outputs $\singleOutput$,
-
-
-# Given this notation, our task is to learn the mapping $\f$, from inputs $\singleInput$ to
-# outputs $\singleOutput$,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-multimodal-dynamics-disc}
-# \singleOutput = \mode{\latentFunc} (\singleInput) + \mode{\epsilon}
-# \quad \text{if} \quad \modeVarK,
-# \end{align}
-# #+END_EXPORT
-# where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
-
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-# A time series of observations from time $a$ to time $b$ (inclusive)
-# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-# The concatenation of the state and control domains is
-# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
-# A single state-control input is denoted as
-# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
-# $\allInput$, and the set of all outputs as $\allOutput$.
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
-# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
-# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
-# $\NumTimesteps$ steps per episode.
-# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
-
-
-# giving the data set,
-# $~{\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}}$.
-
-# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
-# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
-# $\NumTimesteps$ steps per episode.
-# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
-# We combine the independent episodes to get the data set
-# $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
-# We abuse notation (considering time indexing) and denote the data set
-# $\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
-
-# We combine the independent episodes to get the data set
-# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
-# where we have abused the time indexing notation.
-
-# This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-multimodal-dynamics-disc}
-# \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
-# \quad \text{if} \quad \modeVarK,
-# \end{align}
-# #+END_EXPORT
-# where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
-# at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
-# indicates one of $\ModeInd$ dynamics modes) at time $t$.
-
-# A time series of observations from time $a$ to time $b$ (inclusive)
-# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
-# The concatenation of the state and control domains is
-# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
-# A single state-control input is denoted as
-# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
-# $\allInput$, and the set of all outputs as $\allOutput$.
-# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
-# function $\fk$, evaluated at $\singleInput$,
-# is denoted $\fknd = \fkd (\singleInput)$,
-# for all dimensions as $\fkn$ and at all data points as $\Fk$.
-
 ** Problem Statement
 \todo{change t-1 to t and t to t+1 to be consistent with control section}
 This work considers /unknown/, or /partially unknown/,  multimodal,
@@ -7184,478 +6706,6 @@ Given this gating network our marginal likelihood is now an analytic mixture of 
 
 can analytically marginalise.
 
-** Bayesian Model Old 2 :noexport:
-*** Intro :ignore:
-The model is built upon GP priors on each of the transition dynamics functions $\fk$
-with independent GPs placed on each output (state) dimension $d$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-single-expert-prior-single-dim}
-p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDimMode{\mu}(\allInput), \singleDimMode{k}(\allInput, \allInput) \right)
-\end{align}
-#+END_EXPORT
-where $\singleDimMode{\mu}(\cdot)$ and $\singleDimMode{k}(\cdot, \cdot)$ represent the mean and
-covariance functions associated with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ dynamics mode respectively.
-Each mode's output dimensions are assumed independent and are given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-single-expert-prior}
-\pFk &= \prod_{\stateDim=1}^{\StateDim} \pFkd.
-\end{align}
-#+END_EXPORT
-The process noise in each mode is assumed to be factorised across both observations and output (state) dimensions.
-For each mode it is modelled as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-single-expert-likelihood}
-\pYkGivenFk
-&= \prod_{\numData=1}^{\NumData} \prod_{\stateDim=1}^{\StateDim} \pykGivenfkd \\
-&= \prod_{\numData=1}^{\NumData} \prod_{\stateDim=1}^{\StateDim} \mathcal{N}\left( \singleOutput \mid \fknd, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)
-\end{align}
-#+END_EXPORT
-where $\noiseVardK$ represents the noise variance associated with the $d$^{\text{th}} dimension of the $k$^{\text{th}} mode.
-Each mode is then obtained by marginalising its associated latent function values,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-single-expert}
-\pYkGivenX = \int  \pYkGivenFk \pFk \text{d} \Fk,
-\end{align}
-#+END_EXPORT
-akin to GP regression.
-Each dynamics mode $k$ is assumed to be independent,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-prior}
-\pF &= \prod_{k=1}^{K} \pFk.
-\end{align}
-#+END_EXPORT
-At a given input location the mode governing the dynamics is indicated by the discrete mode indicator
-variable $\modeVar$.
-Following a mixture model formulation, we construct a discrete probability distribution over the mode
-indicator variable $\PrA$.
-The resulting marginal likelihood is then given by marginalising the mode indicator variable,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mixture-marginal-likelihood}
-\pYGivenX = \sum_{\modeInd=1}^{\ModeInd} \PrA \pYkGivenX.
-\end{align}
-#+END_EXPORT
-The distribution over the discrete mode indicator variable $\PrA$ is referred to as the gating network.
-It governs how the dynamics switch between modes.
-# This work is interested in spatially varying modes and formulates a
-# which will now be detailed.
-# formulates an input dependent Categorical distribution over $\alpha_t$,
-
-*** Gating Network
-Mixture models are inherently unidentifiable as different combinations of mixture components
-and mixing coefficients can generate the same predictive distributions.
-The gating network can be seen as a handle for encoding prior knowledge that can be used to constrain
-\marginpar{identifiability}
-the set of admissible functions.
-This can improve identifiability and lead to learned representations that better reflect
-our understanding of the system. The simplest case being reordering the experts.
-This motivates Mixtures of Experts models citep:jacobsAdaptive1991, where the distribution over the mode
-indicator variable is formulated to be input-dependent. It's probability mass function is then given by,
-#+BEGIN_EXPORT latex
-%\begin{align} \label{eq-prob-mass}
-%P\left(\modeVar \mid \x \right) = \prod_{k=1}^K \left(\Pr(\modeVar= \modeInd \mid \x) \right)^{[\modeVar=\modeInd]}
-%\end{align}
-\begin{align} \label{eq-prob-mass}
-P\left(\alpha \mid \mathbf{h}(\cdot) \right) = \prod_{k=1}^K \left(\Pr(\alpha=k \mid \mathbf{h}(\cdot))\right)^{[\alpha = \modeInd]}
-\end{align}
-#+END_EXPORT
-where $[\modeVar=\modeInd]$ denotes the Iverson bracket.
-The probabilities of this Categorical distribution $\Pr(\modeVar=\modeInd \mid \GatingFunc(\cdot))$
-are obtained by evaluating $K$ latent
-gating functions $\GatingFunc(\cdot)=\{\mode{\gatingFunc}(\cdot)\}_{\modeInd=1}^\ModeInd$ and normalising their output.
-Each gating function $\mode{\gatingFunc}(\cdot)$ describes how its corresponding mode's mixing
-probability varies over the input space.
-\marginpar{softmax}
-In the general case, the gating network is defined by the softmax function,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-softmax}
-\Pr\left(\modeVar=\modeInd \mid \GatingFunc(\cdot)\right) = \text{softmax}_{\modeInd}\left(\GatingFunc(\cdot)\right) = \frac{\text{exp}\left(\hk(\cdot)\right)}{\sum_{\modeInd=1}^{\ModeInd} \hk(\cdot)}.
-\end{align}
-#+END_EXPORT
-However, instantiating the model with two experts is a special case where only a single gating function is needed.
-\marginpar{two experts}
-The output of a function $\gatingFunc(\cdot)$ can be mapped through a sigmoid
-function $\text{sig} : \R \rightarrow [0, 1]$ and interpreted as
-a probability,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-sigmoid}
-\Pr(\alpha=1 \mid \gatingFunc(\cdot)) = \text{sig}(\gatingFunc(\cdot)).
-\end{align}
-#+END_EXPORT
-If this sigmoid function satisfies the point symmetry condition then
-we know that $\Pr(\alpha=2 \mid \gatingFunc(\cdot)) = 1 - \Pr(\alpha =1 \mid \gatingFunc(\cdot))$.
-This is neat because it only requires a single gating function and no normalisation term needs to be calculated.
-
-Modelling the gating network with input-dependent functions enables
-informative prior knowledge to be encoded through the placement of GP priors.
-\marginpar{GP priors}
-For example, if modelling a dynamical system with oscillatory behaviour (e.g. an engine)
-a periodic kernel could be adopted.
-GPs also lend themselves to data-efficient learning whilst providing a principled
-approach to modelling the epistemic uncertainty associated with the gating functions.
-Learning better representations improves the models
-ability to extrapolate as it will be more true to the underlying system.
-
-We place independent GP priors on each gating function,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gating-prior}
-\Hk \sim \mathcal{N}\left( \mu_{h,k}(\allInput), k_{h,k}(\allInput, \allInput) \right)
-\end{align}
-#+END_EXPORT
-We place independent GP priors on each gating function, giving the distribution over all gating functions as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gating-prior}
-p\left(\GatingFunc(\allInput)\right) &= \prod_{\modeInd=1}^{\ModeInd} \pHkGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \mu_{h,k}(\allInput), k_{h,k}(\allInput, \allInput) \right)
-\end{align}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gating-prior}
-\pHGivenX &= \prod_{\modeInd=1}^{\ModeInd} \pHkGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \mu_{h,k}(\allInput), k_{h,k}(\allInput, \allInput) \right)
-\end{align}
-#+END_EXPORT
-where $\mu_{h,k}(\cdot)$ and $k_{h,k}(\cdot,\cdot)$ are the mean and covariance functions
-associated with the $k^\text{th}$ gating function.
-
-Each mode's mixing probability $\Pr(\modeVarK \mid \singleInput)$ is then obtained by marginalising
-*all* of the gating functions,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-indicator-mult}
-\Pr(\modeVarK \mid \singleInput )
-&= \E_{p(\mathbf{h}(\singleInput))} \left[ \Pr(\modeVarK \mid \mathbf{h}(\singleInput)) \right].
-\end{align*}
-#+END_EXPORT
-In the general case where $\Pr(\modeVar=\modeInd \mid \mathbf{h}(\cdot))$ uses the softmax function
-(Eq. ref:eq-softmax) this integral is intractable, so we approximate it using monte carlo
-quadrature.
-However, in the two expert case (Eq. ref:eq-sigmoid), selecting the sigmoid function to be the Gaussian cumulative distribution
-function
-$\Phi(\gatingFunc(\cdot)) = \int^{\gatingFunc(\cdot)}_{-\infty} \mathcal{N}(\tau | 0, 1) \text{d} \tau$
-leads to analytic integration,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mixing-probabilities-analytic}
-\Pr(\modeVarn=1 \mid \singleInput) &=
- \int \Phi\left(\gatingFunc(\singleInput)\right) \mathcal{N}\left(\gatingFunc(\singleInput) \mid \mu_h, \sigma^2_h \right) \text{d} \gatingFunc(\singleInput) \\
-&= \Phi \left(\frac{\mu_{h}}{\sqrt{1 + \sigma^2_{h} }}\right).
-\end{align}
-#+END_EXPORT
-In the two expert case the marginal likelihood is given as an analytic mixture of two Gaussians.
-\marginpar{marginal likelihood}
-
-*** Generative Model
-This model makes single-step probabilistic predictions,
-where the predictive distribution over the state difference $\Delta \mathbf{x}_{t}$ is
-given by a mixture of Gaussians.
-This provides the model flexibility to model multimodal transition dynamics $f$ as mixtures of $K$ modes.
-With this formulation, the marginal likelihood can be rewritten as,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-marginal-likelihood}
-\pYGivenX &= \sum_{\modeInd=1}^\ModeInd \PrAGivenX \pYkGivenX \\
-&= \sum_{\modeInd=1}^\ModeInd \PraGivenx \pykGivenx \\
-\end{align*}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\small
-\begin{align*} \label{eq-marginal-likelihood}
-p(\Delta\mathbf{x}_{1:T} | \hat{\mathbf{x}}_{1:T}) =
-&\prod_{t=1}^T  \sum_{k=1}^K \Bigg(
-\underbrace{\left\langle \Pr\left(\alpha_t = k | \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}\right) \right\rangle_{p\left(\hat{\mathbf{h}} \mid \bm\xi_h\right)}}_{\text{Mixing Probability}}  \\
-&\underbrace{\left\langle p\left(\Delta\mathbf{x}_t | \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}\right) \right\rangle_{p\left(\hat{\mathbf{f}}^{(k)} \mid \bm\xi^{(k)}_f\right)}}_{\text{Dynamics mode } k} \Bigg), \numberthis
-\end{align*}
-\normalsize
-#+END_EXPORT
-where $\left\langle \cdot \right\rangle_{p(x)}$ denotes an expectation under $p(x)$.
-Fig. [[ref:fig-graphical-model]]
-shows the graphical model where the $K$ latent gating functions $h^{(k)}$
-are evaluated and normalised to obtain the mixing probabilities
-$\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1})$.
-The mode indicator variable $\alpha_t$ is then sampled from a Categorical distribution
-governed by these probabilities.
-The indicated mode's latent function $f^{(k)}$ and process noise $\sigma^{(k)}$ are
-then evaluated to generate the state difference $\Delta\mathbf{x}_{t}$.
-
-*** graphical model :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}[t]
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[const] (x) {$\singleInput$};
-      \node[latent, left=of x, yshift=-1.4cm] (f) {$\Fk$};
-     % \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {$\hk$};
-
-
-      \node[const, left=of f, xshift=0.4cm] (thetak) {$\expertParamsK$};
-
-      \node[const, below=of f] (sigmak) {$\noiseVarK$};
-
-      \node[obs, right=of sigmak, yshift=0.cm] (y) {$\singleOutput$};
-      %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
-      \node[latent, right=of y, xshift=-0.4cm] (a) {$\modeVarn$};
-
-      \node[latent, right=of a, yshift=1.4cm, xshift=-0.4cm] (h) {$\Hk$};
-      \node[const, right=of h, xshift=-0.4cm] (phik) {$\gatingParamsK$};
-
-      %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
-
-      \factor[above=of a] {h-a} {left:Cat} {h} {a};
-
-      \draw[post] (a)--(y);
-      \draw[post] (x)-|(f);
-      %\draw[post] (f)--(yk);
-      \draw[post] (f)--(y);
-      %\draw[post] (yk)--(y);
-      %\draw[post] (h)--(a);
-      \draw[post] (x)-|(h);
-      \draw[post] (thetak)--(f);
-      \draw[post] (phik)--(h);
-      \draw[post] (sigmak)|-(y);
-
-      \plate {} {(x) (y) (a)} {$\NumData$};
-      %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
-      \plate {} {(f) (sigmak) (thetak)} {$\ModeInd$};
-      \plate {} {(h) (phik)} {$\ModeInd$};
-    \end{tikzpicture}
-    %}
-  \caption{Graphical model of the transition dynamics where the state difference $\singleOutput$
-is generated by pushing the state and control $\singleInput$ through the latent process.}
-\label{fig-graphical-model}
-\end{figure}
-#+END_EXPORT
-
-
-# #+BEGIN_EXPORT latex
-# \begin{figure}[t]
-#   \centering
-#   \resizebox{0.8\columnwidth}{!}{
-#     \begin{tikzpicture}[
-#       pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-#       post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-#       ]
-#       \node[const] (x) {$\hat{\mathbf{x}}_{t-1}$};
-#       \node[latent, left=of x, yshift=-1.4cm] (f) {$\mathbf{f}^{(k)}_t$};
-#       %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
-#       \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {${h}^{(k)}_t$};
-
-#       \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\hat{\mathbf{f}}^{(k)}$};
-#       \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\hat{\mathbf{h}}^{(k)}$};
-#       \node[const, left=of uk, xshift=0.4cm] (zk) {$\bm\xi^{(k)}_f$};
-#       \node[const, right=of uh, xshift=-0.4cm] (zh) {$\bm\xi^{(k)}_h$};
-
-#       \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\bm\theta^{(k)}$};
-#       \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\bm\phi^{(k)}$};
-
-#       \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\sigma^{(k)}$};
-
-#       \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\Delta\mathbf{x}_t$};
-#       %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
-#       \node[latent, right=of y, xshift=-0.4cm] (a) {${\alpha}_t$};
-
-#       %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
-
-#       \factor[above=of a] {h-a} {left:Cat} {h} {a};
-
-#       \draw[post] (a)--(y);
-#       \draw[post] (x)-|(f);
-#       %\draw[post] (f)--(yk);
-#       \draw[post] (f)--(y);
-#       %\draw[post] (yk)--(y);
-#       %\draw[post] (h)--(a);
-#       \draw[post] (x)-|(h);
-#       \draw[post] (uk)--(f);
-#       \draw[post] (uh)--(h);
-#       \draw[post] (zk)--(uk);
-#       \draw[post] (zh)--(uh);
-#       \draw[post] (thetak)--(f);
-#       \draw[post] (phik)--(h);
-#       \draw[post] (sigmak)|-(y);
-
-#       \plate {} {(x) (y) (a) (f) (h)} {$T$};
-#       %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
-#       \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$K$};
-#       \plate {} {(zh) (uh) (h) (phik)} {$K$};
-#     \end{tikzpicture}
-#     }
-#   \caption{Graphical model of the transition dynamics
-# where the state difference $\Delta\mathbf{x}_{t}$
-# is generated by pushing the state and control $\hat{\mathbf{x}}_{t-1}$
-# through the latent process.}
-# %\label{fig:graphical_model}
-# \end{figure}
-# #+END_EXPORT
-
-
-
-*** Gating Network :noexport:
-The gating network governs how the dynamics switch between modes.
-This work is interested in spatially varying modes so
-formulates an input dependent Categorical distribution over $\alpha_t$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-prob-mass}
-P\left(\alpha_t \mid \mathbf{h}_t\right) = \prod_{k=1}^K \left(\Pr(\alpha_t=k \mid \mathbf{h}_t)\right)^{[\alpha_t = k]},
-\end{align}
-#+END_EXPORT
-where $[\alpha_t=k]$ denotes the Iverson bracket.
-It should be noted that other gating networks have been proposed that provide computational benefits
-for inference. However, these gating networks often lack a handle for encoding domain knowledge
-that can be used to restrict the set of possible
-
-\todo[inline]{insert gating network references}
-The probabilities of this Categorical distribution $\Pr(\alpha_t=k \mid \mathbf{h}_t)$
-are obtained by evaluating $K$ latent
-gating functions $\{h^{(k)}\}_{k=1}^K$ and normalising their output.
-Each gating function evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
-as $h^{(k)}_t = h^{(k)}(\hat{\mathbf{x}}_{t-1})$
-and at all observations ${h}^{(k)}_{1:T}$.
-The set of all gating functions evaluated at $\hat{\mathbf{x}}_{t-1}$ is denoted
-as $\mathbf{h}_t$ and at all observations as $\mathbf{h}_{1:T}$.
-Each gating function $h^{(k)}$ describes how its corresponding mode's mixing
-probability varies over the input space.
-
-
-This work is interested in finding trajectories that can avoid areas of the transition dynamics model
-that cannot be predicted confidently.
-Placing independent sparse GP priors on each gating function
-provides a principled approach to
-modelling the epistemic uncertainty associated with each gating function.
-The gating function's posterior covariance is a quantitative value that can be exploited by the
-trajectory optimisation.
-# GPs also provide data-efficient and interpretable learning through the selection of informative mean
-# and covariance functions.
-# For example, if the transition dynamics modes are subject to oscillatory mixing then a periodic
-# covariance function could be selected.
-
-Each gating function's inducing inputs are denoted
-$\bm\xi_h^{(k)}$ and outputs as $\hat{\mathbf{h}}^{(k)}$.
-For all gating functions, they are collected as $\bm\xi_h$ and $\hat{\mathbf{h}}$ respectively.
-The probability that the $t^{\text{th}}$ observation is generated by mode $k$
-given the inducing inputs is obtained by marginalising $\mathbf{h}_t$,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-indicator-mult}
-\Pr(\alpha=\modeInd \mid \mathbf{h}(\cdot) )
-&= \E_{p(\mathbf{h}(\cdot))} \left[ \Pr(\alpha_t=k \mid \mathbf{h}(\cdot)) \right],
-\end{align*}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-indicator-mult}
-\Pr(\alpha=\modeInd \mid \mathbf{h}(\cdot) )
-&= \E_{p(\mathbf{h}(\cdot))} \left[ \text{softmax}_k(\mathbf{h}(\cdot)) \right],
-\end{align*}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-% \small
-\begin{align*} \label{eq-indicator-mult}
-\Pr(\alpha_t=k \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}} )
-&= \int \text{softmax}_k(\mathbf{h}_t) p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) \text{d} \mathbf{h}_t,
-\end{align*}
-#+END_EXPORT
-where $p(\mathbf{h}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}) = \prod_{k=1}^K p\left({h}^{(k)}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{h}}^{(k)}\right)$
-is the $K$ independent sparse GP priors on the gating functions.
-
-**** Two Experts
-Instantiating the model with two experts is a special case where only a single gating function is needed.
-The output of a function can be mapped through a sigmoid
-function $\text{sig} : \R \rightarrow [0, 1]$ and interpreted as
-a probability $\Pr(\alpha=1 \mid \gatingFunc(\cdot))$.
-If this sigmoid function satisfies the point symmetry condition then
-we know that $\Pr(\alpha=2 \mid \gatingFunc(\cdot)) = 1 - \Pr(\alpha =1 \mid \gatingFunc(\cdot))$.
-
-The distribution over $\gatingFunc(\cdot)$
-
-We note that $p({h}_n^{(k)} \mid \mathbf{h}_{\neg n}, \mathbf{X})$
-is a GP conditional and denote its mean $\mu_h$ and variance $\sigma^2_h$.
-Choosing the sigmoid as the Gaussian cdf
-$\Phi(h_n) = \int^{h_n}_{-\infty} \mathcal{N}(\tau | 0, 1) \text{d} \tau$
-leads to,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mixing-probabilities-analytic}
-\Pr(\alpha_n=1 | \mathbf{X}) &=
- \int \Phi({h}_n) \mathcal{N}(h_n \mid \mu_h, \sigma^2_h) \text{d} {h}_n
-= \Phi \left(\frac{\mu_{h}}{\sqrt{1 + \sigma^2_{h} }}\right).
-\end{align}
-#+END_EXPORT
-Given this gating network our marginal likelihood is now an analytic mixture of two Gaussians.
-
-can analytically marginalise.
-
-** Bayesian Model Old :noexport:
-The model is built upon sparse GP priors on each of the transition dynamics functions $f^{(k)}$
-with independent GPs placed on each state dimension $d$,
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-prior}
-p(\Fk \mid \allInput, \uFk) = \prod_{\numData = 1}^{\dataInd} p(\Fkn \mid \singleInput, \uFk)
-\end{align}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-dynamics-prior}
-p\left(\mathbf{f}^{(k)}_{1:T} \mid \hat{\mathbf{x}}_{1:T}, \hat{\mathbf{f}}^{(k)} \right) =
-&\prod_{t=1}^T
-p\left(\mathbf{f}^{(k)}_{t} \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)} \right) \numberthis \\
-&\prod_{t=1}^T \prod_{d=1}^D
-p\left(f^{(k)}_{t,d} \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}_{d} \right)
-\end{align*}
-#+END_EXPORT
-where $p\left(f^{(k)}_{t,d} \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}_{d} \right)$
-is a sparse GP conditional (Eq. ref:eq-sparse-gp-prediction).
-For notational conciseness, the dependency on the inducing inputs $\bm\xi^{(k)}_f$ is dropped
-throughout.
-The $M$ inducing inputs and outputs associated with the $d^{\text{th}}$ dimension
-of the $k^{\text{th}}$ mode's latent function $f^{(k)}$ are denoted as
-$\bm\xi_{f,d}^{(k)}$ and
-$\hat{\mathbf{f}}^{(k)}_d$ respectively.
-They are collected as
-$\bm\xi^{(k)}_f$ and $\hat{\mathbf{f}}^{(k)}$ for all output dimensions
-and as $\bm\xi_f$ and $\hat{\mathbf{f}}$ for all modes.
-The process noise in each mode is modelled as,
-#+BEGIN_EXPORT latex
-\small
-\begin{align*} \label{eq-likelihood}
-p\left(\Delta\mathbf{x}_{t} \mid \mathbf{f}^{(k)}_{t}\right)
-= \mathcal{N}\left(\Delta\mathbf{x}_{t} \mid \mathbf{f}_t^{(k)}, \text{diag}\left(\left(\sigma^{(k)}_{1}\right)^2, \ldots, \left(\sigma^{(k)}_D\right)^2\right) \right),
-\end{align*}
-\normalsize
-#+END_EXPORT
-where $\left(\sigma^{(k)}_{d}\right)^2$ represents the noise variance associated
-with the $d^{\text{th}}$ dimension of the $k^{\text{th}}$ mode.
-# #+BEGIN_EXPORT latex
-# \small
-# \begin{gathered} \label{eq-likelihood}
-# p\left(\Delta\mathbf{x}_{t} \mid \mathbf{f}^{(k)}_{t}\right)
-# = \mathcal{N}\left(\Delta\mathbf{x}_{t} \mid \mathbf{f}_t^{(k)}, \text{diag}\left(\left(\sigma^{(k)}_{1}\right)^2, \ldots, \left(\sigma^{(k)}_D\right)^2\right) \right),
-# \end{gathered}
-# \normalsize
-# #+END_EXPORT
-
-# The dynamics modes given the inducing variables,
-# #+BEGIN_EXPORT latex
-# \small
-# \begin{align*} \label{eq-dynamics-mode}
-# p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T}, \hat{\mathbf{f}}^{(k)}) =
-# \prod_{t=1}^T \int
-# &p\left(\Delta\mathbf{x}_t \mid \mathbf{f}^{(k)}_t\right)
-# p\left(\mathbf{f}^{(k)}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)} \right)
-# \text{d} \mathbf{f}^{(k)}_t
-# \end{align*}
-# \normalsize
-# #+END_EXPORT
-
-# The dynamics modes are combined by the gating network to obtain,
-# #+BEGIN_EXPORT latex
-# \small
-# \begin{align*} \label{eq-marginal-likelihood}
-# p(\Delta\mathbf{x}_{1:T} \mid \hat{\mathbf{x}}_{1:T}, \hat{\mathbf{f}}) =
-# \prod_{t=1}^T \sum_{k=1}^K
-# &\Pr(\alpha_t = k \mid \hat{\mathbf{x}}_{t-1})
-# p(\Delta\mathbf{x}_t \mid \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)})
-# %&\int p\left(\Delta\mathbf{x}_t \mid \hat{\mathbf{f}}^{(k)}\right)
-# %p\left(\hat{\mathbf{f}}^{(k)} \mid \hat{\mathbf{x}}_{t-1}\right) \text{d} \hat{\mathbf{f}}^{(k)}
-# %&p(\Delta\mathbf{x}_t \mid \alpha_t=k, \hat{\mathbf{x}}_{t-1}, \hat{\mathbf{f}}^{(k)}). \numberthis \\
-# \end{align*}
-# \normalsize
-# #+END_EXPORT
-
 ** Approximate Inference [[label:sec-inference]]
 #+begin_export latex
 \epigraph{Nature laughs at the difficulties of integration.}{\textit{Pierre-Simon Laplace}}
@@ -8694,264 +7744,6 @@ $\gatingVariationalPosteriorBernoulli$ at $\singleTestInput$.
 # $\predictiveGatingPriorBernoulli$ at $\x_*$.
 
 *** sparse graphical model old :ignore:noexport:
-#+BEGIN_EXPORT latex
-\begin{figure}[t]
-  \centering
-  \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[const] (x) {$\singleInput$};
-      \node[latent, left=of x, yshift=-1.4cm] (f) {$\fkn$};
-      %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
-      \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {$\hkn$};
-
-      \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\uFk$};
-      \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\Hku$};
-      \node[const, left=of uk, xshift=0.4cm] (zk) {$\zFk$};
-      \node[const, right=of uh, xshift=-0.4cm] (zh) {$\zHk$};
-
-      \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\expertParamsK$};
-      \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\gatingParamsK$};
-
-      \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\noiseVarK$};
-
-      \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\singleOutput$};
-      %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
-      \node[latent, right=of y, xshift=-0.4cm] (a) {$\modeVarn$};
-
-      %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
-
-      \factor[above=of a] {h-a} {left:Cat} {h} {a};
-
-      \draw[post] (a)--(y);
-      \draw[post] (x)-|(f);
-      %\draw[post] (f)--(yk);
-      \draw[post] (f)--(y);
-      %\draw[post] (yk)--(y);
-      %\draw[post] (h)--(a);
-      \draw[post] (x)-|(h);
-      \draw[post] (uk)--(f);
-      \draw[post] (uh)--(h);
-      \draw[post] (zk)--(uk);
-      \draw[post] (zh)--(uh);
-      \draw[post] (thetak)--(f);
-      \draw[post] (phik)--(h);
-      \draw[post] (sigmak)|-(y);
-
-      \plate {} {(x) (y) (a) (f) (h)} {$\NumData$};
-      %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
-      \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$\ModeInd$};
-      \plate {} {(zh) (uh) (h) (phik)} {$\ModeInd$};
-    \end{tikzpicture}
-    }
-  \caption{Graphical model of the transition dynamics where the state difference $\singleOutput$
-is generated by pushing the state and control $\singleInput$ through the latent process.}
-\label{fig-graphical-model-sparse}
-\end{figure}
-#+END_EXPORT
-
-
-
-#+BEGIN_EXPORT latex
-\todo[inline]{
-\begin{itemize}
-\item We want $\pFGivenFu$ outside the log (and not just $\qFu$) so we can analytically integrate $\qFu$ (like in Eq. \ref{eq-experts-var-dist})??
-\item In the ICRA paper I had only $\qFu$ outside the log so we had to approximate the M-dimensional integral over $\qFu$ with samples.
-\end{itemize}
-}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\todo[inline]{
-This is the bound I had coded up previously,
-\begin{align} \label{eq-expert-bound-old}
-\mathcal{L}_{\text{old}} =
-&\sum_{\numData}^{\NumData} E_{\prod_{\modeInd=1}^{\ModeInd} \qFku} \text{log} \sum_{k=1}^{K} \PrA \left[ \pykGivenFku \right] \\
-&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right]
-\end{align}
-This bound is valid but it is nicer to move the expectations over $\pFk$ outside the log, like in Eq. \ref{eq-experts-bound-4-fact}.
-}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\todo[inline]{
-This is another bound I implemented,
-\begin{align} \label{eq-expert-bound-old}
-\mathcal{L}_{\text{old}} =
-&\sum_{\numData}^{\NumData} \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \qFku} \left[ \pykGivenFku \right] \\
-&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right]
-\end{align}
-\begin{itemize}
-\item THIS IS WRONG as the expectation over $\qFku$ should be outside the log.
-\item which is why I used to approximate it with single samples....
-\end{itemize}
-}
-#+END_EXPORT
-
-\todo[inline]{Need to extend bound for the gating network}
-
-** Inference_old [[label:sec-inference]] :noexport:
-#+begin_export latex
-\epigraph{Nature laughs at the difficulties of integration.}{\textit{Pierre-Simon Laplace}}
-#+end_export
-#+BEGIN_EXPORT latex
-\renewcommand{\modei}[2]{\ensuremath{#1_{#2}}}
-\renewcommand{\singleOutput}{\ensuremath{\Delta x_{\numData}}}
-\renewcommand{\allOutput}{\ensuremath{\Delta\mathbf{\state}}}
-\newcommand{\expertInducingInput}{\ensuremath{\singleData{\modeVar}}}
-\newcommand{\expertInducingOutput}{\ensuremath{\singleData{\modeVar}}}
-#+END_EXPORT
-*** intro :ignore:
-The marginal likelihood in Eq. ref:eq-marginal-likelihood-factorised is extremely expensive
-to evaluate $\mathcal{O}(\ModeInd^2 \NumData^{4})$
-\todo{add marginal likelihood's correct complexity}
-and is also intractable due to the marginalisation of $\mathbf{h}$ in the gating network
-(except for the two expert case).
-For these reasons, this work derives a variational approximation based on inducing variables that provides scalability
-by utilising stochastic gradient-based optimisation.
-
-Following the approach by cite:titsiasVariational2009, the probability space is augmented
-with a set of $M$ inducing variables for each GP.
-However, instead of collapsing these inducing variables they are explicitly
-represented as variational distributions and used to lower bound citep:hensmanGaussian2013
-and then further bound citep:hensmanScalable2015 the marginal likelihood.
-
-
-
-Let us first consider lower bounding the MoGPE model for the general gating network case
-i.e. without specifying a particular gating network. The marginal likelihood of this model is given by,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-general-moe-marginal-likelihood}
-\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\pFk} \left[ \pYkGivenFk \right],
-\end{align*}
-#+END_EXPORT
-Following the approach by cite:titsiasVariational2009 and cite:hensmanGaussian2013, which is
-detailed in Section ref:sec-sparse-gps Eqs. ref:eq-titsias-bound - ref:eq-hensman-bound,
-the probability space is first augmented with a set of $M$ inducing variables from each GP prior,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-experts-inducing-dist}
-\pFuGivenX = \prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \uFk \mid \mode{\mu}(\zFk), \mode{k}(\zFk, \zFk) \right).
-\end{align*}
-#+END_EXPORT
-The augmented log marginal likelihood is then given by,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-general-moe-marginal-likelihood}
-\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \pFkuGivenX} \left[ \E_{\pFkGivenFku} \left[ \pYkGivenFk \right] \right] .
-%\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \prod_{\modeInd=1}^{\ModeInd} \pYkGivenFk \pFkGivenFku \pFkuGivenX.
-\end{align*}
-#+END_EXPORT
-For notational conciseness the dependency on the inputs has been dropped.
-Note that we have assumed each expert's inducing variables are independent and augmented each expert with
-the product over all experts inducing variables.
-This will enable us to move the expectation over the inducing variables outside the sum over the indicator variable.
-\todo[inline]{no need to say this...}
-
-We start by considering the augmented log marginal likelihood,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-marginal-likelihood}
-\text{log} \pYGivenX &= \text{log} \sum_{k=1}^{K} \PrA \E_{\prod_{\modeInd=1}^{\ModeInd} \pFku} \left[ \pYkGivenFku \right].
-\end{align}
-#+END_EXPORT
-and moving the integrals over the inducing variables outside of the sum over the indicator variable,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-marginal-likelihood-fact}
-\text{log} \pYGivenX = \text{log} \E_{\prod_{\modeInd=1}^{\ModeInd} \pFku} \left[ \sum_{k=1}^{K} \PrA  \pYkGivenFku \right],
-\end{align}
-\todo{Don't think I need to mention Fubini-Tonelli theorem here}
-#+END_EXPORT
-Instead of collapsing the inducing variables here citep:titsiasVariational2009
-they can be explicitly represented as variational distributions citep:hensmanGaussian2013,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-var-experts-inducing-dist}
-\qFu = \prod_{k=1}^{K} \qFku = \prod_{k=1}^{K} \mathcal{N}\left(\uFk \mid \mode{\mathbf{m}}, \mode{\mathbf{S}} \right)
-\end{align}
-#+END_EXPORT
-These variational distributions can then be used to obtain a lower
-bound on Eq. ref:eq-expert-marginal-likelihood-fact,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-2}
-\text{log} \pYGivenX
-\geq &\E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \PrA  \pYkGivenFku \right] \nonumber \\
-&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] := \mathcal{L}_{1}.
-\end{align}
-#+END_EXPORT
-This bound meets the necessary conditions to perform stochastic gradient methods on $\qFu$ as the first term
-can be written as a sum over input-output pairs,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-2-fact}
-\mathcal{L}_{1} =
-&\sum_{\numData=1}^{\NumData} \E_{\prod_{\modeInd=1}^{\ModeInd}\qFku} \left[ \text{log} \sum_{k=1}^{K} \Pra  \pykGivenFku \right] \nonumber \\
-&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right].
-\end{align}
-#+END_EXPORT
-However, the expectation over the inducing variables cannot be calculated in closed form and
-must be approximated. The joint distribution over the inducing variables for each GP $\qFku$ is $M$ dimensional and as
-a result the integral is $M$ dimensional.
-Following cite:hensmanScalable2015 this bound (Eq. ref:eq-expert-bound-2-fact) can be further bounded by
-moving the expectations over each expert's conditional of its latent function values given its inducing variables
-$\pFkGivenFku$
-outside the log, i.e. applying Jensen's inequality to the conditional probability $\pYkGivenFku$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-3}
-\mathcal{L}_{1}
-\geq &\E_{\prod_{k=1}^{K}\qFku} \left[ \E_{\pFkGivenFku} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] \right] \nonumber \\
-&- \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right] := \mathcal{L}_{\text{experts}},
-\end{align}
-#+END_EXPORT
-Denoting the variational posterior
-$\qF := \prod_{k=1}^{K} \qFk = \prod_{k=1}^{K} \int \pFkGivenFku \qFku \text{d} \uFk$ enables us
-to rewrite Eq. ref:eq-expert-bound-3 as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-4}
-\mathcal{L}_{\text{experts}}
-&= \E_{\qF} \left[ \text{log} \sum_{k=1}^{K} \PrA \pYkGivenFk \right] - \sum_{k=1}^{K} \text{KL}\left[\qFku \mid\mid \pFku\right]
-\end{align}
-#+END_EXPORT
-As each experts inducing variables distribution $\qFku$ is Gaussian the functional form of the variational posterior is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-var-dist}
-\qF = \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \Fk \mid \mode{\mathbf{A}} \mode{\mathbf{m}}, \mode{\K}_{\numData \numData } + (\mode{\mathbf{S}} - \mode{\K}_{mm}) \left(\mode{\mathbf{A}}\right)^{T} \right),
-\end{align}
-#+END_EXPORT
-where $\mode{\mathbf{A}} = \mode{\K}_{\numData m}\left(\mode{\K}_{mm}\right)^{-1}$.
-The model's likelihood is a mixture of Gaussians and factorizes
-across data as $\prod_{\numData=1}^{\NumData} \Pra \pykGivenfk$. $\mathcal{L}_{\text{experts}}$ can thus be
-written as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-bound-4-fact}
-\mathcal{L}_{\text{experts}} =
-&\sum_{\numData=1}^{\NumData}\E_{\qfn} \left[ \text{log} \sum_{k=1}^{K} \Pra \pykGivenfk \right] \nonumber \\
-&- \sum_{\modeInd=1}^{\ModeInd} \text{KL}\left[\qFku \mid\mid \pFku\right].
-\end{align}
-#+END_EXPORT
-Importantly, the variational posterior $\qfn$ analytically marginalises each $\qFku$
-(with Gaussian convolutions) removing the undesirable approximate $M$ dimensional integrals from
-Eq. ref:eq-expert-bound-2-fact. The expectation in Eq. ref:eq-experts-bound-4-fact still requires approximation
-but now only requires one dimensional integrals of the log-likelihood to be approximated.
-We approximate the integrals with Gibbs sampling and
-in practice only use single samples because the added stochasticity helps the optimisation.
-
-The bound in Eq. ref:eq-experts-bound-4-fact meets the necessary conditions to perform stochastic
-gradient methods on $\qFu$ as the sum of $\NumData$ terms corresponds to input-output pairs.
-The inducing inputs $\{\Z\}_{\modeInd=1}^{\ModeInd}$, kernel hyperparameters and noise variances are treated as
-variational hyperparameters and are optimised using stochastic gradient descent alongside the variational
-parameters.
-Note that our augmented model captures the dependencies in the joint distribution of the data through the
-inducing variables, but as $M \ll \NumData$ these have a much lower computational burden.
-Given a batch of $\NumData_b$ observations this bound has complexity
-$\mathcal{O}\left( \NumData_{b} \ModeInd M^{3} \right)$ to evaluate.
-It is worth noting that in contrast to other MoGPE models, our model does not partition the data set,
-i.e. each of our expert depends on **all** of the training inputs.
-However, after augmenting each expert with inducing points,
-the augmented model has the flexibility to /partition/ our inducing points.
-As such, when selecting the number of inducing points $\NumInducing$ for each GP, one could partition $\NumData$
-and select the number of inducing points based off of the number of data points believed to be
-associated with each expert.
-\todo{citation for selecting number of inducing points}
-
-*** sparse graphical model :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}[t]
   \centering
@@ -10322,7 +9114,6 @@ The power of the \acrshort{gp}-based gating network will become apparent
 when its latent /geometry/ is leveraged for control in cref:chap-traj-opt-geometry.
 # In particular, cref:chap-traj-opt-geometry is interested in finding length minimising trajectories on the
 # gating functions' GP posteriors, aka geodesic trajectories citep:tosiMetrics2014.
-
 
 ** Conclusion
 This chapter has presented a method for learning representations of multimodal dynamical systems using
@@ -11830,6 +10621,17 @@ The performance of the methods presented in this chapter are evaluated using thr
     \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
     \end{align}
     #+END_EXPORT
+   this is calculated using cref:eq-mode-chance-constraint-integral
+    #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-mode-probability-no-unc}
+    \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \gatingFunc(\state_{0:\timeInd}), \state_{0:\timeInd}, \control_{0:\timeInd})
+    \end{align}
+    #+END_EXPORT
+    #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-mode-probability-all-unc}
+    \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})
+    \end{align}
+    #+END_EXPORT
    # - The indirect control method calculates the probability of being in the desired dynamics mode under the
    #   MoSVGPE model,
    #  #+BEGIN_EXPORT latex
@@ -12137,30 +10939,66 @@ In contrast to the real-world experiments, the simulated experiments presented h
 dynamics model, i.e. they do not assume constant controls.
 
 **** Environment 1
+***** Blah :ignore:
+The two control methods were first tested in a simulated representation of the real-world environment, named
+Environment 1.
+cref:fig-dataset-scenario-7 illustrates the environment and shows the state transition data set that was used
+to train the model.
+Three settings of the tuneable $\lambda$ parameter --
+which determines the relevance of the covariance term in the expected Riemannian metric -- were tested for
+each method.
+All experiments in Environment 1 used a $\TimeInd=20$ step horizon.
+cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7
+show the results using the indirect geodesic control method in cref:sec-traj-opt-collocation and
+cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,fig-riemannian-energy-high-traj-opt-7
+show the results using the direct control method in cref:sec-traj-opt-energy.
+The top row of each figure shows the optimised trajectories overlayed on each mode's mixing probability.
+This is useful for seeing how well trajectories remain in regions of the learned dynamics model with high
+probability of being in the desired mode.
+The bottom row of each figure shows the trajectories overlayed on the gating function's posterior
+mean (left) and posterior variance (right).
+As the geometry-based methods in this chapter are based on finding shortest trajectories on this manifold,
+the posterior mean plot is useful for observing contour following behaviour.
+Similarly, as the methods should find trajectories that avoid regions of the gating network with
+high epistemic uncertainty, overlaying the trajectories on the posterior variance is useful for seeing
+this behaviour.
+
+To further help visualise the results, the optimised controls are rolled out in
+the desired mode's dynamics GP (magenta) and in the environment (cyan).
+Deviation between these two trajectories is undesirable as it indicates that the controls,
+1. drive the system out of the desired mode, or,
+2. drive the system into regions of the learned model with high epistemic uncertainty.
+For the indirect geodesic control experiments, the state trajectory found by the collocation solver
+is also overlayed (yellow).
+cref:tab-results-sim-envs summarises the all of the results for the simulated experiments.
+
+# In the indirect geodesic control experiments, the yellow trajectory represents the state trajectory found by the
+# collocation solver on the geodesic ODE.
+
 ***** Table :ignore:
+
 #+begin_table
-#+LATEX: \caption{\textbf{Results in simulated environments} Comparison of the performance of both control methods in the simulated environments, when using different settings of $\lambda$. The performance measures are summed over the collocation points for the indirect geodesic control method and over each time step for the direct control method.}
+#+LATEX: \caption{\textbf{Results in simulated environments} Comparison of the direct geodesic control method from \cref{sec-traj-opt-collocation} and the  indirect control method from \cref{sec-traj-opt-energy}, in the two simulated environments, when using different settings of $\lambda$. The performance measures are summed over the collocation points for the indirect geodesic control method and over each time step for the direct control method. The "Mode prob" column calculates the probability at each time step without marginalising the state and gating function uncertainty whereas the "Mode prob with uncertainty" marginalises both the state and gating function uncertainty at each time step.}
 #+LATEX: \label{tab-results-sim-envs}
 #+LATEX: \resizebox{\textwidth}{!}{
-#+ATTR_LATEX: :center t :placement [!b]
-|-----+----------+-----------+------------------+--------------------+-------------------+-------------------|
-| Env | Method   | $\lambda$ | Mode prob        | State uncertainty  | Gating unc        | Riemannian energy |
-|-----+----------+-----------+------------------+--------------------+-------------------+-------------------|
-|     | Baseline | N/A       | $17.06$          | $0.00620$          | $93.62$           |                   |
-|     | Direct   | $0.5$     | $16.77$          | $8.70$             | $874.45$          | $180.10$          |
-|     | Direct   | $1.0$     | $\mathbf{18.10}$ | $8.72$             | $\mathbf{638.68}$ | $\mathbf{173.84}$ |
-|   1 | Direct   | $20.0$    | $13.00$          | $\mathbf{8.69}$    | $1504.12$         | $349.08$          |
-|     | Indirect | $0.5$     | $16.22$          | $\mathbf{8.69}$    | $816.57$          | $238.29$          |
-|     | Indirect | $1.0$     | $16.97$          | $8.70$             | $734.32$          | $222.07$          |
-|     | Indirect | $20.0$    | $14.62$          | $8.66$             | $1150.32$         | $627.74$          |
-|-----+----------+-----------+------------------+--------------------+-------------------+-------------------|
-|     | Baseline | N/A       | $17.06$          | $0.00620$          | $93.62$           |                   |
-|     | Direct   | $0.5$     | $16.77$          | $0.00300$          | $874.45$          | $180.10$          |
-|     | Direct   | $1.0$     | $18.10$          | $0.00920$          | $638.68$          | $173.84$          |
-|   2 | Direct   | $20.0$    | $13.00$          | $\mathbf{0.00198}$ | $1504.12$         | $349.08$          |
-|     | Indirect | $0.5$     | $16.22$          | $0.00300$          | $816.57$          | $238.29$          |
-|     | Indirect | $1.0$     | $16.97$          | $0.00920$          | $734.32$          | $222.07$          |
-|     | Indirect | $20.0$    | $14.62$          | $\mathbf{0.00198}$ | $1150.32$         | $627.74$          |
+#+ATTR_LATEX: :center t :placement [!b] :align clcccccc
+|-----+----------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
+| Env | Method   | $\lambda$ | Mode prob                       | Mode prob with uncertainty       | State uncertainty        | Gating uncertainty                                   | Riemannian energy                                |   |
+|     |          |           | cref:eq-mode-probability-no-unc | cref:eq-mode-probability-all-unc | $\mathbb{V}[\stateTraj]$ | $\mathbb{V}[\gatingFunc_{\desiredMode}(\stateTraj)]$ | cref:eq-approximate-trajectory-riemannian-energy |   |
+|-----+----------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
+|     | Direct   | $0.5$     | $20.91$                         | $16.77$                          | $8.70$                   | $404.51$                                             | $180.10$                                         |   |
+|     | Direct   | $1.0$     | $\mathbf{20.98}$                | $\mathbf{18.10}$                 | $8.72$                   | $388.51$                                             | $\mathbf{173.84}$                                |   |
+|   1 | Direct   | $20.0$    | $12.64$                         | $13.00$                          | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                         |   |
+|     | Indirect | $0.5$     | $16.96$                         | $16.22$                          | $8.69$                   | $346.62$                                             | $238.29$                                         |   |
+|     | Indirect | $1.0$     | $18.51$                         | $16.97$                          | $8.70$                   | $367.16$                                             | $222.07$                                         |   |
+|     | Indirect | $20.0$    | $15.32$                         | $14.62$                          | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                         |   |
+|-----+----------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
+|     | Direct   | $0.5$     | $1$                             | $16.77$                          | $0.00300$                | $874.45$                                             | $180.10$                                         |   |
+|     | Direct   | $1.0$     | $1$                             | $18.10$                          | $0.00920$                | $638.68$                                             | $173.84$                                         |   |
+|   2 | Direct   | $20.0$    | $1$                             | $13.00$                          | $\mathbf{0.00198}$       | $1504.12$                                            | $349.08$                                         |   |
+|     | Indirect | $0.5$     | $1$                             | $16.22$                          | $0.00300$                | $816.57$                                             | $238.29$                                         |   |
+|     | Indirect | $1.0$     | $1$                             | $16.97$                          | $0.00920$                | $734.32$                                             | $222.07$                                         |   |
+|     | Indirect | $20.0$    | $1$                             | $14.62$                          | $\mathbf{0.00198}$       | $1150.32$                                            | $627.74$                                         |   |
 #+LATEX: }
 #+end_table
 
@@ -12222,7 +11060,7 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \end{figure}
 #+END_EXPORT
 
-***** Geodesic collocation 30 :ignore:
+***** Geodesic collocation 20 :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -12250,127 +11088,6 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \label{fig-geodesic-high-traj-opt-7}
 \end{figure}
 #+END_EXPORT
-
-***** Blah :ignore:
-The two control methods were first tested in a simulated representation of the real-world environment, named
-Environment 1.
-cref:fig-dataset-scenario-7 illustrates the environment and shows the state transition data set that was used
-to train the model.
-Three settings of the tuneable $\lambda$ parameter --
-which determines the relevance of the covariance term in the expected Riemannian metric -- were tested for
-each method.
-All experiments in Environment 1 used a $\TimeInd=20$ step horizon.
-To aid with interpretation of the results, the optimised controls are rolled out in
-the desired mode's dynamics GP (magenta) and in the environment (cyan).
-Deviation between the two trajectories indicates that the trajectory optimisation has found controls that,
-1. drive the system out of the desired mode, or,
-2. drive the system into regions of the learned model with high epistemic uncertainty.
-In the indirect geodesic control experiments, the yellow trajectory represents the state trajectory found by the
-collocation solver on the geodesic ODE.
-
-The methods are first evaluated at their ability to remain in the desired dynamics mode.
-They are then evaluated at their ability to avoid regions of the dynamics with high epistemic uncertainty.
-
-cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,fig-riemannian-energy-high-traj-opt-7
-show the trajectory optimisation results using the method in cref:sec-traj-opt-energy and
-cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7
-show the results using the method in cref:sec-traj-opt-collocation.
-cref:tab-results-sim-envs summarises the results for all of the experiments.
-
-*Target state*
-The methods are first evaluated at their ability to navigate to the target state.
-All experiments in Environment 1 were able to find trajectories that navigate to the target state under the
-desired mode's GP dynamics.
-This is indicated by the magenta trajectory in
-cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,fig-riemannian-energy-high-traj-opt-7,fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7
-successfully navigating to the target state $\targetState$.
-The state trajectory found by the collocation solver is guaranteed to satisfy the boundary conditions
-in the indirect geodesic control experiments
-(cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7).
-This is because it is a property of the collocation solver.
-The inference strategy has then successfully recovered controls that drive the system along the
-collocation solver's state trajectory (yellow),
-This is indicated by the state trajectory under the desired mode's GP dynamics (magenta) following the state
-trajectory found by the collocation solver (yellow).
-Although the state trajectories under the learned dynamics navigate to the target state, the state trajectories
-in the environment (cyan) do not.
-This is due to the collocation solver finding state trajectories that leave the desired dynamics mode.
-
-
-All of the direct control experiments shown in
-cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,fig-riemannian-energy-high-traj-opt-7
-were also able to navigate to the target state.
-Although the direct control method does not guarantee that trajectories will satisfy the boundary conditions,
-in practice, setting the terminal state cost matrix $\terminalStateCostMatrix$ to be very high,
-appears to work well.
-
-
-*Mode remaining*
-None of the indirect geodesic control experiments
-(cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7)
-were able to successfully remain in the desired dynamics mode.
-This is shown by the state trajectories under the learned dynamics (magenta) passing over the mode boundary into
-the turbulent dynamics mode.
-This is further emphasised by the environment trajectory (cyan) deviating from the
-dynamics trajectory (magenta) when it passes into the turbulent dynamics mode.
-This is due to the strong wind field blowing the quadcopter in the negative $x$ direction.
-Although none of the indirect geodesic control experiments successfully remained in the desired dynamics mode,
-they have exhibited mode remaining behaviour.
-The results in  cref:fig-geodesic-low-traj-opt-7 with $\lambda=0.5$
-and cref:fig-geodesic-traj-opt-7 with $\lambda=1.0$
-
-In practice, setting the lower and upper bounds on the collocation constraints in SciPy, is extremely fiddly.
-Setting the bounds to loose results in trajectories not satisfying the geodesic ODE and
-setting them to tight leads to the constrained optimisation exiting in an error mode.
-These issues could potentially be resolved by casting the constrained optimisation into an unconstrained optimisation
-using Lagrange multipliers. However, this is left for future work.
-
-
-The two direct control experiments in cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,
-with $\lambda =0.5$ and $\lambda=1.0$ respectively,
-were able to successfully remain in the desired dynamics mode and thus
-navigate to the target state in the environment (cyan).
-This is demonstrated by their trajectories under the dynamics (magenta) and their trajectories in the environment
-(cyan), not passing over the mode boundary into the turbulent dynamics mode.
-
-These results are confirmed by cref:tab-results-sim-envs.
-
-This is because for $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) the loss landscape favours
-avoiding the region of high posterior variance in the gating network, over remaining the desired dynamics mode.
-In this setting, increasing $\lambda$ has a negative impact on performance
-
-# Two of the direct control experiments (with $\lambda =0.5$ and $\lambda=1.0$),
-# (cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7)
-# were able to successfully navigate to the target state in the environment.
-# This is because for $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) the loss landscape favours
-# avoiding the region of high posterior variance in the gating network, over remaining the desired dynamics mode.
-# In this setting, increasing $\lambda$ has a negative impact on performance
-
-In cref:fig-riemannian-energy-low-traj-opt-7 the optimised trajectory only just remains in the desired mode.
-That is, the trajectory passes very close to the boundary between the dynamics modes.
-This is because with $\lambda=0.5$ the method is starting to ignore the uncertainty in the gating network.
-In contrast, the optimised trajectory with $\lambda=1.0$ follows the contours of the gating function's
-posterior variance (cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 right).
-As a result, the trajectory is remaining in the desired mode by following the contours of the
-desired mode's gating function
-(cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 left)
-and avoiding regions of the gating network which it cannot predict confidently
-(cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 right).
-
-cref:tab-results-sim-envs indicates that the indirect control method with $\lambda=1.0$ was the highest performing
-result in Environment 1.
-This is because it obtained the highest probability of remaining in the desired mode over the trajectory.
-That is, it exhibited the best mode remaining behaviour under the \acrshort{mosvgpe} dynamics model.
-Further to this, it obtained the lowest accumulation of gating function variance over the trajectory,
-indicating that it introduced the least amount of epistemic uncertainty from the gating network.
-This is an interesting result as I originally hypothesised that the gating function variance would
-decrease with higher $\lambda$ values.
-This is most likely due to the trajectory optimiser finding a local optima when $\lambda=20.0$.
-In contrast, the loss landscape non
-
-and
-the complex interaction between the two terms in the Riemannian metric enabling the
-$\lambda=1.0$
 
 ***** Riemannian energy 0.5 :ignore:
 #+BEGIN_EXPORT latex
@@ -12467,16 +11184,179 @@ All plots show a slice of the input space with constant zero controls.}
 \end{figure}
 #+END_EXPORT
 
-***** Blah 2 :ignore:
-cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7
-show results after performing trajectory optimisation using the method
-in cref:sec-traj-opt-collocation.
-All settings are guaranteed to find state trajectories to the target state under the geodesic ODE
-(yellow).
-However, these are not guaranteed to satisfy the dynamics constraints.
-Regardless of this fact, none of the settings find trajectories that navigate to the target state  in the
-environment (cyan).
-This is because they all pass through the turbulent dynamics.
+***** target state :ignore:
+\newline
+
+*Target state*
+The methods are first evaluated at their ability to navigate to the target state.
+All experiments in Environment 1 were able to find trajectories that navigate to the target state under the
+desired mode's GP dynamics.
+This is indicated by the magenta trajectory in
+cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,fig-riemannian-energy-high-traj-opt-7,fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7
+successfully navigating to the target state $\targetState$.
+The state trajectory found by the collocation solver is guaranteed to satisfy the boundary conditions
+in the indirect geodesic control experiments
+(cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7).
+This is because it is a property of the collocation solver.
+The inference strategy has then successfully recovered controls that drive the system along the
+collocation solver's state trajectory (yellow),
+indicated by the dynamics trajectory (magenta) following the collocation trajectory (yellow).
+
+All of the direct control experiments shown in
+cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,fig-riemannian-energy-high-traj-opt-7
+were also able to find trajectories that navigate to the target state under the learned dynamics (magenta).
+Although the direct control method does not guarantee that trajectories will satisfy the boundary conditions,
+in practice, setting the terminal state cost matrix $\terminalStateCostMatrix$ to be very high,
+appears to work well.
+
+Although all of the dynamics trajectories (magenta) navigate to the target state, not all of
+their corresponding environment trajectories (cyan) do.
+This is due to the trajectories in
+cref:fig-riemannian-energy-high-traj-opt-7,fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7
+leaving the desired dynamics mode and becoming subject to the turbulent dynamics.
+
+***** mode remaining :ignore:
+\newline
+
+*Mode remaining*
+The experiments are now evaluated at their ability to remain in the desired dynamics mode.
+None of the indirect geodesic control experiments
+(cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7)
+were able to successfully remain in the desired dynamics mode.
+This is shown by the dynamics trajectories (magenta) passing over the mode boundary into the turbulent dynamics mode.
+This is further emphasised by the environment trajectory (cyan) deviating from the
+dynamics trajectory (magenta) when it passes into the turbulent dynamics mode.
+This is due to the strong wind field blowing the quadcopter in the negative $x$ direction.
+Although none of the indirect geodesic control experiments successfully remained in the desired dynamics mode,
+they have exhibited mode remaining behaviour.
+That is, the trajectories with $\lambda=0.5$ in cref:fig-geodesic-low-traj-opt-7
+and with $\lambda=1.0$ in cref:fig-geodesic-traj-opt-7,
+navigate to the left and almost reach the mode boundary.
+# This is further indicated in cref:tab-results-sim-envs, where the probability of remaining in the desired
+# dynamics mode is higher than the experiments with $\lambda=20.0$.
+
+In practice, setting the lower and upper bounds on the collocation constraints in SciPy, is extremely fiddly,
+and impacts how much mode remaining behaviour is exhibited.
+Setting the bounds too loose results in trajectories not satisfying the geodesic ODE and
+setting them to tight leads to the constrained optimisation exiting with an error.
+These issues could potentially be resolved by casting the constrained optimisation into an unconstrained optimisation
+using Lagrange multipliers. However, this is left for future work.
+
+The two direct control experiments in cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,
+with $\lambda =0.5$ and $\lambda=1.0$ respectively,
+were able to successfully remain in the desired dynamics mode, and thus,
+navigate to the target state in the environment (cyan).
+This is demonstrated by their dynamics trajectories (magenta) and their environment trajectories
+(cyan), not passing over the mode boundary into the turbulent dynamics mode.
+These results are confirmed by cref:tab-results-sim-envs where the trajectory found with $\lambda=1.0$ obtained
+the highest probability of remaining in the desired dynamics mode for Environment 1.
+Interestingly, the trajectory found with $\lambda=0.5$ obtained the second highest probability
+when not considering the epistemic from the learned dynamics model (cref:eq-mode-probability-no-unc),
+but only the third highest when considering the epistemic uncertainty (cref:eq-mode-probability-all-unc).
+This is due to the lower relevance of the covariance term in the expected Riemannian metric
+allowing the trajectory to pass
+through regions of the gating network with high epistemic uncertainty.
+This can be seen in the bottom right plot of cref:fig-riemannian-energy-low-traj-opt-7 where the trajectory
+passes straight over the region of highest gating function variance in the middle of the environment.
+This is quantified in cref:tab-results-sim-envs as it is the trajectory with the highest accumulated gating
+variance.
+From visual inspection, the trajectory found with $\lambda=1.0$ has more clearance from the turbulent dynamics
+mode.
+This is due to the higher relevance of the covariance term pushing the trajectory away from the region of high
+epistemic uncertainty in the gating network.
+
+The trajectory found with $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) did not successfully remain
+in the desired dynamics mode.
+This indicates that setting the relevance of the covariance term too high can have a negative impact on performance.
+This is likely due to the optimisation landscape favouring trajectories that
+avoid the region of high posterior variance in the gating network more than following the contours of the
+gating function.
+# This is most likely due to the trajectory optimiser finding a local optima when $\lambda=20.0$.
+
+# This is because for $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) the loss landscape favours
+# avoiding the region of high posterior variance in the gating network, over remaining the desired dynamics mode.
+# In this setting, increasing $\lambda$ has a negative impact on performance
+
+# Two of the direct control experiments (with $\lambda =0.5$ and $\lambda=1.0$),
+# (cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7)
+# were able to successfully navigate to the target state in the environment.
+# This is because for $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) the loss landscape favours
+# avoiding the region of high posterior variance in the gating network, over remaining the desired dynamics mode.
+# In this setting, increasing $\lambda$ has a negative impact on performance
+
+***** epistemic uncertainty :ignore:
+\newline
+
+*Epistemic uncertainty*
+Finally, the methods are evaluated at their ability to avoid regions of the dynamics with high epistemic uncertainty.
+cref:tab-results-sim-envs shows the state variance and the gating function variance accumulated over
+each trajectory.
+In all experiments, the state variance accumulated over the trajectory (from cascading single-step predictions
+via moment matching) were fairly similar.
+This is due to the dynamics of the simulator being simple enough that the desired mode's GP
+can confidently interpolate into the turbulent dynamics mode and the region which has not been observed.
+In the latter case, it is up to the gating network to model the epistemic uncertainty arising from limited
+training data.
+# In this case, the dynamics model explains epistemic uncertainty is explained by the gating network
+# In this case, the complexity of the dynamics arises from the mulitmodaility which the model explains by
+# assigning the second dynamics mode to a second expert.
+# regions of the
+
+In the indirect geodesic control experiments with $\lambda=1.0$ and $\lambda=0.5$, the trajectories navigate
+directly over the region of high posterior variance associated with the gating function.
+This can be seen in the bottom right plots of cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7.
+In contrast, the indirect geodesic control experiment with $\lambda=20.0$ (in cref:fig-geodesic-high-traj-opt-7)
+avoided this region.
+However, this uncertainty avoiding behaviour came at the cost of passing straight through the turbulent
+dynamics mode.
+
+Similarly for the direct control experiments, setting $\lambda=20.0$ resulted in the trajectory passing
+straight through the turbulent dynamics mode.
+However, the benefit of the covariance term in the expected Riemannian metric
+is demonstrated in the results with $\lambda=0.5$ in cref:fig-riemannian-energy-low-traj-opt-7 and with
+$\lambda=1.0$ in cref:fig-riemannian-energy-traj-opt-7.
+As mentioned earlier, this resulted in the trajectory having more clearance from the turbulent dynamics mode,
+because the covariance term pushed the trajectory to the left of the region of high variance in the gating
+network.
+This is confirmed in cref:tab-results-sim-envs where trajectory found with $\lambda=1.0$ accumulated
+less gating function variance than the trajectory found with $\lambda=1.0$.
+
+These results indicate that the covariance term -- in the expected Riemannain metric -- plays an important role
+at keeping trajectories in the desired dynamics mode.
+They also indicate that the interplay between the contour following term and the covariance term,
+alter the optimisation landscape in a complex manner.
+Enough so, that it is not immediately clear how the value of $\lambda$ will alter it,
+in turn, making it hard to set $\lambda$.
+Especially in this scenario where the inoperable dynamics mode intersects a region of high epistemic
+uncertainty.
+In this case, the effect of adjusting the tunable $\lambda$ parameter is complex enough that it may
+be best to just leave it at $\lambda=1.0$.
+It is worth noting here that the experiments in Environment 2 do demonstrate a
+scenario where it is beneficial to adjust the $\lambda$ parameter.
+
+*Overall* Visual inspection combined with the results in cref:tab-results-sim-envs,
+indicate that the indirect control method with $\lambda=1.0$ was the highest performing experiment in Environment 1.
+
+# In cref:fig-riemannian-energy-low-traj-opt-7 the optimised trajectory only just remained in the desired mode.
+# That is, the trajectory passes very close to the boundary between the dynamics modes.
+# This is because with $\lambda=0.5$ the method is starting to ignore the uncertainty in the gating network.
+# In contrast, the optimised trajectory with $\lambda=1.0$ follows the contours of the gating function's
+# posterior variance (cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 right).
+# As a result, the trajectory is remaining in the desired mode by following the contours of the
+# desired mode's gating function
+# (cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 left)
+# and avoiding regions of the gating network which it cannot predict confidently
+# (cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 right).
+
+
+# This is because it obtained the highest probability of remaining in the desired mode over the trajectory.
+# That is, it exhibited the best mode remaining behaviour under the \acrshort{mosvgpe} dynamics model.
+# Further to this, it obtained the lowest accumulation of gating function variance over the trajectory,
+# indicating that it introduced the least amount of epistemic uncertainty from the gating network.
+# This is an interesting result as I originally hypothesised that the gating function variance would
+# decrease with higher $\lambda$ values.
+# This is most likely due to the trajectory optimiser finding a local optima when $\lambda=20.0$.
+# In contrast, the loss landscape non
 
 **** Environment 2
 ***** Riemannian energy 0.5 :ignore:
@@ -12657,37 +11537,9 @@ The trajectories are overlayed on (\subref{fig-geodesic-high-traj-opt-over-prob-
 each mode's mixing probability
 and (\subref{fig-geodesic-high-traj-opt-over-svgp-5})
 the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.}
-\label{fig-geodesic-high-traj-opt-7}
+\label{fig-geodesic-high-traj-opt-5}
 \end{figure}
 #+END_EXPORT
-
-***** Table :ignore:
-#+begin_table
-#+CAPTION: *Direct control via Riemannian energy* Comparison of performance with different settings of $\lambda$.
-#+CAPTION: The performance measures are summed over each time step in the horizon.
-#+LATEX: \label{tab-results-energy}
-#+LATEX: \resizebox{\textwidth}{!}{
-#+ATTR_LATEX: :center t :placement [!b]
-|-----+----------+-----------+------------------+--------------------+-------------------+-------------------|
-| Env | Method   | $\lambda$ | Mode prob        | State uncertainty  | Gating unc        | Riemannian energy |
-|-----+----------+-----------+------------------+--------------------+-------------------+-------------------|
-|     | Baseline | N/A       | $17.06$          | $0.00620$          | $93.62$           |                   |
-|     | Energy   | $0.5$     | $16.77$          | $8.70$             | $874.45$          | $180.10$          |
-|     | Energy   | $1.0$     | $\mathbf{18.10}$ | $8.72$             | $\mathbf{638.68}$ | $\mathbf{173.84}$ |
-|   1 | Energy   | $20.0$    | $13.00$          | $\mathbf{8.69}$    | $1504.12$         | $349.08$          |
-|     | Geodesic | $0.5$     | $16.22$          | $\mathbf{8.69}$    | $816.57$          | $238.29$          |
-|     | Geodesic | $1.0$     | $16.97$          | $8.70$             | $734.32$          | $222.07$          |
-|     | Geodesic | $20.0$    | $14.62$          | $8.66$             | $1150.32$         | $627.74$          |
-|-----+----------+-----------+------------------+--------------------+-------------------+-------------------|
-|     | Baseline | N/A       | $17.06$          | $0.00620$          | $93.62$           |                   |
-|     | Energy   | $0.5$     | $16.77$          | $0.00300$          | $874.45$          | $180.10$          |
-|     | Energy   | $1.0$     | $18.10$          | $0.00920$          | $638.68$          | $173.84$          |
-|   2 | Energy   | $20.0$    | $13.00$          | $\mathbf{0.00198}$ | $1504.12$         | $349.08$          |
-|     | Geodesic | $0.5$     | $16.22$          | $0.00300$          | $816.57$          | $238.29$          |
-|     | Geodesic | $1.0$     | $16.97$          | $0.00920$          | $734.32$          | $222.07$          |
-|     | Geodesic | $20.0$    | $14.62$          | $\mathbf{0.00198}$ | $1150.32$         | $627.74$          |
-#+LATEX: }
-#+end_table
 
 ***** Blah :ignore:
 All experiments presented here used a $\TimeInd=20$ step horizon.
@@ -12695,234 +11547,6 @@ For comparison, the optimised controls are rolled out in the desired mode's dyna
 environment (cyan).
 In the geodesic collocation experiments, the yellow trajectory represents the state trajectory found by the
 collocation solver.
-
-**** OLD
-***** Baseline Prob :ignore:noexport:
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_prob.pdf}
-\subcaption{Trajectories overlayed on the gating network's mixing probabilities.}
-\label{eq-traj-opt-over-prob-baseline}
-\end{minipage}
-\begin{minipage}{1.0\textwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_gp.pdf}
-\subcaption{Trajectories overlayed on desired mode's gating function GP.}
-\label{eq-traj-opt-over-svgp-baseline}
-\end{minipage}
-\caption{\label{fig-traj-opt-baseline}
-This figure demonstrates the shortcomings of finding trajectories
-from a start state $\state_0$, to a target state $\targetState$,
-in the system in \cref{fig-point-mass-motivation},
-without avoiding the turbulent dynamics mode.
-To demonstrate the methods shortcomings, the optimised controls were rolled out in the desired mode's GP dynamics (magenta)
-and in the environment (cyan).
-(\subref{eq-traj-opt-over-prob-baseline}) shows the trajectories overlayed on the desired mode's mixing probability
-and (\subref{eq-traj-opt-over-svgp-baseline}) shows them overlayed on the desired mode's gating function posterior
-mean (left) and posterior variance (right).
-It is clear that the trajectory resulting from rolling out the controls in the environment,
-passes through the turbulent dynamics mode and as a result, deviates from the
-trajectory rolled out in the desired mode's dynamics.}
-\end{figure}
-#+END_EXPORT
-****** Discussion Baseline Prob :ignore:noexport:
-The contour plots in cref:fig-traj-opt-baseline represent the gating network associated with the model from
-cref:chap-dynamics after performing Bayesian inference, given a historical data set of state transitions
-$\dataset$ from the environment in cref:fig-point-mass-motivation.
-Control trajectories were found by minimising the expected cost under the state distribution
-resulting from cascading single-step predictions through the desired mode's ($\modeInd=2$ in this case)
-learned GP dynamics model.
-The cost function consisted of a quadratic integral control cost and a terminal state cost.
-This approach only considered the dynamics of the desired mode, leading to trajectories in the environment deviating
-from those planned in the learned dynamics model.
-The trajectories also pass through regions of the dynamics with high epistemic uncertainty, which is not desirable.
-\todo{finish this para when have trajectory deviating at high epistemic uncertainty}
-
-****** Discussion Baseline Prob :ignore:noexport:
-cref:fig-traj-opt-baseline shows results for a baseline trajectory optimisation method, where the optimised trajectory
-rolled out in the desired mode's GP dynamics (magenta), passes through the undesired dynamics mode
-(mode one $\modeVar = 1$ in this case).
-This trajectory rolled out in the simulated environment (cyan),
-clearly deviates from the models predicted trajectory, when it passes through the undesired dynamics mode.
-This trajectory was obtained from a standard form of control in GP dynamics models, with
-no maximum entropy control or mode remaining behaviour.
-It used deterministic controls and the cost function from cref:eq-quadratic-cost-control.
-As such, the controls were optimised w.r.t. the expected cost in cref:eq-expected-quadratic-cost.
-
-***** Riemannian energy 0.1 :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-low/trajectories_over_desired_prob}.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-low-traj-opt-over-prob}
-\end{minipage}
-\begin{minipage}[r]{0.99\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-low/trajectories_over_desired_gating_gp}.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-low-traj-opt-over-svgp}
-\end{minipage}
-\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=0.1}$
-Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$,
-with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
-with $\labmda=0.1$
-and deterministic controls (no maximum entropy control).
-The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
-The state trajectories are overlayed on (\subref{fig-riemannian-energy-low-traj-opt-over-prob})
-each mode's mixing probability
-and (\subref{fig-riemannian-energy-low-traj-opt-over-svgp})
-the posterior mean (left) and variance (right) associated with the desired mode's gating function.
-All plots show a slice of the input space with constant zero controls.}
-\label{fig-riemannian-energy-low-traj-opt}
-\end{figure}
-#+END_EXPORT
-
-***** Riemannian energy 1 :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/riemannian-energy/trajectories_over_desired_prob.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-traj-opt-over-prob}
-\end{minipage}
-\begin{minipage}[r]{0.99\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/riemannian-energy/trajectories_over_desired_gating_gp.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-traj-opt-over-svgp}
-\end{minipage}
-\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=1.0}$
-Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$,
-with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
-with $\labmda=1.0$
-and deterministic controls (no maximum entropy control).
-The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
-The state trajectories are overlayed on (\subref{fig-riemannian-energy-traj-opt-over-prob})
-each mode's mixing probability
-and (\subref{fig-riemannian-energy-traj-opt-over-svgp})
-the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
-All plots show a slice of the input space with constant zero controls.}
-\label{fig-riemannian-energy-traj-opt}
-\end{figure}
-#+END_EXPORT
-
-***** Riemannian energy 10 :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{minipage}[r]{\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-high/trajectories_over_desired_prob}.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-high-traj-opt-over-prob}
-\end{minipage}
-\begin{minipage}[r]{0.99\columnwidth}
-\centering
-\includegraphics[width=\textwidth]{{./images/traj-opt/mode-remaining/riemannian-energy-high/trajectories_over_desired_gating_gp}.pdf}
-\subcaption{}
-\label{fig-riemannian-energy-high-traj-opt-over-svgp}
-\end{minipage}
-\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=10.0}$
-Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$,
-with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
-with $\labmda=10.0$
-and deterministic controls (no maximum entropy control).
-The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
-The state trajectories are overlayed on (\subref{fig-riemannian-energy-high-traj-opt-over-prob})
-each mode's mixing probability
-and (\subref{fig-riemannian-energy-high-traj-opt-over-svgp})
-the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
-All plots show a slice of the input space with constant zero controls.}
-\label{fig-riemannian-energy-high-traj-opt}
-\end{figure}
-#+END_EXPORT
-
-***** Table :ignore:
-#+begin_table
-#+CAPTION: *Direct control via Riemannian energy* Comparison of performance with different settings of $\lambda$.
-#+CAPTION: The performance measures are summed over each time step in the horizon.}
-#+LATEX: \label{tab-results-energy}
-#+LATEX: \resizebox{\textwidth}{!}{
-#+ATTR_LATEX: :center t :placement [!b]
-|----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
-| Trajectory     | Mode probability                                                                                        | State uncertainty                                          | Gating function uncertainty                                                            | Riemannian energy |
-|                | $\sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\state_\timeInd]$ | $\sum_{\timeInd=0}^{\TimeInd} \mathbb{V}[\gatingFunc_{\desiredMode}(\state_\timeInd)]$ |                   |
-|----------------+---------------------------------------------------------------------------------------------------------+------------------------------------------------------------+----------------------------------------------------------------------------------------+-------------------|
-| Baseline       | $17.06$                                                                                                 | $0.00620$                                                  | $93.62$                                                                                |                   |
-| $\lambda=0.1$  | $20.91$                                                                                                 | $0.00300$                                                  | $292.42$                                                                               | $41.64$           |
-| $\lambda=1.0$  | $\mathbf{20.98}$                                                                                        | $0.00920$                                                  | $54.21$                                                                                | $39.26$           |
-| $\lambda=10.0$ | $20.83$                                                                                                 | $\mathbf{0.00198}$                                         | $\mathbf{31.51}$                                                                       | $50.34$           |
-#+LATEX: }
-#+end_table
-
-***** Blah :ignore:
-All experiments presented here used a $\TimeInd=20$ step horizon.
-For comparison, the optimised controls are rolled out in the desired mode's dynamics GP (magenta) and in the
-environment (cyan).
-# and the controls were optimised using
-# SciPy's Sequential Least Squares Programming (SLSQP) citep:2020SciPy-NMeth.
-
-cref:fig-riemannian-energy-low-traj-opt,fig-riemannian-energy-traj-opt,fig-riemannian-energy-high-traj-opt
-show results after performing trajectory optimisation using this learned model and the method
-in cref:sec-traj-opt-results-energy.
-The results compare three different settings of the tuneable $\lambda$ parameter,
-which determines the relevance of the covariance term in the expected Riemannian metric.
-
-cref:fig-riemannian-energy-low-traj-opt shows results with $\lambda=0.1$ -- low covariance relevance --
-where trajectories should prioritise remaining in the desired dynamics mode over avoiding regions of high
-epistemic uncertainty.
-The left plot in cref:fig-riemannian-energy-low-traj-opt-over-svgp shows the trajectories
-following the contours of the posterior mean associated with the desired mode's gating function.
-With this $\lambda$ setting, trajectories appear to be completely dominated by the contour following term and
-do not avoid the region of high posterior variance.
-This is the desired behaviour when setting $\lambda$ to be small.
-For example, in scenarios where avoiding regions of high epistemic uncertainty is a secondary goal.
-However, this is not desirable in a risk-averse setting.
-
-cref:fig-riemannian-energy-traj-opt-over-svgp,fig-riemannian-energy-high-traj-opt-over-svgp
-show the results using $\lambda=1.0$ and $\lambda=10.0$ respectively.
-These $\labmda$ settings should avoid regions of high epistemic uncertainty to different degrees.
-The right plots show the trajectories avoiding regions of high posterior variance associated with the desired
-mode's gating function.
-Note that the Riemannian energy contains the covariance of the gating function's Jacobian, not the
-covariance associated with the gating function \acrshort{gp}.
-Both of these $\lambda$ settings find trajectories that successfully avoid the region of high uncertainty in the
-gating network.
-They appear to initially avoid the region of high uncertainty and then attempt to follow the
-posterior mean's contours, once they have passed the uncertain region.
-As a result, the trajectories successfully remain in the desired dynamics mode.
-In this example, setting $\lambda=10.0$ is overly cautious with respect to Goal 2.
-This is because the trajectory has a lot of clearance from the region of high epistemic uncertainty
-which has reduced its clearance from the turbulent dynamics mode.
-\todo{could be a good place to compare mode prob after marginalsing h and x}
-
-Minimising the approximated expected Riemannian energy in cref:eq-approximate-trajectory-riemannian-energy
-principally encodes both goals, whilst also decoupling them via the $\lambda$ parameter.
-
-*Chance Constraints*
-In practice, all trajectories that were optimised subject to the expected Riemannain energy,
-satisfied the chance constraints in cref:eq-mode-chance-constraint.
-However, this may not always be the case.
-In these cases, the $\lambda$ parameter can be tuned until the constraints are satisfied.
-Remember that the chance constraints are governed by the desired mode's mixing probability,
-which decreases in regions with:
-- high uncertainty in the desired gating function,
-- high uncertainty in the state, resulting from high uncertainty in the desired dynamics mode.
-Therefore, if the uncertainty in the gating network is very high, the $\lambda$ parameter
-can be increased to try and avoid entering these regions.
-In turn, this will increase the probability of remaining in the desired dynamics mode, as indicated by the
-marginalisation of the gating functions in cref:eq-mode-chance-constraint-integral.
 
 *** Simulated Quadcopter Experiments label:sec-traj-opt-results-energy :noexport:
 **** maths :ignore:
