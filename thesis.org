@@ -6052,17 +6052,17 @@ This work considers /unknown/, or /partially unknown/,  multimodal,
 stochastic, nonlinear dynamical systems,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-disc}
-\Delta \state_{\timeInd}
-&= \unknownDynamics(\state_{t-1}, \control_{t-1}; \Delta t = t_*) + \bm\epsilon & \nonumber \\
-&= \unknownDynamicsK (\state_{\timeInd-1}, \control_{\timeInd-1} ; \Delta t = t_*) + \mode{\bm\epsilon}
-&\text{if} \quad \modeVar_{\timeInd-1} = \modeInd
+\Delta \state_{\timeInd+1}
+&= \unknownDynamics(\state_{t}, \control_{t}; \Delta t = t_*) + \bm\epsilon & \nonumber \\
+&= \unknownDynamicsK (\state_{\timeInd}, \control_{\timeInd} ; \Delta t = t_*) + \mode{\bm\epsilon}
+&\text{if} \quad \modeVar_{\timeInd} = \modeInd
 \end{align}
 #+END_EXPORT
 with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
 $\control \in \controlDomain \subseteq \R^\ControlDim$.
 The state and control at time $t$ are denoted as $\state_t \in \stateDomain$ and $\control_t \in \controlDomain$
 respectively and
-$\Delta \state_{\timeInd} = \state_{\timeInd} - \state_{\timeInd-1}$ denotes the change in state between time $\timeInd-1$
+$\Delta \state_{\timeInd+1} = \state_{\timeInd+1} - \state_{\timeInd}$ denotes the change in state between time $\timeInd-1$
 and $\timeInd$.
 At any given time step $t$, one of the $\ModeInd$ dynamics modes
 $\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
@@ -6087,7 +6087,7 @@ This chapter assumes access to historical data comprising state transitions from
 of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
 The data set has ${N=ET}$ elements
 and we abuse notation by appending the independent trajectories along
-time to get the data set $\mathcal{D}=\{(\state_{\timeInd-1},\control_{\timeInd-1}),\Delta \state_t\}^\NumData_{\timeInd=1}$.
+time to get the data set $\mathcal{D}=\{(\state_{\timeInd},\control_{\timeInd}),\Delta \state_{t+1}\}^\NumData_{\timeInd=1}$.
 
 To help with understanding and ease of notation, our modelling only considers a single output dimension,
 i.e. $\stateDomain \subseteq \R$ as $\fk : \stateDomain \times \controlDomain \rightarrow \stateDomain$.
@@ -6095,21 +6095,21 @@ The extension to multiple output dimensions follows from standard GP methodologi
 To further ease notation, the state-control input domain is denoted
 $\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
 and a single state-control input is dentoed
-$\singleInput = (\state_{\timeInd-1},\control_{\timeInd-1})$.
+$\singleInput = (\state_{\timeInd},\control_{\timeInd})$.
 Given this formulation, the goal of this chapter is to learn the mapping $\unknownDynamics$,
 which switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
 This is a regression problem,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-disc-regression}
-\underbrace{\Delta \state_t}_{\text{\singleOutput}}
-= \underbrace{\unknownDynamicsK(\state_{t-1}, \control_{t-1} ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
+\underbrace{\Delta \state_{t+1}}_{\text{\singleOutput}}
+= \underbrace{\unknownDynamicsK(\state_{t}, \control_{t} ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
 + \mode{\epsilon}
 \quad \text{if} \quad \modeVarK,
 \end{align}
 #+END_EXPORT
 where both the latent dynamics functions $\unknownDynamics$ and how the system switches between them
 $\modeVar$, must be inferred from observations.
-A single observation is denoted as $(\singleInput, \singleOutput) = ((\state_{t-1},\control_{t-1}), \Delta \state_t)$.
+A single observation is denoted as $(\singleInput, \singleOutput) = ((\state_{t},\control_{t}), \Delta \state_{t+1})$.
 The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
 and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
 With this notation, the regression problem can be written as,
