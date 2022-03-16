@@ -643,6 +643,7 @@ Use with
 {{{acronym(vae,VAE,Variational Auto-Encoder)}}}
 {{{acronym(mbrl,MBRL,Model-Based Reinforcement Learning)}}}
 {{{acronym(hmm,HMM,Hidden Markov Model)}}}
+{{{acronym(svi,SVI,Stochastic variational inference)}}}
 * Frontmatter :ignore:
 #+BEGIN_EXPORT latex
 \frontmatter
@@ -1098,12 +1099,12 @@ recent successes in machine learning.
 This growing interest in learning-based control
 \parmarginnote{real-world systems}
 has emphasised the importance for real-world considerations.
-Real world systems are often highly /nonlinear/, exhibit /stochasticity/ and /multimodalities/,
+Real-world systems are often highly /nonlinear/, exhibit /stochasticity/ and /multimodalities/,
 are expensive to run (energy intensive, subject to wear and tear) and
 must be controlled subject to /constraints/ (for safety, efficiency, and so on).
 In contrast to simulation, the control of physical systems also has real-world consequences:
 components may get damaged, the system may damage its environment, or the system may catastrophically fail.
-As such, any learning-based control strategy deployed in the real-world, should handle both the uncertainty inherent
+As such, any learning-based control strategy deployed in the real-world should handle both the uncertainty inherent
 to the environment, and the uncertainty introduced by learning from observations.
 # As such, any control strategy deployed in the real-world should ensure the safety of itself and
 # its surrounding environment.
@@ -1177,8 +1178,7 @@ It can be reduced by the accumulation of additional information.
 In a *risk-averse setting*, it is desirable for control strategies
 to avoid entering regions of a learned dynamics model with high /epistemic uncertainty/.
 \parmarginnote{decision-making under uncertainty}
-This is because the trajectory cannot be predicted confidently, and thus, if any
-/constraints/ have been violated, i.e.
+This is because it is impossible to guarantee /constraint/ satisfaction in a learned model, i.e.
 if the trajectory will avoid the undesired dynamics mode.
 Conversely, in an *explorative setting*,
 if the /epistemic uncertainty/ has been quantified, then it can be used to guide exploration into
@@ -1264,7 +1264,7 @@ dynamics with low /epistemic uncertainty/?
 ** Illustrative Example label:illustrative_example
 *** intro :ignore:
 # The methods developed throughout this dissertation are evaluated on an illustrative 2D quadcotper navigation example.
-The methods developed throughout this dissertation are motivated by a 2D quadcotper navigation example.
+The methods developed throughout this dissertation are motivated by a 2D quadcopter navigation example.
 See cref:fig-problem-statement for a schematic of the environment and details of the problem.
 The goal is to fly the quadcopter from an initial state $\state_0$, to a target state $\state_{f}$.
 However, it considers a quadcopter operating in an environment subject to spatially varying wind --
@@ -1359,7 +1359,7 @@ This learned dynamics model can then be leveraged for model-based control.
 cref:fig-traj-opt-over-gating-mask-svgp-all-baseline demonstrates the shortcomings of performing trajectory
 optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
 It shows that the GP is not able to learn a representation of the dynamics which is true to the underlying system.
-This is because it cannot model the mulitmodal behaviour present in the environment.
+This is because it cannot model the multimodal behaviour present in the environment.
 The optimised controls successfully drive the GP dynamics from the start state $\state_0$,
 to the target state $\targetState$.
 However, as the GP dynamics model does not correspond to the true underlying dynamics,
@@ -1487,7 +1487,7 @@ This learned dynamics model can then be leveraged for model-based control.
 cref:fig-traj-opt-over-gating-mask-svgp-all-baseline demonstrates the shortcomings of performing trajectory
 optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
 It shows that the GP is not able to learn a representation of the dynamics which is true to the underlying system.
-This is because it cannot model the mulitmodal behaviour present in the environment.
+This is because it cannot model the multimodal behaviour present in the environment.
 The optimised controls successfully drive the GP dynamics from the start state $\state_0$,
 to the target state $\targetState$.
 However, as the GP dynamics model does not correspond to the true underlying dynamics,
@@ -1567,9 +1567,10 @@ a quadratic integral control cost term regularised the controls to encode the no
 
 ** Contributions
 This dissertation explores mode constrained control in multimodal dynamical systems that explicitly reasons
-about uncertainties during learning and control.
+about the uncertainties that arise during learning and control.
 The primary contributions of this dissertation are as follows:
-- cref:chap-dynamics: Due to the complexity of the problem,
+- cref:chap-dynamics: is concerned with learning representations of multimodal dynamical systems.
+  Due to the complexity of the problem,
   this work first considers having prior access to the environment, where it can perform prior flight
   trials and observe state transitions over the domain, i.e. collect a data set of state transitions $\mathcal{D}$.
   Given such a data set, this chapter addresses learning environment models that
@@ -1639,7 +1640,7 @@ The primary contributions of this dissertation are as follows:
 ** Associated Publications
 # The probabilistic model and variational inference scheme presented in Chapter ref:chap-dynamics is used to learn
 # the transition dynamics of a DJI Tello quadcopter in cite:scannellTrajectory2021.
-The first trajectory optimisation algorithm presented in Chapter ref:chap-traj-opt, as well as the approach
+The first trajectory optimisation algorithm presented in Chapter ref:chap-traj-opt-geometry, as well as the approach
 to learning multimodal dynamical systems in Chapter ref:chap-dynamics are published in:
 
 #+BEGIN_EXPORT latex
@@ -1729,7 +1730,7 @@ To the best of our knowledge, there is no previous work addressing such trajecto
 in transition dynamics models.
 
 Probabilistic modelling and Bayesian inference are a promising
-avenue for learning dynamics models to be used for controlling real world systems.
+avenue for learning dynamics models to be used for controlling real-world systems.
 \parmarginnote{probabilistic modelling}
 The Bayesian framework provides a principled approach to modelling both the
 /epistemic uncertainty/ associated with the model,
@@ -2200,7 +2201,7 @@ Conveniently, the conditional densities are also Gaussian,
 \end{align}
 #+END_EXPORT
 Consider the case where $\u$ represents some observations and $\f$ represents a new test location.
-Eq. ref:eq-gaussian-conditional can be used to make
+cref:eq-gaussian-conditional can be used to make
 inferences in the location $\f$ given the observations $\u$, i.e. make
 sophisticated interpolations on the measurements, based on their closeness.
 In real-world scenarios, it is desirable to consider the entire input domain, instead of simply
@@ -2288,7 +2289,7 @@ $f_* = f(\mathbf{x}_*)$ at a new test input,
  \end{array}\right]\right).
 \end{align*}
 #+END_EXPORT
-Given the multivariate Gaussian conditionals in Eq. ref:eq-gaussian-conditional, it is easy to see how
+Given the multivariate Gaussian conditionals in cref:eq-gaussian-conditional, it is easy to see how
 the distribution over the test function value $f_*$,
 \marginpar{noise-free predictions}
 can be obtained by conditioning on the observations,
@@ -2318,7 +2319,7 @@ p(\mathbf{y} \mid \f) = \mathcal{N}\left( \mathbf{y} \mid \f, \sigma^2_{n} \math
 \end{align}
 #+END_EXPORT
 to relate the observations to the latent function values $\f$.
-The predictive distribution for a test input $\mathbf{x}_*$ follows from Eq. ref:eq-gaussian-conditional,
+The predictive distribution for a test input $\mathbf{x}_*$ follows from cref:eq-gaussian-conditional,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-gp-prediction-noisy}
 p(f_{*} \mid \mathbf{x}_*, \mathbf{y}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
@@ -2353,7 +2354,7 @@ This predictive distribution is the GP posterior.
 \newcommand{\modelMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X})}}
 \newcommand{\modelPosterior}{\ensuremath{p(\modelStructures \mid \mathbf{y}, \mathbf{X})}}
 #+END_EXPORT
-The /posterior/ distribution in Eq. ref:eq-gp-prediction-noisy considers a fixed covariance function.
+The /posterior/ distribution in cref:eq-gp-prediction-noisy considers a fixed covariance function.
 In most practical applications it is hard to specify all components of the covariance function /a priori/.
 Although some properties of the underlying function may be known, such as stationarity,
 it may not be easy to specify the hyperparameters, e.g. lengthscales.
@@ -2471,7 +2472,7 @@ As such, approximate inference techniques are often required.
 These approximations may be analytical or based on Markov Chain Monte Carlo (MCMC) methods.
 
 *Type II Maximum Likelihood*
-In Gaussian process methods, the marginalisation of the hyperparameters in Eq. ref:eq-marginal-likelihood-2
+In Gaussian process methods, the marginalisation of the hyperparameters in cref:eq-marginal-likelihood-2
 is often difficult.
 \marginpar{type II maximum likelihood}
 When it is not possible to marginalise all of the variables, the next best thing to a full Bayesian
@@ -2488,7 +2489,7 @@ This optimisation is known as Type II Maximum Likelihood and is given by,
 
 
 **** old :noexport:
-# The integral in Eq. ref:eq:type-2-ml is often always tractable so approximations
+# The integral in cref:eq:type-2-ml is often always tractable so approximations
 
 # In Bayesian machine learning it is common to use GPs to formulate prior distributions over functions
 # $p(\f \mid \mathbf{X})$.
@@ -2533,7 +2534,7 @@ Bayesian principles are an appealing framework for inference.
 However, for most interesting models arising in machine learning, the required computations
 (integrals over the latent variables) are analytically intractable.
 Gaussian process regression with Gaussian noise is a rare exception, where the posterior
-is analytically tractable Eq. ref:eq-gp-prediction-noisy.
+is analytically tractable cref:eq-gp-prediction-noisy.
 
 The power of Gaussian process regression arises from the tractability of the marginal likelihood of the
 observed outputs given the observed inputs.
@@ -2559,7 +2560,7 @@ fits the data.
 Although GPs are nonparametric, the mean and kernel functions may contain hyperparameters $\bm\theta$.
 In practical settings, it is desirable to find the best hyperparameter settings given the observations.
 Unfortunately, specifying (hyper-)priors over the hyperparameters and marginalising them
-(Eq. ref:eq-marginal-likelihood-2), is often difficult for GP models.
+(cref:eq-marginal-likelihood-2), is often difficult for GP models.
 As such, it is common to resort to Type II Maximum Likelihood and maximise the log marginal likelihood
 with respect to the kernel hyperparameters $\bm\theta$ and noise variance $\sigma^2_n$.
 The log marginal likelihood is given by,
@@ -2591,7 +2592,7 @@ The resulting optimisation is given by,
 \end{align}
 #+END_EXPORT
 
-# Making predictions in Eq. ref:eq-gp-prediction-noisy is computationally expensive due to conditioning
+# Making predictions in cref:eq-gp-prediction-noisy is computationally expensive due to conditioning
 
 
 **** Sparse Gaussian Processes
@@ -2606,7 +2607,7 @@ Many approximation schemes have been proposed to reduce the computational comple
 cite:quinonero-candelaUnifying2005 for a review.
 
 
-# The log marginal likelihood in Eq. ref:eq-gp-log-marginal-likelihood is computationally
+# The log marginal likelihood in cref:eq-gp-log-marginal-likelihood is computationally
 # expensive due to the inversion of the covariance matrix evaluated between all of the
 # training inputs $\mathbf{X}$.
 # In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
@@ -2637,7 +2638,7 @@ This marginal distribution is also Gaussian,
 \end{align}
 #+END_EXPORT
 Replacing $q(\u)$ with $p(\u)$ would recover the original marginal distribution $p(\f)$ with
-mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from Eq. ref:eq-gaussian-marginal.
+mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from cref:eq-gaussian-marginal.
 
 
 
@@ -2704,14 +2705,14 @@ to obtain a tractable lower bound,
 \end{align}
 #+END_EXPORT
 where $\sigma^2$ is the noise variance associated with the Gaussian likelihood.
-The bound in Eq. ref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
+The bound in cref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
 when the inducing inputs $\Z$ equal the
 data inputs $\mathbf{X}$ as $\K_{nm}=\K_{mm}=\K_{nn}$ so $\mathbf{Q}_{nn}=\K_{nn}$.
 
 cite:hensmanGaussian2013 noted that this bound has complexity $O(NM^{2})$ so
 introduced additional variational parameters to achieve a more computationally scalable bound
 with complexity $O(M^{3})$.
-Instead of collapsing the inducing points in Eq. ref:eq-titsias-bound
+Instead of collapsing the inducing points in cref:eq-titsias-bound
 they explicitly represent them as a variational distribution,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq--inducing-dist}
@@ -2733,7 +2734,7 @@ further bounding $\mathcal{L}_{\text{titsias}}$,
 where $q(\mathbf{f}) = \int p(\mathbf{f} \mid \u) q(\u) \text{d} \u$.
 This is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
 If the likelihood factorizes across data $p(\mathbf{y} \mid \mathbf{f}) = \prod_{n=1}^{N} p(y_{n} \mid f_{n})$
-only the marginals of $q(\mathbf{f})$ are needed to calculate Eq. ref:eq-hensman-bound,
+only the marginals of $q(\mathbf{f})$ are needed to calculate cref:eq-hensman-bound,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-bound-3-fact}
 \mathcal{L}_{\text{hensman}}
@@ -2795,7 +2796,7 @@ p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, 
 \sigma^2 &= k_{\mathbf{x}_*, \mathbf{x}_*} - \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} \mathbf{k}_{\mathbf{X}, \mathbf{x}_*}.
 \end{align*}
 #+END_EXPORT
-The conditional in Eq. ref:eq-gp-prediction is computationally expensive due to conditioning
+The conditional in cref:eq-gp-prediction is computationally expensive due to conditioning
 on all of the training data $\mathbf{X}, \mathbf{f}$.
 Introducing a set of $M$ inducing points from the same GP prior can reduce the computational cost
 if $M < N$.
@@ -2916,7 +2917,7 @@ p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, 
 \sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) - k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} k(\mathbf{X}, \mathbf{x}_*). \nonumber
 \end{align}
 #+END_EXPORT
-The conditional in Eq. ref:eq-gp-prediction is computationally expensive due to conditioning
+The conditional in cref:eq-gp-prediction is computationally expensive due to conditioning
 on all of the training data $\mathbf{X}, \mathbf{f}$.
 The computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$
 due to the inversion of the covariance matrix $k(\mathbf{X},\mathbf{X})$.
@@ -2942,7 +2943,7 @@ Bayesian methods overcome overfitting by treating the model parameters as random
 #+END_EXPORT
 This is advantageous as we now take a weighted average over all possible settings of $\mathbf{\Theta}$ and we obtain the posterior $p(\mathbf{\Theta} | \mathbf{Y})$ for the unknown variables, as opposed to just a point estimate as in maximum likelihood. This provides automatic Occam's razor, penalising complex models and preventing overfitting.
 
-The integral in Eq. ref:eq:type-2-ml is often always tractable so approximations
+The integral in cref:eq:type-2-ml is often always tractable so approximations
 
 **** Variational Inference
 \todo{seek to convert inference into an optimisation}
@@ -2990,7 +2991,7 @@ This marginal distribution is also Gaussian,
 \end{align}
 #+END_EXPORT
 Replacing $q(\u)$ with $p(\u)$ would recover the original marginal distribution $p(\f)$ with
-mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from Eq. ref:eq-gaussian-marginal.
+mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from cref:eq-gaussian-marginal.
 
 
 Consider a set of $N$ random variable with a joint Gaussian distribution,
@@ -3076,14 +3077,14 @@ to obtain a tractable lower bound,
 \end{align}
 #+END_EXPORT
 where $\sigma^2$ is the noise variance associated with the Gaussian likelihood.
-The bound in Eq. ref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
+The bound in cref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
 when the inducing inputs $\Z$ equal the
 data inputs $\mathbf{X}$ as $\K_{nm}=\K_{mm}=\K_{nn}$ so $\mathbf{Q}_{nn}=\K_{nn}$.
 
 cite:hensmanGaussian2013 noted that this bound has complexity $O(NM^{2})$ so
 introduced additional variational parameters to achieve a more computationally scalable bound
 with complexity $O(M^{3})$.
-Instead of collapsing the inducing points in Eq. ref:eq-titsias-bound
+Instead of collapsing the inducing points in cref:eq-titsias-bound
 they explicitly represent them as a variational distribution,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq--inducing-dist}
@@ -3105,7 +3106,7 @@ further bounding $\mathcal{L}_{\text{titsias}}$,
 where $q(\F) = \int p(\F \mid \uF) q(\uF) \text{d} \uF$.
 This is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
 If the likelihood factorizes across data $p(\mathbf{y} \mid \F) = \prod_{n=1}^{N} p(y_{n} \mid f_{n})$
-only the marginals of $q(\F)$ are needed to calculate Eq. ref:eq-hensman-bound,
+only the marginals of $q(\F)$ are needed to calculate cref:eq-hensman-bound,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-bound-3-fact}
 \mathcal{L}_{\text{hensman}}
@@ -3143,7 +3144,7 @@ p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, 
 \sigma^2 &= k_{\mathbf{x}_*, \mathbf{x}_*} - \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} \mathbf{k}_{\mathbf{X}, \mathbf{x}_*}.
 \end{align*}
 #+END_EXPORT
-The conditional in Eq. ref:eq-gp-prediction is computationally expensive due to conditioning
+The conditional in cref:eq-gp-prediction is computationally expensive due to conditioning
 on all of the training data $\mathbf{X}, \mathbf{f}$.
 Introducing a set of $M$ inducing points from the same GP prior can reduce the computational cost
 if $M < N$.
@@ -3536,7 +3537,7 @@ the MoE marginal likelihood is given by,
 where $\singleModeVar$ is the expert indicator variable assigning observations to experts.
 The probability mass function over the expert indicator variable is referred to as the gating network and
 indicates which expert governs the model at a given input location.
-See cite:yukselTwenty2012 for a survey of \acrshor{moe} methods.
+See cite:yukselTwenty2012 for a survey of \acrshort{moe} methods.
 
 **** Nonparametric Mixtures of Experts :ignore:
 
@@ -3555,7 +3556,7 @@ As highlighted by cite:rasmussenInfinite2001,
 the traditional MoE marginal likelihood does not apply when the
 experts are nonparametric.
 This is because the model assumes that the observations are i.i.d. given the model parameters,
-which is contrary to \acrshor{gp} models, which model the dependencies in the joint distribution, given the
+which is contrary to \acrshort{gp} models, which model the dependencies in the joint distribution, given the
 hyperparameters.
 \marginpar{mixtures of nonparametric experts}
 cite:rasmussenInfinite2001 point out that there is a joint distribution corresponding to every possible
@@ -4379,7 +4380,7 @@ recovers an algorithm resembling the Cross Entropy Method (CEM).
 ***** Joint Probability Model
 \newline
 Given the "cost" likelihood
-(Eq. ref:eq-monotonicOptimalityLikelihood)
+(cref:eq-monotonicOptimalityLikelihood)
 the joint probability for an optimal trajectory (i.e.
 for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$), is given by,
 #+BEGIN_EXPORT latex
@@ -4740,7 +4741,7 @@ recovers an algorithm resembling the Cross Entropy Method (CEM).
 
 ***** Joint Probability Model
 Given the "cost" likelihood
-(Eq. ref:eq-monotonicOptimalityLikelihood)
+(cref:eq-monotonicOptimalityLikelihood)
 the joint probability for an optimal trajectory (i.e.
 for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$), is given by,
 #+BEGIN_EXPORT latex
@@ -5479,7 +5480,7 @@ have previously been sampled from the system at a constant frequency, i.e. with 
 # inference in the model.
 
 # This chapter is motivated by synergising model learning and control.
-Following the motivation in cref:motivation, this chapter
+Following the motivation in cref:to_motivation, this chapter
 seeks to correctly identify the underlying dynamics modes, whilst inferring
 latent structure that can be exploited for control.
 The main goals of this chapter can be summarised as follows,
@@ -5489,9 +5490,8 @@ The main goals of this chapter can be summarised as follows,
 
 The probabilistic model constructed in this chapter
 resembles a \acrfull{mogpe} with a \acrshort{gp}-based gating network and  is named \acrfull{mosvgpe}.
-Following other \acrshort{mogpe} methods, the \acrshort{elbo}s are first evaluated on the
-motorcyle data set citep:Silverman1985.
-They are then tested on the real-world quadcopter data set from the illustrative example detailed in cref:illustrative_example.
+Following other \acrshort{mogpe} methods, the \acrshort{mosvgpe} is evaluated on the motorcyle data set citep:Silverman1985.
+It is then tested on the real-world quadcopter data set from the illustrative example detailed in cref:illustrative_example.
 The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub[fn::Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].]
 citep:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper.
 
@@ -5698,7 +5698,7 @@ With this notation, the regression problem can be written as,
 # $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
 # where we have abused the time indexing notation.
 
-# This work learns a discrete-time representation of Eq. ref:eq-multimodal-dynamics-cont,
+# This work learns a discrete-time representation of cref:eq-multimodal-dynamics-cont,
 # #+BEGIN_EXPORT latex
 # \begin{align} \label{eq-multimodal-dynamics-disc}
 # \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
@@ -5771,7 +5771,7 @@ the MoE marginal likelihood is given by,
 where $\singleModeVar$ is the expert indicator variable assigning observations to experts.
 The probability mass function over the expert indicator variable is referred to as the gating network and
 indicates which expert governs the model at a given input location.
-See cite:yukselTwenty2012 for a survey of \acrshor{moe} methods.
+See cite:yukselTwenty2012 for a survey of \acrshort{moe} methods.
 *** Nonparametric Mixtures of Experts :ignore:
 
 \newline
@@ -5905,7 +5905,7 @@ As highlighted by cite:rasmussenInfinite2001,
 the traditional MoE marginal likelihood does not apply when the
 experts are nonparametric.
 This is because the model assumes that the observations are i.i.d. given the model parameters,
-which is contrary to \acrshor{gp} models, which model the dependencies in the joint distribution, given the
+which is contrary to \acrshort{gp} models, which model the dependencies in the joint distribution, given the
 hyperparameters.
 \marginpar{mixtures of nonparametric experts}
 cite:rasmussenInfinite2001 point out that there is a joint distribution corresponding to every possible
@@ -6317,7 +6317,7 @@ associated with the $\modeInd^\text{th}$ gating function.
 Similarly to the experts, dependence on the inputs and hyperparameters is dropped from the gating network's GP prior,
 i.e. $\gatingPrior = p(\GatingFunc(\allInput) \mid \allInput, \gatingParams)$.
 In contrast to the experts, partitioning of the data set is not desirable for the gating network GPs,
-as each gating function should depend on all of training observations.
+as each gating function should depend on all of the training observations.
 
 # Each mode's mixing probability $\singleGatingPosterior$ is then obtained by marginalising
 # *all* of the gating functions,
@@ -6329,11 +6329,11 @@ as each gating function should depend on all of training observations.
 # \end{align}
 # #+END_EXPORT
 # In the general case where $\singleGatingLikelihood$ uses the softmax function
-# (Eq. ref:eq-softmax) this integral is intractable, so it is approximated with Monte carlo quadrature.
+# (cref:eq-softmax) this integral is intractable, so it is approximated with Monte carlo quadrature.
 Each mode's mixing probability $\singleGatingPosterior$ is then obtained by marginalising
 *all* of the gating functions.
 In the general case where $\singleGatingLikelihood$ uses the softmax function
-(Eq. ref:eq-softmax) this integral is intractable, so it is approximated with Monte carlo quadrature.
+(cref:eq-softmax) this integral is intractable, so it is approximated with Monte carlo quadrature.
 
 *Bernoulli ($\ModeInd=2$)* Instantiating the model with two experts, $\singleModeVar \in \{1, 2\}$, is a special case
 where only a single gating function is needed.
@@ -6349,11 +6349,11 @@ If this sigmoid function satisfies the point symmetry condition then
 the following holds,
 $\Pr(\singleModeVar=2 \mid \modei{\gatingFunc}{1}(\singleInput)) = 1 - \Pr(\singleModeVar=1 \mid \modei{\gatingFunc}{1}(\singleInput))$.
 This only requires a single gating function and no normalisation term needs to be calculated.
-If the sigmoid function in Eq. ref:eq-sigmoid is selected
+If the sigmoid function in cref:eq-sigmoid is selected
 to be the Gaussian cumulative distribution function
 $\Phi(\gatingFunc(\cdot)) = \int^{\gatingFunc(\cdot)}_{-\infty} \mathcal{N}(\tau | 0, 1) \text{d} \tau$,
 then the mixing probability can be calculated in closed-form,
-# then the integral in Eq. ref:eq-gating-posterior can be calculated in closed-form,
+# then the integral in cref:eq-gating-posterior can be calculated in closed-form,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mixing-probabilities-analytic}
 \Pr(\modeVarn=1 \mid \singleInput, \gatingParams) &=
@@ -6720,7 +6720,7 @@ p(\GatingFunc(\allInput), \LatentFunc(\allInput) \mid \allInput, \allOutput, \ga
 \prod_{\modeInd=1}^{\ModeInd} \allExpertLikelihood \expertPrior}{\evidence}
 \end{align}
 #+END_EXPORT
-where the denominator is the marginal likelihood from Eq. ref:eq-marginal-likelihood-assign.
+where the denominator is the marginal likelihood from cref:eq-marginal-likelihood-assign.
 Exact inference in our model is intractable, so we resort to a variational approximation.
 The rich structure of our model makes it hard to construct an ELBO that can
 be evaluated in closed-form, whilst accurately modelling the complex dependencies.
@@ -6736,10 +6736,10 @@ by utilising stochastic gradient-based optimisation.
 # set of assignments.
 # and is also intractable due to the marginalisation of $\mathbf{h}$ in the gating network.
 
-Stochastic variational inference (SVI) citep:hoffmanStochastic2013 relies upon having a set of local variables
+\acrfull{svi} citep:hoffmanStochastic2013 relies upon having a set of local variables
 factorised across observations and a set of global variables.
 The marginalisation over the set of expert indicator variables $\allModeVar$
-in cref:eq-np-moe-marginal-likelihood is prohibitive to SVI.
+in cref:eq-np-moe-marginal-likelihood is prohibitive to \acrshort{svi}.
 Following the approach by cite:titsiasVariational2009, the probability space is augmented
 with a set of $\NumInducing$ inducing variables for each GP.
 However, instead of collapsing these inducing variables they are explicitly
@@ -6748,7 +6748,7 @@ represented as variational distributions and used to lower bound
 cite:hensmanGaussian2013,hensmanScalable2015.
 cref:fig-graphical-model-sparse shows the graphical model of the augmented joint probability space.
 
-# The marginal likelihood in Eq. ref:eq-marginal-likelihood-factorised is extremely expensive
+# The marginal likelihood in cref:eq-marginal-likelihood-factorised is extremely expensive
 # to evaluate $\mathcal{O}(\ModeInd^2 \NumData^{4})$
 # \todo{add marginal likelihood's correct complexity}
 # and is also intractable due to the marginalisation of $\mathbf{h}$ in the gating network
@@ -6771,9 +6771,9 @@ cref:fig-graphical-model-sparse shows the graphical model of the augmented joint
 # - Achieves data partitioning behaviour like other MoGPE methods.
 # 3. *Shared inducing inputs* for the *gating network* GPs, i.e. $\gatingInducingOutput=\mode{\gatingFunc}(\gatingInducingInput)$,
 #    - Partitioning of the data set is not desirable for the gating function GPs as each gating function
-#       should depend on all of training observations. For this reason the inducing inputs should be shared between each gating function GP.
+#       should depend on all of the training observations. For this reason the inducing inputs should be shared between each gating function GP.
 # - Partitioning of the data set is not desirable for the gating function GPs as each gating function
-#   should depend on all of training observations,
+#   should depend on all of the training observations,
 # - For this reason the inducing inputs should be shared between each gating function GP.
 
 *** sparse graphical model :ignore:
@@ -6882,7 +6882,7 @@ Again, the dependence on the inducing inputs has been dropped for notational con
 The set of all inducing variables associated with the gating network has been
 denoted $\gatingsInducingOutput$.
 Partitioning of the data set is not desirable for the gating function GPs as each gating function
-should depend on all of training observations.
+should depend on all of the training observations.
 For this reason the gating functions share the same inducing inputs $\gatingInducingInput$.
 
 *Marginal likelihood* These inducing points are used to approximate the marginal likelihood with a factorisation over observations
@@ -6958,7 +6958,7 @@ $\expertsInducingOutput$.
 As such, information regarding the assignment of observations to experts must pass through the bottleneck of the
 inducing variables.
 This approximation induces a local factorisation over observations and a set of global variables
--- the necessary conditions for SVI.
+-- the necessary conditions for \acrshort{svi}.
 cref:fig-graphical-model-sparse shows the graphical model of this augmented joint probability model.
 This approach can loosely be viewed as parameterising the full nonparametric model
 in cref:eq-np-moe-marginal-likelihood-assign to obtain a desirable
@@ -6968,11 +6968,11 @@ whilst still capturing the complex dependencies between the gating network and e
 
 *** Augmented probability space :ignore:noexport:
 
-Stochastic variational inference (SVI) citep:hoffmanStochastic2013 relies upon having a set of local variables
+\acrfull{svi} citep:hoffmanStochastic2013 relies upon having a set of local variables
 factorised across observations and a set of global variables.
 Annoyingly, the order of the marginalisation over the expert indicator variable
 and the product over observations $\NumData$
-in cref:eq-marginal-likelihood is prohibitive to SVI.
+in cref:eq-marginal-likelihood is prohibitive to \acrshort{svi}.
 
 
 # which is detailed in Section ref:sec-sparse-gps Eqs. ref:eq-titsias-bound - ref:eq-hensman-bound,
@@ -6995,7 +6995,7 @@ the probability space is first augmented with a set of $\NumInducing$ inducing v
 where  $\gatingInducingOutput = \mode{\gatingFunc}(\gatingInducingInput)$
 are the inducing points associated with the $\modeInd^{\text{th}}$ gating function.
 Partitioning of the data set is not desirable for the gating function GPs as each gating function
-should depend on all of training observations.
+should depend on all of the training observations.
 For this reason the gating functions share the same inducing inputs $gatingInducingInput$.
 The set of all inducing variables associated with the gating network has been
 denoted $\gatingsInducingOutput$.
@@ -7015,7 +7015,7 @@ $(\gatingsInducingOutput, \expertsInducingOutput)$.
 As such, information regarding the assignment of observations to experts must pass through the bottleneck of the
 inducing variables.
 This approximation induces a local factorisation over observations and a set of global variables -- the inducing
-variables -- the necessary conditions for SVI.
+variables -- the necessary conditions for \acrshort{svi}.
 Figure ref:fig-graphical-model-sparse shows the graphical model of this augmented joint probability model.
 
 
@@ -7123,7 +7123,7 @@ $(\gatingsInducingOutput, \expertsInducingOutput)$.
 As such, information regarding the assignment of observations to experts must pass through the bottleneck of the
 inducing variables.
 This approximation induces a local factorisation over observations and a set of global variables -- the inducing
-variables -- the necessary conditions for SVI.
+variables -- the necessary conditions for \acrshort{svi}.
 Figure ref:fig-graphical-model-sparse shows the graphical model of this augmented joint probability model.
 
 
@@ -7255,7 +7255,7 @@ All three of these bounds are evaluated in cref:sec-mcycle-results.
 # \newline
 *Tight lower bound*
 Following a similar approach to cite:hensmanGaussian2013,hensmanScalable2015,
-a lower bound on Eq. ref:eq-augmented-marginal-likelihood can be obtained,
+a lower bound on cref:eq-augmented-marginal-likelihood can be obtained,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-lower-bound-tight}
 \text{log} \evidence &\geq  \sum_{\numData=1}^\NumData \E_{\gatingsInducingVariational \expertsInducingVariational}
@@ -7265,12 +7265,12 @@ a lower bound on Eq. ref:eq-augmented-marginal-likelihood can be obtained,
 &- \expertsKL := \tightBound,
 \end{align}
 #+END_EXPORT
-# From Eq. ref:eq-lower-bound-tight it is clear that the optimal distribution for gating network's variational
+# From cref:eq-lower-bound-tight it is clear that the optimal distribution for gating network's variational
 # distribution consists of independent Guassians.
 # The experts' variational posterior is not tractable so we assume a Gaussian approximate posterior.
 where we parameterise the variational posteriors to be independent Gaussians,
 # Our variational posteriors are then given by,
-# From Eq. ref:eq-lower-bound-tight it is clear that the optimal distribution for each of the variational distributions
+# From cref:eq-lower-bound-tight it is clear that the optimal distribution for each of the variational distributions
 # is Guassian, so we parameterise them as such,
 # The posterior is not tractable so we assume a Gaussian approximate posterior.
 #+BEGIN_EXPORT latex
@@ -7293,7 +7293,7 @@ Therefore, each expectation requires an $\NumInducing$ dimensional integral to b
 \todo{add more on why we don't want M dimensional integral}
 
 *Further lower bound* Following cite:hensmanScalable2015, these issues can be overcome
-by further bounding the bound in Eq. ref:eq-lower-bound-tight ($\tightBound$).
+by further bounding the bound in cref:eq-lower-bound-tight ($\tightBound$).
 This removes the $\NumInducing$ dimensional integrals associated with each of the gating functions.
 Jensen's inequality can be applied to the conditional probability $\singleLatentGatingGivenInducing$,
 obtaining the further bound,
@@ -7345,7 +7345,7 @@ Instead of mixing the GPs associated with each expert, this approximation simply
 noise models.
 
 # *Further Lower Bound* Following cite:hensmanScalable2015, the bound in
-# Eq. ref:eq-lower-bound-tight ($\tightBound$) can be further bounded to remove the $\NumInducing$ dimensional integrals.
+# cref:eq-lower-bound-tight ($\tightBound$) can be further bounded to remove the $\NumInducing$ dimensional integrals.
 # Applying Jensen's inequality to the conditional probability $\singleGatingGivenInducing \singleExpertGivenInducing$,
 # obtains a further bound,
 # # #+BEGIN_EXPORT latex
@@ -7409,8 +7409,8 @@ $\mode{\hat{\mathbf{A}}} = \gatingKernelnM \gatingKernelMM^{-1}$.
 Importantly, these variational posteriors marginalise the inducing variables in closed-form,
 with Gaussian convolutions.
 $\furtherBound$ removes $\ModeInd$ of the undesirable approximate $M$ dimensional integrals from
-Eq. ref:eq-lower-bound-tight and $\furtherBoundTwo$ removes $\ModeInd^2$.
-The variational expectation in Eq. ref:eq-lower-bound-further still requires approximation,
+cref:eq-lower-bound-tight and $\furtherBoundTwo$ removes $\ModeInd^2$.
+The variational expectation in cref:eq-lower-bound-further still requires approximation,
 however, the integrals are now only one dimensional.
 These integrals are approximated with Gibbs sampling and
 in practice only single samples are used because the added stochasticity helps the optimisation.
@@ -7673,7 +7673,7 @@ In the general case, when $\ModeInd > 2$, the gating likelihood is the softmax,
 \underbrace{\predictiveGatingLikelihood}_{\text{likelihood}} = \text{softmax}(\GatingFunc(\singleTestInput)),
 \end{align}
 #+END_EXPORT
-so Eq. ref:eq-gating-prediction is approximated with Monte Carlo quadrature.
+so cref:eq-gating-prediction is approximated with Monte Carlo quadrature.
 In the two expert case there is only a single gating function, $\gatingFunc_1$, as,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-}
@@ -7686,7 +7686,7 @@ In this case, the gating likelihood is the Gaussian cdf,
 \underbrace{\predictiveGatingLikelihoodBernoulli}_{\text{likelihood}} = \Phi(\gatingFunc_1(\singleTestInput)),
 \end{align}
 #+END_EXPORT
-so Eq. ref:eq-gating-prediction can be calculated in closed-form with,
+so cref:eq-gating-prediction can be calculated in closed-form with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-predictive-gating-bernoulli}
 \predictiveProbBernoulli &=
@@ -7711,7 +7711,7 @@ $\gatingVariationalPosteriorBernoulli$ at $\singleTestInput$.
 # \end{align}
 # #+END_EXPORT
 # where the predictive posterior $\predictiveGatingPrior$ is given by
-# Eq. ref:eq--variational-posteriors-functional-gating.
+# cref:eq--variational-posteriors-functional-gating.
 
 # In the general case, when $\ModeInd > 2$, the gating likelihood is the softmax,
 # #+BEGIN_EXPORT latex
@@ -7719,7 +7719,7 @@ $\gatingVariationalPosteriorBernoulli$ at $\singleTestInput$.
 # \predictiveGatingLikelihood = \text{softmax}(\GatingFunc(\x_*)),
 # \end{align}
 # #+END_EXPORT
-# so Eq. ref:eq-predictive-gating is approximated with Monte Carlo quadrature.
+# so cref:eq-predictive-gating is approximated with Monte Carlo quadrature.
 # In the two expert case there is only a single gating function, $\gatingFunc_1$, as,
 # #+BEGIN_EXPORT latex
 # \begin{align} \label{eq-}
@@ -7732,7 +7732,7 @@ $\gatingVariationalPosteriorBernoulli$ at $\singleTestInput$.
 # \predictiveGatingLikelihoodBernoulli = \Phi(\gatingFunc_1(\x_*)),
 # \end{align}
 # #+END_EXPORT
-# so Eq. ref:eq-predictive-gating can be calculated in closed-form with,
+# so cref:eq-predictive-gating can be calculated in closed-form with,
 # #+BEGIN_EXPORT latex
 # \begin{align} \label{eq-predictive-gating-bernoulli}
 # \Pr(\modeVar_*=1 \mid \x_*) &=
@@ -8075,7 +8075,7 @@ compare the posterior densities to the SVGP.
 The red lines show plus or minus two standard deviations of the SVGP's posterior variance.
 As the \acrshort{mosvgpe} posterior is a Gaussian mixture, it is visualised by drawing samples
 from its posterior, i.e. sample a mode indicator variable $\modeVar_*$ and then draw a sample
-form the corresponding expert.
+from the corresponding expert.
 
 *Predictive posteriors* Both \acrshort{mosvgpe} results are capable of modelling the non-stationarity
 at $x \approx -0.7$ better than the sparse variational Gaussian process (SVGP).
@@ -8286,7 +8286,7 @@ their associated mixing probabilities $\approxPredictiveProb$ in
 # Given that the two lower bounds lead to different ways for explaining the data
 # at $x \geq 1.5$, it is interesting to consider adding a third expert.
 The model was then instantiated with three experts $\ModeInd=3$ and trained
-following the same procedure as the two experts experiments,
+following the same procedure as the two experts' experiments,
 i.e. with the same initial model and training parameters.
 The results are show in cref:fig-y-mcycle-three-experts,
 where the top row visualises the predictive mean and
@@ -8400,7 +8400,7 @@ In practice, the number of inducing points should be less than the number
 of data points $(\NumInducing \ll \NumData)$, to obtain improved computational performance.
 The learning curves in cref:fig-mcycle-training-curve visualise the learning process for different numbers
 of inducing points $\NumInducing$.
-Best performance is obtained when the model is instantiated with $\NumInducing=133$ inducing inputs
+Best performance is obtained when the model is instantiated with $\NumInducing=133$ inducing inputs,
 i.e. a one-to-one correspondence between inducing inputs and
 data inputs, $\expertInducingInput=\gatingInducingInput=\allInput$.
 As the number of inducing points decreases the model is still able to recover the same negative ELBO.
@@ -8410,7 +8410,7 @@ As the number of inducing points decreases the model is still able to recover th
 *Evidence lower bounds*
 The tight lower bound $\tightBound$ and further lower bound $\furtherBound$ recovered similar results in
 all experiments.
-This indicates that $\furtherBound$ does not loosen the bound to a point where is loses valuable information.
+This indicates that $\furtherBound$ does not loosen the bound to a point where it loses valuable information.
 In contrast, $\furtherBoundTwo$ is not able to recover the same results.
 This was expected as $\furtherBoundTwo$ corresponds to a further likelihood approximation, where
 the experts' noise models are mixed instead of their full SVGPs.
@@ -8550,7 +8550,7 @@ of $0.01$ and Squared Exponential kernels for all GPs.}
 **** intro :ignore:
 # The goal of this dissertation is to control a DJI Tello quadcopter in an indoor environment
 # subject to two modes of operation characterised by turbulence.
-In order to verify that \acrshort{mosvgpe} works on real world systems,
+In order to verify that \acrshort{mosvgpe} works on real-world systems,
 it was tested on a real-world quadcopter data set following the illustrative example detailed
 in cref:illustrative_example.
 The data set was collected at the Bristol Robotics Laboratory using
@@ -10147,7 +10147,7 @@ a non-central Wishart distribution citep:andersonNonCentral1946,
 where $P$ is the number of degrees of freedom (always one in our case) and
 $\E\left[\desiredJacobian\right]$ and $\covJac$ are the mean and covariance matrices
 associated with the GP over the Jacobian.
-The expected value of the metric tensor in Eq. ref:eq-metric-dist is given by,
+The expected value of the metric tensor in cref:eq-metric-dist is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expected-metric}
   \E[\desiredMetricTensor] = \E[\mathbf{J}^T] \E[\mathbf{J}] + \covJac.
@@ -10158,7 +10158,7 @@ which implies that lengths on the manifold increase in areas of high covariance.
 This is a desirable behaviour because it encourages length minimising trajectories
 to avoid regions of the learned dynamics with high epistemic uncertainty,
 encoding Goal 3.
-To aid with user control the metric tensor in Eq. ref:eq-expected-metric is modified with
+To aid with user control the metric tensor in cref:eq-expected-metric is modified with
 a weighting parameter $\lambda$ that enables the relevance of the covariance term to be adjusted,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expected-metric-weighting}
@@ -10171,7 +10171,7 @@ of the dynamics with high epistemic uncertainty.
 
 
 The model in Chapter ref:chap-dynamics is built upon sparse GP approximations,
-so the Jacobian in Eq. ref:eq-predictive-jacobian-dist must be extended for such approximations.
+so the Jacobian in cref:eq-predictive-jacobian-dist must be extended for such approximations.
 
 
 #+BEGIN_EXPORT latex
@@ -11633,7 +11633,7 @@ can confidently interpolate into the turbulent dynamics mode and the region whic
 In the latter case, it is up to the gating network to model the epistemic uncertainty arising from limited
 training data.
 # In this case, the dynamics model explains epistemic uncertainty is explained by the gating network
-# In this case, the complexity of the dynamics arises from the mulitmodaility which the model explains by
+# In this case, the complexity of the dynamics arises from the multmodaility which the model explains by
 # assigning the second dynamics mode to a second expert.
 # regions of the
 
@@ -11997,7 +11997,7 @@ can confidently interpolate into the turbulent dynamics mode and the region whic
 In the latter case, it is up to the gating network to model the epistemic uncertainty arising from limited
 training data.
 # In this case, the dynamics model explains epistemic uncertainty is explained by the gating network
-# In this case, the complexity of the dynamics arises from the mulitmodaility which the model explains by
+# In this case, the complexity of the dynamics arises from the multimodaility which the model explains by
 # assigning the second dynamics mode to a second expert.
 # regions of the
 
@@ -13132,7 +13132,7 @@ J &= (\state_{\TimeInd} - \targetState)^T \terminalStateCostMatrix (\state_{\Tim
 &= || \state_\TimeInd - \targetState ||_{\terminalStateCostMatrix}.
 \end{align}
 #+END_EXPORT
-# When $\terminalStateCostMatrix$ is the identity matrix Eq. ref:eq-quadratic-terminal-cost-matrix-notation
+# When $\terminalStateCostMatrix$ is the identity matrix cref:eq-quadratic-terminal-cost-matrix-notation
 # is recovered.
 # #+BEGIN_EXPORT latex
 # \begin{align} \label{eq-quadratic-terminal-cost-matrix-notation}
@@ -13423,14 +13423,14 @@ policies, the problem,
 - \underbrace{\E_{\controlledPolicyDist(\stateTraj)} \left[ H(\policy) \right]}_{\text{max entropy term}},
 \end{align}
 #+END_EXPORT
-is equivalent to the SOC problem in Eq. ref:eq-mode-soc-problem, with a modified integral cost,
+is equivalent to the SOC problem in cref:eq-mode-soc-problem, with a modified integral cost,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-cost-per-stage}
 \hat{\costFunc}(\state_\timeInd, \control_\timeInd) = \costFunc(\state_\timeInd, \control_\timeInd)
 - \frac{1}{\temperature} \log \priorPolicy(\control_\timeInd \mid \state_\timeInd).
 \end{align}
 #+END_EXPORT
-The problem in Eq. ref:eq-kl-control finds trajectories that balance
+The problem in cref:eq-kl-control finds trajectories that balance
 minimising expected costs
 $\E_{\controlledPolicyDist(\stateTraj, \controlTraj)} \left[ \costFunc(\stateTraj, \controlTraj) \right]$
 and selecting a policy $\policy$ that is similar to the prior policy $\priorPolicy$.
@@ -13495,7 +13495,7 @@ citep:shumwayAPPROACH1982,ghahramaniLearning1999,schonSystem2011, with input est
 In order to find trajectories that remain in a desired
 dynamics mode, this work further augments
 the graphical model in cref:fig-control-graphical-model with the mode indicator variable $\modeVar \in \modeDomain$
-from Eq. ref:eq-multimodal-dynamics-disc.
+from cref:eq-multimodal-dynamics-disc.
 The resulting graphical model is shown in Figure ref:fig-mode-augmented-control-graphical-model,
 where the evidence is that $\optimalVar_{\timeInd}=1$ and $\modeVar_{\timeInd}=\desiredMode$ for
 all $\timeInd \in \{0,\ldots,\TimeInd\}$.
@@ -14077,7 +14077,7 @@ Remember that the variational posterior $\expertVariational$ is an approximation
 \end{align}
 #+END_EXPORT
 that captures the joint distribution in the data through the inducing variables $\expertInducingOutput$.
-Given a deterministic state-control input, $\singleInput$, Eq. ref:eq-sparse-gp-dynamics can be used
+Given a deterministic state-control input, $\singleInput$, cref:eq-sparse-gp-dynamics can be used
 to calculate the density over the next state $\state_{\timeInd+1}$.
 However, as both the state and control at a given time step could also be Gaussian distributed,
 ${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$,
@@ -14546,7 +14546,7 @@ $p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)$,
 requires a recursive backwards message passing algorithm
 starting from the last time step $\timeInd=\TimeInd$ and passing information backwards in time to $\timeInd=1$.
 The terminal term $p(\optimalVar_\TimeInd=1 \mid \state_\TimeInd, \control_\TimeInd)$ can be calculated
-from the "cost" likelihood (Eq. ref:eq-monotonicOptimalityLikelihood) and the proceeding time steps
+from the "cost" likelihood (cref:eq-monotonicOptimalityLikelihood) and the proceeding time steps
 can be obtained via recursive message passing,
 #+BEGIN_EXPORT latex
 %\small
@@ -14562,7 +14562,7 @@ p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)
 #+END_EXPORT
 Given these recursive messages the optimal policy
 $p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1)$
-can be calculated using Eq. ref:eq-optimal-control-message-passing.
+can be calculated using cref:eq-optimal-control-message-passing.
 
 This inference mirrors trajectory optimisation as it also has a forward pass that simulates the
 current controller and a backward pass that updates the controller to improve the trajectory.
@@ -14860,7 +14860,7 @@ dynamics model with high epistemic uncertainty.
 
 \newcommand{\gatingFunc}{\ensuremath{g}}
 #+END_EXPORT
-This chapter is concerned with exploration in mulitmodal dynamical systems
+This chapter is concerned with exploration in multimodal dynamical systems
 where the transition dynamics are /not fully known a priori/.
 In particular, it is interested in exploring a single desired dynamics
 mode whilst avoiding entering any of the other modes.
@@ -14959,7 +14959,7 @@ H(\params \mid \dataset)
 \end{align}
 #+END_EXPORT
 # The expectation requires the unseen output $\output$ and many works have
-An important insight is that minimising Eq. ref:eq-expected-decrease-entropy
+An important insight is that minimising cref:eq-expected-decrease-entropy
 is equivalent to minimising the conditional mutual information between
 the output and the parameters $I(\output, \params \mid \input, \dataset$.
 #+BEGIN_EXPORT latex
@@ -14988,9 +14988,9 @@ H(\output \mid \input, \dataset)
 - \E_{\params \sim p(\params \mid\dataset)} \left[ H(\output \mid \input, \params) \right].
 \end{align}
 #+END_EXPORT
-The entropy terms in Eq. ref:eq-output-space-entropy are now calculated
+The entropy terms in cref:eq-output-space-entropy are now calculated
 in a (usually) low dimensional output space.
-In the binary classification setting, Eq. ref:eq-output-space-entropy simply
+In the binary classification setting, cref:eq-output-space-entropy simply
 involves calculating the entropy of Bernoulli random variables.
 #+BEGIN_EXPORT latex
 \begin{myquote}
@@ -15003,7 +15003,7 @@ h_{\text{Bern}}(p) &= -p \text{log}p - (1-p) \text{log}(1-p),
 \end{align}
 \end{myquote}
 #+END_EXPORT
-Intuitively, the first term in Eq. ref:eq-output-space-entropy
+Intuitively, the first term in cref:eq-output-space-entropy
 ($H(\output \mid \input, \dataset)$) seeks to
 find the input $\input$ where the model is marginally most uncertain about
 its corresponding output $\output$, whilst the
@@ -15026,7 +15026,7 @@ binary classification model,
 where $\Phi$ represents the Gaussian CDF and $\Phi(\gatingFunc(\input))$ is
 the probability of the (Bernoulli) output variable
 $\alpha$ cite:nickischApproximations2008.
-In this context,  Eq. ref:eq-output-space-entropy can be re-written as,
+In this context,  cref:eq-output-space-entropy can be re-written as,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-output-space-entropy-gp-classification}
 \text{arg}\underset{\input}{\max}
@@ -15035,7 +15035,7 @@ H(\output \mid \input, \dataset)
 \end{align}
 #+END_EXPORT
 Their approach introduces approximations to the two terms in
-Eq. ref:eq-output-space-entropy-gp-classification.
+cref:eq-output-space-entropy-gp-classification.
 They assume that the posterior over the latent function $\gatingFunc$
 is approximated to be Gaussian,
 #+BEGIN_EXPORT latex
@@ -15048,7 +15048,7 @@ is approximated to be Gaussian,
 #+END_EXPORT
 The $\overset{1}{\approx}$ symbol will be used to indicate when such an approximation
 has been exploited.
-The first term in Eq. ref:eq-output-space-entropy-gp-classification is approximated as follows,
+The first term in cref:eq-output-space-entropy-gp-classification is approximated as follows,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-entropy--data}
 H(\output \mid \input, \dataset) &\overset{1}{\approx}
@@ -15080,7 +15080,7 @@ exponential curve ($\text{exp}(-\gatingFunc(\input)^2/\pi\text{ln}2)$).
 This approximation is referred to as $\overset{2}{\approx}$.
 A simple Gaussian convolution then gives the closed form expression in Eq.
 ref:eq-entropy-expected-term-last.
-The objective in Eq. ref:eq-output-space-entropy-gp-classification can then be approximated as,
+The objective in cref:eq-output-space-entropy-gp-classification can then be approximated as,
 #+BEGIN_EXPORT latex
 \newcommand{\approxEntropy}{\ensuremath{\hat{H}}}
 \begin{align} \label{eq-approximate-output-space-entropy-obj}
@@ -15151,7 +15151,7 @@ The coupled learning provides well-calibrated uncertainty estimates in the gatin
 good choice for information-based exploration.
 
 In order to calculate the approximate entropy objective in the output space $\approxEntropy(\output_{\timeInd})$
-(Eq. ref:eq-approximate-output-space-entropy-obj)
+(cref:eq-approximate-output-space-entropy-obj)
 at a given time step $\timeInd$, the posterior $\posterior$ over the gating function is required.
 After the first time step this distribution is calculated as,
 #+BEGIN_EXPORT latex
@@ -15210,7 +15210,7 @@ p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_
 
 
 The exploration strategy introduced in this chapter builds on the approximate
-entropy objective in Eq. ref:eq-approximate-output-space-entropy.
+entropy objective in cref:eq-approximate-output-space-entropy.
 
 
 is a selective
