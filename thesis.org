@@ -1271,7 +1271,7 @@ However, it considers a quadcopter operating in an environment subject to spatia
 induced by a fan -- where the system can be represented by two dynamics modes,
 - Mode 1 :: an inoperable, /turbulent/ mode in front of the fan,
 - Mode 2 :: a /non-turbulent/ mode everywhere else.
-The turbulent dynamics mode is subject to higher drift (in the negative $y$ direction) and
+The turbulent dynamics mode is subject to higher drift (in the negative $x$ direction) and
 to higher diffusion (aka process noise).
 It is hard to know the exact turbulent dynamics due to complex and uncertain interactions between the
 quadcopter and the wind field.
@@ -1286,8 +1286,9 @@ to solve this quadcopter navigation problem.
 #+BEGIN_EXPORT latex
 \begin{figure}[t!]
 \centering
-\includegraphics[width=1.0\textwidth]{./images/point-mass-problem-statement-scenario-4.pdf}
-\caption{\label{fig-problem-statement}\textbf{Quadcopter Navigation Problem}
+%\includegraphics[width=1.0\textwidth]{./images/point-mass-problem-statement-scenario-4.pdf}
+\includegraphics[width=1.0\textwidth]{./images/quadcopter-domain-collocation-ppt.png}
+\caption{\label{fig-problem-statement}\textbf{Quadcopter navigation problem}
 Diagram showing a top down view of an environment, representing a quadcopter
 subject to two dynamics modes: 1) a turbulent dynamics mode
 induced by a fan (green) and 2) a non-turbulent dynamics mode everywhere else (blue).
@@ -9316,6 +9317,297 @@ cite:jax2018github.
 
 \todo{cite ICRA paper}
 
+** Problem Statement label:sec-problem-statement :noexport:
+# #+BEGIN_EXPORT latex
+# \begin{align}
+# \mode{\latentFunc} : \stateDomain \times \controlDomain \rightarrow \stateDomain \quad \text{if} \quad \modeVar=\modeInd,
+# \end{align}
+# #+END_EXPORT
+# $\stateDomain = \bigcup_{\modeInd \in \modeVarDomain} \mode{\stateDomain} = \{ \state \subseteq \stateDomain \mid \modeInd \in \modeVarDomain \}$.
+# $\stateDomain = \bigcup_{\modeInd=1}^{\ModeInd} \mode{\stateDomain}$.
+# This chapter considers multimodal dynamical systems where the dynamics modes are defined by disjoint
+# state domains.
+This chapter considers nonlinear, stochastic, multimodal dynamical systems,
+#+BEGIN_EXPORT latex
+\begin{subequations}
+\begin{align}
+\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
+&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar_{\timeInd}=\modeInd \nonumber \\
+\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
+\end{align}
+\end{subequations}
+#+END_EXPORT
+where the dynamics modes are defined by disjoint state domains.
+That is, each dynamics mode is defined by its state domain
+$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$, with
+$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for $i \neq j$.
+Each mode's dynamics are then given by,
+#+BEGIN_EXPORT latex
+\begin{align}
+\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain.
+\end{align}
+#+END_EXPORT
+Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
+and enter another mode.
+Ideally, this work seeks to enforce the controlled system to remain in a given mode at every time step.
+#+BEGIN_EXPORT latex
+\begin{definition}[Mode Remaining] \label{def-mode-remaining}
+Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
+Given an inital state $\state_0 \in \mode{\stateDomain}$, and a sequence of controls $\controlTraj=\control_{0:\TimeInd-1}$,
+the controlled system is said to be mode-remaining iff:
+\begin{align} \label{eq-mode-remaining-def}
+\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \mode{\stateDomain} \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
+\end{align}
+\end{definition}
+#+END_EXPORT
+
+Given a desired dynamics mode $\desiredMode$, this work seeks to find a control
+trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
+to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
+target state $\targetState \in \desiredStateDomain$,
+over a horizon $\TimeInd$,
+whilst minimising a cost function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$
+and keeping the system in the desired dynamics mode $\desiredMode$.
+Formally, this problem is given by,
+#+BEGIN_EXPORT latex
+\begin{subequations} \label{eq-mode-soc-problem}
+\begin{align}
+\min_{\controlTraj} &\E\Bigg[
+\sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd) \Bigg] \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
+\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
+&\text{\cref{eq-mode-remaining-def}} \\
+%\state_{\timeInd} &\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\state_\TimeInd = \targetState,
+\end{align}
+\end{subequations}
+#+END_EXPORT
+To simplify notation, the state and control trajectories are denoted
+as $\stateTraj = \state_{1:T}$ and $\controlTraj = \control_{0:T-1}$ respectively.
+The novelty of this problem arises from the mode remaining behaviour.
+To the best of our knowledge, there is no prior work addressing how to find
+trajectories that remain in a desired dynamics mode,
+when knowledge of how the system switches between the dynamics modes is /not known a priori/.
+
+
+
+# where the expectation is taken w.r.t. the distribution over state
+# trajectories,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-trajectory-dist}
+# %\controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
+# p(\stateTraj \mid \state_0, \controlTraj) =
+# \prod_{\timeInd=0}^{\TimeInd-1}
+# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd).
+# \end{align}
+# #+END_EXPORT
+
+
+
+Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
+This is a realistic assumption as the parameters associated with each dynamics GP can be used to identify
+different behaviours.
+For example, the noise variance associated with each mode's dynamics GP models its process noise.
+If it is desirable to avoid modes with high process noise, then they can easily be identified by their noise
+variances.
+#+BEGIN_EXPORT latex
+\begin{assumption} \label{}
+A desired dynamics mode $\desiredMode$ is known.
+\end{assumption}
+#+END_EXPORT
+Given a learned dynamics model and a desired dynamics mode $\desiredMode$,
+the goals of the trajectory optimisation in this chapter can be summarised as follows,
+# - Goal 1 :: Remain in a desired dynamics mode $\desiredMode$,
+# - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/.
+# - Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
+# - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
+#   - in the desired dynamic mode,
+#   - in the gating network.
+- Goal 1 :: Navigate to a target state $\targetState$,
+- Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$,
+  + Goal 2.1 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/, in the desired dynamics mode and in the gating network.
+Goal 2.1 arises due to learning the dynamics model from observations.
+The learned model may not be able to confidently predict which mode governs the dynamics at a given region.
+This is due to lack of training observations and is known as /epistemic uncertainty/.
+It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
+
+
+
+
+This chapter assumes prior access to the environment, enabling a data set of state transitions to be collected.
+This data set is used to learn a factorised representation of the underlying dynamics modes
+with the \acrshort{mosvgpe} method from cref:chap-dynamics.
+#+BEGIN_EXPORT latex
+\begin{assumption} \label{}
+Access to a single-step dynamics model learned using
+the \acrshort{mosvgpe} method from \cref{chap-dynamics} and a data set $\dataset$ of state transitions
+from the system.
+\end{assumption}
+#+END_EXPORT
+Deploying model-based control in a learned dynamics model makes
+it impossible to find trajectories that are guaranteed to be Mode Remaining (cref:def-mode-remaining).
+This work relaxes the requirement to finding mode remaining trajectories with high probability.
+#+BEGIN_EXPORT latex
+\begin{definition}[$\delta$-mode remaining] \label{def-delta-mode-remaining}
+Let $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ denote a multimodal dynamical system
+and $\desiredMode$ a desired dynamics mode defined by its state domain $\desiredStateDomain \subseteq \stateDomain$.
+Given an initial state $\state_0 \in \desiredStateDomain$ and $\delta \in (0,1]$,
+a system is said to be $\delta$-mode remaining under the controls $\controlTraj$ iff:
+\begin{align}
+\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \dynamicsFunc(\state_{\timeInd},\control_{\timeInd}) &\in \desiredStateDomain,
+\control_{\timeInd} \in \controlDomain) \geq 1 - \delta
+\end{align}
+\end{definition}
+#+END_EXPORT
+
+# Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
+# This is a realistic assumption as the parameters associated with each dynamics GP can be used to identify
+# different behaviours.
+# For example, the noise variance associated with each mode's dynamics GP models its process noise.
+# If it is desirable to avoid modes with high process noise, then they can easily be identified by their noise
+# variances.
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# A desired dynamics mode $\desiredMode$ is known.
+# \end{assumption}
+# #+END_EXPORT
+# Given a learned dynamics model and a desired dynamics mode $\desiredMode$,
+# the goals of the trajectory optimisation in this chapter can be summarised as follows,
+# # - Goal 1 :: Remain in a desired dynamics mode $\desiredMode$,
+# # - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/.
+# # - Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
+# # - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
+# #   - in the desired dynamic mode,
+# #   - in the gating network.
+# - Goal 1 :: Navigate to a target state $\targetState$,
+# - Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$,
+#   + Goal 2.1 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/, in the desired dynamics mode and in the gating network.
+# Goal 2.1 arises due to learning the dynamics model from observations.
+# The learned model may not be able to confidently predict which mode governs the dynamics at a given region.
+# This is due to lack of training observations and is known as /epistemic uncertainty/.
+# It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
+
+
+
+# Given a desired dynamics mode $\desiredMode$, this work seeks to find a control
+# trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
+# to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
+# target state $\targetState \in \desiredStateDomain$,
+# over a horizon $\TimeInd$,
+# whilst minimising a cost function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$
+# and keeping the system in the desired dynamics mode $\desiredMode$.
+
+# where the expectation is taken w.r.t. the distribution over state-control
+# trajectories under controller $\policy$,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-trajectory-dist}
+# \controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
+# \prod_{\timeInd=0}^{\TimeInd-1}
+# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
+# \policy(\control_\timeInd).
+# \end{align}
+# #+END_EXPORT
+
+
+
+
+# #+BEGIN_EXPORT latex
+# \begin{remark}[Epistemic Uncertainty]
+# %Given that the underlying dynamics modes and how the dynamics switches between them, are
+# %\textit{not fully known a priori}, these methods should \textit{air on the side of caution}.
+# Due to lack of training observations, the learned model may be uncertain which mode governs the
+# dynamics at a particular region. This is known as epistemic uncertainty.
+# In a risk-averse setting, trajectories should also avoid entering these regions of high epistemic uncertainty.
+# \end{remark}
+# #+END_EXPORT
+
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# The system has previously been observed to obtain a data set $\dataset$ of state transitions sampled at constant frequency.
+# \end{assumption}
+# #+END_EXPORT
+# Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
+# This is a realistic assumption as the parameters associated with each dynamics GP represent different
+# characteristics of the system.
+# For example, the noise variance associated with each mode's dynamics GP models the process noise that the mode
+# is subject to.
+# A high noise variance can therefore be used to identify dynamics modes that are undesirable.
+
+
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# A desired dynamics mode $\desiredMode$  is known.
+# Moreover, its transition dynamics are given by
+# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$.
+# \end{assumption}
+# #+END_EXPORT
+# the \acrshort{mosvgpe} method from cref:chap-dynamics to learn a factorised
+# representation of the underlying dynamics modes.
+
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# Further to this, it is assumed that the mode switching behaviour is governed by the state space, i.e.
+# each dynamics modes is governed by its state domain
+# $\stateDomain_{\modeInd} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
+# giving each mode's dynamics,
+# $\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain$.
+
+# The system switches between its dynamics modes over the systems state space, i.e.
+# each dynamics modes is governed by its state domain
+# $\stateDomain_{\modeInd} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
+# giving each mode's dynamics,
+# $\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain$.
+# \end{assumption}
+# #+END_EXPORT
+
+# and used to train a single-step dynamics model using
+# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
+
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# A data set $\dataset$ of state transitions have previously been sampled from the
+# system (at constant frequency) and used to train a single-step dynamics model using
+# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
+# \end{assumption}
+# #+END_EXPORT
+# Further to this, it assumes that a desired dynamics mode $\desiredMode$ is /known a priori/.
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# Let $\desiredMode$ denote the desired dynamics mode governed
+# by its state domain
+# $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$.
+# The desired mode's transition dynamics are given by
+# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
+# with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+# $\control \in \controlDomain \subseteq \R^\ControlDim$.
+# \end{assumption}
+# #+END_EXPORT
+
+# The desired mode's transition dynamics are given by
+# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
+# with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
+# $\control \in \controlDomain \subseteq \R^\ControlDim$,
+# where $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$
+# denotes the subset of the state space associated with the desired dynamics mode.
+# Note that the desired mode's transition dynamics $\desiredDynamicsFunc$
+# are free to leave the desired mode's state space $\desiredStateDomain$.
+
+
+
+
+
+
+\todo{cite active learning paper and multimodal mogpe paper?}
+# The most similar works are cite:schreiterSafe2015 where active learning is gu
+
+
+
+# Of particular interest in this chapter is the GP posterior over the desired mode's gating function.
+# cref:fig-traj-opt-gating-network-gp visualises this GP posterior after training on the historical data set of state
+# transitions from the illustrative example in cref:illustrative_example.
+# One approach to encoding mode remaining behaviour is to consider the geometry of the latent gating functions.
+
 ** Problem Statement label:sec-problem-statement
 # #+BEGIN_EXPORT latex
 # \begin{align}
@@ -9435,8 +9727,11 @@ from the system.
 # #+END_EXPORT
 # As the true underlying dynamics modes and how the system switches between them are /not fully known a priori/,
 # it is impossible to develop algorithms that can find trajectories that are guaranteed to be
-As the control algorithms presented in this chapter leverage this learned dynamics model,
-it is impossible to find trajectories that are guaranteed to be Mode Remaining (cref:def-mode-remaining).
+
+# As the control algorithms presented in this chapter leverage this learned dynamics model,
+# it is impossible to find trajectories that are guaranteed to be Mode Remaining (cref:def-mode-remaining).
+Leveraging a learned dynamics model in this way makes
+it impossible to find trajectories that are guaranteed to be Mode Remaining (cref:def-mode-remaining).
 This work relaxes the requirement to finding mode remaining trajectories with high probability.
 #+BEGIN_EXPORT latex
 \begin{definition}[$\delta$-mode remaining] \label{def-delta-mode-remaining}
@@ -9472,8 +9767,8 @@ the goals of the trajectory optimisation in this chapter can be summarised as fo
 #   - in the gating network.
 - Goal 1 :: Navigate to a target state $\targetState$,
 - Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$,
-  + Goal 2.1 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/, in the desired dynamics mode and in the gating network.
-Goal 2.1 arises due to learning the dynamics model from observations.
+- Goal 3 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/, in the desired dynamics mode and in the gating network.
+Goal 3 arises due to learning the dynamics model from observations.
 The learned model may not be able to confidently predict which mode governs the dynamics at a given region.
 This is due to lack of training observations and is known as /epistemic uncertainty/.
 It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
@@ -9579,12 +9874,15 @@ It is desirable to avoid entering these regions as it may result in the system l
 #+BEGIN_EXPORT latex
 \begin{figure}[t!]
 \centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mosvgpe/desired_gating_gp_no_traj.pdf}
+%\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mosvgpe/desired_gating_gp_no_traj.pdf}
+\includegraphics[width=\textwidth]{./images/mode-opt/env/scenario_7/mosvgpe/desired_gating_gp_no_obs.pdf}
 \caption{
 Visualisation of the GP posterior mean (left) and posterior variance (right), associated with the
-desired mode's gating function after training the \acrshort{mosvgpe}
-(with $\ModeInd=2$ experts) on the historical data set of state transitions from the 2D quadcopter environment
-in the illustrative example from \cref{illustrative_example}.}
+desired mode's gating function after training \acrshort{mosvgpe}
+on the historical data set of state transitions from the 2D quadcopter environment
+in the illustrative example from \cref{illustrative_example}.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line)
+and a subset of the environment which has not been observed (hashed box).}
 \label{fig-traj-opt-gating-network-gp}
 \end{figure}
 #+END_EXPORT
@@ -9596,7 +9894,7 @@ latent spaces that can be used to encode mode remaining behaviour.
 cref:fig-traj-opt-gating-network-gp shows the GP posterior associated with the desired mode's gating function
 after training
 \acrshort{mosvgpe} on the historical data set of state transitions from the quadcopter experiment in cref:illustrative_example.
-Goal 1 can be encoded as finding length minimising trajectories on the desired mode's gating function.
+Goals 1 and 2 can be encoded as finding length minimising trajectories on the desired mode's gating function.
 Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
 manifold given by the desired mode's gating function,
 increases when it passes over the contours; analogous to climbing a hill.
@@ -9679,14 +9977,14 @@ calculate lengths of trajectories on manifolds endowed with an inner product.
 *Lengths on Riemannian manifolds*
 The length of a trajectory $\trajectory$ on a manifold $\manifold$, can be calculated
 by mapping it through the function $\manifoldFunction$ and
-using Eq. ref:eq-euclidean-length,
+using cref:eq-euclidean-length,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-manifold-length}
 \text{Length}\left(\manifoldFunction(\trajectory)\right)
 &= \int_{t_0}^{t_f}\left\|\dot{\manifoldFunction}(\manifoldInput(t))\right\|_2 \mathrm{d}t.
 \end{align}
 #+END_EXPORT
-Applying the chain-rule allows Eq. ref:eq-manifold-length to be expressed in terms of the Jacobian and the
+Applying the chain-rule allows cref:eq-manifold-length to be expressed in terms of the Jacobian and the
 velocity,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-manifold-length-chain}
@@ -9722,28 +10020,54 @@ can then be calculated as,
 
 *** Probabilistic Geometries label:sec-prob-geo
 **** intro :ignore:
-Now consider finding
+Consider finding
 length minimising trajectories on the manifold $\desiredManifold=\desiredGatingFunction(\gatingDomain)$
 associated with the desired mode's gating function,
-$\desiredGatingFunction : \stateDomain \times \controlDomain \rightarrow \gatingCodomain$.
-In this work the gating functions are assumed to only depend on the state,
-$\desiredGatingFunction : \gatingDomain \rightarrow \gatingCodomain$,
-where $\gatingDomain \in \R^{\GatingDim}$ and $\gatingCodomain \in \R$.
-That is, trajectories minimising cref:eq-manifold-length-G,
-subject to the metric $\desiredMetricTensor$,
+$\desiredGatingFunction : \stateDomain \times \controlDomain \rightarrow \gatingCodomain$,
+in cref:fig-traj-opt-gating-network-gp, with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-desired-metric-tensor}
 \desiredMetricTensor &= \desiredJacobian^T \desiredJacobian, \\
 \desiredJacobian &= \frac{\partial \desiredGatingFunction}{\partial \manifoldInput(t)} \in \R^{1 \times \GatingDim}.
 \end{align}
 #+END_EXPORT
-These trajectories will attempt to remain in the desired dynamics mode $\desiredMode$, i.e. encode Goal 1.
-However, this metric does encode Goal 2.
-We now address Goal 2 by observing that the metric tensor is actually stochastic.
-For notational conciseness, only a single gating function
-$\manifoldFuncion$ is used to denote the desired mode's gating function in this chapter.
+These trajectories will attempt to remain in the desired dynamics mode $\desiredMode$, encoding Goals 1 and 2.
+However, length minimising trajectories subject to this metric do not encode Goal 3.
+That is, they will not avoid regions of the learned dynamics with high /epistemic uncertainty/.
+However, Goal 3 can be encoded by observing that the metric tensor is actually stochastic and extending the concept
+of length minimising trajectories to probabilistic manifolds.
+# For notational conciseness, only a single gating function
+# $\manifoldFuncion$ is used to denote the desired mode's gating function in this chapter.
+
+# Note, that the gating functions are assumed to only depend on the state,
+# $\desiredGatingFunction : \gatingDomain \rightarrow \gatingCodomain$,
+# where $\gatingDomain \in \R^{\GatingDim}$ and $\gatingCodomain \in \R$,
+# so the metric is given by,
+
+# That is, trajectories minimising cref:eq-manifold-length-G,
+# subject to the metric $\desiredMetricTensor$,
+
+# In this work the gating functions are assumed to only depend on the state,
+# $\desiredGatingFunction : \gatingDomain \rightarrow \gatingCodomain$,
+# where $\gatingDomain \in \R^{\GatingDim}$ and $\gatingCodomain \in \R$.
+# That is, trajectories minimising cref:eq-manifold-length-G,
+# subject to the metric $\desiredMetricTensor$,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-desired-metric-tensor}
+# \desiredMetricTensor &= \desiredJacobian^T \desiredJacobian, \\
+# \desiredJacobian &= \frac{\partial \desiredGatingFunction}{\partial \manifoldInput(t)} \in \R^{1 \times \GatingDim}.
+# \end{align}
+# #+END_EXPORT
+
+# These trajectories will attempt to remain in the desired dynamics mode $\desiredMode$, i.e. encode Goals 1 and 2.
+# However, this metric does encode Goal 3.
+# We now address Goal 3 by observing that the metric tensor is actually stochastic.
+# For notational conciseness, only a single gating function
+# $\manifoldFuncion$ is used to denote the desired mode's gating function in this chapter.
 
 **** Extension to Probabilistic Geometries :ignore:
+\newline
+
 Following cite:tosiMetrics2014 this work formulates a metric tensor that captures the variance in the manifold
 via a probability distribution.
 First note that as the differential operator is linear, the derivative of a GP is also a GP,
@@ -9833,7 +10157,7 @@ Importantly, this expected metric tensor includes a covariance term $\covJac$,
 which implies that lengths on the manifold increase in areas of high covariance.
 This is a desirable behaviour because it encourages length minimising trajectories
 to avoid regions of the learned dynamics with high epistemic uncertainty,
-encoding Goal 2.
+encoding Goal 3.
 To aid with user control the metric tensor in Eq. ref:eq-expected-metric is modified with
 a weighting parameter $\lambda$ that enables the relevance of the covariance term to be adjusted,
 #+BEGIN_EXPORT latex
@@ -9967,9 +10291,9 @@ satisfy a continuous-time $2^{\text{nd}}$ order \acrshort{ode}, given by,
 where $\operatorname{vec}[\metricTensor(\manifoldInput(t)])$ stacks the columns of $\metricTensor(\manifoldInput(t))$
 and $\otimes$ denotes the Kronecker product.
 The implication of cref:eq-geodesic,eq-2ode, is that trajectories that are solutions
-to the $2^{\text{nd}}$ order \acrshort{ode} in Eq. ref:eq-2ode, implicitly minimise the objective
+to the $2^{\text{nd}}$ order \acrshort{ode} in cref:eq-2ode, implicitly minimise the objective
 in cref:eq-manifold-length-G.
-Given this observation, computing geodesics involves finding a solution to Eq. ref:eq-2ode
+Given this observation, computing geodesics involves finding a solution to cref:eq-2ode
 with $\manifoldInput(t_0) = \manifoldInput_0$ and $\manifoldInput(t_f) = \manifoldInput_f$.
 This is a boundary value problem (BVP) with a smooth solution so it can be solved using
 any BVP solver, e.g. (multiple) shooting and collocation methods.
@@ -9998,7 +10322,7 @@ dynamics constraints.
 # \end{align}
 # #+END_EXPORT
 *Collocation*
-Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, Eq. ref:eq-2ode cannot
+Since neither $\dot{\mathbf{x}}(t_0)$ nor $\dot{\mathbf{x}}(t_f)$ are known, cref:eq-2ode cannot
 be solved with simple forward-backward integration.
 Instead, the problem is transcribed using collocation.
 Collocation methods are used to transcribe continuous-time trajectory optimisation problems into
@@ -10100,7 +10424,7 @@ cref:eq-control-elbo.
 # [[file:./images/geometric-traj-opt-over-svgp.pdf]]
 
 *** Remarks :ignore:
-Although this method provides an elegant solution to finding trajectories that satisfy Goals 1 and 2,
+Although this method provides an elegant solution to finding trajectories that satisfy Goals 1, 2 and 3,
 it is not without its limitations.
 First of all, this approach does not necessarily find trajectories that satisfy the dynamics constraints,
 as it projects the problem onto the geodesic \acrshort{ode}.
@@ -10195,7 +10519,7 @@ Cannot validate that trajectories are $\delta-\text{mode remaining}$.
 This section details a direct control approach which embeds the mode remaining behaviour directly into the
 SOC problem in cref:eq-mode-soc-problem, via a geometric objective function.
 In contrast to the previous approach, this method:
-1) guarantees trajectories satisfy the dynamics constraints,
+1) enforces the dynamics constraints,
 2) principally handles the uncertainty associated with the dynamics,
 3) can validate that trajectories are $\delta-\text{mode remaining}$.
 This approach is a shooting method that enforces the dynamics constraints through simulation, i.e.
@@ -10616,25 +10940,29 @@ The state-space of the velocity controlled quadcopter example consists of the 2D
 The controls consist of the speed in each direction, given by $\control = (\velocity_x, \velocity_y)$.
 
 *** Performance Indicators
-The performance of the methods presented in this chapter are evaluated using three performance indicators.
-1. The desired mode's mixing probability,
-    #+BEGIN_EXPORT latex
-    \begin{align}
-    \sum_{\timeInd=1}^{\TimeInd}
-    \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
-    \end{align}
-    #+END_EXPORT
-   this is calculated using cref:eq-mode-chance-constraint-integral
-    #+BEGIN_EXPORT latex
-    \begin{align} \label{eq-mode-probability-no-unc}
-    \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \gatingFunc(\state_{0:\timeInd}), \state_{0:\timeInd}, \control_{0:\timeInd})
-    \end{align}
-    #+END_EXPORT
+This section evaluates the performance of trajectories using four performance indicators.
+1. Probability of remaining in the desired mode with the model's uncertainty marginalised,
+    calculated using cref:eq-mode-chance-constraint-integral.
     #+BEGIN_EXPORT latex
     \begin{align} \label{eq-mode-probability-all-unc}
-    \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})
+    \sum_{\timeInd=1}^{\TimeInd}
+    \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode).
     \end{align}
     #+END_EXPORT
+    This probability will decrease when a trajectory leaves the desired mode AND when it
+    passes through regions of the learned dynamics with high uncertainty.
+2. Probability of remaining in the desired mode without the model's uncertainty marginalised,
+    #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-mode-probability-no-unc}
+    \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \gatingFunc(\state_{0:\timeInd}), \state_{0:\timeInd}, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
+    \end{align}
+    #+END_EXPORT
+    This probability will ONLY decrease when a trajectory leaves the desired mode.
+    # #+BEGIN_EXPORT latex
+    # \begin{align} \label{eq-mode-probability-all-unc}
+    # \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})
+    # \end{align}
+    # #+END_EXPORT
    # - The indirect control method calculates the probability of being in the desired dynamics mode under the
    #   MoSVGPE model,
    #  #+BEGIN_EXPORT latex
@@ -10645,21 +10973,23 @@ The performance of the methods presented in this chapter are evaluated using thr
    #  #+END_EXPORT
    # - The direct control method also calculates the probability of being in the desired dynamics mode
    #   but it also marginalises the state uncertainty along the trajectory,
-2. The variance accumulated along the state trajectory,
+3. The state variance accumulated from cascading single-step predictions,
    #+BEGIN_EXPORT latex
-    \begin{align}
+    \begin{align} \label{eq-metric-state-var}
     \sum_{\timeInd=1}^{\TimeInd} \mathbb{V}[\state_{\timeInd}]
     \end{align}
    #+END_EXPORT
-3. The posterior variance associated with the desired mode's gating function \acrshort{gp}
+    This will increase when a trajectory passes through regions of the desired dynamics mode with high uncertainty.
+4. The gating function variance accumulated from cascading single-step predictions,
    #+BEGIN_EXPORT latex
-    \begin{align}
+    \begin{align} \label{eq-metric-gating-var}
     \sum_{\timeInd=1}^{\TimeInd}
     \mathbb{V}[\gatingFunc_{\desiredMode}(\state_{\timeInd})]
     \end{align}
    #+END_EXPORT
+    This will increase when a trajectory passes through regions of the gating network with high uncertainty.
 Intuitively, the goal is to maximise the probability of being in the desired mode,
-whilst minimising the variance accumulated over a trajectory.
+whilst minimising the variance accumulated over a trajectory, i.e. maximise cref:eq-metric-prob-unc.
 To test each methods ability at avoiding regions of high epistemic uncertainty,
 a subset of the environment was intentionally not observed.
 
@@ -10682,9 +11012,9 @@ a subset of the environment was intentionally not observed.
 
 *** Real-World Quadcopter Experiments label:sec-traj-opt-results-collocation
 **** intro :ignore:
-The indirect control via latent geodesics method presented in cref:sec-traj-opt-collocation is evaluated
+The indirect control via latent geodesics method presented in cref:sec-traj-opt-collocation was evaluated
 on the real-world quadcopter control problem detailed in cref:sec-brl-experiment.
-However, a different subset of the environment is not observed
+However, a different subset of the environment was not observed
 and the model was trained using an old variational inference scheme, not the one presented in cref:chap-dynamics.
 cref:fig-real-world-schematic shows the environment and details the quadcopter navigation problem.
 The controls were kept constant during data collection, reducing the dynamics to
@@ -10890,7 +11220,7 @@ $\state_0$, to the target state $\targetState$, given the state transition data 
 \centering
 \begin{minipage}[r]{\columnwidth}
 \centering
-\includegraphics[width=0.8\textwidth]{./images/mode-opt/env/scenario_7/env_with_dataset_start_end_pos.pdf}
+\includegraphics[width=0.7\textwidth]{./images/mode-opt/env/scenario_7/env_with_dataset_start_end_pos.pdf}
 \subcaption{\textbf{Environment 1} - $\windDrift{1} = \{0.02, -0.4\}$, $\windDrift{2} = \{-2.0, -0.4\}$,
 $\windTurbulenceNoise{1} = \diag\left([0.0002, 0.0001]\right)$ and
 $\windTurbulenceNoise{2} = \diag\left([0.2, 0.05]\right)$}
@@ -10898,7 +11228,7 @@ $\windTurbulenceNoise{2} = \diag\left([0.2, 0.05]\right)$}
 \end{minipage}
 \begin{minipage}[r]{\columnwidth}
 \centering
-\includegraphics[width=0.8\textwidth]{./images/mode-opt/env/scenario_5/env_with_dataset_start_end_pos.pdf}
+\includegraphics[width=0.7\textwidth]{./images/mode-opt/env/scenario_5/env_with_dataset_start_end_pos.pdf}
 \subcaption{\textbf{Environment 2} - $\windDrift{1} = \{0.4, 0.02\}$, $\windDrift{2} = \{0.4, -2.0\}$,
 $\windTurbulenceNoise{1} = \diag\left([0.0001, 0.0002]\right)$ and
 $\windTurbulenceNoise{2} = \diag\left([0.05, 0.2]\right)$}
@@ -10985,23 +11315,25 @@ cref:tab-results-sim-envs summarises the all of the results for the simulated ex
 #+LATEX: \label{tab-results-sim-envs}
 #+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center t :placement [!b] :align clcccccc
-|-----+----------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
-| Env | Method   | $\lambda$ | Mode prob                       | Mode prob with uncertainty       | State uncertainty        | Gating uncertainty                                   | Riemannian energy                                |   |
-|     |          |           | cref:eq-mode-probability-no-unc | cref:eq-mode-probability-all-unc | $\mathbb{V}[\stateTraj]$ | $\mathbb{V}[\gatingFunc_{\desiredMode}(\stateTraj)]$ | cref:eq-approximate-trajectory-riemannian-energy |   |
-|-----+----------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
-|     | Direct   | $0.5$     | $20.91$                         | $16.77$                          | $8.70$                   | $404.51$                                             | $180.10$                                         |   |
-|     | Direct   | $1.0$     | $\mathbf{20.98}$                | $\mathbf{18.10}$                 | $8.72$                   | $388.51$                                             | $\mathbf{173.84}$                                |   |
-|   1 | Direct   | $20.0$    | $12.64$                         | $13.00$                          | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                         |   |
-|     | Indirect | $0.5$     | $16.96$                         | $16.22$                          | $8.69$                   | $346.62$                                             | $238.29$                                         |   |
-|     | Indirect | $1.0$     | $18.51$                         | $16.97$                          | $8.70$                   | $367.16$                                             | $222.07$                                         |   |
-|     | Indirect | $20.0$    | $15.32$                         | $14.62$                          | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                         |   |
-|-----+----------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
-|     | Direct   | $0.5$     | $1$                             | $16.77$                          | $0.00300$                | $874.45$                                             | $180.10$                                         |   |
-|     | Direct   | $1.0$     | $1$                             | $18.10$                          | $0.00920$                | $638.68$                                             | $173.84$                                         |   |
-|   2 | Direct   | $20.0$    | $1$                             | $13.00$                          | $\mathbf{0.00198}$       | $1504.12$                                            | $349.08$                                         |   |
-|     | Indirect | $0.5$     | $1$                             | $16.22$                          | $0.00300$                | $816.57$                                             | $238.29$                                         |   |
-|     | Indirect | $1.0$     | $1$                             | $16.97$                          | $0.00920$                | $734.32$                                             | $222.07$                                         |   |
-|     | Indirect | $20.0$    | $1$                             | $14.62$                          | $\mathbf{0.00198}$       | $1150.32$                                            | $627.74$                                         |   |
+|-----+---------------------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
+| Env | Method                    | $\lambda$ | Mode prob                       | Mode prob with uncertainty       | State uncertainty        | Gating uncertainty                                   | Riemannian energy                                |   |
+|     |                           |           | cref:eq-mode-probability-no-unc | cref:eq-mode-probability-all-unc | $\mathbb{V}[\stateTraj]$ | $\mathbb{V}[\gatingFunc_{\desiredMode}(\stateTraj)]$ | cref:eq-approximate-trajectory-riemannian-energy |   |
+|-----+---------------------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
+|     | Direct                    | $0.5$     | $16.96$                         | $16.22$                          | $8.69$                   | $346.62$                                             | $238.29$                                         |   |
+|     | Direct                    | $1.0$     | $\mathbf{18.51}$                | $\mathbf{16.98}$                 | $8.70$                   | $367.16$                                             | $\mathbf{222.07}$                                |   |
+|   1 | Direct                    | $20.0$    | $12.64$                         | $13.00$                          | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                         |   |
+|     | Indirect                  | $0.5$     | $20.91$                         | $16.77$                          | $8.70$                   | $404.51$                                             | $180.10$                                         |   |
+|     | Indirect                  | $1.0$     | $20.98$                         | $18.10$                          | $8.72$                   | $388.51$                                             | $173.84$                                         |   |
+|     | Indirect                  | $20.0$    | $12.64$                         | $13.00$                          | $\mathbf{8.69}$          | $157.83$                                             | $349.08$                                         |   |
+|     | Inference                 | N/A       | $20.94$                         | $19.99$                          | $8.74$                   | $208.62$                                             | $287.52$                                         |   |
+|     | Inference (deterministic) | N/A       | $20.96$                         | $19.58$                          | $8.73$                   | $258.27$                                             | $237.32$                                         |   |
+|-----+---------------------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+---|
+|     | Indirect                  | $0.01$    | $20.98$                         | $20.80$                          | $1.79$                   | $497.47$                                             | $275.00$                                         |   |
+|     | Indirect                  | $0.5$     | $20.96$                         | $20.34$                          | $1.42$                   | $367.47$                                             | $182.06$                                         |   |
+|   2 | Indirect                  | $1.0$     | $20.98$                         | $20.68$                          | $1.28$                   | $334.47$                                             | $144.16$                                         |   |
+|     | Indirect                  | $5.0$     | $20.81$                         | $20.13$                          | $1.37$                   | $374.13$                                             | $134.33$                                         |   |
+|     | Inference                 | N/A       | $20.98$                         | $20.72$                          | $1.75$                   | $596.67$                                             | $442.88$                                         |   |
+|     | Inference (deterministic) | N/A       | $20.98$                         | $20.61$                          | $1.56$                   | $644.35$                                             | $534.39$                                         |   |
 #+LATEX: }
 #+end_table
 
@@ -11362,7 +11694,7 @@ indicate that the indirect control method with $\lambda=1.0$ was the highest per
 # In contrast, the loss landscape non
 
 **** Environment 2
-***** Riemannian energy 0.5 :ignore:
+***** Riemannian energy 0.01 :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -11378,11 +11710,11 @@ indicate that the indirect control method with $\lambda=1.0$ was the highest per
 \subcaption{}
 \label{fig-riemannian-energy-low-traj-opt-over-svgp-5}
 \end{minipage}
-\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=0.5}$
+\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=0.01}$
 Trajectory optimisation results after finding trajectories from the start state $\state_0$,
 to the target state $\targetState$,
 with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
-with $\lambda=0.5$
+with $\lambda=0.01$
 and deterministic controls (no maximum entropy control).
 The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
 The state trajectories are overlayed on (\subref{fig-riemannian-energy-low-traj-opt-over-prob-5})
@@ -11391,6 +11723,38 @@ and (\subref{fig-riemannian-energy-low-traj-opt-over-svgp-5})
 the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
 All plots show a slice of the input space with constant zero controls.}
 \label{fig-riemannian-energy-low-traj-opt-5}
+\end{figure}
+#+END_EXPORT
+
+***** Riemannian energy 0.5 :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/scenario_5/riemannian-energy-low-2/trajectories_over_mixing_probs.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-low-2-traj-opt-over-prob-5}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/scenario_5/riemannian-energy-low-2/trajectories_over_desired_gating_gp.pdf}
+\subcaption{}
+\label{fig-riemannian-energy-low-2-traj-opt-over-svgp-5}
+\end{minipage}
+\caption{\textbf{Riemannian Energy} $\bm\lambda\mathbf{=0.5}$
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$,
+with the Riemannian energy cost function from \cref{eq-approximate-trajectory-riemannian-energy}
+with $\lambda=0.5$
+and deterministic controls (no maximum entropy control).
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-riemannian-energy-low-2-traj-opt-over-prob-5})
+each mode's mixing probability
+and (\subref{fig-riemannian-energy-low-2-traj-opt-over-svgp-5})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-riemannian-energy-low-2-traj-opt-5}
 \end{figure}
 #+END_EXPORT
 
@@ -11457,7 +11821,7 @@ All plots show a slice of the input space with constant zero controls.}
 \end{figure}
 #+END_EXPORT
 
-***** Geodesic collocation 0.5 :ignore:
+***** Geodesic collocation 0.5 :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -11486,7 +11850,7 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \end{figure}
 #+END_EXPORT
 
-***** Geodesic collocation 1.0 :ignore:
+***** Geodesic collocation 1.0 :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -11515,7 +11879,7 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \end{figure}
 #+END_EXPORT
 
-***** Geodesic collocation 30 :ignore:
+***** Geodesic collocation 30 :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -11544,12 +11908,154 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \end{figure}
 #+END_EXPORT
 
-***** Blah :ignore:
-All experiments presented here used a $\TimeInd=20$ step horizon.
-For comparison, the optimised controls are rolled out in the desired mode's dynamics GP (magenta) and in the
-environment (cyan).
-In the geodesic collocation experiments, the yellow trajectory represents the state trajectory found by the
-collocation solver.
+***** target state :ignore:
+\newline
+
+The direct control method was tested in a second simulated environment.
+In Environment 2, the turbulent dynamics mode and the unobserved regions are in different locations.
+Notice from cref:fig-dataset-scenario-5 that they do not overlap.
+The indirect geodesic control method struggled to find solutions in this environment.
+For this reason, it has been left out.
+Following the experiments in Environment 1, four different settings of the $\lambda$ parameter were tested.
+
+
+*Target state*
+The magenta trajectories in
+cref:fig-riemannian-energy-low-2-traj-opt-5fig-riemannian-energy-low-traj-opt-5,fig-riemannian-energy-traj-opt-5,fig-riemannian-energy-high-traj-opt-5
+indicate that all of the direct control experiments in Environment 2 were able to find trajectories
+that navigate to the target state $\targetState$ under the desired mode's GP dynamics.
+Further to this, the cyan trajectories indicate that all of the experiments found controls that
+successfully control the system to the target state in environment.
+Similarly to the results for Environment 1, setting the terminal state cost matrix $\terminalStateCostMatrix$
+to be very high, ensured trajectories successfully reached the target state.
+# All of their corresponding environment trajectories (cyan) also navigate to the target state $\targetState$.
+# The small error between the environment trajectories (cyan) and dynamics trajectories (magenta) is due to
+# the accumulation of process noise.
+
+***** mode remaining :ignore:
+\newline
+
+*Mode remaining*
+All of the experiments  were able to successfully remain in the desired dynamics mode.
+This is indicated by none of the dynamics trajectories (magenta) passing over the mode boundary into
+the turbulent dynamics mode.
+
+The results show that $\lambda$ effects the mode remaining behaviour.
+cref:fig-riemannian-energy-low-traj-opt-5
+
+This is confirmed by cref:tab-results-sim-envs where the trajectory found with $\lambda=1.0$ obtained
+
+These results are confirmed by cref:tab-results-sim-envs
+
+where the trajectory found with $\lambda=1.0$ obtained
+the highest probability of remaining in the desired dynamics mode for Environment 1.
+Interestingly, the trajectory found with $\lambda=0.5$ obtained the second highest probability
+when not considering the epistemic from the learned dynamics model (cref:eq-mode-probability-no-unc),
+but only the third highest when considering the epistemic uncertainty (cref:eq-mode-probability-all-unc).
+This is due to the lower relevance of the covariance term in the expected Riemannian metric
+allowing the trajectory to pass
+through regions of the gating network with high epistemic uncertainty.
+This can be seen in the bottom right plot of cref:fig-riemannian-energy-low-traj-opt-7 where the trajectory
+passes straight over the region of highest gating function variance in the middle of the environment.
+This is quantified in cref:tab-results-sim-envs as it is the trajectory with the highest accumulated gating
+variance.
+From visual inspection, the trajectory found with $\lambda=1.0$ has more clearance from the turbulent dynamics
+mode.
+This is due to the higher relevance of the covariance term pushing the trajectory away from the region of high
+epistemic uncertainty in the gating network.
+
+The trajectory found with $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) did not successfully remain
+in the desired dynamics mode.
+This indicates that setting the relevance of the covariance term too high can have a negative impact on performance.
+This is likely due to the optimisation landscape favouring trajectories that
+avoid the region of high posterior variance in the gating network more than following the contours of the
+gating function.
+# This is most likely due to the trajectory optimiser finding a local optima when $\lambda=20.0$.
+
+# This is because for $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) the loss landscape favours
+# avoiding the region of high posterior variance in the gating network, over remaining the desired dynamics mode.
+# In this setting, increasing $\lambda$ has a negative impact on performance
+
+# Two of the direct control experiments (with $\lambda =0.5$ and $\lambda=1.0$),
+# (cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7)
+# were able to successfully navigate to the target state in the environment.
+# This is because for $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) the loss landscape favours
+# avoiding the region of high posterior variance in the gating network, over remaining the desired dynamics mode.
+# In this setting, increasing $\lambda$ has a negative impact on performance
+
+***** epistemic uncertainty :ignore:
+\newline
+
+*Epistemic uncertainty*
+Finally, the methods are evaluated at their ability to avoid regions of the dynamics with high epistemic uncertainty.
+cref:tab-results-sim-envs shows the state variance and the gating function variance accumulated over
+each trajectory.
+In all experiments, the state variance accumulated over the trajectory (from cascading single-step predictions
+via moment matching) were fairly similar.
+This is due to the dynamics of the simulator being simple enough that the desired mode's GP
+can confidently interpolate into the turbulent dynamics mode and the region which has not been observed.
+In the latter case, it is up to the gating network to model the epistemic uncertainty arising from limited
+training data.
+# In this case, the dynamics model explains epistemic uncertainty is explained by the gating network
+# In this case, the complexity of the dynamics arises from the mulitmodaility which the model explains by
+# assigning the second dynamics mode to a second expert.
+# regions of the
+
+In the indirect geodesic control experiments with $\lambda=1.0$ and $\lambda=0.5$, the trajectories navigate
+directly over the region of high posterior variance associated with the gating function.
+This can be seen in the bottom right plots of cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7.
+In contrast, the indirect geodesic control experiment with $\lambda=20.0$ (in cref:fig-geodesic-high-traj-opt-7)
+avoided this region.
+However, this uncertainty avoiding behaviour came at the cost of passing straight through the turbulent
+dynamics mode.
+
+Similarly for the direct control experiments, setting $\lambda=20.0$ resulted in the trajectory passing
+straight through the turbulent dynamics mode.
+However, the benefit of the covariance term in the expected Riemannian metric
+is demonstrated in the results with $\lambda=0.5$ in cref:fig-riemannian-energy-low-traj-opt-7 and with
+$\lambda=1.0$ in cref:fig-riemannian-energy-traj-opt-7.
+As mentioned earlier, this resulted in the trajectory having more clearance from the turbulent dynamics mode,
+because the covariance term pushed the trajectory to the left of the region of high variance in the gating
+network.
+This is confirmed in cref:tab-results-sim-envs where trajectory found with $\lambda=1.0$ accumulated
+less gating function variance than the trajectory found with $\lambda=1.0$.
+
+These results indicate that the covariance term -- in the expected Riemannain metric -- plays an important role
+at keeping trajectories in the desired dynamics mode.
+They also indicate that the interplay between the contour following term and the covariance term,
+alter the optimisation landscape in a complex manner.
+Enough so, that it is not immediately clear how the value of $\lambda$ will alter it,
+in turn, making it hard to set $\lambda$.
+Especially in this scenario where the inoperable dynamics mode intersects a region of high epistemic
+uncertainty.
+In this case, the effect of adjusting the tunable $\lambda$ parameter is complex enough that it may
+be best to just leave it at $\lambda=1.0$.
+It is worth noting here that the experiments in Environment 2 do demonstrate a
+scenario where it is beneficial to adjust the $\lambda$ parameter.
+
+*Overall* Visual inspection combined with the results in cref:tab-results-sim-envs,
+indicate that the indirect control method with $\lambda=1.0$ was the highest performing experiment in Environment 1.
+
+# In cref:fig-riemannian-energy-low-traj-opt-7 the optimised trajectory only just remained in the desired mode.
+# That is, the trajectory passes very close to the boundary between the dynamics modes.
+# This is because with $\lambda=0.5$ the method is starting to ignore the uncertainty in the gating network.
+# In contrast, the optimised trajectory with $\lambda=1.0$ follows the contours of the gating function's
+# posterior variance (cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 right).
+# As a result, the trajectory is remaining in the desired mode by following the contours of the
+# desired mode's gating function
+# (cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 left)
+# and avoiding regions of the gating network which it cannot predict confidently
+# (cref:fig-riemannian-energy-low-traj-opt-over-svgp-7 right).
+
+
+# This is because it obtained the highest probability of remaining in the desired mode over the trajectory.
+# That is, it exhibited the best mode remaining behaviour under the \acrshort{mosvgpe} dynamics model.
+# Further to this, it obtained the lowest accumulation of gating function variance over the trajectory,
+# indicating that it introduced the least amount of epistemic uncertainty from the gating network.
+# This is an interesting result as I originally hypothesised that the gating function variance would
+# decrease with higher $\lambda$ values.
+# This is most likely due to the trajectory optimiser finding a local optima when $\lambda=20.0$.
+# In contrast, the loss landscape non
 
 *** Simulated Quadcopter Experiments label:sec-traj-opt-results-energy :noexport:
 **** maths :ignore:
@@ -11883,54 +12389,7 @@ marginalisation of the gating functions in cref:eq-mode-chance-constraint-integr
 This section compares the two control methods presented in this chapter and suggests future
 work to address their limitations.
 cref:tab-geometry-control-comparison offers a succinct comparison of the two approaches.
-The main drawback of the indirect control method is that it does not enforce the dynamics constraints.
-
-*Dynamics constraints*
-The direct control method ensures trajectories satisfy the learned dynamics.
-It achieves this by enforcing the distribution over state trajectories,
-to match the distribution from cascading single-step predictions through the desired mode's dynamics \acrshort{gp}.
-This can be seen as a method for approximating the integration of the controlled dynamics with respect to time, whilst
-considering the epistemic uncertainty associated with learning from observations.
-The chance constraints ensure the controlled system is $\delta-\text{mode remaining}$, which
-makes the approximate dynamics integration valid.
-In contrast, the indirect control method does not find trajectories that are guaranteed to satisfy the dynamics
-constraints.
-This is a limiting factor that makes the direct control method more appealing.
-However, future work could attempt to enforce the dynamics constraints in the indirect method.
-
-# Future work could consider extending the indirect control method to enforce the dynamics constraints.
-# Further to this,
-*Uncertainty aware*
-For the direct control method, the combination of approximate dynamics integration and chance constraints
-leads to closed-form expressions for the expected cost.
-This expression considers the epistemic uncertainty associated with the learned dynamics model,
-both in the desired dynamics mode and in the gating network.
-In contrast, the indirect control method ignores the uncertainty accumulated by cascading single-step predictions through
-the learned dynamics model.
-# It models the state at each time step to be deterministic and approximates the full geodesic \acrshort{sde}
-# to be deterministic.
-# As as result, the cost function will not keep the state trajectory in regions of low uncertainty.
-
-*Uncertainty propagation*
-This work only considered the moment matching approximation for propagating uncertainty through the probabilistic
-dynamics model.
-cite:chuaDeep2018 test different uncertainty propagation schemes in Bayesian Neural Networks.
-It would be interesting to test the impact of deploying a sampling based approach here.
-In particular, calculating the expected Riemannian metric would require less assumptions.
-
-# Moment matching cannot represent multimodal distributions as it forces a unimodal distribution at each time step.
-# cite:mcallisterImproving2016 hypothesise that this effect may be caused due to smoothing of the loss surface and
-# implicitly penalising multimodal distributions, which often occur in uncontrolled systems.
-
-# Note that the uncertainty in the gating network may be low in these regions.
-# This is undesirable behaviour in a risk-averse setting.
-# It approximates the geodesic \acrshort{sde} by replacing the random variable associated with the Riemannain metric
-# tensor with its expected value.
-# In combination with the deterministic state approximation, this reduces the geodesic \acrshort{sde} to an \acrshort{ode}.
-
-# As as result, trajectories may pass through regions of the desired dynamics mode which are uncertain.
-# Note that the uncertainty in the gating network may be low in these regions.
-# This is undesirable behaviour in a risk-averse setting.
+# The main drawback of the indirect control method is that it does not enforce the dynamics constraints.
 
 #+begin_table
 #+LATEX: \caption{Comparison of the Indirect Control via Latent Geodesics method from \cref{sec-traj-opt-collocation} and the Direct Control via Riemannian Energy method from \cref{sec-traj-opt-energy}.}
@@ -11950,10 +12409,69 @@ In particular, calculating the expected Riemannian metric would require less ass
 #+LATEX: }
 #+end_table
 
+*Dynamics constraints*
+The direct control method ensures trajectories satisfy the learned dynamics.
+It achieves this by enforcing the distribution over state trajectories,
+to match the distribution from cascading single-step predictions through the desired mode's dynamics \acrshort{gp}.
+This can be seen as a method for approximating the integration of the controlled dynamics with respect to time, whilst
+considering the epistemic uncertainty associated with learning from observations.
+The chance constraints ensure the controlled system is $\delta-\text{mode remaining}$, which
+makes the approximate dynamics integration valid.
+In contrast, the indirect control method does not find trajectories that are guaranteed to satisfy the dynamics
+constraints.
+This is a limiting factor that makes the direct control method more appealing.
+Therefore, methods for incorporating the dynamics constraints into the indirect method are an interesting
+direction for future work..
+# However, future work could attempt to enforce the dynamics constraints in the indirect method.
+
+# Future work could consider extending the indirect control method to enforce the dynamics constraints.
+# Further to this,
+# *Uncertainty aware*
+*Decision-making under uncertainty*
+The combination of the approximate dynamics integration and the chance constraints
+in the direct control method, leads to closed-form expressions for the expected cost.
+This expression considers the epistemic uncertainty associated with the learned dynamics model,
+both in the desired dynamics mode and in the gating network.
+In contrast, the indirect control method ignores the uncertainty accumulated by cascading single-step predictions through
+the learned dynamics model.
+As as result, it considers the uncertainty associated with the gating network and ignores any uncertainty
+in the desired dynamics mode.
+# It models the state at each time step to be deterministic and approximates the full geodesic \acrshort{sde}
+# to be deterministic.
+# As as result, the cost function will not keep the state trajectory in regions of low uncertainty.
+
+*Uncertainty propagation*
+This work only considered the moment matching approximation for propagating uncertainty through the probabilistic
+dynamics model.
+cite:chuaDeep2018 test different uncertainty propagation schemes in Bayesian Neural Networks.
+It would be interesting to test the impact of deploying a sampling based approach here.
+For example, to see the impact of calculating the expected Riemannian metric without approximations.
+# In particular, calculating the expected Riemannian metric would require less assumptions.
+# In particular, calculating the expected Riemannian metric would require less assumptions.
+
+# Moment matching cannot represent multimodal distributions as it forces a unimodal distribution at each time step.
+# cite:mcallisterImproving2016 hypothesise that this effect may be caused due to smoothing of the loss surface and
+# implicitly penalising multimodal distributions, which often occur in uncontrolled systems.
+
+# Note that the uncertainty in the gating network may be low in these regions.
+# This is undesirable behaviour in a risk-averse setting.
+# It approximates the geodesic \acrshort{sde} by replacing the random variable associated with the Riemannain metric
+# tensor with its expected value.
+# In combination with the deterministic state approximation, this reduces the geodesic \acrshort{sde} to an \acrshort{ode}.
+
+# As as result, trajectories may pass through regions of the desired dynamics mode which are uncertain.
+# Note that the uncertainty in the gating network may be low in these regions.
+# This is undesirable behaviour in a risk-averse setting.
+
+
 *Decouple goals*
-Both approaches provide a mechanism to set the relevance of each goal, i.e. to decouple them.
+Both approaches provide a mechanism to set the relevance of the covariance term, i.e. decouple the goals.
 This is achieved by augmenting the expected Riemannian metric tensor with the user-tunable weight
 parameter $\lambda$, that can be adjusted to determine the relevance of the covariance term.
+The experiments show that although adjusting $\lambda$ can be beneficial in some scenarios, it is not necessarily straight
+forward to set.
+In particular, when regions of high epistemic uncertainty intersect with mode boundaries.
+Therefore, care should be taken when setting $\lambda$.
 
 *Multiple desired modes*
 Although not tested, the approaches are theoretically sound and should be applicable in systems with more
@@ -11963,7 +12481,7 @@ For example, in the quadcopter experiment, the transition dynamics model was int
 with two dynamics modes, even though there could be more in reality.
 The desired dynamics mode was engineered to have a noise variance that was deemed operable.
 The other dynamics mode was then used to explain away all of the inoperable modes.
-In most scenarios a similar approach could be followed.
+In most scenarios, a similar approach could be followed.
 Nevertheless, it is interesting to consider systems with more than two modes.
 This is because the main goal is to avoid entering the inoperable dynamics mode, not just remain in a desired
 dynamics mode.
@@ -11976,7 +12494,7 @@ However, the direct control approach does provide chance constraints that can be
 trajectory is $\delta-\text{mode remaining}$.
 Recent work by
 cite:berkenkampSafe2019,berkenkampSafe2017,kollerLearningBased2018
-considers the use of invariant sets to synthesise closed-loop controllers/policies that are guaranteed to
+consider the use of invariant sets to synthesise closed-loop controllers/policies, that are guaranteed to
 remain in a given set of states.
 Their work considers safe sets defined by Lyapanov stability but it would be interesting to extend their
 concepts to synthesise $\delta-\text{mode remaining}$ controllers
@@ -11988,15 +12506,15 @@ with theoretical guarantees of the form,
 \end{align}
 #+END_EXPORT
 
-*Continuous time trajectories*
+*Continuous-time trajectories*
 The direct control method required control regularisation to prevent state transitions that
 "jump" over the undesired mode.
-That is, the discrete time steps of the trajectory appear to satisfy the constraints and minimise the cost,
-but the actual continuous time trajectory passes through the undesired mode.
-This is a general problem that arises with discrete time solvers.
+Although the discrete time steps of the trajectory appear to satisfy the constraints and minimise the cost,
+in reality, the continuous-time trajectory passes through the undesired mode.
+This is a general problem that arises when using discrete-time solvers.
 In contrast, the indirect control method uses a collocation solver where the cost can be evaluated at arbitrary
-points along the continuous time trajectory.
-An interesting direction for future work is to extend the direct control method to find trajectories in continuous time.
+points along the continuous-time trajectory.
+An interesting direction for future work is to extend the direct control method to find trajectories in continuous-time.
 # This is because they can be used to enforce the dynamics and interpolate the cost with higher resolution.
 # Stochastic collocation methods may offer
 
@@ -12011,8 +12529,10 @@ An interesting direction for future work is to extend the direct control method 
 *State-control dependent modes*
 This chapter assumed that the dynamics modes were separated according to their state domains $\mode{\stateDomain}$.
 It would be interesting to extend this work to systems where the modes are governed by both state and control.
-For example, flying at high speed through a wind field may belong to the operable dynamics mode with low drift and
-process noise.
+For example, flying at high speed through a wind field may be deemed an operable dynamics mode, whilst
+flying at low speed along the same state trajectory may not.
+# For example, flying at high speed through a wind field may belong to the operable dynamics mode with low drift and
+# process noise.
 
 *Real-time control*
 Whilst real-time control requires efficient inference algorithms,
@@ -12172,9 +12692,6 @@ cite:jax2018github[fn:2:Code accompanying this Chapter can be found @ [[https://
 # infers the optimal controls after conditioning on the goals.
 # The mode remaining behaviour is encoded by further conditioning on the mode indicator variable.
 
-
-
-
 ** Problem Statement
 This chapter shares the problem statement in cref:sec-problem-statement.
 It is briefly recapped here for convenience but please refer to cref:sec-problem-statement for more details.
@@ -12191,7 +12708,7 @@ This chapter considers nonlinear, stochastic, multimodal dynamical systems,
 \end{subequations}
 #+END_EXPORT
 Given a learned representation of the dynamics and a desired dynamics mode $\desiredMode$,
-the goals of the trajectory optimisation in this chapter can be summarised as follows,
+the goals of the trajectory optimisation are to,
 - Goal 1 :: Navigate to a target state $\targetState$,
 - Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$,
   + Goal 2.1 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/, in the desired dynamics mode and in the gating network.
@@ -12598,7 +13115,7 @@ is an affine transformation of the cost,
 #+END_EXPORT
 which preserves convexity.
 When the inverse temperature parameter is set to 1, (i.e. $\temperature=1$) the Maximum Likelihood (ML)
-trajectory coincides with classical optimal control cite:toussaintRobot2009.
+trajectory coincides with classical optimal control citep:toussaintRobot2009.
 
 **** Quadratic Cost Functions :noexport:
 This work primarily focuses on quadratic costs, $\costFunc$, which are ubiquitous in control.
@@ -14263,18 +14780,18 @@ control constraints to ensure controls stay in region that have been observed
 Although the initial trajectory may transition between multiple dynamics modes, the lower bound favours
 trajectories that remain in the desired dynamics mode.
 
-Whilst real-time control requires efficient inference algorithms,
-"offline" trajectory optimisation can trade in computational cost for greater accuracy.
-This work is primarily interested in finding trajectories that attempt to remain in a
-desired dynamics mode.
-For the sake of simplicity, it considers the "offline" trajectory optimisation setting.
-The increased computational time may hinder
-its suitability to obtain a closed-loop controller via MPC citep:eduardof.Model2007 .
-However, it can be used "offline" to generate reference trajectories for a tracking controller,
-or for guided policy search in a model-based RL setting citep:levineGuided2013.
-Alternatively, future work could investigate approximate inference methods for efficient state estimation
-to aid with real-time control,
-e.g. based on linear/quadratic approximations of the dynamics (iLQG/DDP).
+# Whilst real-time control requires efficient inference algorithms,
+# "offline" trajectory optimisation can trade in computational cost for greater accuracy.
+# This work is primarily interested in finding trajectories that attempt to remain in a
+# desired dynamics mode.
+# For the sake of simplicity, it considers the "offline" trajectory optimisation setting.
+# The increased computational time may hinder
+# its suitability to obtain a closed-loop controller via MPC citep:eduardof.Model2007 .
+# However, it can be used "offline" to generate reference trajectories for a tracking controller,
+# or for guided policy search in a model-based RL setting citep:levineGuided2013.
+# Alternatively, future work could investigate approximate inference methods for efficient state estimation
+# to aid with real-time control,
+# e.g. based on linear/quadratic approximations of the dynamics (iLQG/DDP).
 
 ** Comparison and Discussion
 
