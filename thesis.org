@@ -739,17 +739,17 @@ It is motivated by controlling robotic systems in uncertain environments,
 where both the underlying dynamics modes,
 and how the dynamics switches between them, are \textit{not fully known a priori}.
 
-%For example, controlling a quadrotor subject to inoperable dynamics modes that are
+%For example, controlling a quadcopter subject to inoperable dynamics modes that are
 %induced via spatially varying turbulence
-%i.e. fly a quadrotor to a target location, whilst remaining in the operable (non turbulent) dynamics mode.
+%i.e. fly a quadcopter to a target location, whilst remaining in the operable (non turbulent) dynamics mode.
 
 %This dissertation is concerned with \textbf{learning} and \textbf{control}
 %in unknown, (or partially unknown), multimodal dynamical systems.
-%It is motivated by controlling a quadrotor with inoperable dynamics modes that are
+%It is motivated by controlling a quadcopter with inoperable dynamics modes that are
 %induced via spatially varying turbulence.
 %The operable mode corresponds to regions of the state space subject to \textbf{low turbulence}, and the
 %inoperable mode(s) corresponds to regions subject to \textbf{high turbulence}.
-%The goal is to fly the quadrotor from an initial state in the desired (operable) dynamics mode,
+%The goal is to fly the quadcopter from an initial state in the desired (operable) dynamics mode,
 %to a target state, whilst remaining in the desired dynamics mode.
 
 This dissertation first considers learning representations of multimodal dynamical systems, assuming
@@ -778,14 +778,14 @@ stochastic variational inference.
 %goals into an objective function.
 %A second, alternative approach, formulates the control problem as probabilistic inference
 %in a graphical model by conditioning on a mode assignment variable.
-%Both methods are evaluated via experiments on a simulated quadrotor, as well as a data set of a
-%DJI Tello quadrotor flying in the Bristol Robotics Laboratory.
+%Both methods are evaluated via experiments on a simulated quadcopter, as well as a data set of a
+%DJI Tello quadcopter flying in the Bristol Robotics Laboratory.
 
 Secondly, this dissertation considers driving a dynamical system from an initial state (in a desired dynamics mode),
 to a target state, whilst remaining in the desired dynamics mode.
-For example, consider controlling a quadrotor in an environment subject to two dynamics modes: 1) a turbulent
+For example, consider controlling a quadcopter in an environment subject to two dynamics modes: 1) a turbulent
 dynamics mode in front of a fan, and 2) a non turbulent dynamics mode everywhere else.
-The goal in this scenario is to fly the quadrotor to a target location,
+The goal in this scenario is to fly the quadcopter to a target location,
 whilst remaining in the operable (non turbulent) dynamics mode.
 
 In a \textbf{risk-averse setting}, it is desirable to avoid entering regions of a learned dynamics model with
@@ -798,8 +798,8 @@ exploits concepts of Riemannian geometry (extended to probabilistic geometries) 
 into a geometry inspired objective function.
 The second approach formulates the control problem as probabilistic inference
 in a graphical model, and encodes the goals by conditioning on a mode assignment variable.
-Both methods are evaluated via experiments on a simulated quadrotor, as well as a data set collected onboard
-a DJI Tello quadrotor.
+Both methods are evaluated via experiments on a simulated quadcopter, as well as a data set collected onboard
+a DJI Tello quadcopter.
 %A second, alternative approach is also presented.
 %Instead of exploiting the geometry of the learned model, it formulates the control problem as probabilistic inference
 %in a graphical model by conditioning on a mode assignment variable.
@@ -1124,10 +1124,10 @@ Given these motivations, this dissertation is interested in control techniques f
 driving dynamical systems from an initial state,
 to a target state, whilst avoiding specific dynamics modes.
 
-# In particular, it is primarily interested in controlling a quadrotor in an environment
+# In particular, it is primarily interested in controlling a quadcopter in an environment
 # subject to two dynamics modes: 1) a turbulent
 # dynamics mode in front of a fan, and 2) a non turbulent dynamics mode everywhere else.
-# The objective in this environment is to control the quadrotor, whilst navigating to a target location,
+# The objective in this environment is to control the quadcopter, whilst navigating to a target location,
 # and remaining in the operable (non turbulent) dynamics mode.
 
 Model-based control comprises a powerful set of techniques for finding controls of /constrained/ dynamical
@@ -1937,7 +1937,7 @@ is an i.i.d process noise term with $\E[\epsilon(t)] = 0$.
 The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
 For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
 for in the process noise term.
-Throughout this thesis it is assumed that the state $\mathbf{x}$ is observed directly and is not subject to
+Throughout this dissertation it is assumed that the state $\mathbf{x}$ is observed directly and is not subject to
 observation noise.
 This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
 in the reinforcement learning literature.
@@ -3968,10 +3968,10 @@ This work formulates a gating network aimed at,
 # The simplest case being reordering the experts.
 # This work derives a variational approximation that can,
 # As highlighted previously, the gating network can be formulated to hard assign observations to experts with the
-# goal of improving the computational problems associated with inference and prediction in MoGPE models.
+# goal of improving the computational problems associated with inference and prediction in MoGPE methods.
 # This work derives a variational approximation that can,
 # This work chooses to sacrifice these computational benefits in favour of constructing a gating network that can,
-1) Improving *identifiability* in MoGPE models,
+1) Improving *identifiability* in MoGPE methods,
    - Selecting informative mean and covariance functions for each gating function GP prior can ensure that each expert corresponds to the underlying dynamics mode that it was intended to model. Learning representations that are more true to the underlying system will also enhance the models ability to generalise away from training observations.
 2) Inferring *informative latent structure* that can be exploited for *control*,
    - The goal of cref:chap-traj-opt-geometry is to construct control techniques that attempt to find trajectories that remain in a single dynamics mode and avoid regions of the dynamics that cannot be predicted confidently, e.g. because they have not been observed.
@@ -8681,7 +8681,7 @@ output dimension.
 The predictive mean is fairly constant over the domain, except for the region in front of the fan, where it is
 higher.
 This result makes sense as the data set was assumed to be collected with constant controls.
-The region with high predictive mean in front of the fan, is modelling the drift arising from the fan blowing the quadrotor in the negative $x$ direction.
+The region with high predictive mean in front of the fan, is modelling the drift arising from the fan blowing the quadcopter in the negative $x$ direction.
 The right hand plots of Figure ref:fig-y-mm-quadcopter-subset
 show the predictive variance. It is high where there are no training observations,
 indicating that the method has successfully represented the model's /epistemic uncertainty/.
@@ -8712,7 +8712,7 @@ system switches between dynamics modes over the input space.
 These results show that the GP-based gating network is capable of turning a single expert
 on in multiple regions of the input space.
 This is a desirable behaviour as it has enabled only two underlying dynamics modes to be identified.
-In contrast, other MoGPE models may have assigned an extra expert to one of the regions modelled by Expert 1.
+In contrast, other MoGPE methods may have assigned an extra expert to one of the regions modelled by Expert 1.
 In particular, the regions at $y>0$ and $y<-1$ may have been assigned to separate experts.
 
 *Latent spaces for control*
@@ -8768,7 +8768,7 @@ The top right plot in Figure ref:fig-experts-f-quadcopter-subset shows the poste
 the $x$ dimension of Expert 1.
 The posterior variance is high in front of the fan because the gating network has assigned responsibility to the
 other expert in this region.
-It is also high in the region where the model has had no training observations, as should be expected.
+It is also high in the region where the model has had no training observations, as would be expected.
 However, the posterior variance associated with the $y$ dimension of Expert 1, is not high in this region.
 This is due to the lengthscale of the second output dimension allowing Expert 1 to confidently extrapolate.
 \todo{is this because of the lengthscale or is it due to gating network}
@@ -8863,26 +8863,26 @@ the inducing points.
 \renewcommand{\Thrust}{\ensuremath{\mathbf{f_{x}}}}
 \renewcommand{\torque}{\ensuremath{\tau_z}}
 
-\newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
+\newcommand{\quadcopterDynamics}{\ensuremath{f_{\text{quad}}}}
 #+END_EXPORT
-The quadrotor frames and Euler angles (roll $\roll$, pitch $\pitch$ and yaw $\yaw$) are shown
+The quadcopter frames and Euler angles (roll $\roll$, pitch $\pitch$ and yaw $\yaw$) are shown
 in Figure ref:fig-quadcopter-frames.
 The subscripts $\world$, $\body$ and $\intermediate$ are used to denote the world
 $\worldFrame$, body $\bodyFrame$ and intermediate $\intermediateFrame$ (after yaw angle rotation) frames respectively.
-The the 3D nonlinear quadrotor dynamics are described with the quadcopter model from cite:wangSafe2018,zhouVector2014.
+The the 3D nonlinear quadcopter dynamics are described with the quadcopter model from cite:wangSafe2018,zhouVector2014.
 
-The 2D nonlinear quadrotor dynamics are based on the
+The 2D nonlinear quadcopter dynamics are based on the
 state vector is given by $\state = [x, y, \velocityx, \velocityy, \yaw]$
 where $\positions = [x, y]$ is the Euclidean coordinates relative to the world frame $\worldFrame$,
 $\Velocity = [\velocityx, \velocityy]$ is the velocity in the world frame $\worldFrame$ and
 $\yaw$ is the yaw angle, i.e. the angle around the $z$ axis.
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
-\dot{\state} &= \quadrotorDynamics(\state, \control)
+\begin{align} \label{eq-quadcopter-dynamics}
+\dot{\state} &= \quadcopterDynamics(\state, \control)
 \end{align}
 #+END_EXPORT
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
+\begin{align} \label{eq-quadcopter-dynamics}
 \rotationMatrix_{\body,\world} =
 \begin{bmatrix}
 \cos{\yaw} & -\sin(\yaw) \\
@@ -8892,19 +8892,19 @@ $\yaw$ is the yaw angle, i.e. the angle around the $z$ axis.
 #+END_EXPORT
 where,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
+\begin{align} \label{eq-quadcopter-dynamics}
 \dot{\state}_{1:2} &= \dot{\positions} = \state_{3:4} \\
 \dot{\state}_{3:4} &= \dot{\Velocity} = \frac{1}{m} \rotationMatrix \Thrust \\
 \dot{\state}_{5} &= \dot{\yaw} = \frac{1}{\inertiaZ} \torque
 \end{align}
 #+END_EXPORT
-where $\Thrust = [\thrust, 0]^T$ is the total thrust force in the quadrotors from the rotors and $\torque$ is the torque on the quadrotor
+where $\Thrust = [\thrust, 0]^T$ is the total thrust force in the quadcopters from the rotors and $\torque$ is the torque on the quadcopter
 around the $z$ axis of the world frame $\worldFrame$.
-The thrust and torque are realistic controls for a 2D quadrotor system and gives the
+The thrust and torque are realistic controls for a 2D quadcopter system and gives the
 control vector \control = [\thrust, \torque].
 
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
+\begin{align} \label{eq-quadcopter-dynamics}
 \dot{\Velocity} &= g \zw + \frac{1}{m} \thrust \rotationMatrix \zw \\
 \dot{\rotationMatrix} &= \rotationMatrix \angularVelocityMatrix \\
 \dot{\angularVelocity} &= \inertiaMatrix^{-1} \torque - \inertiaMatrix^{-1} \angularVelocityMatrix \inertiaMatrix \angularVelocity \\
@@ -8912,10 +8912,10 @@ control vector \control = [\thrust, \torque].
 \end{align}
 #+END_EXPORT
 where $g=9.81ms^{-2}$ is the acceleration due to gravity, $m$ is the mass, $\zw=[0,0,1]^T$,
-$\positions=[x, y, z]^T$ is the position of the quadrotor in the world frame $\worldFrame$,
+$\positions=[x, y, z]^T$ is the position of the quadcopter in the world frame $\worldFrame$,
 $\Velocity=[\velocity_x, \velocity_y, \velocity_z]^T$ is the
-and velocity of the quadrotor in the world frame $\worldFrame$ respectively.
-The angular velocity of the quadrotor in the body frame $\bodyFrame$ is denoted $\angularVelocity=[p, q ,r]^T$
+and velocity of the quadcopter in the world frame $\worldFrame$ respectively.
+The angular velocity of the quadcopter in the body frame $\bodyFrame$ is denoted $\angularVelocity=[p, q ,r]^T$
 and in tensor form $\angularVelocityMatrix=[[0,-p,q];[r,0,-p];[-q,p,0]]$
 
 $\state=[x, y, z, \velocity_x, \velocity_y, \velocity_z, \roll, \pitch, \yaw, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]$
@@ -8956,7 +8956,7 @@ $\state=[\ddot{x}, \ddot{y}, \ddot{z}, \dot{\roll}, \dot{\pitch}, \dot{\yaw}]^T$
 \renewcommand{\Thrust}{\ensuremath{\mathbf{f_{x}}}}
 \renewcommand{\torque}{\ensuremath{\tau_z}}
 
-\newcommand{\quadrotorDynamics}{\ensuremath{f_{\text{quad}}}}
+\newcommand{\quadcopterDynamics}{\ensuremath{f_{\text{quad}}}}
 #+END_EXPORT
 cite:williamsAdvancing
 cite:watsonStochastic2020
@@ -8999,7 +8999,7 @@ It can also rotate itself by applying a torque $\torque$ around its $z$ axis.
 The resulting control vector for the 2D point mass is given by $\control = [\thrust, \torque]$.
 The nonlinear dynamics of the system are given by,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
+\begin{align} \label{eq-quadcopter-dynamics}
 \dot{\state} &=
 \begin{bmatrix}
     \dot{\state}_{1} \\
@@ -9021,7 +9021,7 @@ The nonlinear dynamics of the system are given by,
 where $m$ is the mass and $\inertiaZ$ is the moment of inertia around the vertical $z$ axis.
 Defining the rotation matrix from the body frame $\bodyFrame$ to the world frame $\worldFrame$ as,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
+\begin{align} \label{eq-quadcopter-dynamics}
 \rotationMatrix_{\body,\world} =
 \begin{bmatrix}
 \cos{\yaw} & -\sin(\yaw) \\
@@ -9031,7 +9031,7 @@ Defining the rotation matrix from the body frame $\bodyFrame$ to the world frame
 #+END_EXPORT
 the dynamics can be calculated as,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-quadrotor-dynamics}
+\begin{align} \label{eq-quadcopter-dynamics}
 \dot{\state}_{1:2} &= \dot{\positions} = \state_{3:4} \\
 \dot{\state}_{3:4} &= \dot{\Velocity} = \frac{1}{m} \rotationMatrix \Thrust \\
 \dot{\state}_{5} &= \dot{\yaw} = \frac{1}{\inertiaZ} \torque
@@ -9042,7 +9042,7 @@ The unknown dynamics can be modelled by placing GP priors on the accelerations (
 the angular (yaw) velocity $\dot{\yaw}$,
 #+BEGIN_EXPORT latex
 \renewcommand{\input}{\ensuremath{\hat{\state}}}
-\begin{align} \label{eq-quadrotor-dynamics}
+\begin{align} \label{eq-quadcopter-dynamics}
 \dot{\state} &=
 \begin{bmatrix}
     \dot{\state}_{1} \\
@@ -9067,7 +9067,7 @@ the angular (yaw) velocity $\dot{\yaw}$,
 ** Remarks
 
 *Implicit data assignment*
-It is worth noting that in contrast to other MoGPE models, this model does not directly assign observations to experts.
+It is worth noting that in contrast to other MoGPE methods, this model does not directly assign observations to experts.
 However, after augmenting each expert with separate inducing points,
 the model has the flexibility to loosely /partition/ the data set.
 Just as sparse GP methods can be viewed as methods that parameterise a full nonparametric GP,
@@ -9894,7 +9894,8 @@ latent spaces that can be used to encode mode remaining behaviour.
 cref:fig-traj-opt-gating-network-gp shows the GP posterior associated with the desired mode's gating function
 after training
 \acrshort{mosvgpe} on the historical data set of state transitions from the quadcopter experiment in cref:illustrative_example.
-Goals 1 and 2 can be encoded as finding length minimising trajectories on the desired mode's gating function.
+The work in this chapter is based on the observation that
+goals 1 and 2 can be encoded as finding length minimising trajectories on the desired mode's gating function.
 Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
 manifold given by the desired mode's gating function,
 increases when it passes over the contours; analogous to climbing a hill.
@@ -9922,7 +9923,7 @@ In this dissertation if suffices to consider manifolds $\manifold$ defined by a 
 where $\manifoldDomain$ and $\manifoldCodomain$ are open subsets of Euclidean spaces.
 The manifold $\manifold$ is given by $\manifold = \manifoldFunction(\manifoldDomain)$ and is said to
 be immersed in the ambient space $\manifoldCodomain$.
-The intrinsic dimensionality of the surface is denoted $\manifoldDomainDim = \text{dim}(\manifoldDomain)$
+The dimensionality of the surface is denoted $\manifoldDomainDim = \text{dim}(\manifoldDomain)$
 whilst $\manifoldCodomainDim = \text{dim}(\manifoldCodomain)$ denotes the dimensionality of the ambient space.
 Riemannian manifolds can intuitively be seen as $\manifoldCodomainDim\text{-dimensional}$
 curved surfaces with a smoothly
@@ -10010,7 +10011,7 @@ where $\metricTensor_{\mathbf{x}_t} = \jacobian^T \jacobian}$
 is a symmetric positive definite matrix
 (akin to a local Mahalanobis distance measure), known as the natural Riemannian metric.
 The length of a trajectory on a manifold $\manifold$, endowed with the metric $\metricTensor$,
-can then be calculated as,
+can then be calculated with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-manifold-length-G}
 \text{Length}(\manifoldFunction(\trajectory))
@@ -10018,13 +10019,11 @@ can then be calculated as,
 \end{align}
 #+END_EXPORT
 
-*** Probabilistic Geometries label:sec-prob-geo
-**** intro :ignore:
+cref:fig-traj-opt-gating-network-gp shows the GP posterior over the desired mode's gating function,
+$\desiredGatingFunction : \stateDomain \times \controlDomain \rightarrow \gatingCodomain$.
 Consider finding
 length minimising trajectories on the manifold $\desiredManifold=\desiredGatingFunction(\gatingDomain)$
-associated with the desired mode's gating function,
-$\desiredGatingFunction : \stateDomain \times \controlDomain \rightarrow \gatingCodomain$,
-in cref:fig-traj-opt-gating-network-gp, with,
+associated with the desired mode's gating function, where the metric is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-desired-metric-tensor}
 \desiredMetricTensor &= \desiredJacobian^T \desiredJacobian, \\
@@ -10065,6 +10064,7 @@ of length minimising trajectories to probabilistic manifolds.
 # For notational conciseness, only a single gating function
 # $\manifoldFuncion$ is used to denote the desired mode's gating function in this chapter.
 
+*** Probabilistic Geometries label:sec-prob-geo
 **** Extension to Probabilistic Geometries :ignore:
 \newline
 
@@ -10240,9 +10240,9 @@ The distribution over the Jacobian is then obtained via a Gaussian convolution,
 *** intro :ignore:
 This section presents an indirect trajectory optimisation algorithm that exploits the fact that
 length minimising trajectories on the manifold endowed with the expected metric from cref:eq-expected-metric,
-encodes both of our goals.
+encodes all of the goals.
 Shortest lengths on a manifold are known as geodesics, so we refer to shortest trajectories as geodesic trajectories.
-This algorithm further exploits the fact that geodesic trajectories are solutions to a 2^{nd} order \acrshort{ode} and projects
+This algorithm exploits the fact that geodesic trajectories are solutions to a 2^{nd} order \acrshort{ode} and projects
 the optimisation onto this \acrshort{ode}.
 # #+BEGIN_EXPORT latex
 # \begin{remark}
@@ -10436,8 +10436,8 @@ Dynamics constraints not guaranteed to be satisfied.
 Secondly, it does not consider the full distribution over state-control trajectories.
 Without the inclusion of the full probabilistic dynamics model, it is impossible
 to consider the full distribution over state-control trajectories.
-Although propagating uncertainty through a single GP dynamics mode is straight forward,
-how to handle the collocation constraints is not immediately clear.
+Although propagating uncertainty through a single dynamics GP is straightforward,
+handling the collocation constraints is not.
 This is because the geodesic \acrshort{ode} will become a Stochastic Differential Equation (SDE).
 #+BEGIN_EXPORT latex
 \begin{remark}
@@ -10527,7 +10527,7 @@ the state trajectory is enforced to match the integral of the dynamics with resp
 
 Similar to the previous approach, this method builds on the observation that
 length minimising trajectories on the Riemannian manifold $\manifold$,
-associated with the desired mode's gating function $\manifoldFunction$, encodes both of the goals.
+associated with the desired mode's gating function $\manifoldFunction$, encodes the goals.
 Further to this, this method exploits the fact that length minimising trajectories on a Riemannian manifold $\manifold$,
 are also energy minimising trajectories citep:carmoRiemannian1992.
 As such, mode remaining behaviour can be encoded through the minimisation of
@@ -10767,7 +10767,7 @@ energy,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-trajectory-riemannian-energy}
 \E_{\stateTraj, \jacTraj} \left[ \text{Energy}(\stateTraj) \right]
-= \sum_{\timeInd=0}^\TimeInd
+= \sum_{\timeInd=1}^\TimeInd
 \E_{\stateDist}\left[ \stateDiff_\timeInd^T
 \E_{\Jac_{\state_{\timeInd}} \mid \state_{\timeInd}}\left[ \Jac_{\state_\timeInd} \Jac_{\state_\timeInd}^T \right]
  \stateDiff_\timeInd \right],
@@ -10826,13 +10826,16 @@ can be calculated in closed-form with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expected-quadratic-cost-with-energy}
 \approxExpectedCost =
-&\underbrace{\text{tr}(\terminalStateCostMatrix \terminalStateCov) +
-(\terminalStateMean - \targetState)^T \terminalStateCostMatrix (\terminalStateMean - \targetState)}_{\text{expected terminal cost}} \\
+&\underbrace{
+(\terminalStateMean - \targetState)^T \terminalStateCostMatrix (\terminalStateMean - \targetState)
++\text{tr}(\terminalStateCostMatrix \terminalStateCov)
+}_{\text{expected terminal cost}} \\
 &+ \underbrace{\sum_{\timeInd=1}^{\TimeInd} \stateDiffMean^T (\muJac \muJac^T + \covJac) \stateDiffMean
 + \text{tr}\left( \left(\muJac \muJac^T + \covJac \right)
 \stateDiffCov \right)}_{\text{expected Riemannian energy}} \\
-&+ \underbrace{\sum_{\timeInd=0}^{\TimeInd-1} \text{tr}(\controlCostMatrix \controlCov)
-+ \controlMean^T \controlCostMatrix \controlMean}_{\text{expected control cost}}.
+&+ \underbrace{\sum_{\timeInd=0}^{\TimeInd-1}
+ \controlMean^T \controlCostMatrix \controlMean +
+\text{tr}(\controlCostMatrix \controlCov) }_{\text{expected control cost}}.
 \end{align}
 #+END_EXPORT
 This work then approximately solves the problem in cref:eq-mode-soc-problem-geometry by solving,
@@ -10915,7 +10918,7 @@ The trajectory optimisation algorithms presented in this chapter are evaluated
 on the illustrative example from cref:illustrative_example, i.e.
 flying a velocity controlled quadcopter from an initial state $\state_0$, to a target
 state $\state_{f}$, whilst avoiding the turbulent dynamics mode.
-See cref:fig-problem-statement for a schematic of the environment and details of the problem.
+See cref:fig-real-world-schematic for a schematic of the environment and details of the problem.
 The turbulent dynamics mode is subject to higher drift in the negative $x$ direction, due to the
 wind field created by the fan.
 It is also subject to higher diffusion (aka process noise) resulting from the turbulence induced by the fan.
@@ -10930,7 +10933,7 @@ It is therefore desirable to find trajectories that avoid entering this turbulen
 \caption{Diagram showing the real-world quadcopter navigation problem.
 It shows the desired dynamics mode in blue (Mode 1) and
 the turbulent dynamics mode induced by the fan at the right hand side of the room, in green (Mode 2).
-The hashed box indicates a region of the environment which was not observed.
+The white box indicates a region of the environment which was not observed.
 The goal is to navigate from the start state $\state_0$, to the target state $\targetState$, whilst remaining
 in the desired dynamics mode.}
 \label{fig-real-world-schematic}
@@ -10939,80 +10942,9 @@ in the desired dynamics mode.}
 The state-space of the velocity controlled quadcopter example consists of the 2D Cartesian coordinates $\state = (x, y)$.
 The controls consist of the speed in each direction, given by $\control = (\velocity_x, \velocity_y)$.
 
-*** Performance Indicators
-This section evaluates the performance of trajectories using four performance indicators.
-1. Probability of remaining in the desired mode with the model's uncertainty marginalised,
-    calculated using cref:eq-mode-chance-constraint-integral.
-    #+BEGIN_EXPORT latex
-    \begin{align} \label{eq-mode-probability-all-unc}
-    \sum_{\timeInd=1}^{\TimeInd}
-    \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode).
-    \end{align}
-    #+END_EXPORT
-    This probability will decrease when a trajectory leaves the desired mode AND when it
-    passes through regions of the learned dynamics with high uncertainty.
-2. Probability of remaining in the desired mode without the model's uncertainty marginalised,
-    #+BEGIN_EXPORT latex
-    \begin{align} \label{eq-mode-probability-no-unc}
-    \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \gatingFunc(\state_{0:\timeInd}), \state_{0:\timeInd}, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
-    \end{align}
-    #+END_EXPORT
-    This probability will ONLY decrease when a trajectory leaves the desired mode.
-    # #+BEGIN_EXPORT latex
-    # \begin{align} \label{eq-mode-probability-all-unc}
-    # \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})
-    # \end{align}
-    # #+END_EXPORT
-   # - The indirect control method calculates the probability of being in the desired dynamics mode under the
-   #   MoSVGPE model,
-   #  #+BEGIN_EXPORT latex
-   #  \begin{align}
-   #  \sum_{\timeInd=1}^{\TimeInd}
-   #   \Pr(\modeVar_\timeInd=\desiredMode \mid \state_{0:\timeInd}, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
-   #  \end{align}
-   #  #+END_EXPORT
-   # - The direct control method also calculates the probability of being in the desired dynamics mode
-   #   but it also marginalises the state uncertainty along the trajectory,
-3. The state variance accumulated from cascading single-step predictions,
-   #+BEGIN_EXPORT latex
-    \begin{align} \label{eq-metric-state-var}
-    \sum_{\timeInd=1}^{\TimeInd} \mathbb{V}[\state_{\timeInd}]
-    \end{align}
-   #+END_EXPORT
-    This will increase when a trajectory passes through regions of the desired dynamics mode with high uncertainty.
-4. The gating function variance accumulated from cascading single-step predictions,
-   #+BEGIN_EXPORT latex
-    \begin{align} \label{eq-metric-gating-var}
-    \sum_{\timeInd=1}^{\TimeInd}
-    \mathbb{V}[\gatingFunc_{\desiredMode}(\state_{\timeInd})]
-    \end{align}
-   #+END_EXPORT
-    This will increase when a trajectory passes through regions of the gating network with high uncertainty.
-Intuitively, the goal is to maximise the probability of being in the desired mode,
-whilst minimising the variance accumulated over a trajectory, i.e. maximise cref:eq-metric-prob-unc.
-To test each methods ability at avoiding regions of high epistemic uncertainty,
-a subset of the environment was intentionally not observed.
-
-# This section evaluates the performance of the two algorithms at achieving the goals:
-# - Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
-# - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
-#   - in the desired dynamic mode.
-#   - in the gating network,
-
-# The indirect geodesic control method from cref:sec-traj-opt-collocation is evaluated on the real-world
-# quadcopter data set detailed in cref:sec-brl-experiment.
-# Due to coronavirus and limited access to the laboratory, the direct control method in cref:sec-traj-opt-energy
-# is tested in a simulated version of the illustrative example from cref:illustrative_example.
-# This is because the data set in cref:sec-brl-experiment was collected with constant controls and
-# the method in cref:sec-traj-opt-energy requires a data set with controls.
-# Nevertheless, results on the real-world quadcopter are included to demonstrate the applicability of this method
-# to real-world robotic systems.
-
-\todo{Add section looking at GP Jacobian and metric tensor for one of the experiments?}
-
 *** Real-World Quadcopter Experiments label:sec-traj-opt-results-collocation
 **** intro :ignore:
-The indirect control via latent geodesics method presented in cref:sec-traj-opt-collocation was evaluated
+The indirect control via latent geodesics method presented in cref:sec-traj-opt-collocation is evaluated
 on the real-world quadcopter control problem detailed in cref:sec-brl-experiment.
 However, a different subset of the environment was not observed
 and the model was trained using an old variational inference scheme, not the one presented in cref:chap-dynamics.
@@ -11047,7 +10979,7 @@ See cref:sec-brl-experiment for more details on data collection and processing.
 \begin{minipage}[r]{\columnwidth}
 \centering
 \includegraphics[width=\textwidth]{./images/geometric-traj-opt-over-svgp.pdf}
-\subcaption{GP posterior (left) mean and (right) variance over the desired mode's gating function.}
+\subcaption{GP posterior mean (left) and variance (right) over the desired mode's gating function.}
 \label{fig-geometric-traj-opt-over-svgp}
 \end{minipage}
 \caption{\textbf{Indirect geodesic control} Trajectory optimisation results after solving the nonlinear
@@ -11079,7 +11011,8 @@ believes another mode is responsible and zero where it is uncertain.
 The variance (right) has also clearly captured information regrading the epistemic uncertainty,
 i.e. where the model is uncertain which mode governs the dynamics.
 
-**** Indirect Control via Latent Geodesics
+**** Indirect Control via Latent Geodesics :ignore:
+\newline
 
 #+BEGIN_EXPORT latex
 \begin{figure}
@@ -11132,8 +11065,11 @@ with high epistemic uncertainty.}
 **** After Table :ignore:
 \newline
 
-The initial (cyan) trajectory in cref:fig-geometric-traj-opt-over-svgp was initialised with
+The initial (cyan) trajectory in cref:fig-geometric-traj-opt-over-svgp was initialised as a straight line with
 $10$ collocation points indicated by the crosses.
+The collocation solver guarantees that trajectories end at the target state.
+However, trajectories are not guaranteed to remain in the desired dynamics mode, nor are they guaranteed to
+satisfy the systems dynamics.
 cref:tab-results compares the initial trajectory to the results obtained
 with two settings of the $\lambda$ parameter from cref:eq-expected-metric-weighting.
 It is clear from cref:fig-geometric-traj-opt,fig-metric-vs-time
@@ -11143,11 +11079,18 @@ with high epistemic uncertainty.
 For $\lambda=20$, the trajectory initially remains in the desired mode
 but then sacrifices entering the turbulent mode in favour of avoiding the area of high epistemic
 uncertainty.
-These results confirm the intended behaviour of the user tunable $\lambda$ parameter.
+These results align with the intended behaviour of the user tunable $\lambda$ parameter.
+However, in this experiment, increasing the relevance of the covariance term in the expected Riemannian
+metric has no benefit.
+This is because it pushes the trajectory into the turbulent dynamics mode.
 
-The collocation solver guarantees that trajectories end at the target state.
-However, trajectories are not guaranteed to remain in the desired dynamics mode, nor are they guaranteed to
-satisfy the systems dynamics.
+
+These experiments do not recover the controls using cref:eq-control-elbo because
+a full transition dynamics model has not been learned.
+That is, the dynamics model does not depend on the controls so the control trajectory cannot be recovered.
+In cref:sec-traj-opt-results-energy the full method is tested in a simulated environment representing
+this
+
 Further to this, the mode remaining behaviour is sensitive to the tolerance on the collocation constraints.
 Setting the tolerance too small can result in the solver failing to converge, whilst setting the tolerance too
 large often omits any mode remaining behaviour.
@@ -11270,6 +11213,77 @@ The gating network used a single gating function with
 a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
 In contrast to the real-world experiments, the simulated experiments presented here learn the full transition
 dynamics model, i.e. they do not assume constant controls.
+
+**** Performance Indicators
+This section evaluates the performance of trajectories using four performance indicators.
+1. Probability of remaining in the desired mode with the model's uncertainty marginalised,
+    calculated using cref:eq-mode-chance-constraint-integral.
+    #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-mode-probability-all-unc}
+    \sum_{\timeInd=1}^{\TimeInd}
+    \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode).
+    \end{align}
+    #+END_EXPORT
+    This probability will decrease when a trajectory leaves the desired mode AND when it
+    passes through regions of the learned dynamics with high uncertainty.
+2. Probability of remaining in the desired mode without the model's uncertainty marginalised,
+    #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-mode-probability-no-unc}
+    \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \gatingFunc(\state_{0:\timeInd}), \state_{0:\timeInd}, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
+    \end{align}
+    #+END_EXPORT
+    This probability will ONLY decrease when a trajectory leaves the desired mode.
+    # #+BEGIN_EXPORT latex
+    # \begin{align} \label{eq-mode-probability-all-unc}
+    # \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})
+    # \end{align}
+    # #+END_EXPORT
+   # - The indirect control method calculates the probability of being in the desired dynamics mode under the
+   #   MoSVGPE model,
+   #  #+BEGIN_EXPORT latex
+   #  \begin{align}
+   #  \sum_{\timeInd=1}^{\TimeInd}
+   #   \Pr(\modeVar_\timeInd=\desiredMode \mid \state_{0:\timeInd}, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
+   #  \end{align}
+   #  #+END_EXPORT
+   # - The direct control method also calculates the probability of being in the desired dynamics mode
+   #   but it also marginalises the state uncertainty along the trajectory,
+3. The state variance accumulated from cascading single-step predictions,
+   #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-metric-state-var}
+    \sum_{\timeInd=1}^{\TimeInd} \mathbb{V}[\state_{\timeInd}]
+    \end{align}
+   #+END_EXPORT
+    This will increase when a trajectory passes through regions of the desired dynamics mode with high uncertainty.
+4. The gating function variance accumulated from cascading single-step predictions,
+   #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-metric-gating-var}
+    \sum_{\timeInd=1}^{\TimeInd}
+    \mathbb{V}[\gatingFunc_{\desiredMode}(\state_{\timeInd})]
+    \end{align}
+   #+END_EXPORT
+    This will increase when a trajectory passes through regions of the gating network with high uncertainty.
+Intuitively, the goal is to maximise the probability of being in the desired mode,
+whilst minimising the variance accumulated over a trajectory, i.e. maximise cref:eq-metric-prob-unc.
+To test each methods ability at avoiding regions of high epistemic uncertainty,
+a subset of the environment was intentionally not observed.
+
+# This section evaluates the performance of the two algorithms at achieving the goals:
+# - Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
+# - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
+#   - in the desired dynamic mode.
+#   - in the gating network,
+
+# The indirect geodesic control method from cref:sec-traj-opt-collocation is evaluated on the real-world
+# quadcopter data set detailed in cref:sec-brl-experiment.
+# Due to coronavirus and limited access to the laboratory, the direct control method in cref:sec-traj-opt-energy
+# is tested in a simulated version of the illustrative example from cref:illustrative_example.
+# This is because the data set in cref:sec-brl-experiment was collected with constant controls and
+# the method in cref:sec-traj-opt-energy requires a data set with controls.
+# Nevertheless, results on the real-world quadcopter are included to demonstrate the applicability of this method
+# to real-world robotic systems.
+
+\todo{Add section looking at GP Jacobian and metric tensor for one of the experiments?}
 
 **** Environment 1
 ***** Blah :ignore:
