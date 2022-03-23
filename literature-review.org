@@ -1,5 +1,32 @@
 #+TITLE: Literature Review
 
+* maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
+
+\renewcommand{\allInput}{\ensuremath{\hat{\state}_{1:\TimeInd}}}
+\renewcommand{\allOutput}{\ensuremath{{\Delta\state}_{1:\TimeInd}}}
+
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+
+\newcommand{\dynamicsFunc}{\ensuremath{f}}
+
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
+\newcommand{\integralCostFunc}{\ensuremath{C}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+
+\newcommand{\policySpace}{\ensuremath{\Pi}}
+\newcommand{\policy}{\ensuremath{\pi}}
+
+\renewcommand{\u}{\ensuremath{\mathbf{u}}}
+#+END_EXPORT
+
 * Literature Review
 # * Background and Related Work
 ** maths :ignore:
