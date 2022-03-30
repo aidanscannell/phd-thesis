@@ -225,6 +225,9 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \usepackage[format=plain,labelfont={bf},textfont=it]{caption} % make captions italic
 *** Maths diag
 #+LATEX_HEADER: \newcommand{\diag}{\mathop{\mathrm{diag}}}
+*** Algorithms
+#+LATEX_HEADER: \usepackage{algpseudocode}
+#+LATEX_HEADER: \usepackage{algorithm}
 ** Text Variables :noexport:
 #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Learning \& Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Data Efficient Learning for Control in Multimodal Dynamical Systems}}
@@ -1934,6 +1937,7 @@ With this in mind, the main goals of this chapter are to construct a model which
    - rich with information regarding the mode switching behaviour.
    # - this could be achieved by providing handles for encoding informative domain knowledge, in turn, constraining the set of admissible functions,
 
+* Literature Review
 * Probabilistic Inference for Learning Multimodal Dynamical Systems label:chap-dynamics
 #+begin_export latex
 \epigraph{All models are wrong, but some are useful.}{\textit{George Box}}
@@ -6012,11 +6016,11 @@ probabilistic manifolds.
 cref:sec-traj-opt-collocation,sec-traj-opt-energy
 detail the two trajectory optimisation algorithms.
 The methods are then evaluated using the illustrative example from cref:illustrative_example.
-The work in this chapter is implemented in JAX and TensorFlow and is available on GitHub[fn::Code accompanying
+The work in this chapter is implemented in JAX and TensorFlow/GPflow and is available on GitHub[fn::Code accompanying
 cref:sec-traj-opt-collocation can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt and]]
 [[https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems]]
 and code accompanying cref:sec-traj-opt-energy can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]].]
-citep:jax2018github.
+citep:jax2018github,tensorflow2015-whitepaper,GPflow2017.
 
 # This section first recaps the relevant concepts from Riemannian geometry.
 # It then details two control methods that exploit the geometry of the \acrshort{mosvgpe} model to obtain mode remaining behaviour.
@@ -6027,297 +6031,6 @@ citep:jax2018github.
 
 
 \todo{cite ICRA paper}
-
-** Problem Statement label:sec-problem-statement :noexport:
-# #+BEGIN_EXPORT latex
-# \begin{align}
-# \mode{\latentFunc} : \stateDomain \times \controlDomain \rightarrow \stateDomain \quad \text{if} \quad \modeVar=\modeInd,
-# \end{align}
-# #+END_EXPORT
-# $\stateDomain = \bigcup_{\modeInd \in \modeVarDomain} \mode{\stateDomain} = \{ \state \subseteq \stateDomain \mid \modeInd \in \modeVarDomain \}$.
-# $\stateDomain = \bigcup_{\modeInd=1}^{\ModeInd} \mode{\stateDomain}$.
-# This chapter considers multimodal dynamical systems where the dynamics modes are defined by disjoint
-# state domains.
-This chapter considers nonlinear, stochastic, multimodal dynamical systems,
-#+BEGIN_EXPORT latex
-\begin{subequations}
-\begin{align}
-\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
-&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
-\quad \text{if} \quad \modeVar_{\timeInd}=\modeInd \nonumber \\
-\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
-\end{align}
-\end{subequations}
-#+END_EXPORT
-where the dynamics modes are defined by disjoint state domains.
-That is, each dynamics mode is defined by its state domain
-$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$, with
-$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for $i \neq j$.
-Each mode's dynamics are then given by,
-#+BEGIN_EXPORT latex
-\begin{align}
-\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain.
-\end{align}
-#+END_EXPORT
-Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
-and enter another mode.
-Ideally, this work seeks to enforce the controlled system to remain in a given mode at every time step.
-#+BEGIN_EXPORT latex
-\begin{definition}[Mode Remaining] \label{def-mode-remaining}
-Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
-Given an inital state $\state_0 \in \mode{\stateDomain}$, and a sequence of controls $\controlTraj=\control_{0:\TimeInd-1}$,
-the controlled system is said to be mode-remaining iff:
-\begin{align} \label{eq-mode-remaining-def}
-\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \mode{\stateDomain} \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
-\end{align}
-\end{definition}
-#+END_EXPORT
-
-Given a desired dynamics mode $\desiredMode$, this work seeks to find a control
-trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
-to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
-target state $\targetState \in \desiredStateDomain$,
-over a horizon $\TimeInd$,
-whilst minimising a cost function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$
-and keeping the system in the desired dynamics mode $\desiredMode$.
-Formally, this problem is given by,
-#+BEGIN_EXPORT latex
-\begin{subequations} \label{eq-mode-soc-problem}
-\begin{align}
-\min_{\controlTraj} &\E\Bigg[
-\sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd) \Bigg] \\
-\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
-\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
-&\text{\cref{eq-mode-remaining-def}} \\
-%\state_{\timeInd} &\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-&\state_\TimeInd = \targetState,
-\end{align}
-\end{subequations}
-#+END_EXPORT
-To simplify notation, the state and control trajectories are denoted
-as $\stateTraj = \state_{1:T}$ and $\controlTraj = \control_{0:T-1}$ respectively.
-The novelty of this problem arises from the mode remaining behaviour.
-To the best of our knowledge, there is no prior work addressing how to find
-trajectories that remain in a desired dynamics mode,
-when knowledge of how the system switches between the dynamics modes is /not known a priori/.
-
-
-
-# where the expectation is taken w.r.t. the distribution over state
-# trajectories,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-trajectory-dist}
-# %\controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
-# p(\stateTraj \mid \state_0, \controlTraj) =
-# \prod_{\timeInd=0}^{\TimeInd-1}
-# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd).
-# \end{align}
-# #+END_EXPORT
-
-
-
-Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
-This is a realistic assumption as the parameters associated with each dynamics GP can be used to identify
-different behaviours.
-For example, the noise variance associated with each mode's dynamics GP models its process noise.
-If it is desirable to avoid modes with high process noise, then they can easily be identified by their noise
-variances.
-#+BEGIN_EXPORT latex
-\begin{assumption} \label{}
-A desired dynamics mode $\desiredMode$ is known.
-\end{assumption}
-#+END_EXPORT
-Given a learned dynamics model and a desired dynamics mode $\desiredMode$,
-the goals of the trajectory optimisation in this chapter can be summarised as follows,
-# - Goal 1 :: Remain in a desired dynamics mode $\desiredMode$,
-# - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/.
-# - Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
-# - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
-#   - in the desired dynamic mode,
-#   - in the gating network.
-- Goal 1 :: Navigate to a target state $\targetState$,
-- Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$,
-  + Goal 2.1 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/, in the desired dynamics mode and in the gating network.
-Goal 2.1 arises due to learning the dynamics model from observations.
-The learned model may not be able to confidently predict which mode governs the dynamics at a given region.
-This is due to lack of training observations and is known as /epistemic uncertainty/.
-It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
-
-
-
-
-This chapter assumes prior access to the environment, enabling a data set of state transitions to be collected.
-This data set is used to learn a factorised representation of the underlying dynamics modes
-with the \acrshort{mosvgpe} method from cref:chap-dynamics.
-#+BEGIN_EXPORT latex
-\begin{assumption} \label{}
-Access to a single-step dynamics model learned using
-the \acrshort{mosvgpe} method from \cref{chap-dynamics} and a data set $\dataset$ of state transitions
-from the system.
-\end{assumption}
-#+END_EXPORT
-Deploying model-based control in a learned dynamics model makes
-it impossible to find trajectories that are guaranteed to be Mode Remaining (cref:def-mode-remaining).
-This work relaxes the requirement to finding mode remaining trajectories with high probability.
-#+BEGIN_EXPORT latex
-\begin{definition}[$\delta$-mode remaining] \label{def-delta-mode-remaining}
-Let $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ denote a multimodal dynamical system
-and $\desiredMode$ a desired dynamics mode defined by its state domain $\desiredStateDomain \subseteq \stateDomain$.
-Given an initial state $\state_0 \in \desiredStateDomain$ and $\delta \in (0,1]$,
-a system is said to be $\delta$-mode remaining under the controls $\controlTraj$ iff:
-\begin{align}
-\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \dynamicsFunc(\state_{\timeInd},\control_{\timeInd}) &\in \desiredStateDomain,
-\control_{\timeInd} \in \controlDomain) \geq 1 - \delta
-\end{align}
-\end{definition}
-#+END_EXPORT
-
-# Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
-# This is a realistic assumption as the parameters associated with each dynamics GP can be used to identify
-# different behaviours.
-# For example, the noise variance associated with each mode's dynamics GP models its process noise.
-# If it is desirable to avoid modes with high process noise, then they can easily be identified by their noise
-# variances.
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# A desired dynamics mode $\desiredMode$ is known.
-# \end{assumption}
-# #+END_EXPORT
-# Given a learned dynamics model and a desired dynamics mode $\desiredMode$,
-# the goals of the trajectory optimisation in this chapter can be summarised as follows,
-# # - Goal 1 :: Remain in a desired dynamics mode $\desiredMode$,
-# # - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/.
-# # - Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
-# # - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
-# #   - in the desired dynamic mode,
-# #   - in the gating network.
-# - Goal 1 :: Navigate to a target state $\targetState$,
-# - Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$,
-#   + Goal 2.1 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/, in the desired dynamics mode and in the gating network.
-# Goal 2.1 arises due to learning the dynamics model from observations.
-# The learned model may not be able to confidently predict which mode governs the dynamics at a given region.
-# This is due to lack of training observations and is known as /epistemic uncertainty/.
-# It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
-
-
-
-# Given a desired dynamics mode $\desiredMode$, this work seeks to find a control
-# trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
-# to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
-# target state $\targetState \in \desiredStateDomain$,
-# over a horizon $\TimeInd$,
-# whilst minimising a cost function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$
-# and keeping the system in the desired dynamics mode $\desiredMode$.
-
-# where the expectation is taken w.r.t. the distribution over state-control
-# trajectories under controller $\policy$,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-trajectory-dist}
-# \controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
-# \prod_{\timeInd=0}^{\TimeInd-1}
-# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
-# \policy(\control_\timeInd).
-# \end{align}
-# #+END_EXPORT
-
-
-
-
-# #+BEGIN_EXPORT latex
-# \begin{remark}[Epistemic Uncertainty]
-# %Given that the underlying dynamics modes and how the dynamics switches between them, are
-# %\textit{not fully known a priori}, these methods should \textit{air on the side of caution}.
-# Due to lack of training observations, the learned model may be uncertain which mode governs the
-# dynamics at a particular region. This is known as epistemic uncertainty.
-# In a risk-averse setting, trajectories should also avoid entering these regions of high epistemic uncertainty.
-# \end{remark}
-# #+END_EXPORT
-
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# The system has previously been observed to obtain a data set $\dataset$ of state transitions sampled at constant frequency.
-# \end{assumption}
-# #+END_EXPORT
-# Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
-# This is a realistic assumption as the parameters associated with each dynamics GP represent different
-# characteristics of the system.
-# For example, the noise variance associated with each mode's dynamics GP models the process noise that the mode
-# is subject to.
-# A high noise variance can therefore be used to identify dynamics modes that are undesirable.
-
-
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# A desired dynamics mode $\desiredMode$  is known.
-# Moreover, its transition dynamics are given by
-# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$.
-# \end{assumption}
-# #+END_EXPORT
-# the \acrshort{mosvgpe} method from cref:chap-dynamics to learn a factorised
-# representation of the underlying dynamics modes.
-
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# Further to this, it is assumed that the mode switching behaviour is governed by the state space, i.e.
-# each dynamics modes is governed by its state domain
-# $\stateDomain_{\modeInd} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
-# giving each mode's dynamics,
-# $\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain$.
-
-# The system switches between its dynamics modes over the systems state space, i.e.
-# each dynamics modes is governed by its state domain
-# $\stateDomain_{\modeInd} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
-# giving each mode's dynamics,
-# $\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain$.
-# \end{assumption}
-# #+END_EXPORT
-
-# and used to train a single-step dynamics model using
-# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
-
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# A data set $\dataset$ of state transitions have previously been sampled from the
-# system (at constant frequency) and used to train a single-step dynamics model using
-# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
-# \end{assumption}
-# #+END_EXPORT
-# Further to this, it assumes that a desired dynamics mode $\desiredMode$ is /known a priori/.
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# Let $\desiredMode$ denote the desired dynamics mode governed
-# by its state domain
-# $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$.
-# The desired mode's transition dynamics are given by
-# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
-# with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-# $\control \in \controlDomain \subseteq \R^\ControlDim$.
-# \end{assumption}
-# #+END_EXPORT
-
-# The desired mode's transition dynamics are given by
-# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
-# with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-# $\control \in \controlDomain \subseteq \R^\ControlDim$,
-# where $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$
-# denotes the subset of the state space associated with the desired dynamics mode.
-# Note that the desired mode's transition dynamics $\desiredDynamicsFunc$
-# are free to leave the desired mode's state space $\desiredStateDomain$.
-
-
-
-
-
-
-\todo{cite active learning paper and multimodal mogpe paper?}
-# The most similar works are cite:schreiterSafe2015 where active learning is gu
-
-
-
-# Of particular interest in this chapter is the GP posterior over the desired mode's gating function.
-# cref:fig-traj-opt-gating-network-gp visualises this GP posterior after training on the historical data set of state
-# transitions from the illustrative example in cref:illustrative_example.
-# One approach to encoding mode remaining behaviour is to consider the geometry of the latent gating functions.
 
 ** Problem Statement label:sec-problem-statement
 # #+BEGIN_EXPORT latex
@@ -7810,14 +7523,15 @@ the method presented in this chapter is applicable in a wider range of \acrshort
 # The approach presented in this chapter extends the control as inference framework.
 # It encodes mode remaining behaviour by conditioning on the expert indicator variable and inferring the optimal controls.
 
-# cref:sec-problem-statement-inference-traj-opt
 # This chapter shares the problem statement in cref:sec-problem-statement.
-This chapter is organised as follows.
-cref:sec-inference-background first recaps the necessary background and related work.
+# This chapter is organised as follows.
+This chapter shares the problem statement in cref:sec-problem-statement
+but it is briefly recapped in cref:sec-problem-statement-inference-traj-opt.
+cref:sec-inference-background recaps the necessary background and related work.
 cref:sec-traj-opt-inference then details the trajectory optimisation algorithm.
 The method is evaluated in two simulated quadcopter environments in cref:chap-traj-opt-results.
-The work in this chapter is implemented in TensorFlow and is available on GitHub
-cite:jax2018github[fn:2:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt.]]]
+The work in this chapter is implemented in TensorFlow/GPflow and is available on GitHub
+citep:tensorflow2015-whitepaper,GPflow2017[fn:2:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt.]]]
 
 # This chapter presents an another control method  for controlling /unknown/ or /partially unknown/,
 # multimodal dynamical systems,
@@ -7855,10 +7569,6 @@ cite:jax2018github[fn:2:Code accompanying this Chapter can be found @ [[https://
 # The mode remaining behaviour is encoded by further conditioning on the mode indicator variable.
 
 ** Problem Statement label:sec-problem-statement-inference-traj-opt
-This chapter shares the problem statement in cref:sec-problem-statement.
-It is briefly recapped here for convenience but please refer to cref:sec-problem-statement for more details.
-# \todo[inline]{Do I need to recap or shall I just remove this section?}
-
 The goal of this chapter is to control nonlinear, stochastic, multimodal dynamical systems,
 #+BEGIN_EXPORT latex
 \begin{subequations}
@@ -7935,297 +7645,6 @@ and keeping the system in the desired dynamics mode $\desiredMode$.
 # \end{figure}
 # #+END_EXPORT
 # This chapter unleashes the power of these latent variables by making decisions under their uncertainty.
-
-** Problem Statement label:sec-problem-statement-inference-traj-opt :noexport:
-This chapter considers nonlinear, stochastic, multimodal dynamical systems,
-#+BEGIN_EXPORT latex
-\begin{subequations}
-\begin{align}
-\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
-&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
-\quad \text{if} \quad \modeVar_{\timeInd}=\modeInd \nonumber \\
-\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
-\end{align}
-\end{subequations}
-#+END_EXPORT
-where the dynamics modes are defined by disjoint state domains.
-That is, each dynamics mode is defined by its state domain
-$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$, with
-$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for $i \neq j$.
-Each mode's dynamics are then given by,
-#+BEGIN_EXPORT latex
-\begin{align}
-\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain.
-\end{align}
-#+END_EXPORT
-Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
-and enter another mode.
-Ideally, this work seeks to enforce the controlled system to remain in a given mode at every time step.
-#+BEGIN_EXPORT latex
-\begin{definition}[Mode Remaining] \label{def-mode-remaining}
-Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
-Given an inital state $\state_0 \in \mode{\stateDomain}$, and a sequence of controls $\controlTraj=\control_{0:\TimeInd-1}$,
-the controlled system is said to be mode-remaining iff:
-\begin{align} \label{eq-mode-remaining-def}
-\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \mode{\stateDomain} \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
-\end{align}
-\end{definition}
-#+END_EXPORT
-Given a desired dynamics mode $\desiredMode$, this work seeks to find a control
-trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
-to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
-target state $\targetState \in \desiredStateDomain$,
-over a horizon $\TimeInd$,
-whilst minimising a cost function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$
-and keeping the system in the desired dynamics mode $\desiredMode$.
-Formally, this problem is given by,
-#+BEGIN_EXPORT latex
-\begin{subequations} \label{eq-mode-soc-problem}
-\begin{align}
-\min_{\controlTraj} &\E\Bigg[
-\sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd) \Bigg] \\
-\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
-\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
-&\text{\cref{eq-mode-remaining-def}} \\
-%\state_{\timeInd} &\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-&\state_\TimeInd = \targetState,
-\end{align}
-\end{subequations}
-#+END_EXPORT
-where the expectation is taken w.r.t. the distribution over state
-trajectories,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-trajectory-dist}
-%\controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
-p(\stateTraj \mid \state_0, \controlTraj) =
-\prod_{\timeInd=0}^{\TimeInd-1}
-p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd).
-\end{align}
-#+END_EXPORT
-To simplify notation, the state and control trajectories are denoted
-as $\stateTraj = \state_{1:T}$ and $\controlTraj = \control_{0:T-1}$ respectively.
-The novelty of this problem arises from the mode remaining behaviour.
-To the best of our knowledge, there is no prior work addressing how to find
-trajectories that remain in a desired dynamics mode,
-when knowledge of how the system switches between the dynamics modes is /not known a priori/.
-
-# where the expectation is taken w.r.t. the distribution over state-control
-# trajectories under controller $\policy$,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-trajectory-dist}
-# \controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
-# \prod_{\timeInd=0}^{\TimeInd-1}
-# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
-# \policy(\control_\timeInd).
-# \end{align}
-# #+END_EXPORT
-
-
-This chapter assumes prior access to the environment, enabling a data set of state transitions to be collected.
-This data set is used to learn a factorised representation of the underlying dynamics modes
-with the \acrshort{mosvgpe} method from cref:chap-dynamics.
-# This method correctly identifies the underlying dynamics modes and provides informative latent spaces that
-# can be used to encode mode remaining behaviour into control strategies.
-# In particular, the GP-based gating network infers informative latent structure.
-# cref:fig-traj-opt-gating-network-gp shows the GP posterior associated with the desired mode's gating function
-# after training
-# \acrshort{mosvgpe} on the historical data set of state transitions from the quadcopter experiment in cref:illustrative_example.
-#+BEGIN_EXPORT latex
-\begin{assumption} \label{}
-A single-step dynamics model has been learned using
-the \acrshort{mosvgpe} method from \cref{chap-dynamics} and a data set $\dataset$ of state transitions
-from the system.
-\end{assumption}
-#+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# A data set $\dataset$ of state transitions have previously been sampled from the
-# system (at constant frequency) and used to train a single-step dynamics model using
-# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
-# \end{assumption}
-# #+END_EXPORT
-# As the true underlying dynamics modes and how the system switches between them are /not fully known a priori/,
-# it is impossible to develop algorithms that can find trajectories that are guaranteed to be
-As the control algorithms presented in this chapter leverage this learned dynamics model,
-it is impossible to find trajectories that are guaranteed to be Mode Remaining (cref:def-mode-remaining).
-This work relaxes the requirement to finding mode remaining trajectories with high probability.
-#+BEGIN_EXPORT latex
-\begin{definition}[$\delta$-mode remaining] \label{def-delta-mode-remaining}
-Let $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ denote a multimodal dynamical system
-and $\desiredMode$ a desired dynamics mode defined by its state domain $\desiredStateDomain \subseteq \stateDomain$.
-Given an initial state $\state_0 \in \desiredStateDomain$ and $\delta \in (0,1]$,
-a system is said to be $\delta$-mode remaining under the controls $\controlTraj$ iff:
-\begin{align}
-\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \dynamicsFunc(\state_{\timeInd},\control_{\timeInd}) &\in \desiredStateDomain,
-\control_{\timeInd} \in \controlDomain) \geq 1 - \delta
-\end{align}
-\end{definition}
-#+END_EXPORT
-
-Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
-This is a realistic assumption as the parameters associated with each dynamics GP can be used to identify
-different behaviours.
-For example, the noise variance associated with each mode's dynamics GP models its process noise.
-If it is desirable to avoid modes with high process noise, then they can easily be identified by their noise
-variances.
-#+BEGIN_EXPORT latex
-\begin{assumption} \label{}
-A desired dynamics mode $\desiredMode$ is known.
-\end{assumption}
-#+END_EXPORT
-Given a learned dynamics model and a desired dynamics mode $\desiredMode$,
-the goals of the trajectory optimisation in this chapter can be summarised as follows,
-# - Goal 1 :: Remain in a desired dynamics mode $\desiredMode$,
-# - Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/.
-- Goal 1 :: Remain in the operable, desired dynamics mode $\desiredMode$,
-- Goal 2 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
-  - in the desired dynamic mode,
-  - in the gating network.
-The second goal arises due to learning the dynamics model from observations.
-The learned model may not be able to confidently predict which mode governs the dynamics at a given region.
-This is due to lack of training observations and is known as /epistemic uncertainty/.
-It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
-
-# #+BEGIN_EXPORT latex
-# \begin{remark}[Epistemic Uncertainty]
-# %Given that the underlying dynamics modes and how the dynamics switches between them, are
-# %\textit{not fully known a priori}, these methods should \textit{air on the side of caution}.
-# Due to lack of training observations, the learned model may be uncertain which mode governs the
-# dynamics at a particular region. This is known as epistemic uncertainty.
-# In a risk-averse setting, trajectories should also avoid entering these regions of high epistemic uncertainty.
-# \end{remark}
-# #+END_EXPORT
-
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# The system has previously been observed to obtain a data set $\dataset$ of state transitions sampled at constant frequency.
-# \end{assumption}
-# #+END_EXPORT
-# Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ can easily be identified.
-# This is a realistic assumption as the parameters associated with each dynamics GP represent different
-# characteristics of the system.
-# For example, the noise variance associated with each mode's dynamics GP models the process noise that the mode
-# is subject to.
-# A high noise variance can therefore be used to identify dynamics modes that are undesirable.
-
-
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# A desired dynamics mode $\desiredMode$  is known.
-# Moreover, its transition dynamics are given by
-# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$.
-# \end{assumption}
-# #+END_EXPORT
-# the \acrshort{mosvgpe} method from cref:chap-dynamics to learn a factorised
-# representation of the underlying dynamics modes.
-
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# Further to this, it is assumed that the mode switching behaviour is governed by the state space, i.e.
-# each dynamics modes is governed by its state domain
-# $\stateDomain_{\modeInd} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
-# giving each mode's dynamics,
-# $\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain$.
-
-# The system switches between its dynamics modes over the systems state space, i.e.
-# each dynamics modes is governed by its state domain
-# $\stateDomain_{\modeInd} = \{ \state \in \stateDomain \mid \modeVar = \modeInd \}$,
-# giving each mode's dynamics,
-# $\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain$.
-# \end{assumption}
-# #+END_EXPORT
-
-# and used to train a single-step dynamics model using
-# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
-
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# A data set $\dataset$ of state transitions have previously been sampled from the
-# system (at constant frequency) and used to train a single-step dynamics model using
-# the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
-# \end{assumption}
-# #+END_EXPORT
-# Further to this, it assumes that a desired dynamics mode $\desiredMode$ is /known a priori/.
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# Let $\desiredMode$ denote the desired dynamics mode governed
-# by its state domain
-# $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$.
-# The desired mode's transition dynamics are given by
-# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
-# with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-# $\control \in \controlDomain \subseteq \R^\ControlDim$.
-# \end{assumption}
-# #+END_EXPORT
-
-# The desired mode's transition dynamics are given by
-# $\desiredDynamicsFunc: \desiredStateDomain \times \controlDomain \rightarrow \stateDomain$,
-# with continuous states $\state \in \stateDomain \subseteq \R^\StateDim$ and controls
-# $\control \in \controlDomain \subseteq \R^\ControlDim$,
-# where $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$
-# denotes the subset of the state space associated with the desired dynamics mode.
-# Note that the desired mode's transition dynamics $\desiredDynamicsFunc$
-# are free to leave the desired mode's state space $\desiredStateDomain$.
-
-
-
-
-
-
-\todo{cite active learning paper and multimodal mogpe paper?}
-# The most similar works are cite:schreiterSafe2015 where active learning is gu
-
-
-
-# Of particular interest in this chapter is the GP posterior over the desired mode's gating function.
-# cref:fig-traj-opt-gating-network-gp visualises this GP posterior after training on the historical data set of state
-# transitions from the illustrative example in cref:illustrative_example.
-# One approach to encoding mode remaining behaviour is to consider the geometry of the latent gating functions.
-
-** Problem Statement :ignore:noexport:
-
-The novelty of our problem, however, arises from the mode remaining behaviour.
-To the best of our knowledge, there is no prior work addressing how to find
-trajectories that remain in a desired dynamics mode,
-when knowledge of how the system switches between the dynamics modes is /not known a priori/.
-This chapter explores different mechanisms for encoding mode remaining behaviour.
-
-The \acrshort{mosvgpe} method from cref:chap-dynamics can be used to learn a factorised representation of the underlying
-dynamics modes.
-Conveniently, it was formulated with latent variables
-to represent the mode indicator variable $\modeVar$ and our uncertainty in it.
-Of particular interest are the posteriors' over the mode indicator variable and the gating functions
-(visualised in cref:fig-traj-opt-gating-network).
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/mosvgpe/desired_prob_no_traj.pdf}
-\caption{
-Visualisation of the latent variable posteriors associated with the gating network after training the \acrshort{mosvgpe}
-(with $\ModeInd=2$ experts) on the historical data set of state transitions from the 2D quadcopter environment
-in the illustrative example from \cref{illustrative_example}.
-(\subref{eq-traj-opt-gating-network-over-prob}) shows the probability of the desired mode over the domain
-and (\subref{eq-traj-opt-gating-network-over-svgp}) shows the desired mode's gating function posterior
-mean (left) and posterior variance (right).}
-\label{eq-traj-opt-gating-network-prob}
-\end{figure}
-#+END_EXPORT
-This chapter unleashes the power of these latent variables by making decisions under their uncertainty.
-
-The trajectory optimisation algorithm presented in cref:sec-traj-opt-geometric can be viewed as
-an indirect method.
-\todo{Fact check it as an indirect method?}
-The trajectory optimisation algorithm presented in this section is a direct method that considers the
-full stochastic nature of the learned dynamics model. In particular, it considers uncertainty propagation
-through the dynamics.
-Given the \acrshort{soc} problem in cref:eq-mode-soc-problem, the trajectory optimisation algorithm presented here
-builds off of the control-as-inference framework citep:toussaintProbabilistic2006,kappenOptimal2013,
-which frames optimal control as probabilistic inference.
-Translating optimal control to inference can be viewed as a subset of probabilistic numerics
-citep:hennigProbabilistic2015, where statistical methods are used to solve numerical problems,
-providing uncertainty quantification, regularisation and faster convergence.
-This is achieved by assuming access to a dynamics model and
-embedding the cost function into the likelihood.
 
 ** Background and Related Work label:sec-inference-background
 *** Cost Functions as Likelihoods :ignore:
@@ -11450,162 +10869,6 @@ the mode remaining behaviour and the uncertainty avoiding behaviour.
 # However, the marginalisation of uncertainty in the \acrshort{elbo}
 # (cref:eq-traj-opt-inference) is principled and requires no human input.
 
-*** text :ignore:noexport:
-Following cref:sec-traj-opt-results-energy the optimised trajectories are overlayed on the
-mixing probabilities and the GP posterior over the desired mode's gating function.
-cref:tab-results-sim-envs-inf summarises the trajectory optimisation results.
-
-The control-as-inference method in cref:eq-traj-opt-inference is tested with and without maximum entropy behaviour,
-i.e. with Gaussian and deterministic controls.
-cref:fig-mode-conditioning-max-entropy-traj-opt-7,fig-mode-conditioning-max-entropy-traj-opt-5
-show the results using Gaussian controls,
-i.e. with maximum entropy control, in Environment 1 and Environment 2 respectively.
-cref:fig-mode-conditioning-no-max-entropy-traj-opt-7,fig-mode-conditioning-no-max-entropy-traj-opt-5
-show the results without maximum entropy control.
-
-*Target state*
-All of the experiments were able to find trajectories that successfully navigate to the target state $\targetState$
-under the dynamics (magenta) and in the environment (cyan).
-Similarly to the results for the direct Riemannian energy method in cref:sec-traj-opt-energy,
-setting the terminal state cost matrix $\terminalStateCostMatrix$
-to be very high, appears to work well in practice.
-
-*Mode remaining*
-It is clear from
-cref:fig-mode-conditioning-no-max-entropy-traj-opt-7,fig-mode-conditioning-max-entropy-traj-opt-7,fig-mode-conditioning-no-max-entropy-traj-opt-5,fig-mode-conditioning-max-entropy-traj-opt-5
-that all of the experiments found discrete-time trajectories remained in the desired dynamics mode.
-This is indicated by none of the trajectories time steps being in the turbulent dynamics mode.
-However, when interpolating the discrete-time trajectory for the experiment in Environment 2 without
-maximum entropy control, shown in
-cref:fig-mode-conditioning-no-max-entropy-traj-opt-5,
-the trajectory crosses the mode boundary.
-This is an undesirable behaviour, as in a non simulated environment this corresponds to the trajectory
-entering the turbulent dynamics mode.
-Visual inspection of
-cref:fig-mode-conditioning-no-max-entropy-traj-opt-5,fig-mode-conditioning-max-entropy-traj-opt-5
-show that in Environment 2, the maximum entropy control term resulted in a trajectory with more clearance from the
-mode boundary.
-This is a desirable behaviour that is expected from the maximum entropy control term.
-This can also be seen in the results for Environment 1, shown in
-cref:fig-mode-conditioning-no-max-entropy-traj-opt-7,fig-mode-conditioning-max-entropy-traj-opt-7,
-where the trajectory found with maximum entropy control has more clearance from the mode boundary.
-This observation is confirmed in cref:tab-results-sim-envs-inf, where the experiments with maximum entropy
-control obtained higher probabilities of remaining in the desired dynamics mode when considering the
-model's epistemic uncertainty.
-
-Both experiments in each environment obtained equal (or almost equal) probabilities of
-remaining in the desired dynamics mode when not marginalising the model's epistemic uncertainty.
-This indicates that the maximum entropy control term has little impact on this probability.
-However, in both environments, the maximum entropy control experiment obtained a
-higher probability of remaining in the desired
-dynamics mode when  marginalising the models epistemic uncertainty.
-# This indicates that the maximum entropy term
-
-compare to geometry methods
-
-# Although subtle, the trajectory found with maximum entropy control appears to have more clearance from
-# the turbulent dynamics mode.
-# cref:tab-results-sim-envs-inf provides more insights into this observation.
-
-# The experiment with maximum entropy control obtained a higher probability of remaining in the desired
-# dynamics mode when marginalising the models epistemic uncertainty.
-# This higher probability indicates that the maximum entropy term
-
-# Although the experiment without maximum entropy control obtained a higher probability of remaining in the desired
-# dynamics mode without marginalising the models epistemic uncertainty,
-# Both methods
-
-# Before evaluating their performance at avoiding regions of high epistemic uncertainty,
-# it is worth considering the influence of the expected cost term on the optimisation.
-# The expected cost increases when the state-control trajectory distribution has high variance.
-# This variance consists of the control variance (at each time step), which is being optimised, as well as
-# the state variance,
-# which is calculated by cascading single-step predictions through the desired mode's dynamics GP.
-# As such, the expected cost term in cref:eq-traj-opt-elbo will favour trajectories
-# that remain in regions of the desired mode's dynamics GP with low variance.
-# In systems with only a single dynamics mode, this may suffice for avoiding regions of the dynamics with
-# high epistemic uncertainty.
-# However, in multimodal systems where the underlying dynamics are fairly simple, each mode's GP
-# may confidently interpolate/extrapolate into regions that belong to another mode.
-# In this case, the epistemic uncertainty is not represented in the dynamics GP but
-# in the gating network.
-# In the \acrshort{mosvgpe} model, this form of epistemic uncertainty is modelled by the gating function's posterior variance.
-*Epistemic uncertainty*
-The methods ability to avoid regions of high epistemic uncertainty is now evaluated.
-From visual inspection, in Environment 1, the trajectory found with maximum entropy control,
-shown in cref:fig-mode-conditioning-max-entropy-over-svgp-traj-opt-7
-appears to remain in regions of the model with lower epistemic uncertainty in the gating network.
-This is shown by the trajectory navigating to the left of the region of high epistemic uncertainty in
-the center of the environment.
-This is confirmed in cref:tab-results-sim-envs-inf, as it is the trajectory with
-the lowest accumulation of gating function variance.
-In Environment 2, the experiment with maximum entropy control also obtained a
-lower accumulation of gating function variance than the experiment without maximum entropy control.
-
-Relative to the geometry-based methods,
-the trajectories found with the control-as-inference method, in Environment 2, shown in
-cref:fig-mode-conditioning-max-entropy-traj-opt-5,fig-mode-conditioning-no-max-entropy-traj-opt-5,
-do not exhibit as much uncertainty avoiding behaviour in the gating network.
-In contrast, in Environment 1, the trajectories found with the control-as-inference method
-obtained some of the most uncertainty avoiding behaviour, indicated by some of the
-lowest accumulated gating function variance.
-This change in behaviour is due to the relevance of the uncertainty avoiding behaviour being
-automatically set by the marginalisation of the gating function
-in the mode remaining term from cref:eq-traj-opt-elbo.
-Although, marginalisation is considered a principled way of handing uncertainty, in this scenario,
-it can be conjectured otherwise.
-This is because in the region with no observations, it is perfectly plausible that there
-is another region belonging to the turbulent dynamics mode, or a different dynamics mode altogether.
-# In a risk-averse setting, it is desirable not to introduce this uncertainty into the trajectory,
-# i.e. avoid this region completely.
-# Therefore, it is beneficial to decouple this uncertainty avoiding behaviour from the mode remaining behaviour.
-
-
-It is worth noting that only the trajectories found with the geometry-based methods and
-$\lambda=20.0$ were able to accumulate less gating function variance.
-
-Without decoupling the uncertainty avoiding behaviour from the mode remaining behaviour,
-it is not possible to find trajectories which avoid entering the region of high epistemic uncertainty in the
-gating network.
-However, as mentioned previously, it is not always clear how to balance these two behaviours.
-As shown in cref:chap-traj-opt-geometry, increasing the uncertainty avoiding behaviour can have a detrimental
-impact on the mode remaining behaviour.
-In contrast, the method presented in this chapter does not provide a mechanism for adjusting the relevance
-of each behaviour.
-However, the marginalisation of uncertainty in the \acrshort{elbo}
-(cref:eq-traj-opt-inference) is principled and requires no human input.
-# Issues regarding trajectories not avoiding regions of high epistemic uncertainty in the gating network
-# are attributed to the \acrshort{mosvgpe} underestimating uncertainty.
-# As such, in regions without observations should
-# be overcome by
-
-
-
-# The optimised trajectory avoids entering the turbulent dynamics mode successfully.
-# The control at each time step was initialised as a diagonal Gaussian, which lead to the
-# ELBO encoding maximum entropy control.
-
-# In contrast, cref:fig-mode-conditioning-no-max-entropy-traj-opt-7 shows results when using deterministic
-# controls, i.e. removing the maximum entropy control.
-# Although subtle, the maximum entropy term appears to find trajectories with more clearance from
-# the turbulent dynamics mode.
-
-
-
-# Relative to the geometry-based methods in cref:chap-traj-opt-geometry,
-# the trajectories found with the control-as-inference in
-# cref:fig-mode-conditioning-max-entropy-traj-opt,fig-mode-conditioning-no-max-entropy-traj-opt
-# do not avoid the region of high uncertainty in the gating network.
-# This is because the only term encoding this behaviour is the mode remaining term from
-# cref:eq-traj-opt-elbo, which is the mode probability obtained after marginalising the gating function.
-# Although, marginalisation is considered a principled way of handing uncertainty, in this scenario,
-# it can be conjectured otherwise.
-# This is because in the region with no observations, it is perfectly plausible that there
-# is another region belonging to the turbulent dynamics mode, or a different dynamics mode altogether.
-# In a risk-averse setting, it is desirable not to introduce this uncertainty into the trajectory,
-# i.e. avoid this region completely.
-# Therefore, it is beneficial to decouple this uncertainty avoiding behaviour from the mode remaining behaviour.
-
 ** Conclusion
 *** intro :ignore:
 This section details the main findings and insights obtained from the experiments and then discusses
@@ -11971,8 +11234,15 @@ the mode chance constraints.
 #+begin_export latex
 \epigraph{Real knowledge is to know the extent of one’s ignorance.”}{\textit{Confucius (Philosopher, 551–479BC).}}
 #+end_export
-** Intro :ignore:
+** maths :ignore:
 #+BEGIN_EXPORT latex
+\renewcommand{\explorativeController}{\ensuremath{\pi_{\text{explore}}}}
+\renewcommand{\modeController}{\ensuremath{\pi_{\text{mode}}}}
+\renewcommand{\dynamicsModel}{\ensuremath{p_{\theta}}}
+
+
+\newcommand{\initialStateDomain}{\ensuremath{\stateDomain_0}}
+
 \newcommand{\timeInd}{\ensuremath{t}}
 \newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
 \newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
@@ -11997,52 +11267,437 @@ the mode chance constraints.
 
 \newcommand{\gatingFunc}{\ensuremath{g}}
 #+END_EXPORT
-This chapter is concerned with exploration in multimodal dynamical systems
-where the transition dynamics are /not fully known a priori/.
-In particular, it is interested in exploring a single desired dynamics
-mode whilst avoiding entering any of the other modes.
-This is a challenging problem in systems where both the dynamical modes and
-how they switch over the state-control space are /not known a priori/.
-This is because the agent must observe regions outside of the desired dynamics mode
-in order to know that a particular region does not belong to the desired mode.
-Based on this logic, this chapter utilises the model from Chapter ref:chap-dynamics
-to design an information theoretic trajectory optimisation algorithm
-that
+** Intro :ignore:
 
-The trajectory optimiastion algorithm in this chapter is only concerned with
-the aforementioned exploration and is not intended to run fast enough for
-real-time MPC.
-Although not explored here, the algorithm could be used for guided policy
-search in a model-based reinforcement learning setting
-cite:levineGuided2013,levineVariational2013,okadaVariational2020.
-Alternatively, one could explore approximations enabling the approach to
-work for real time MPC e.g. linearising the dynamics and/or a second order
-Taylor expansion of the cost function.
-\todo{should this be cost of value function??}
+This chapter is concerned with navigating from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
+-- to the target state $\targetState$, whilst guaranteeing that the controlled system remains in the desired dynamics mode.
+In contrast to previous chapters, it does not assume prior access to a historical data set of state transitions.
+That is, it considers the more realistic scenario, where the agent must iteratively explore its environment --
+whilst remaining in the desired dynamics mode -- until it can confidently navigate to the target state $\targetState$.
 
-To the best of our knowledge, there is no previous work addressing exploration of
-a single dynamics mode in multimodal dynamical systems.
-cite:schreiterSafe2015 use a GP classifier to identify safe and unsafe regions
-when learning GP dynamics models in an active learning setting.
-However, they assume that they can directly observe whether a particular
-data point from the environment belongs to either the safe or unsafe regions.
-In contrast, this chapter is concerned with scenarios where the mode cannot be directly observed from the
-environment, but instead, is inferred by a probabilistic dynamics model.
+This chapter seeks to solve this navigation problem by combining all of the work presented thus far in this
+dissertation.
+To this end, it first hypothesises how the work can be combined to solve the navigation problem
+It then uses the work to develop exploration strategies with high probability of remaining in the desired dynamics mode.
+This chapter presents some initial results and details future work.
 
-Utilising mutual information for active learning has been well motivated by, for example,
-cite:krauseNearOptimal2008.
-They highlight that mutual information may lead to a more accurate model than differential entropy.
-It has also been shown that minimising the mutual information  is the same as minimising the expected posterior
-uncertainty (conditional entropy) in the model cite:ertinMaximum2003.
+
 ** Problem Statement
+*** intro :ignore:
+Following previous chapters, this work considers nonlinear, stochastic, multimodal dynamical systems,
+#+BEGIN_EXPORT latex
+\begin{subequations}
+\begin{align}
+\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
+&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar_{\timeInd}=\modeInd \nonumber \\
+\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
+\end{align}
+\end{subequations}
+#+END_EXPORT
+with states $\state \in \stateDomain$, controls $\control \in \controlDomain$ and a discrete time index $\timeInd$.
+The discrete mode indicator variable
+$\alpha_{\timeInd} \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$,
+indicates which of the $\ModeInd$ underlying dynamics modes
+$\{\mode{\latentFunc} : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
+and associated noise models
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
+$\bm\Sigma_{\bm\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
+governs the system at a given time step $\timeInd$.
+
+# #+BEGIN_EXPORT latex
+# \begin{definition}[Mode Remaining] \label{def-mode-remaining-explore}
+# Given an inital state $\state_0$ in dynamics mode $\desiredMode$
+# and a sequence of controls $\controlTraj=\control_{0:\TimeInd-1}$,
+# the controlled system is said to be mode-remaining iff:
+# \begin{align} \label{eq-mode-remaining-def-explore}
+# \modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
+# %\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \mode{\stateDomain} \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
+# \end{align}
+# \end{definition}
+# #+END_EXPORT
+The overall goal is to navigate from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
+-- to the target state $\targetState$, whilst guaranteeing that the controlled
+system remains in the desired dynamics mode.
+#+BEGIN_EXPORT latex
+\begin{definition}[Mode Remaining] \label{def-mode-remaining-explore}
+Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
+Given an inital state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy$,
+the controlled system is said to be mode-remaining iff:
+\begin{align} \label{eq-mode-remaining-def-explore}
+\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+&\in \mode{\stateDomain} \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
+\end{align}
+\end{definition}
+#+END_EXPORT
+Given this definition of a mode remaining controlled system,
+the problem can be formally stated as,
+#+BEGIN_EXPORT latex
+\begin{subequations} \label{eq-mode-explore-problem}
+\begin{align}
+\min_{\policy \in \Pi} &J(\policy) \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \epsilon,
+\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
+%&\text{\cref{eq-mode-remaining-def-explore}} \\
+&\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd-1] \\
+%\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+%&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\state_\TimeInd = \targetState,
+\end{align}
+\end{subequations}
+#+END_EXPORT
+where $\policy : \stateDomain \times \mathbb{Z} \rightarrow \controlDomain$
+denotes the controller.
+It may take the form of a deterministic feedback policy or an open-loop set of controls without state feedback.
+
+This resembles the problem statement from cref:chap-traj-opt-inference,chap-traj-opt-geometry.
+However, this chapter does not assume /a priori/ access to the environment.
+As such, it does not have access to a historical data set of state transitions which it can use to learn a
+predictive dynamics model.
+Instead, it must incrementally explore the environment, without violating the mode remaining constraints.
+However, given that the underlying dynamics modes and how the system switches between them are /not fully known a priori/,
+it is not possible to guarantee that the controlled system remains in the desired dynamics mode.
+
+However, this requirement can be relaxed to keeping the system in the desired mode with high probability.
+#+BEGIN_EXPORT latex
+\begin{definition}[$\delta$-mode remaining] \label{def-delta-mode-remaining}
+Let $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ denote a multimodal dynamical system
+and $\desiredMode$ a desired dynamics mode defined by its state domain $\desiredStateDomain \subseteq \stateDomain$.
+Given an initial state $\state_0 \in \desiredStateDomain$ and $\delta \in (0,1]$,
+a controlled system is said to be $\delta$-mode remaining under the controller $\policy$ iff:
+\begin{align}
+%\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \modeVar_{\timeInd}) = \desiredMode,
+%\control_{\timeInd} \in \controlDomain) \geq 1 - \delta
+\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+&\in \desiredStateDomain,
+\policy(\state_{\timeInd}, \timeInd) \in \controlDomain) \geq 1 - \delta
+\end{align}
+\end{definition}
+#+END_EXPORT
+Intuitively, the more the $\delta-\text{mode remaining}$ constraint is relaxed, the more the controller can explore.
+However, this will also increase the controllers chance of leaving the desired dynamics mode.
+Thus, the algorithm should consider two important properties:
+- Expand the region that is known to belong to the desired dynamics mode without violating the mode constraints,
+- Find the optimal controller parameters.
+
+
+# *Initial set*
+*Initial mode remaining controller*
+In robotics applications, an initial set of poor performing controllers can normally be obtained via
+simulation or domain knowledge.
+This works assumes access to an initial data set of state transitions
+$\dataset_0 = \{(\state_n, \control_n), \Delta \state_n\}_{n=1}^{N_0}$ collected from around the start state.
+This data set can be used to learn a predictive dynamics model which is accurate around the start state $\state_0$.
+cref:fig-mode-opt-initial-gating-network shows the initial data set overlayed on the \acrshort{mosvgpe}'s
+gating network posterior after training on it.
+This model can be used to learn an initial controller which is asymptotically stable around
+the start state.
+However, this controller may not work outside of the initial state domain and will not keep the system
+in the desired dynamics mode.
+# Given this data set,
+
+# such that $\state_0 \in \initialStateDomain$.
+# $\initialStateDomain \subseteq \desiredStateDomain$ around the start state,
+# such that $\state_0 \in \initialStateDomain$.
+
+*** Initial Model :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/scenario_7/explore/initial_mixing_prob.pdf}
+\subcaption{Mixing probabilities}
+\label{fig-mode-opt-over-prob}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/scenario_7/explore/initial_gating_gp.pdf}
+\subcaption{Gating function's GP posterior}
+\label{fig-mode-opt-over-svgp}
+\end{minipage}
+\caption{\mathbf{Initial gating network} Gating network posterior after training on the initial data set $initialDataset$
+shown by the blue crosses.
+The goal is to incrementally explore the environment until $\delta-\text{mode remaining}$ trajectories
+under the learned dynamics model, can be found from the start state $\state_0$, to the target state $\targetState$.
+(\subref{fig-mode-opt-over-prob}) shows the probability mass function over the mode indicators variable and
+(\subref{fig-mode-opt-over-svgp}) shows
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.}
+\label{fig-mode-opt-initial-gating-network}
+\end{figure}
+#+END_EXPORT
+
+** ModeOpt
+*** Flowchart :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[!t]
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=2cm, minimum height=1cm,text centered, draw=black, fill=violet!30]
+\tikzstyle{decision} = [diamond, rounded corners, minimum width=1cm, maximum height=1cm,text centered, draw=black, fill=violet!30]
+%\tikzstyle{decision} = [diamond, minimum width=2cm, minimum height=0.5cm, text centered, draw=black, fill=violet!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+% \begin{tikzpicture}[node distance=1.8cm, style={align=center}]]
+\centering
+\begin{tikzpicture}[every text node part/.style={align=center}, node distance=1.5cm]
+\node (start) [startstop] {Learn dynamics model $\dynamicsModel$};
+\node (trajopt) [startstop, below of=start, left of=start, xshift=-2cm] {Find trajectory to $\state_f$};
+\node (constraints) [decision, below of=trajopt, yshift=-1cm] {$\delta-\text{mode}$\\ remaining?};
+%# \node (constraints) [startstop, below of=trajopt] {$\delta-\text{mode remaining}$?};
+\node (execute) [startstop, below of=constraints, yshift=-1cm] {Execute trajectory in environment};
+\node (explore) [startstop, right of=constraints, xshift=6cm] {$\delta-\text{mode exploration}$ with $\explorativeController$};
+
+\draw [arrow] (start) -| (trajopt);
+\draw [arrow] (trajopt) -- (constraints);
+\draw [arrow] (constraints) -- node[anchor=east] {yes} (execute);
+\draw [arrow] (constraints) -- node[anchor=south] {no} (explore);
+\draw [arrow] (explore) |- node[anchor=west] {Experience} (start);
+\end{tikzpicture}
+\caption{Flowchart showing the sequence of steps and processes needed to control a system
+from an initial state $\state_0$, to a target state $\targetState$, with $\delta-\text{mode remaining}$ guarantee,
+when the underlying dynamics modes and how
+the system switches between them are \textit{not fully known a priori}.}
+\label{fig-mode-opt-loop}
+\end{figure}
+#+END_EXPORT
+*** Alg :ignore:
+#+BEGIN_EXPORT latex
+\begin{algorithm}[!t]
+\caption{ModeOpt}\label{alg-mode-opt}
+\begin{algorithmic}[1]
+\Require{Explorative controller $\explorativeController$, mode remaining controller $\modeController$, dynamics model $\dynamicsModel}$, data set $\dataset$}
+\For{$n = 1, 2, \ldots $}
+    \State Train model $\dynamicsModel}$ on $\dataset$ using \acrshort{elbo} from \cref{eq-lower-bound-further}
+    %\State Find trajectory $\controlTraj$ to $\targetState$ using \cref{eq-}
+    \State Optimise mode remaining controller $\modeController$ using learned model $\dynamicsModel}$
+    \If{$\state_{\TimeInd}$ = $\targetState$ and $\modeController$ is $\delta-\text{mode remaining}$}
+        \State Break
+    \EndIf
+    \State Optimise explorative controller $\explorativeController$ using learned model $\dynamicsModel}$
+    \State Collect state transition data set in environment using $\explorativeController$; add to $\dataset$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+#+END_EXPORT
+*** After flowchart :ignore:
+
+This chapter proposes a method for solving the mode remaining navigation problem that combines all of
+the work in this dissertation.
+At is core, the method learns a single-step dynamics model $\dynamicsModel$ using the \acrshort{mosvgpe}
+model from cref:chap-dynamics.
+Given this model, the mode remaining control methods in cref:chap-traj-opt-geometry,chap-traj-opt-inference
+can be used to find trajectories to the target state $\targetState$.
+The mode chance constraints from cref:eq-mode-chance-constraint,
+can then be used to check if these trajectories are $\delta-\text{mode remaining}$ under the learned dynamics
+model $\dynamicsModel$.
+Initially, it will not be possible to find
+$\delta-\text{mode remaining}$ trajectories under the learned dynamics model, due to high
+epistemic uncertainty.
+In this case, the agent must explore the environment, collect  data and update its dynamics model.
+This will reduce the model's epistemic uncertainty.
+Eventually the agent will reduce the model's epistemic uncertainty such that
+it can find $\delta-\text{mode remaining}$ trajectories to the target state $\targetState$.
+Ideally this exploration strategy will have some guarantee on remaining in the desired dynamics mode.
+cref:fig-mode-opt-loop illustrates this process in a flowchart.
+and cref:alg-mode-opt details the algorithm presented in this chapter.
+# The algorithm presented in this chapter is detailed in cref:alg-mode-opt.
+
+*$\delta-\text{mode remaining}$ exploration*
+In order to implement such an algorithm, this chapter first proposes a method for exploring the environment
+with mode remaining guarantees.
+That is, a controller that will explore the environment whilst ensuring the controlled system remains in the
+desired dynamics mode with high probability, i.e. satisfy cref:eq-mode-remaining-def-explore.
+
+This section now details the
+
+*** ModeOpt :ignore:
+The algorithm presented in this chapter is detailed in cref:alg-mode-opt.
+The algorithm is initialised with a data set of state transitions, which are around the start state and
+known to belong to the desired dynamics mode.
+
+*\acrshort{mosvgpe} dynamics model $\dynamicsModel$*
+At is core, the method learns a single-step dynamics model $\dynamicsModel$ using the \acrshort{mosvgpe}
+model from cref:chap-dynamics.
+This model learns a factorised representation of the underlying dynamics modes as well as a gating network
+which infers valuable information regarding how the system switches between the modes.
+
+*Mode remaining controller $\modeController$*
+The mode remaining control methods in cref:chap-traj-opt-geometry,chap-traj-opt-inference
+can be used to construct a mode remaining controller $\modeController$ that finds trajectories
+to the target state $\targetState$.
+The mode chance constraints from cref:eq-mode-chance-constraint
+can then be used to check if these trajectories are $\delta-\text{mode remaining}$.
+
+*Explorative controller $\explorativeController$*
+# *$\delta-\text{mode remaining}$ exploration*
+In order to implement such an algorithm, this chapter first proposes a method for exploring the environment
+with mode remaining guarantees.
+That is, am controller that will explore the environment whilst ensuring the controlled system remains in the
+desired dynamics mode with high probability, i.e. satisfy cref:eq-mode-remaining-def-explore.
+
+
+# The steps of the algorithm presnted in this chapter can be summarised as follows,
+# 1. Learn a single-step dynamics model using \acrshort{mosvgpe} from cref:chap-dynamics,
+# 2. Find trajectories to $\targetState$ under the learned model, using the methods from cref:chap-traj-opt-geometry,chap-traj-opt-inference,
+# 3. Check if trajectories are $\delta-\text{mode remaining}$ using mode chance constraints from cref:eq-mode-chance-constraint,
+# 4. Explore the environment, whilst ensuring the controlled system is $\delta-\text{mode remaining}$.
+
+*** Mode Remaining Exploration
+*Greedy exploitation*
+One of the most commonly used exploration strategies is to select the controller that maximises
+the expected performance under the learned dynamics model.
+This greedy strategy is given by,
+#+BEGIN_EXPORT latex
+\begin{align}
+\pi_{\text{greedy}} = \arg \max_{\pi \in \Pi} \E_{f \in p(f \mid \mathcal{D}_{1:t})} \left[ J(f, \pi) \right].
+\end{align}
+#+END_EXPORT
+This approach is used in PILCO citep:deisenrothPILCO2011 and GP-MPC citep:kamtheDataEfficient2018
+where the dynamics are represented using \acrshort{gp}s and the moment approximation is used to cascade
+single-step predictions.
+Similarly, PETS citep:chuaDeep2018 uses this exploration strategy but represents the dynamics
+using ensembles of probabilistic neural networks.
+
+*Thompson sampling*
+An alternative and theoretically grounded strategy is Thompson sampling.
+This approach samples a single model  $f \sim p(f \mid \mathcal{D}_{1:t})$ at every iteration
+and uses the sampled model to optimise the controller.
+This is given by,
+#+BEGIN_EXPORT latex
+\begin{align}
+\pi_{\text{thompson}} = \arg \max_{\pi \in \Pi} J(f, \pi) \quad \text{s.t.} \quad f \sim p(f \mid \mathcal{D}_{1:t}).
+\end{align}
+#+END_EXPORT
+# This contrasts the greedy approach that averages over the
+In general it is intractable to sample from $p(f \mid \mathcal{D}_{1:t})$, although methods do exist
+for both \acrshort{gp} models and ensembles.
+Note that after the sampling step this problem is equivalent to greedy exploitation.
+
+*Active learning*
+blah blah blah
+
+In dynamical systems an arbitrary state $\state$ cannot be sampled, so instead, the dynamics must be steered
+to $\state$ through the unknown dynamics $\dynamicsFunc$ through a sequence of controls $\control$.
+Thus, there is information gain along the trajectory which must also be
+considered.
+As highlighted by cite:buisson-fenetActively2020, information gain in dynamical systems is therefore
+fundamentally different to the /static/ problem addressed by cite:krauseNearOptimal2008
+and cite:houlsbyBayesian2011.
+The goal here is to pick the most informative control trajectory $\controlTraj$ whilst observing $\stateTraj$.
+
+Recent work has addressed active learning in (unimodal) GP dynamics models
+citep:buisson-fenetActively2020 and (unimodal)
+GP state-space models citep:caponeLocalized2020.
+cite:schreiterSafe2015 consider safe exploration for active learning where they distinguish safe and unsafe regions
+with a binary GP classifier, which is learned separately to the dynamics model. Their exploration strategy considers
+the differential entropy of the posterior GP associated with the dynamics model and they use the GP classifier to
+define a set of constraints.
+
+This chapter resembles cite:schreiterSafe2015
+except that it exploits the coupled learning of the dynamics modes and the gating network, instead of learning
+a separate \acrshort{gp} classifier to distinguish safe and unsafe regions.
+The exploration strategy is then projected onto the posterior GP(s) associated with the gating network.
+The coupled learning provides well-calibrated uncertainty estimates in the gating network, making it a
+good choice for information-based exploration.
+
+*Exploration*
+#+BEGIN_EXPORT latex
+\begin{align}
+\arg \min_{\controlTraj} &\sum_{\timeInd=0}^{\TimeInd}
+\mathcal{H} \left[ p(\desiredGatingFunction(\state_{\timeInd}) \mid \state_{0:\timeInd-1}, \dataset) ) \right] \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
+\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
+%\modeVar_{\timeInd} &= \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd-1}=\desiredMode)
+\geq 1-\delta \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\state_{\TimeInd} = \targetState,
+\end{align}
+#+END_EXPORT
 
 #+BEGIN_EXPORT latex
-\begin{theorem}[definition] \label{}
-Given a desired dynamics mode $\desiredMode$ with state space
-$\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$
-controller $\policy_{\desiredMode}$ and the
-The controller satisfies the constraints
-\end{theorem}
+\begin{align}
+J(\stateTraj, \controlTraj) =
+\underbrace{(\state_{\TimeInd} - \state_0)^T \mathbf{H} (\state_{\TimeInd} - \state_0)}_{\text{terminal cost}}
++ \underbrace{\sum_{\timeInd=1}^{\TimeInd-1} (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState)}_{\text{state difference}}
++ \underbrace{\sum_{\timeInd=0}^{\TimeInd-1} \control_{\timeInd}^T \mathbf{R} \control_{\timeInd}}_{\text{control cost}}
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align}
+p(\desiredGatingFunction(\state_{\timeInd}) \mid \state_{0:\timeInd-1}, \dataset)
+=
+\end{align}
+#+END_EXPORT
+where
+$q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd}) = \mathcal{N}(\state_{\timeInd} \mid  \mu_{\timeInd}, \sigma^2_{\timeInd})$
+is the approximate posterior over the
+gating functions from cref:eq-predictive-gating.
+
+Assuming that the gating function values associated with each state $\state_{\timeInd}$ in the trajectory
+are from the gating function's GP, gives the distribution over a gating function value as,
+#+BEGIN_EXPORT latex
+\begin{align}
+p(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd}) =
+\mathcal{N}(\mode{\hat{\mu}}(\state_{\timeInd}), \mode{\hat{k}}(\state_{\timeInd}, \state_{\timeInd}))
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align}
+\arg \min_{\controlTraj} &\sum_{\timeInd=0}^{\TimeInd}
+\mathcal{H} \left[ p(\desiredGatingFunction(\state_{\timeInd}) \mid \state_{0:\timeInd-1}, \dataset) ) \right] \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
+\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
+\modeVar_{\timeInd} &= \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+\state_{\TimeInd} &= \targetState,
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align}
+\arg \min_{\controlTraj \in \controlDomain} &\objectiveFunc \\
+\text{s.t.}
+&\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd-1}=\desiredMode)
+\geq 1-\delta \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd].
+\end{align}
+#+END_EXPORT
+
+- Adding new inducing points
+- Fixed gating kernel parameters
+
+# Given a desired dynamics mode $\desiredMode$, this work seeks to find a control
+# trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
+# to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
+# target state $\targetState \in \desiredStateDomain$,
+# over a horizon $\TimeInd$,
+# whilst minimising a cost function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$
+# and keeping the system in the desired dynamics mode $\desiredMode$.
+
+
+# Do not violate the a priori unknown, but learned safety constraints with high probability.
+# Actively learn about the constraints
+
+# - $\delta$ mode remaining exploration
+#   + via model predictive control
+#   + via policy optimisation
+
+
+# #+BEGIN_EXPORT latex
+# \begin{theorem}[definition] \label{}
+# Given a desired dynamics mode $\desiredMode$ with state space
+# $\desiredStateDomain = \{ \state \in \stateDomain \mid \modeVar = \desiredMode \}$
+# controller $\policy_{\desiredMode}$ and the
+# The controller satisfies the constraints
+# \end{theorem}
+# #+END_EXPORT
+
+*Chance constraints*
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mode-chance-constraint}
+\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd-1}=\desiredMode)
+\geq 1-\delta \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd].
+%\geq \satisfactionProb \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd].
+\end{align}
 #+END_EXPORT
 
 ** Bayesian Information Theoretic Active Learning
@@ -12058,7 +11713,7 @@ $p(\params \mid \dataset)$
 has been inferred.
 The goal of information theoretic active learning is to reduce the number of
 possible hypothesis as fast as possible, i.e. minimise the uncertainty associated
-with the parameters using Shannon's entropy cite:coverElements2006.
+with the parameters using Shannon's entropy citep:coverElements2006.
 #+BEGIN_EXPORT latex
 \newcommand{\crv}{\ensuremath{X}}
 \newcommand{\density}{\ensuremath{p(\crv)}}
@@ -12282,8 +11937,11 @@ cite:schreiterSafe2015 consider safe exploration for active learning where they 
 with a binary GP classifier, which is learned separately to the dynamics model. Their exploration strategy considers
 the differential entropy of the posterior GP associated with the dynamics model and they use the GP classifier to
 define a set of constraints.
-In contrast, this chapter exploits the coupled learning of the dynamics modes and the gating network (i.e. the classifier)
-and projects the exploration strategy onto the posterior GP(s) associated with the gating network.
+
+This chapter resembles cite:schreiterSafe2015
+except that it exploits the coupled learning of the dynamics modes and the gating network, instead of learning
+a separate \acrshort{gp} classifier to distinguish safe and unsafe regions.
+The exploration strategy is then projected onto the posterior GP(s) associated with the gating network.
 The coupled learning provides well-calibrated uncertainty estimates in the gating network, making it a
 good choice for information-based exploration.
 
@@ -12378,15 +12036,6 @@ We consider a fully discriminative model where the goal of active learning is to
 \end{align}
 #+END_EXPORT
 
-** Mode Constraints
-In order to ensure that the exploration strategy remains in the desired dynamics
-mode this section introduces additional information to describe the discriminative
-function when it gets close to the decision boundary  w
-
-** The Algorithm
-This section introduces the entropy based active learning framework extended by
-
-** Content
 An approximated mutual information exploration criterion is used
 
 entropy
@@ -12407,6 +12056,45 @@ p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_
 \end{align}
 #+END_EXPORT
 
+** Discussion
+The trajectory optimiastion algorithm in this chapter is only concerned with
+the aforementioned exploration and is not intended to run fast enough for
+real-time MPC.
+Although not explored here, the algorithm could be used for guided policy
+search in a model-based reinforcement learning setting
+cite:levineGuided2013,levineVariational2013,okadaVariational2020.
+Alternatively, one could explore approximations enabling the approach to
+work for real time MPC e.g. linearising the dynamics and/or a second order
+Taylor expansion of the cost function.
+\todo{should this be cost of value function??}
+
+
+This chapter is concerned with exploration in multimodal dynamical systems
+where the underlying dynamics modes and how the system switches between them are /not fully known a priori/.
+In particular, it is interested in exploring a single desired dynamics
+mode whilst avoiding entering any of the other modes.
+This is a challenging problem because the agent must observe regions outside of the desired dynamics mode
+in order to know that a particular region does not belong to the desired mode.
+Based on this logic, this chapter utilises the model from Chapter ref:chap-dynamics
+to design an information theoretic trajectory optimisation algorithm
+that
+
+
+To the best of our knowledge, there is no previous work addressing exploration of
+a single dynamics mode in multimodal dynamical systems.
+cite:schreiterSafe2015 use a GP classifier to identify safe and unsafe regions
+when learning GP dynamics models in an active learning setting.
+However, they assume that they can directly observe whether a particular
+data point from the environment belongs to either the safe or unsafe regions.
+In contrast, this chapter is concerned with scenarios where the mode cannot be directly observed from the
+environment, but instead, is inferred by a probabilistic dynamics model.
+
+Utilising mutual information for active learning has been well motivated by, for example,
+cite:krauseNearOptimal2008.
+They highlight that mutual information may lead to a more accurate model than differential entropy.
+It has also been shown that minimising the mutual information  is the same as minimising the expected posterior
+uncertainty (conditional entropy) in the model cite:ertinMaximum2003.
+** Conclusion
 * Conclusion
 * Appendix
 ** Multivariate Normals
