@@ -11230,7 +11230,7 @@ the mode chance constraints.
 # prioritise remaining in a desired dynamics mode or prioritise avoiding regions of the learned transition
 # dynamics model with high epistemic uncertainty.
 
-* Mode Constrained Exploration for Model-Based Reinforcement Learning label:chap-active-learning
+* Mode Remaining Model-Based Reinforcement Learning label:chap-active-learning
 #+begin_export latex
 \epigraph{Real knowledge is to know the extent of one’s ignorance.”}{\textit{Confucius (Philosopher, 551–479BC).}}
 #+end_export
@@ -11240,6 +11240,9 @@ the mode chance constraints.
 \renewcommand{\modeController}{\ensuremath{\pi_{\text{mode}}}}
 \renewcommand{\dynamicsModel}{\ensuremath{p_{\theta}}}
 
+\renewcommand{\desiredGatingKernel}{\ensuremath{\hat{k}_{\desiredMode}}}
+\renewcommand{\desiredGatingVariance}{\ensuremath{\hat{\sigma}^2_{\timeInd}}}
+\renewcommand{\desiredGatingMean}{\ensuremath{\hat{\mu}_{\timeInd}}}
 
 \newcommand{\initialStateDomain}{\ensuremath{\stateDomain_0}}
 
@@ -11280,7 +11283,6 @@ dissertation.
 To this end, it first hypothesises how the work can be combined to solve the navigation problem
 It then uses the work to develop exploration strategies with high probability of remaining in the desired dynamics mode.
 This chapter presents some initial results and details future work.
-
 
 ** Problem Statement
 *** intro :ignore:
@@ -11486,18 +11488,17 @@ At is core, the method learns a single-step dynamics model $\dynamicsModel$ usin
 model from cref:chap-dynamics.
 Given this model, the mode remaining control methods in cref:chap-traj-opt-geometry,chap-traj-opt-inference
 can be used to find trajectories to the target state $\targetState$.
-The mode chance constraints from cref:eq-mode-chance-constraint,
+The mode chance constraints from cref:eq-mode-chance-constraint
 can then be used to check if these trajectories are $\delta-\text{mode remaining}$ under the learned dynamics
 model $\dynamicsModel$.
 Initially, it will not be possible to find
 $\delta-\text{mode remaining}$ trajectories under the learned dynamics model, due to high
 epistemic uncertainty.
 In this case, the agent must explore the environment, collect  data and update its dynamics model.
-This will reduce the model's epistemic uncertainty.
 Eventually the agent will reduce the model's epistemic uncertainty such that
 it can find $\delta-\text{mode remaining}$ trajectories to the target state $\targetState$.
-Ideally this exploration strategy will have some guarantee on remaining in the desired dynamics mode.
-cref:fig-mode-opt-loop illustrates this process in a flowchart.
+Ideally, this exploration strategy will have some guarantee on remaining in the desired dynamics mode.
+cref:fig-mode-opt-loop illustrates this process in a flowchart
 and cref:alg-mode-opt details the algorithm presented in this chapter.
 # The algorithm presented in this chapter is detailed in cref:alg-mode-opt.
 
@@ -11507,48 +11508,17 @@ with mode remaining guarantees.
 That is, a controller that will explore the environment whilst ensuring the controlled system remains in the
 desired dynamics mode with high probability, i.e. satisfy cref:eq-mode-remaining-def-explore.
 
-This section now details the
+*** Exploration Strategies
+The performance of the algorithm depends on the controllers ability to explore.
+This section provides an overview of existing exploration schemes.
 
-*** ModeOpt :ignore:
-The algorithm presented in this chapter is detailed in cref:alg-mode-opt.
-The algorithm is initialised with a data set of state transitions, which are around the start state and
-known to belong to the desired dynamics mode.
-
-*\acrshort{mosvgpe} dynamics model $\dynamicsModel$*
-At is core, the method learns a single-step dynamics model $\dynamicsModel$ using the \acrshort{mosvgpe}
-model from cref:chap-dynamics.
-This model learns a factorised representation of the underlying dynamics modes as well as a gating network
-which infers valuable information regarding how the system switches between the modes.
-
-*Mode remaining controller $\modeController$*
-The mode remaining control methods in cref:chap-traj-opt-geometry,chap-traj-opt-inference
-can be used to construct a mode remaining controller $\modeController$ that finds trajectories
-to the target state $\targetState$.
-The mode chance constraints from cref:eq-mode-chance-constraint
-can then be used to check if these trajectories are $\delta-\text{mode remaining}$.
-
-*Explorative controller $\explorativeController$*
-# *$\delta-\text{mode remaining}$ exploration*
-In order to implement such an algorithm, this chapter first proposes a method for exploring the environment
-with mode remaining guarantees.
-That is, am controller that will explore the environment whilst ensuring the controlled system remains in the
-desired dynamics mode with high probability, i.e. satisfy cref:eq-mode-remaining-def-explore.
-
-
-# The steps of the algorithm presnted in this chapter can be summarised as follows,
-# 1. Learn a single-step dynamics model using \acrshort{mosvgpe} from cref:chap-dynamics,
-# 2. Find trajectories to $\targetState$ under the learned model, using the methods from cref:chap-traj-opt-geometry,chap-traj-opt-inference,
-# 3. Check if trajectories are $\delta-\text{mode remaining}$ using mode chance constraints from cref:eq-mode-chance-constraint,
-# 4. Explore the environment, whilst ensuring the controlled system is $\delta-\text{mode remaining}$.
-
-*** Mode Remaining Exploration
 *Greedy exploitation*
 One of the most commonly used exploration strategies is to select the controller that maximises
 the expected performance under the learned dynamics model.
 This greedy strategy is given by,
 #+BEGIN_EXPORT latex
 \begin{align}
-\pi_{\text{greedy}} = \arg \max_{\pi \in \Pi} \E_{f \in p(f \mid \mathcal{D}_{1:t})} \left[ J(f, \pi) \right].
+\pi_t^{\text{greedy}} = \arg \max_{\pi \in \Pi} \E_{f \sim p(f \mid \mathcal{D}_{1:t})} \left[ J(f, \pi) \right].
 \end{align}
 #+END_EXPORT
 This approach is used in PILCO citep:deisenrothPILCO2011 and GP-MPC citep:kamtheDataEfficient2018
@@ -11564,7 +11534,7 @@ and uses the sampled model to optimise the controller.
 This is given by,
 #+BEGIN_EXPORT latex
 \begin{align}
-\pi_{\text{thompson}} = \arg \max_{\pi \in \Pi} J(f, \pi) \quad \text{s.t.} \quad f \sim p(f \mid \mathcal{D}_{1:t}).
+\pi_t^{\text{thompson}} = \arg \max_{\pi \in \Pi} J(f_t, \pi) \quad \text{s.t.} \quad f_t \sim p(f \mid \mathcal{D}_{1:t}).
 \end{align}
 #+END_EXPORT
 # This contrasts the greedy approach that averages over the
@@ -11572,8 +11542,34 @@ In general it is intractable to sample from $p(f \mid \mathcal{D}_{1:t})$, altho
 for both \acrshort{gp} models and ensembles.
 Note that after the sampling step this problem is equivalent to greedy exploitation.
 
+
 *Active learning*
-blah blah blah
+Active learning is another class of exploration algorithms.
+The goal of information theoretic active learning is to reduce the number of
+possible hypothesis as fast as possible, i.e. minimise the uncertainty associated
+with the parameters using Shannon's entropy citep:coverElements2006,
+#+BEGIN_EXPORT latex
+\newcommand{\crv}{\ensuremath{X}}
+\newcommand{\density}{\ensuremath{p(\crv)}}
+\begin{myquote}
+\textbf{Differential Entropy}
+Let $\crv$ be a continuos random variable, with a probability density
+$\density$,
+whose support is a set $\mathcal{X}$.
+The differential entropy $H(\crv)$ is then defined as,
+\begin{align} \label{eq-differential-entropy}
+H(\crv) = - \int_{\mathcal{X}} \density \text{log} \density \text{d} \crv.
+\end{align}
+\end{myquote}
+#+END_EXPORT
+In contrast to the previous approaches, active learning does not seek to maximise a black-box objective.
+Instead, it is only interested in exploration.
+This is given by,
+#+BEGIN_EXPORT latex
+\begin{align}
+\pi_t^{\text{active}} = \arg \max_{\pi \in \Pi} \matahbb{H} \left[ f \mid \mathcal{D}_{1:t} \right].
+\end{align}
+#+END_EXPORT
 
 In dynamical systems an arbitrary state $\state$ cannot be sampled, so instead, the dynamics must be steered
 to $\state$ through the unknown dynamics $\dynamicsFunc$ through a sequence of controls $\control$.
@@ -11584,48 +11580,93 @@ fundamentally different to the /static/ problem addressed by cite:krauseNearOpti
 and cite:houlsbyBayesian2011.
 The goal here is to pick the most informative control trajectory $\controlTraj$ whilst observing $\stateTraj$.
 
-Recent work has addressed active learning in (unimodal) GP dynamics models
-citep:buisson-fenetActively2020 and (unimodal)
-GP state-space models citep:caponeLocalized2020.
+Recent work has addressed active learning in \acrshort{gp} dynamics models
+citep:buisson-fenetActively2020 and \acrshort{gp} state-space models citep:caponeLocalized2020.
 cite:schreiterSafe2015 consider safe exploration for active learning where they distinguish safe and unsafe regions
-with a binary GP classifier, which is learned separately to the dynamics model. Their exploration strategy considers
-the differential entropy of the posterior GP associated with the dynamics model and they use the GP classifier to
+with a binary \acrshort{gp} classifier, which is learned separately to the dynamics model.
+Their exploration strategy considers
+the differential entropy of the posterior \acrshort{gp} associated with the dynamics model and they
+use the \acrshort{gp} classifier to
 define a set of constraints.
 
-This chapter resembles cite:schreiterSafe2015
-except that it exploits the coupled learning of the dynamics modes and the gating network, instead of learning
-a separate \acrshort{gp} classifier to distinguish safe and unsafe regions.
-The exploration strategy is then projected onto the posterior GP(s) associated with the gating network.
-The coupled learning provides well-calibrated uncertainty estimates in the gating network, making it a
-good choice for information-based exploration.
+# This chapter resembles cite:schreiterSafe2015
+# except that it exploits the coupled learning of the dynamics modes and the gating network, instead of learning
+# a separate \acrshort{gp} classifier to distinguish safe and unsafe regions.
+# The exploration strategy is then projected onto the posterior \acrshort{gp}(s) associated with the gating network.
+# The coupled learning provides well-calibrated uncertainty estimates in the gating network, making it a
+# good choice for information-based exploration.
 
-*Exploration*
+
+# *Maximum entropy reinforcement learning*
+
+*** Mode Remaining Exploration
+The exploration strategy presented in this chapter is primarily interested
+in exploring a single desired dynamics mode whilst avoiding entering any of the other modes.
+It is worth noting that this is a challenging problem because the agent must observe regions
+outside of the desired dynamics mode
+in order to know that a particular region does not belong to the desired mode.
+To the best of our knowledge, there is no previous work addressing exploration of
+a single dynamics mode in multimodal dynamical systems.
+# cite:schreiterSafe2015 use a GP classifier to identify safe and unsafe regions
+# when learning GP dynamics models in an active learning setting.
+# However, they assume that they can directly observe whether a particular
+# data point from the environment belongs to either the safe or unsafe regions.
+# In contrast, this chapter is concerned with scenarios where the mode cannot be directly observed from the
+# environment, but instead, is inferred by a probabilistic dynamics model.
+
+The exploration strategy presented in this chapter is primarily interested in exploring
+regions of the gating network that are uncertain.
+This work proposes a trajectory optimisation algorithm that principally ensures $\delta\text{mode remaining}$
+trajectories via chance constraints.
+The objective combines information based exploration of the
+gating network with the main goal of navigating to the target state $\targetState$.
+The trajectory optimisation algorithm that this work solves is given by,
+#+BEGIN_EXPORT latex
+\begin{subequations} \label{eq-explorative-traj-opt}
+\begin{align}
+%\arg \max_{\controlTraj} &\sum_{\timeInd=0}^{\TimeInd}
+\arg \max_{\pi} &\sum_{\timeInd=0}^{\TimeInd}
+\underbrace{\mathcal{H} \left[
+\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj_{\neg\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset \right]}_{\text{conditional gating entropy}}
++ \sum_{\timeInd=0}^{\TimeInd-1}
+\E_{\dynamicsModel(\state_{\timeInd+1} \mid \state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))}
+\left[ \underbrace{(\state_{\timeInd} - \targetState)^T \mathbf{Q}
+(\state_{\timeInd} - \targetState)}_{\text{state difference}} \right] \\
+%+ \sum_{\timeInd=1}^{\TimeInd-1} \underbrace{\control_{\timeInd}^T \mathbf{R} \control_{\timeInd}}_{\text{control cost}} \right] \\
+\text{s.t.} \quad &\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd-1}=\desiredMode)
+\geq 1-\delta \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
+\end{align}
+\end{subequations}
+#+END_EXPORT
+Intuitively, the first term seeks to find trajectories that explore regions of the gating network with
+high epistemic uncertainty.
+Conditioning the entropy on all of the other time steps makes each time step aware of the
+information gained by rest of the trajectory.
+This prevents trajectories from collapsing onto a single location of maximum entropy and favours trajectories
+spreading over the state space in order to maximise the entropy of the entire trajectory.
+The second term targets exploration towards the direction of the target state $\targetState$.
+
+
+
+The distribution over the desired mode's gating function at $\state_{\timeInd}$ conditioned on the rest of the
+trajectory is given by,
 #+BEGIN_EXPORT latex
 \begin{align}
-\arg \min_{\controlTraj} &\sum_{\timeInd=0}^{\TimeInd}
-\mathcal{H} \left[ p(\desiredGatingFunction(\state_{\timeInd}) \mid \state_{0:\timeInd-1}, \dataset) ) \right] \\
-\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
-\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
-%\modeVar_{\timeInd} &= \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-&\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd-1}=\desiredMode)
-\geq 1-\delta \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-&\state_{\TimeInd} = \targetState,
+p(\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj_{\neg\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset)
+&= \mathcal{N}\left( \desiredGatingMean, \desiredGatingVariance \right)
 \end{align}
 #+END_EXPORT
-
+where the mean and variance are obtained via the properties of multivariate Normal distributions,
 #+BEGIN_EXPORT latex
 \begin{align}
-J(\stateTraj, \controlTraj) =
-\underbrace{(\state_{\TimeInd} - \state_0)^T \mathbf{H} (\state_{\TimeInd} - \state_0)}_{\text{terminal cost}}
-+ \underbrace{\sum_{\timeInd=1}^{\TimeInd-1} (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState)}_{\text{state difference}}
-+ \underbrace{\sum_{\timeInd=0}^{\TimeInd-1} \control_{\timeInd}^T \mathbf{R} \control_{\timeInd}}_{\text{control cost}}
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align}
-p(\desiredGatingFunction(\state_{\timeInd}) \mid \state_{0:\timeInd-1}, \dataset)
-=
+\desiredGatingMean &=
+\desiredGatingKernel(\state_{\timeInd},\stateTraj_{\neg\timeInd})
+\desiredGatingKernel(\stateTraj_{\neg\timeInd},\stateTraj_{\neg\timeInd})^{-1}
+\desiredGatingFunction(\stateTraj_{\neg\timeInd}) \\
+\desiredGatingVariance &=
+\desiredGatingKernel(\state_{\timeInd}, \state_{\timeInd}) - \desiredGatingKernel(\state_{\timeInd},\stateTraj_{\neg\timeInd})
+\desiredGatingKernel(\stateTraj_{\neg\timeInd},\stateTraj_{\neg\timeInd})^{-1}
+\desiredGatingKernel(\stateTraj_{\neg\timeInd}, \state_{\timeInd})
 \end{align}
 #+END_EXPORT
 where
@@ -11638,7 +11679,7 @@ are from the gating function's GP, gives the distribution over a gating function
 #+BEGIN_EXPORT latex
 \begin{align}
 p(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd}) =
-\mathcal{N}(\mode{\hat{\mu}}(\state_{\timeInd}), \mode{\hat{k}}(\state_{\timeInd}, \state_{\timeInd}))
+\mathcal{N}(\mode{\hat{\mu}}(\state_{\timeInd}), (\state_{\timeInd}, \state_{\timeInd}))
 \end{align}
 #+END_EXPORT
 
@@ -11699,6 +11740,38 @@ p(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd}) =
 %\geq \satisfactionProb \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd].
 \end{align}
 #+END_EXPORT
+
+*** ModeOpt
+The algorithm presented in this chapter is detailed in cref:alg-mode-opt.
+The algorithm is initialised with a data set of state transitions, which are around the start state and
+known to belong to the desired dynamics mode.
+
+*\acrshort{mosvgpe} dynamics model $\dynamicsModel$*
+At is core, the method learns a single-step dynamics model $\dynamicsModel$ using the \acrshort{mosvgpe}
+model from cref:chap-dynamics.
+This model learns a factorised representation of the underlying dynamics modes as well as a gating network
+which infers valuable information regarding how the system switches between the modes.
+
+*Mode remaining controller $\modeController$*
+The mode remaining control methods in cref:chap-traj-opt-geometry,chap-traj-opt-inference
+can be used to construct a mode remaining controller $\modeController$ that finds trajectories
+to the target state $\targetState$.
+The mode chance constraints from cref:eq-mode-chance-constraint
+can then be used to check if these trajectories are $\delta-\text{mode remaining}$.
+
+*Explorative controller $\explorativeController$*
+# *$\delta-\text{mode remaining}$ exploration*
+In order to implement such an algorithm, this chapter first proposes a method for exploring the environment
+with mode remaining guarantees.
+That is, am controller that will explore the environment whilst ensuring the controlled system remains in the
+desired dynamics mode with high probability, i.e. satisfy cref:eq-mode-remaining-def-explore.
+
+
+# The steps of the algorithm presnted in this chapter can be summarised as follows,
+# 1. Learn a single-step dynamics model using \acrshort{mosvgpe} from cref:chap-dynamics,
+# 2. Find trajectories to $\targetState$ under the learned model, using the methods from cref:chap-traj-opt-geometry,chap-traj-opt-inference,
+# 3. Check if trajectories are $\delta-\text{mode remaining}$ using mode chance constraints from cref:eq-mode-chance-constraint,
+# 4. Explore the environment, whilst ensuring the controlled system is $\delta-\text{mode remaining}$.
 
 ** Bayesian Information Theoretic Active Learning
 Following cite:houlsbyBayesian2011 this section introduces Bayesian
@@ -12056,7 +12129,1588 @@ p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_
 \end{align}
 #+END_EXPORT
 
-** Discussion
+** Preliminary Results
+*** Environment 1
+**** Data Step 0 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{0}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 1 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{1}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 1 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{1}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+%\caption{\textbf{Exploration - step \stepNum, epoch \epochNum}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 1 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{1}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 2 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{2}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 2 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{2}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 2 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{2}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 3 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{3}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 3 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{3}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 3 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{3}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 4 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{4}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 4 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{4}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 4 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{4}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 5 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{5}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 5 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{5}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 5 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{5}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 6 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{6}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 6 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{6}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 6 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{6}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 7 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{7}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 7 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{7}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 7 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{7}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 8 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{8}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 8 Epoch 0 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{8}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 8 Epoch 1494 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{8}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum, epoch \epochNum}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 9 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{9}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 9 Epoch 0 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{9}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 9 Epoch 1494 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{9}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 10 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{10}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 10 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{10}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 10 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{10}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 11 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{11}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 11 Epoch 0 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{11}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 11 Epoch 1494 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{11}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 12 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{12}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 12 Epoch 0 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{12}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 12 Epoch 1494 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{12}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 15 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{15}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 15 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{15}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 15 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{15}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 18 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{18}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 18 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{18}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 18 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{18}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 20 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{20}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 20 Epoch 0 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{20}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 20 Epoch 1494 :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{20}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 21 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{21}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 21 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{21}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 21 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{21}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Trajectory Step 22 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{22}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
+\subcaption{}
+\label{fig-explorative-traj-opt-over-svgp-7-step-\stepNum}
+\end{minipage}
+\caption{\textbf{Exploration - step \stepNum}
+Trajectory optimisation results after solving \cref{eq-explorative-traj-opt}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The state trajectories are overlayed on (\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNum})
+each mode's mixing probability
+and (\subref{fig-explorative-traj-opt-over-svgp-7-step-\stepNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 22 Epoch 0 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{22}
+\renewcommand{\epochNum}{0}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{Before training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+**** Data Step 22 Epoch 1494 :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{22}
+\renewcommand{\epochNum}{1494}
+\begin{figure}
+\centering
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\subcaption{}
+\label{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum}
+\end{minipage}
+\caption{\textbf{After training on $\dataset_{\stepNum}$}
+Data set $\dataset_{\stepNum}$ (blue crosses)  overlayed on
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-\epochNum})
+each mode's mixing probability
+and (\subref{fig-explorative-data-over-svgp-7-step-\stepNum-epoch-\epochNum})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function,
+after training for $\epochNum$ epochs.
+The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line).
+All plots show a slice of the input space with constant zero controls.}
+\label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
+\end{figure}
+#+END_EXPORT
+
+** Discussion & Future Work
 The trajectory optimiastion algorithm in this chapter is only concerned with
 the aforementioned exploration and is not intended to run fast enough for
 real-time MPC.
@@ -12094,6 +13748,14 @@ cite:krauseNearOptimal2008.
 They highlight that mutual information may lead to a more accurate model than differential entropy.
 It has also been shown that minimising the mutual information  is the same as minimising the expected posterior
 uncertainty (conditional entropy) in the model cite:ertinMaximum2003.
+
+It should be noted that in some environments this behaviour may get the strategy stuck in local
+optima.
+Add parameter to balance entropy and state difference terms to get sub linear regret?
+
+- provable regret
+- relax constraint if not improving
+
 ** Conclusion
 * Conclusion
 * Appendix
