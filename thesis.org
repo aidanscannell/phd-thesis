@@ -6249,7 +6249,7 @@ Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\state
 Given an inital state $\state_0 \in \mode{\stateDomain}$, and a sequence of controls $\controlTraj=\control_{0:\TimeInd-1}$,
 the controlled system is said to be mode-remaining iff:
 \begin{align} \label{eq-mode-remaining-def}
-\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \mode{\stateDomain} \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]
+\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \mode{\stateDomain} \quad \forall \timeInd \in \{0, \ldots, \TimeInd \}
 \end{align}
 \end{definition}
 #+END_EXPORT
@@ -6258,15 +6258,16 @@ More formally, the problem this work seeks to solve is given by,
 \begin{subequations} \label{eq-mode-soc-problem}
 \begin{align}
 \min_{\controlTraj} \sum_{\timeInd=0}^{\TimeInd} &\costFunc(\state_\timeInd, \control_\timeInd) \\
-\text{s.t.} \quad \state_{\timeInd+1} &= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
-\quad \text{if} \quad \modeVar(\state_{\timeInd}) = \modeInd  \quad &\forall \timeInd \in \{0,\TimeInd-1\} \\
+%\min_{\controlTraj} \sum_{\timeInd=0}^{\TimeInd} &J(\state_\timeInd, \control_\timeInd) \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar(\state_{\timeInd}) = \modeInd  \quad &\forall \timeInd \in \{0, \ldots,\TimeInd-1\} \\
 %\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
 %\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
 %&\text{\cref{eq-mode-remaining-def}} \\
-\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) &\in \desiredStateDomain \quad &\forall \timeInd \in [0,\TimeInd-1] \\
+&\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) \in \desiredStateDomain \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\} \\
 %\state_{\timeInd} &\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-\state_0 &= \state_0 \\
-\state_\TimeInd &= \targetState,
+&\state_0 = \state_0 \\
+&\state_\TimeInd = \targetState,
 \end{align}
 \end{subequations}
 #+END_EXPORT
@@ -6306,7 +6307,7 @@ and $\desiredMode$ a desired dynamics mode defined by its state domain $\desired
 Given an initial state $\state_0 \in \desiredStateDomain$ and $\delta \in (0,1]$,
 a system is said to be $\delta$-mode remaining under the controls $\controlTraj$ iff:
 \begin{align}
-\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \dynamicsFunc(\state_{\timeInd},\control_{\timeInd}) &\in \desiredStateDomain,
+\Pr( \forall \timeInd \in \{0,\ldots,\TimeInd-1\} : \dynamicsFunc(\state_{\timeInd},\control_{\timeInd}) &\in \desiredStateDomain,
 \control_{\timeInd} \in \controlDomain) \geq 1 - \delta
 \end{align}
 \end{definition}
@@ -9725,7 +9726,7 @@ to be tested.
 Following the experiments in cref:sec-traj-opt-results-brl,
 the model from cref:chap-dynamics was instantiated with $\ModeInd=2$ experts, one to
 represent the desired dynamics mode and one to represent the turbulent dynamics mode.
-Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
+Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a constant mean function.
 The gating network used a single gating function with
 a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
 In contrast to the real-world experiments, the simulated experiments presented here learn the full transition
@@ -11534,8 +11535,7 @@ generally. That is, it may take the form of a deterministic feedback policy or a
 open-loop set of controls without state feedback.
 It is assumed that $\Pi$ is the set of deterministic policies.
 
-Given this definition of a mode remaining controlled system, the problem that this work seeks to solve
-can be formally stated as,
+Given this definition of a mode remaining controlled system, this work seeks to formally solve,
 #+BEGIN_EXPORT latex
 \begin{subequations} \label{eq-mode-explore-problem}
 \begin{align}
@@ -11579,7 +11579,7 @@ a controlled system is said to be $\delta$-mode remaining under the controller $
 \begin{align}
 %\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \modeVar_{\timeInd}) = \desiredMode,
 %\control_{\timeInd} \in \controlDomain) \geq 1 - \delta
-\Pr( \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] : \dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+\Pr( \forall \timeInd \in \{0,\ldots,\TimeInd-1\} : \dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
 &\in \desiredStateDomain,
 \policy(\state_{\timeInd}, \timeInd) \in \controlDomain) \geq 1 - \delta
 \end{align}
@@ -11928,48 +11928,6 @@ a single dynamics mode in multimodal dynamical systems.
 # In contrast, this chapter is concerned with scenarios where the mode cannot be directly observed from the
 # environment, but instead, is inferred by a probabilistic dynamics model.
 
-*** fig :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}
-\centering
-\begin{minipage}[r]{0.48\columnwidth}
-\centering
-%\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
-\adjincludegraphics[trim={0 0 {.45\width} 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
-\subcaption{State difference $J(f, \pi) = - \sum_{\timeInd=1}^{\TimeInd-1}
-\E \left[ (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$}
-\label{fig-explorative-state-diff-traj-opt-over-prob-7}
-\end{minipage}
-\begin{minipage}[r]{0.48\columnwidth}
-\centering
-\adjincludegraphics[trim={0 0 {.45\width} 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
-\subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
-\label{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}
-\end{minipage}
-\begin{minipage}[r]{0.48\columnwidth}
-\centering
-\adjincludegraphics[trim={0 0 {.45\width} 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
-\subcaption{Factorised entropy $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd}
-H \left[ \desiredGatingFunction(\state_{\timeInd}) \mid \state_{\timeInd}, \dataset_{0:i-1} \right]$}
-\label{fig-explorative-mvn-diag-traj-opt-over-prob-7}
-\end{minipage}
-\caption{\textbf{Comparison of explorative objectives}
-Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different objectives.
-(\subref{fig-explorative-state-diff-traj-opt-over-prob-7})
-shows the results found when using only the state difference term.
-It shows the iteration where the optimisation gets stuck and no longer explores.
-(\subref{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
-using the joint entropy over a trajectory and the state difference term.
-(\subref{fig-explorative-mvn-diag-traj-opt-over-prob-7}) then shows
-the results when summing the entropy at each time step, instead of considering the full
-joint distribution over the trajectory.
-The trajectory collapses onto a single location of high entropy.
-The optimised controls are rolled out in the desired mode’s
-GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
-\label{fig-explorative-comparison-traj-opt-7}
-\end{figure}
-#+END_EXPORT
-
 *** exploration :ignore:
 *$\delta-\text{mode remaining}$ exploration*
 The exploration strategy presented here is primarily interested in exploring
@@ -12010,22 +11968,7 @@ that explore regions of the gating network with high epistemic uncertainty and t
 targets exploration towards the target state $\targetState$.
 The state difference term favours trajectories whose centre
 of mass is closer to the target state $\targetState$.
-However, using only the state difference term with the mode chance constraints leads to the optimisation getting
-stuck in local optima and never exploring to the target state.
-This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
-optimisation where the trajectory is stuck at the mode boundary.
-The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
-suggests that using only the joint gating entropy term
-with the mode chance constraints prevents exploration towards the target state. This
-happens when there is a mode boundary between the start state $\state_0$ and the target
-state $\targetState$. In this case, the objective explores away form the mode boundary and
-does not explore towards the target state $\targetState$.
 
-However, when these two terms are combined,
-the objective favours maximum entropy trajectories whose center of mass is closest
-to the target state $\targetState$.
-cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7 shows that
-it is capable of exploring to the target state $\targetState$ without getting stuck in a local minima.
 
 # This first term resembles a greedy entropy-based active learning objective.
 # cref:fig-explorative-mvn-diag-traj-opt-over-prob-7
@@ -12237,10 +12180,10 @@ q(\desiredGatingFunction(\gatingInducingInput)) = \mathcal{N}\left( \desiredGati
 #+END_EXPORT
 *** ModeOpt
 This section now details the complete \modeOpt procedure which is shown in cref:alg-mode-opt.
-The algorithm is initialised with a start state $\state_0$, target state $\targetState$,
-a desired dynamics mode $\desiredMode$ and
+The algorithm is initialised with a start state $\state_0$, a target state $\targetState$,
+a desired dynamics mode $\desiredMode$, a
 data set of state transitions $\dataset_0$ from the desired dynamics mode and a calibrated
-dynamics model $\dyamicsModel$.
+dynamics model $\dynamicsModel$.
 
 *Dynamics model $\dynamicsModel$*
 \modeOpt learns a factorised representation of the underlying
@@ -12256,15 +12199,15 @@ which also infers valuable information regarding how the system switches between
 the modes.
 
 *Mode remaining controller $\modeController$*
-The mode remaining control methods from cref:chap-traj-opt-geometry,chap-traj-opt-inference
+The mode remaining control methods from cref:chap-traj-opt-control
 are used to construct a mode remaining controller $\modeController$,
 #+BEGIN_EXPORT latex
 \begin{align}
-\control_{\timeInd} = \modeController(t) \quad \forall \timeInd \in \{0,\ldots, \TimeInd-1\}
+\control_{\timeInd} = \modeController(t) \quad \forall \timeInd \in \{0,\ldots, \TimeInd-1\}.
 \end{align}
 #+END_EXPORT
 It uses the learned dynamics model $\dynamicsModel$ to find trajectories to the target state $\targetState$.
-The mode chance constraints from cref:eq-mode-chance-constraint are then be used to check if these
+The mode chance constraints from cref:eq-mode-chance-constraint-explore are then used to check if
 trajectories are $\delta-\text{mode remaining}$.
 
 *Explorative controller $\explorativeController$*
@@ -12274,16 +12217,16 @@ explore the environment. This work uses the exploration strategy from cref:sec-e
 to construct such an explorative controller,
 #+BEGIN_EXPORT latex
 \begin{align}
-\control_{\timeInd} = \explorativeController(t) \quad \forall \timeInd \in \{0,\ldots, \TimeInd-1\}
+\control_{\timeInd} = \explorativeController(t) \quad \forall \timeInd \in \{0,\ldots, \TimeInd-1\}.
 \end{align}
 #+END_EXPORT
 The goal of this controller is to explore the environment whilst remaining in the desired dynamics mode.
-It is worth noting that this is also an open-loop trajectory optimisation algorithm.
-It should be noted that extending the method in cref:sec-exploration
+It is worth noting that this is an open-loop trajectory optimisation algorithm.
+However, the extending the method in cref:sec-exploration
 to use a feedback policy should not be too difficult. For example, the trajectory
 optimisation algorithm could be used for guided policy search  cite:levineGuided2013.
 It should also be straightforward to check that trajectories under a feedback
-policy are $\delta-\text{mode remaining}$, under the dynamics, however, this is left as future work.
+policy are $\delta-\text{mode remaining}$ under the dynamics, however, this is left as future work.
 
 
 
@@ -12294,8 +12237,192 @@ policy are $\delta-\text{mode remaining}$, under the dynamics, however, this is 
 # 3. Check if trajectories are $\delta-\text{mode remaining}$ using mode chance constraints from cref:eq-mode-chance-constraint,
 # 4. Explore the environment, whilst ensuring the controlled system is $\delta-\text{mode remaining}$.
 
-** Preliminary Results :noexport:
-*** Environment 1
+** Preliminary Results
+This section presents some initial results on the illustrative quadcotper navigation
+problem from cref:illustrative_example using the simulator from cref:sec-traj-opt-results-simulated.
+In particular, \modeOpt is tested in Environment 1 from cref:sec-traj-opt-results-simulated.
+See cref:sec-traj-opt-results-simulated for more details on the environment and the simulator set up.
+
+cref:fig-explorative-traj-opt-7-initial shows the start/target states $\state_0/\targetState$,
+the initial data set $\dataset_0$ (blue crosses) and the mode boundary.
+The turbulent dynamics mode is the region within the mode boundary and the desired dynamics mode is everywhere else.
+These are overlyaed on the \acrshort{mosvgpe}'s gating network posterior after training on the initial data set $\dataset_0$.
+cref:fig-explorative-data-over-prob-7-initial shows the probability mass function over the mode indicator variable
+where the probability of being in the desired dynamics mode $\desiredMode=2$ is high around the initial data set.
+It tends to $0.5$ away from the data, i.e. maximum entropy for a Categorial distribution.
+cref:fig-explorative-data-over-svgp-7-initial shows the \acrshrot{gp} posterior over the desired mode's gating function.
+The posterior variance (right) is low around the initial data set and high everywhere else.
+These figures are useful for visualising \modeOpt.
+To further aid visualisation, the $1-\delta$ contour is marked on all plots (pruple line).
+The experiments use $\delta=0.2$ which corresponds to the $\Pr(\modeVar=\desiredMode \mid \state) =0.8$ contour.
+
+*** Model Learning
+# To begin with, $\NumData$ state transitions were sampled from the simulator with $\Delta \timeInd = 0.25s$.
+Following the experiments in cref:sec-traj-opt-results
+this section instantiated the \acrshort{mosvgpe} dynamics model with $\ModeInd=2$ experts, one to represent
+each of the dynamics modes.
+Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a constant mean function.
+The gating network used a single gating function with
+a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
+
+*Initial data set $\dataset_0*
+The initial data set consists of $15$ random trajectories from the start state $\state_0$ that were
+ended when the left the initial state domain $\initialStateDomain$.
+This resulted in an initial data set with $118$ elements.
+
+
+
+
+*** Comparison of Exploration Terms
+*** state diff vs entropy vs :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+%\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_19.pdf}
+\subcaption{State difference $J(f, \pi) = - \sum_{\timeInd=1}^{\TimeInd-1}
+\E \left[ (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$}
+\label{fig-explorative-state-diff-traj-opt-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov-only/trajectories_over_mixing_probs_step_1.pdf}
+\subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
+\label{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}
+\end{minipage}
+\caption{\textbf{Comparison of explorative objectives}
+Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different objectives.
+(\subref{fig-explorative-state-diff-traj-opt-over-prob-7})
+shows the results found when using only the state difference term.
+It shows the iteration where the optimisation gets stuck and no longer explores.
+(\subref{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
+using the joint entropy over a trajectory and the state difference term.
+(\subref{fig-explorative-mvn-diag-traj-opt-over-prob-7}) then shows
+the results when summing the entropy at each time step, instead of considering the full
+joint distribution over the trajectory.
+The trajectory collapses onto a single location of high entropy.
+The optimised controls are rolled out in the desired mode’s
+GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+\label{fig-explorative-comparison-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+*** joint vs factorised entropy :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-diag/trajectories_over_mixing_probs_step_1.pdf}
+\subcaption{Factorised entropy $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd}
+H \left[ \desiredGatingFunction(\state_{\timeInd}) \mid \state_{\timeInd}, \dataset_{0:i-1} \right]$}
+\label{fig-explorative-mvn-diag-traj-opt-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf}
+\subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
+\label{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}
+\end{minipage}
+\caption{\textbf{Comparison of explorative objectives}
+Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different objectives.
+(\subref{fig-explorative-state-diff-traj-opt-over-prob-7})
+shows the results found when using only the state difference term.
+It shows the iteration where the optimisation gets stuck and no longer explores.
+(\subref{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
+using the joint entropy over a trajectory and the state difference term.
+(\subref{fig-explorative-mvn-diag-traj-opt-over-prob-7}) then shows
+the results when summing the entropy at each time step, instead of considering the full
+joint distribution over the trajectory.
+The trajectory collapses onto a single location of high entropy.
+The optimised controls are rolled out in the desired mode’s
+GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+\label{fig-entropy-comparison-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+*** state diff vs entropy vs :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+%\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_19.pdf}
+\subcaption{State difference $J(f, \pi) = - \sum_{\timeInd=1}^{\TimeInd-1}
+\E \left[ (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$}
+\label{fig-explorative-state-diff-traj-opt-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov-only/trajectories_over_mixing_probs_step_1.pdf}
+\subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
+\label{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-diag/trajectories_over_mixing_probs_step_1.pdf}
+\subcaption{Factorised entropy $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd}
+H \left[ \desiredGatingFunction(\state_{\timeInd}) \mid \state_{\timeInd}, \dataset_{0:i-1} \right]$}
+\label{fig-explorative-mvn-diag-traj-opt-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf}
+\subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
+\label{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}
+\end{minipage}
+\caption{\textbf{Comparison of explorative objectives}
+Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different objectives.
+(\subref{fig-explorative-state-diff-traj-opt-over-prob-7})
+shows the results found when using only the state difference term.
+It shows the iteration where the optimisation gets stuck and no longer explores.
+(\subref{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
+using the joint entropy over a trajectory and the state difference term.
+(\subref{fig-explorative-mvn-diag-traj-opt-over-prob-7}) then shows
+the results when summing the entropy at each time step, instead of considering the full
+joint distribution over the trajectory.
+The trajectory collapses onto a single location of high entropy.
+The optimised controls are rolled out in the desired mode’s
+GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+\label{fig-explorative-comparison-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+*** state diff text :ignore:
+This work initially considered summing the entropy at each time step, as is seen in cite:buisson-fenetActively2020.
+This approach is compared to using the joint entropy over a trajectory as is used in
+in cref:eq-explorative-traj-opt.
+cref:fig-entropy-comparison-traj-opt-7 shows the initial trajectories found with the two approaches.
+The factorised entropy approach show in
+cref:fig-explorative-mvn-diag-traj-opt-over-prob-7, clearly shows the entire trajectory collapses onto a state
+of high entropy.
+This is an undesirable behaviour because it does not maximise the information gain along the entire trajectory.
+The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
+
+Preliminary experiments suggest that balancing these terms
+results in exploration to the target state $\targetState$ without getting stuck in a local minima.
+# However, when these two terms are combined,
+the objective favours maximum entropy trajectories whose centre of mass is closest
+to the target state $\targetState$.
+cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7 shows that
+it is capable of exploring to the target state $\targetState$ without getting stuck in a local minima.
+
+However, using only the state difference term with the mode chance constraints leads to the optimisation getting
+stuck in local optima and never exploring to the target state.
+This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
+optimisation where the trajectory is stuck at the mode boundary.
+The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
+suggests that using only the joint gating entropy term
+with the mode chance constraints prevents exploration towards the target state. This
+happens when there is a mode boundary between the start state $\state_0$ and the target
+state $\targetState$. In this case, the objective explores away form the mode boundary and
+does not explore towards the target state $\targetState$.
+
+
+*** Environment 1 :noexport:
 **** Data Step 0 Epoch 1494 :ignore:
 #+BEGIN_EXPORT latex
 \renewcommand{\stepNum}{0}
@@ -13876,6 +14003,8 @@ All plots show a slice of the input space with constant zero controls.}
 #+END_EXPORT
 
 ** Discussion & Future Work
+This section discusses the method presented in this chapter and proposes some directions for future work.
+
 *Exploration-exploitation trade-off*
 The method presented in this chapter side-
 steps the exploration-exploitation trade-off which is common in MBRL. It dos so by
@@ -13885,11 +14014,11 @@ evaluating the mode chance constraints.
 
 *Entropy of what?*
 Greedy entropy-based exploration in $\modeVar$ is less good.
-Tries to search where $\Pr(modeVar=\desiredMode \state= 0.5$ (uniform) even though the gating network may
+Tries to search where $\Pr(\modeVar=\desiredMode \state= 0.5$ (uniform) even though the gating network may
 by certain, i.e. have a low posterior variance.
 In this case the \acrfull{bald} objective  from cite:houlsbyBayesian2011 may be a better option
 
-*$\delta−\text{mode remaining}*
+*$\delta-\text{mode remaining}$*
 
 *Exploration guarantees*
 The method presented in this chapter has no exploration
@@ -13909,15 +14038,12 @@ initial data set .
 
 The objective used in this chapter is concerned with exploration. It resembles the
 
-() uncertainty
 
 It contains a term targeting exploration towards the target state and a term favour-
 ing exploration in regions of the state space where the gating network is uncertain.
 Using the term targeting exploration towards the target state by in conjunction with
 the $\delta-\text{mode remaining}$ chance constraints may lead to the strategy getting stuck
 in local optima.
-
-Using the state d
 
 It contains a term favouring uncertainty exploration The entropy term It should be
 noted that in some environments this behaviour may get the strategy stuck in local
@@ -13958,17 +14084,6 @@ issue. However, it is left to future work to study this in more depth.
 
 
 
-The trajectory optimiastion algorithm in this chapter is only concerned with
-the aforementioned exploration and is not intended to run fast enough for
-real-time MPC.
-Although not explored here, the algorithm could be used for guided policy
-search in a model-based reinforcement learning setting
-cite:levineGuided2013,levineVariational2013,okadaVariational2020.
-Alternatively, one could explore approximations enabling the approach to
-work for real time MPC e.g. linearising the dynamics and/or a second order
-Taylor expansion of the cost function.
-\todo{should this be cost of value function??}
-
 
 This chapter is concerned with exploration in multimodal dynamical systems
 where the underlying dynamics modes and how the system switches between them are /not fully known a priori/.
@@ -14002,9 +14117,43 @@ Add parameter to balance entropy and state difference terms to get sub linear re
 
 - provable regret
 - relax constraint if not improving
-- guarantess on exloration by relaxing $\delta$ and/or other params - like UCB
+- guarantees on exploration by relaxing $\delta$ and/or other params - like UCB
 
 ** Conclusion
+* Conclusion
+** Future Work
+*** Ideas for continuing the work in this dissertation
+
+*Deploy on real-world systems*
+
+*Exploration guarantees*
+
+*Higher-dimensional problems*
+Higher-dimensional state-control spaces, for example, models with image inputs.
+
+*Real-time control?*
+The trajectory optimisation algorithm in this chapter is only concerned with
+the aforementioned exploration and is not intended to run fast enough for
+real-time MPC.
+Although not explored here, the algorithm could be used for guided policy
+search in a model-based reinforcement learning setting
+cite:levineGuided2013,levineVariational2013,okadaVariational2020.
+Alternatively, one could explore approximations enabling the approach to
+work for real time MPC e.g. linearising the dynamics and/or a second order
+Taylor expansion of the cost function.
+\todo{should this be cost of value function??}
+
+*Policy gradient*
+
+*Guided policy search*
+
+*** Alternative approaches
+
+Use sensors to observe regions of the environment before interacting with them.
+
+*Model-free approaches*
+This dissertation solely focused on model-based algorithms.
+
 * Active Learning
 ** Bayesian Information Theoretic Active Learning
 Following cite:houlsbyBayesian2011 this section introduces Bayesian
@@ -14362,7 +14511,6 @@ p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_
 \end{align}
 #+END_EXPORT
 
-* Conclusion
 * Appendix
 ** Multivariate Normals
 ** Derivatives of a Gaussian Process
