@@ -17,8 +17,8 @@
                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                ("\\paragraph{%s}" . "\\paragraph*{%s}")
                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-               ;; ("\\mboxparagraph{%s}" . "\\mboxparagraph*{%s}")
-               ;; ("\\mboxsubparagraph{%s}" . "\\mboxsubparagraph*{%s}")))
+;; ("\\mboxparagraph{%s}" . "\\mboxparagraph*{%s}")
+;; ("\\mboxsubparagraph{%s}" . "\\mboxsubparagraph*{%s}")))
 (add-to-list 'org-latex-classes
              '("mimosis"
                "\\documentclass{mimosis-class/mimosis}
@@ -88,6 +88,9 @@ By default,  if a figure consumes 60% of the page it will get its own float-page
 #+latex_header: \renewcommand{\floatpagefraction}{.8}%
 
 See more information [[https://tex.stackexchange.com/questions/68516/avoid-that-figure-gets-its-own-page][here]].
+
+Allow images to be cropped
+#+LATEX_HEADER: \usepackage[export]{adjustbox}
 
 *** Hyperref
 Self-explanatory.
@@ -661,74 +664,74 @@ Use with
 #+END_EXPORT
 ** Title Page :ignore:noexport:
 
-  #+BEGIN_EXPORT latex
-  \begin{titlepage}
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % First page: Thesis Title and Author Name
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#+BEGIN_EXPORT latex
+\begin{titlepage}
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % First page: Thesis Title and Author Name
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % Uncomment when adding the background figure to the cover.
-    \BgThispage
+  % Uncomment when adding the background figure to the cover.
+  \BgThispage
 
-    \cleardoublepage
-    \pagestyle{empty}
+  \cleardoublepage
+  \pagestyle{empty}
 
-    \begin{center}
-      \null\vfill
-      {\huge{\bfseries \ThesisTitle}\par}
-      \vspace{\stretch{0.5}}
-      {\large \ThesisSubTitle \par}
-      \vspace{\stretch{2}}
-      \vspace{\baselineskip}
-      {\large By \AuthorFullName\par}
-      \vspace{\stretch{2}}
-      %\vspace{\baselineskip}
-      %\vspace{\baselineskip}
-      \vspace{\baselineskip}
-      \includegraphics[scale=0.6]{./logos/bristolcrest_colour}
-      \hspace{5mm}
-      \includegraphics[scale=0.35]{./logos/UWE_insignia.png}\\
-      \vspace{10mm}
-      {\large Department of Aerospace Engineering\\
-       \textsc{University of Bristol}}
-       \\
-       \&
-       \\
-       {\large Department of Engineering Design and Mathematics\\
-       \textsc{University of the West of England}}\\
+  \begin{center}
+    \null\vfill
+    {\huge{\bfseries \ThesisTitle}\par}
+    \vspace{\stretch{0.5}}
+    {\large \ThesisSubTitle \par}
+    \vspace{\stretch{2}}
+    \vspace{\baselineskip}
+    {\large By \AuthorFullName\par}
+    \vspace{\stretch{2}}
+    %\vspace{\baselineskip}
+    %\vspace{\baselineskip}
+    \vspace{\baselineskip}
+    \includegraphics[scale=0.6]{./logos/bristolcrest_colour}
+    \hspace{5mm}
+    \includegraphics[scale=0.35]{./logos/UWE_insignia.png}\\
+    \vspace{10mm}
+    {\large Department of Aerospace Engineering\\
+     \textsc{University of Bristol}}
+     \\
+     \&
+     \\
+     {\large Department of Engineering Design and Mathematics\\
+     \textsc{University of the West of England}}\\
 
-      %{\large Faculty of Engineering\\
-      %\textsc{University of Bristol}}\\
-      %\vspace{6mm}
-      \vspace{\baselineskip}
-      \vspace{\baselineskip}
-      \begin{minipage}{10cm}
-        A dissertation submitted to the University of Bristol and the University of the West of England in accordance with the requirements of the degree of \textsc{Doctor of Philosophy} in the Faculty of Engineering.
-      \end{minipage}\\
-       \vspace{\baselineskip}
-      % \vspace{\stretch{1}}
-      \vspace{\baselineskip}
-      \vspace{\stretch{1}}
-      \noindent
-      \begin{tabular}{@{}l@{\hspace{22pt}}ll}
-        \textbf{Supervisors}:          & Prof.\ Arthur Richards\\
-                                       & Dr.\ Carl Henrik Ek\\
-      \end{tabular} \\
-      %\vspace{\stretch{1}}
-      %\vspace{\baselineskip}
-      %\vspace{\baselineskip}
-      \vspace{9mm}
-      {\large\textsc{January 2022}}
-      \vspace{12mm}
-      \vfill
-    \end{center}
+    %{\large Faculty of Engineering\\
+    %\textsc{University of Bristol}}\\
+    %\vspace{6mm}
+    \vspace{\baselineskip}
+    \vspace{\baselineskip}
+    \begin{minipage}{10cm}
+      A dissertation submitted to the University of Bristol and the University of the West of England in accordance with the requirements of the degree of \textsc{Doctor of Philosophy} in the Faculty of Engineering.
+    \end{minipage}\\
+     \vspace{\baselineskip}
+    % \vspace{\stretch{1}}
+    \vspace{\baselineskip}
+    \vspace{\stretch{1}}
+    \noindent
+    \begin{tabular}{@{}l@{\hspace{22pt}}ll}
+      \textbf{Supervisors}:          & Prof.\ Arthur Richards\\
+                                     & Dr.\ Carl Henrik Ek\\
+    \end{tabular} \\
+    %\vspace{\stretch{1}}
+    %\vspace{\baselineskip}
+    %\vspace{\baselineskip}
+    \vspace{9mm}
+    {\large\textsc{January 2022}}
+    \vspace{12mm}
+    \vfill
+  \end{center}
 
-    \cleardoublepage
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % End Titlepage
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  \end{titlepage}
-  #+END_EXPORT
+  \cleardoublepage
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % End Titlepage
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{titlepage}
+#+END_EXPORT
 
 ** Abstract
 :PROPERTIES:
@@ -9731,27 +9734,27 @@ dynamics model, i.e. they do not assume constant controls.
 *** Performance Indicators
 This section evaluates the performance of trajectories using four performance indicators:
 1. Probability of remaining in the desired mode with the model's uncertainty marginalised,
-    calculated using cref:eq-mode-chance-constraint-integral,
-    #+BEGIN_EXPORT latex
-    \begin{align} \label{eq-mode-probability-all-unc}
-    \sum_{\timeInd=1}^{\TimeInd}
-    \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode).
-    \end{align}
-    #+END_EXPORT
-    This probability will decrease when a trajectory leaves the desired mode and when it
-    passes through regions of the learned dynamics with high uncertainty.
+   calculated using cref:eq-mode-chance-constraint-integral,
+   #+BEGIN_EXPORT latex
+   \begin{align} \label{eq-mode-probability-all-unc}
+   \sum_{\timeInd=1}^{\TimeInd}
+   \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode).
+   \end{align}
+   #+END_EXPORT
+   This probability will decrease when a trajectory leaves the desired mode and when it
+   passes through regions of the learned dynamics with high uncertainty.
 2. Probability of remaining in the desired mode without the model's uncertainty marginalised,
-    #+BEGIN_EXPORT latex
-    \begin{align} \label{eq-mode-probability-no-unc}
-    \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \gatingFunc(\state_{0:\timeInd}), \state_{0:\timeInd}, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
-    \end{align}
-    #+END_EXPORT
-    This probability will only decrease when a trajectory leaves the desired mode.
-    # #+BEGIN_EXPORT latex
-    # \begin{align} \label{eq-mode-probability-all-unc}
-    # \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})
-    # \end{align}
-    # #+END_EXPORT
+   #+BEGIN_EXPORT latex
+   \begin{align} \label{eq-mode-probability-no-unc}
+   \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \gatingFunc(\state_{0:\timeInd}), \state_{0:\timeInd}, \control_{0:\timeInd}, \modeVar_{0:\timeInd-1}=\desiredMode)
+   \end{align}
+   #+END_EXPORT
+   This probability will only decrease when a trajectory leaves the desired mode.
+   # #+BEGIN_EXPORT latex
+   # \begin{align} \label{eq-mode-probability-all-unc}
+   # \sum_{\timeInd=0}^{\TimeInd} \Pr(\modeVar_\timeInd=\desiredMode \mid \state_0, \control_{0:\timeInd})
+   # \end{align}
+   # #+END_EXPORT
    # - The indirect optimal control method calculates the probability of being in the desired dynamics mode under the
    #   MoSVGPE model,
    #  #+BEGIN_EXPORT latex
@@ -9768,7 +9771,7 @@ This section evaluates the performance of trajectories using four performance in
     \sum_{\timeInd=1}^{\TimeInd} \mathbb{V}[\state_{\timeInd}].
     \end{align}
    #+END_EXPORT
-    This will increase when a trajectory passes through regions of the desired dynamics mode with high uncertainty.
+   This will increase when a trajectory passes through regions of the desired dynamics mode with high uncertainty.
 4. The gating function variance accumulated from cascading single-step predictions,
    #+BEGIN_EXPORT latex
     \begin{align} \label{eq-metric-gating-var}
@@ -9776,7 +9779,7 @@ This section evaluates the performance of trajectories using four performance in
     \mathbb{V}[\gatingFunc_{\desiredMode}(\state_{\timeInd})].
     \end{align}
    #+END_EXPORT
-    This will increase when a trajectory passes through regions of the gating network with high uncertainty.
+   This will increase when a trajectory passes through regions of the gating network with high uncertainty.
 Intuitively, the goal is to maximise the probability of being in the desired mode,
 whilst minimising the variance accumulated over a trajectory, i.e. maximise cref:eq-mode-probability-all-unc.
 To test each methods ability at avoiding regions of high epistemic uncertainty,
@@ -11845,7 +11848,7 @@ information between all the variables in time
 $I \left[\mathbf{y}_{1:t}, \hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{1:t+1} \right]$.
 Here $\mathbf{y}_{1:t}$ denotes the set of observed outputs and $\hat{\mathbf{y}}_{t+1}$ denotes
 the output predicted by the \acrshort{gpssm}. This contrasts other approaches, which tend
-to study the latest mutual information $I[\hat{\matbbf{y}}_{t+1} ; \mathbf{f}_{t+1}]$.
+to study the latest mutual information $I[\hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{t+1}]$.
 
 *Myopic active learning*
 In reinforcement learning and control it is standard to
@@ -11929,26 +11932,41 @@ a single dynamics mode in multimodal dynamical systems.
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
-\begin{minipage}[r]{\columnwidth}
+\begin{minipage}[r]{0.48\columnwidth}
 \centering
-\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
-\subcaption{}
-\label{fig-explorative-no-cond-traj-opt-over-prob-7}
+%\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\adjincludegraphics[trim={0 0 {.45\width} 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{State difference $J(f, \pi) = - \sum_{\timeInd=1}^{\TimeInd-1}
+\E \left[ (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$}
+\label{fig-explorative-state-diff-traj-opt-over-prob-7}
 \end{minipage}
-\begin{minipage}[r]{\columnwidth}
+\begin{minipage}[r]{0.48\columnwidth}
 \centering
-\includegraphics[width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNum.pdf}
-\subcaption{}
-\label{fig-explorative-cond-traj-opt-over-prob-7}
+\adjincludegraphics[trim={0 0 {.45\width} 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
+\label{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}
 \end{minipage}
-\caption{\textbf{Comparison of greedy entropy-based strategy with/without conditioning on previous time steps}
-Exploration results using the gating network’s entropy
-(\subref{fig-explorative-cond-traj-opt-over-prob-7}) without conditionining on previous time steps and
-(\subref{fig-explorative-no-cond-traj-opt-over-prob-7}) with conditionining on previous time steps.
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={0 0 {.45\width} 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\subcaption{Factorised entropy $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd}
+H \left[ \desiredGatingFunction(\state_{\timeInd}) \mid \state_{\timeInd}, \dataset_{0:i-1} \right]$}
+\label{fig-explorative-mvn-diag-traj-opt-over-prob-7}
+\end{minipage}
+\caption{\textbf{Comparison of explorative objectives}
+Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different objectives.
+(\subref{fig-explorative-state-diff-traj-opt-over-prob-7})
+shows the results found when using only the state difference term.
+It shows the iteration where the optimisation gets stuck and no longer explores.
+(\subref{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
+using the joint entropy over a trajectory and the state difference term.
+(\subref{fig-explorative-mvn-diag-traj-opt-over-prob-7}) then shows
+the results when summing the entropy at each time step, instead of considering the full
+joint distribution over the trajectory.
+The trajectory collapses onto a single location of high entropy.
 The optimised controls are rolled out in the desired mode’s
-GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s
-mixing probability.}
-\label{fig-explorative-cond-comparison-traj-opt-7}
+GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+\label{fig-explorative-comparison-traj-opt-7}
 \end{figure}
 #+END_EXPORT
 
@@ -11961,7 +11979,7 @@ a greedy entropy-based strategy over a finite horizon. Further to this,
 it principally ensures solutions are $\delta-\text{mode remaining}$ via the chance constraints
 in cref:eq-mode-chance-constraint-explore. The objective combines greedy entropy-based exploration of
 the gating network with the main goal of navigating to the target state $\targetState$. The
-exploration strategy is given by
+exploration strategy is given by,
 #+BEGIN_EXPORT latex
 \begin{subequations} \label{eq-explorative-traj-opt}
 \begin{align}
@@ -11971,12 +11989,12 @@ exploration strategy is given by
 %\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj_{\neg\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset \right]}_{\text{conditional gating entropy}} \\
 \arg \max_{\pi \in \Pi}
 &\underbrace{\mathcal{H} \left[
-\desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]}_{\text{gating entropy}} \\
-&- \sum_{\timeInd=1}^{\TimeInd-1}
+\desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]}_{\text{joint gating entropy}} \\
+&+ \sum_{\timeInd=1}^{\TimeInd-1}
 \E_{\dynamicsModel(\state_{\timeInd+1} \mid \state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))}
-\left[ \underbrace{(\state_{\timeInd} - \targetState)^T \mathbf{Q}
+\left[ \underbrace{- (\state_{\timeInd} - \targetState)^T \mathbf{Q}
 (\state_{\timeInd} - \targetState)}_{\text{state difference}}
-+ \underbrace{(\control_{\timeInd})^T \mathbf{R} (\control_{\timeInd})}_{\text{control cost}}
+- \underbrace{\control_{\timeInd}^{\TimeInd} \mathbf{R} \control_{\timeInd}}_{\text{control cost}}
 \right] \\
 %+ \sum_{\timeInd=1}^{\TimeInd-1} \underbrace{\control_{\timeInd}^T \mathbf{R} \control_{\timeInd}}_{\text{control cost}} \right] \\
 \text{s.t.} \quad &\Pr(\modeVar_{\timeInd} = \desiredMode \mid \state_{0}, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd-1}=\desiredMode)
@@ -11987,23 +12005,62 @@ exploration strategy is given by
 #+END_EXPORT
 where $\stateCostMatrix$ and $\controlCostMatrix$ are user defined, real, symmetric, positive semi-definite and
 positive definite matrices respectively.
-Intuitively, the first term seeks to find trajectories
-that explore regions of the gating network with high epistemic uncertainty.
-Conditioning the entropy at a given time step on all previous time steps ensures the
-objective maximises the information gain over the entire trajectory. This prevents
-trajectories from collapsing onto a single location of maximum entropy and favours
-trajectories spreading over the state space in order to maximise the entropy of the
-entire trajectory. This first term resembles a greedy entropy-based active learning
-objective. However, initial experiments suggest that using this entropy term alone
-with the chance constraints can prevent exploration towards the target state. This
+Intuitively, the first term (joint gating entropy) seeks to find trajectories
+that explore regions of the gating network with high epistemic uncertainty and the second (state difference) term
+targets exploration towards the target state $\targetState$.
+The state difference term favours trajectories whose centre
+of mass is closer to the target state $\targetState$.
+However, using only the state difference term with the mode chance constraints leads to the optimisation getting
+stuck in local optima and never exploring to the target state.
+This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
+optimisation where the trajectory is stuck at the mode boundary.
+The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
+suggests that using only the joint gating entropy term
+with the mode chance constraints prevents exploration towards the target state. This
 happens when there is a mode boundary between the start state $\state_0$ and the target
 state $\targetState$. In this case, the objective explores away form the mode boundary and
-does not explore towards the target state $\targetState$. Experiments suggest that the state
-difference term is effective for targeting exploration towards the direction of the
-target state $\targetState$. Intuitively, the state difference term favours trajectories whose centre
-of mass is closer to the target state $\targetState$. Overall, when these two terms are balanced,
+does not explore towards the target state $\targetState$.
+
+However, when these two terms are combined,
 the objective favours maximum entropy trajectories whose center of mass is closest
 to the target state $\targetState$.
+cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7 shows that
+it is capable of exploring to the target state $\targetState$ without getting stuck in a local minima.
+
+# This first term resembles a greedy entropy-based active learning objective.
+# cref:fig-explorative-mvn-diag-traj-opt-over-prob-7
+# compares solving cref:eq-explorative-traj-opt with the joint gating entropy and with a factorised gating entropy.
+# The results show that the joint entropy over a trajectory ensures the
+# objective maximises the information gain over the entire trajectory.
+# This prevents trajectories from collapsing onto a single location of maximum entropy and favours
+# trajectories spreading over the state space in order to maximise the entropy of the
+# entire trajectory.
+
+
+
+# It then compares solving  with both the joint gating entropy and a factorise joint gating entropy.
+# The results show that the joint entropy over a trajectory ensures the
+# objective maximises the information gain over the entire trajectory.
+# This prevents
+# trajectories from collapsing onto a single location of maximum entropy and favours
+# trajectories spreading over the state space in order to maximise the entropy of the
+# entire trajectory.
+
+# This first term resembles a greedy entropy-based active learning
+# objective.
+# However, initial experiments suggest that using this entropy term alone
+# with the chance constraints can prevent exploration towards the target state. This
+# happens when there is a mode boundary between the start state $\state_0$ and the target
+# state $\targetState$. In this case, the objective explores away form the mode boundary and
+# does not explore towards the target state $\targetState$.
+# Experiments suggest that the state
+# difference term is effective for targeting exploration towards the direction of the
+# target state $\targetState$.
+# Intuitively, the state difference term favours trajectories whose centre
+# of mass is closer to the target state $\targetState$.
+# Overall, when these two terms are balanced,
+# the objective favours maximum entropy trajectories whose center of mass is closest
+# to the target state $\targetState$.
 
 
 # Intuitively, the first term seeks to find trajectories that explore regions of the gating network with
@@ -12108,6 +12165,7 @@ q(\desiredGatingFunction(\gatingInducingInput)) = \mathcal{N}\left( \desiredGati
 \mid \hat{\mathbf{m}}_{\desiredMode}, \hat{\mathbf{S}}_{\desiredMode} \right).
 \end{align}
 #+END_EXPORT
+
 
 
 # Note that the variational distribution over the inducing inputs is given by
@@ -13824,6 +13882,12 @@ steps the exploration-exploitation trade-off which is common in MBRL. It dos so 
 separating the exploration into the explorative controller $\explorativeController$  and the exploitation
 into the mode remaining controller $\modeController$ and selecting the relevant strategy by
 evaluating the mode chance constraints.
+
+*Entropy of what?*
+Greedy entropy-based exploration in $\modeVar$ is less good.
+Tries to search where $\Pr(modeVar=\desiredMode \state= 0.5$ (uniform) even though the gating network may
+by certain, i.e. have a low posterior variance.
+In this case the \acrfull{bald} objective  from cite:houlsbyBayesian2011 may be a better option
 
 *$\delta−\text{mode remaining}*
 
