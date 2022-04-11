@@ -12253,7 +12253,7 @@ It tends to $0.5$ away from the data, i.e. maximum entropy for a Categorial dist
 cref:fig-explorative-data-over-svgp-7-initial shows the \acrshrot{gp} posterior over the desired mode's gating function.
 The posterior variance (right) is low around the initial data set and high everywhere else.
 These figures are useful for visualising \modeOpt.
-To further aid visualisation, the $1-\delta$ contour is marked on all plots (pruple line).
+To further aid visualisation, the $1-\delta$ contour is marked on all plots (purple line).
 The experiments use $\delta=0.2$ which corresponds to the $\Pr(\modeVar=\desiredMode \mid \state) =0.8$ contour.
 
 *** Model Learning
@@ -12265,30 +12265,28 @@ Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} an
 The gating network used a single gating function with
 a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
 
-*Initial data set $\dataset_0*
-The initial data set consists of $15$ random trajectories from the start state $\state_0$ that were
-ended when the left the initial state domain $\initialStateDomain$.
+*Initial data set $\dataset_0$*
+The initial data set was collected from $15$ random trajectories from the start state $\state_0$ that were
+terminated when they left the initial state domain $\initialStateDomain$.
 This resulted in an initial data set with $118$ elements.
 
 
-
-
 *** Comparison of Exploration Terms
-*** state diff vs entropy vs :ignore:
+*** state diff vs entropy vs :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
 %\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
-\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_19.pdf}
+\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_19.pdf}
 \subcaption{State difference $J(f, \pi) = - \sum_{\timeInd=1}^{\TimeInd-1}
 \E \left[ (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$}
 \label{fig-explorative-state-diff-traj-opt-over-prob-7}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov-only/trajectories_over_mixing_probs_step_1.pdf}
+\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov-only/trajectories_over_mixing_probs_step_2.pdf}
 \subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
 \label{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}
 \end{minipage}
@@ -12299,13 +12297,26 @@ shows the results found when using only the state difference term.
 It shows the iteration where the optimisation gets stuck and no longer explores.
 (\subref{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
 using the joint entropy over a trajectory and the state difference term.
-(\subref{fig-explorative-mvn-diag-traj-opt-over-prob-7}) then shows
-the results when summing the entropy at each time step, instead of considering the full
-joint distribution over the trajectory.
-The trajectory collapses onto a single location of high entropy.
 The optimised controls are rolled out in the desired mode’s
 GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
 \label{fig-explorative-comparison-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+*** state diff :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+%\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
+\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=0.6\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_19.pdf}
+\caption{\textbf{State difference only}
+Results when solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with only the state difference
+term, i.e. $J(f, \pi) = - \sum_{\timeInd=1}^{\TimeInd-1}
+\E \left[ (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$.
+It shows the iteration where the optimisation gets stuck and no longer explores.
+The optimised controls are rolled out in the desired mode’s
+GP dynamics (magenta) and in the environment (cyan) and are overlayed on the desired mode’s mixing probability.}
+\label{fig-explorative-state-diff-traj-opt-over-prob-7}
 \end{figure}
 #+END_EXPORT
 
@@ -12315,28 +12326,26 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mo
 \centering
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-diag/trajectories_over_mixing_probs_step_1.pdf}
+\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-diag/trajectories_over_mixing_probs_step_1.pdf}
 \subcaption{Factorised entropy $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd}
 H \left[ \desiredGatingFunction(\state_{\timeInd}) \mid \state_{\timeInd}, \dataset_{0:i-1} \right]$}
-\label{fig-explorative-mvn-diag-traj-opt-over-prob-7}
+\label{fig-entropy-mvn-diag-traj-opt-over-prob-7}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.45\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf}
+\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf}
 \subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
-\label{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}
+\label{fig-entropy-mvn-full-cov-traj-opt-over-prob-7}
 \end{minipage}
-\caption{\textbf{Comparison of explorative objectives}
-Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different objectives.
-(\subref{fig-explorative-state-diff-traj-opt-over-prob-7})
-shows the results found when using only the state difference term.
-It shows the iteration where the optimisation gets stuck and no longer explores.
-(\subref{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
-using the joint entropy over a trajectory and the state difference term.
-(\subref{fig-explorative-mvn-diag-traj-opt-over-prob-7}) then shows
-the results when summing the entropy at each time step, instead of considering the full
-joint distribution over the trajectory.
+\caption{\textbf{Comparison of joint/factorised entropy objectives}
+Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different entropy
+objectives.
+(\subref{fig-entropy-mvn-diag-traj-opt-over-prob-7}) shows
+the results assuming the distribution is factorised over time, i.e.
+summing the entropy at each time step, instead of considering the full joint distribution over the trajectory.
 The trajectory collapses onto a single location of high entropy.
+(\subref{fig-entropy-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
+considering the full joint entropy over a trajectory.
 The optimised controls are rolled out in the desired mode’s
 GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
 \label{fig-entropy-comparison-traj-opt-7}
@@ -12392,35 +12401,34 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mo
 #+END_EXPORT
 
 *** state diff text :ignore:
-This work initially considered summing the entropy at each time step, as is seen in cite:buisson-fenetActively2020.
-This approach is compared to using the joint entropy over a trajectory as is used in
-in cref:eq-explorative-traj-opt.
-cref:fig-entropy-comparison-traj-opt-7 shows the initial trajectories found with the two approaches.
-The factorised entropy approach show in
-cref:fig-explorative-mvn-diag-traj-opt-over-prob-7, clearly shows the entire trajectory collapses onto a state
-of high entropy.
-This is an undesirable behaviour because it does not maximise the information gain along the entire trajectory.
-The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
-
-Preliminary experiments suggest that balancing these terms
-results in exploration to the target state $\targetState$ without getting stuck in a local minima.
-# However, when these two terms are combined,
-the objective favours maximum entropy trajectories whose centre of mass is closest
-to the target state $\targetState$.
-cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7 shows that
-it is capable of exploring to the target state $\targetState$ without getting stuck in a local minima.
-
+*State difference only?*
+A simple exploration strategy is to favour trajectories whose centre of mass is closer to the target state.
+This corresponds to solving the constrained optimisation in cref:eq-explorative-traj-opt
+with only the state difference term.
 However, using only the state difference term with the mode chance constraints leads to the optimisation getting
 stuck in local optima and never exploring to the target state.
 This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
 optimisation where the trajectory is stuck at the mode boundary.
-The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
-suggests that using only the joint gating entropy term
-with the mode chance constraints prevents exploration towards the target state. This
-happens when there is a mode boundary between the start state $\state_0$ and the target
-state $\targetState$. In this case, the objective explores away form the mode boundary and
-does not explore towards the target state $\targetState$.
+Intuitively, a strategy which favours searching regions of the state space which have not previously observed
+could likely avoid the local optima in cref:fig-explorative-state-diff-traj-opt-over-prob-7.
+This intuition motivates the joint gating entropy term in cref:eq-explorative-traj-opt.
+This term should guide exploration into regions of the model with high epistemic uncertainty.
 
+*** entropy comparison text :ignore:
+*Joint vs factorised entropy*
+This section compares the joint gating entropy term in cref:eq-explorative-traj-opt with the sum of individual
+entropy's over the trajectory, which is referred to as the factorised entropy.
+cref:fig-entropy-comparison-traj-opt-7 shows the trajectories found at the first iteration
+when using the two entropy objectives.
+The factorised entropy objective, show in
+cref:fig-explorative-mvn-diag-traj-opt-over-prob-7, shows that the entire trajectory collapses onto a single state
+of high entropy.
+This is an undesirable behaviour because it does not maximise the information gain along the entire trajectory.
+In contrast, the result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7 consider the joint entropy over
+the entire trajectory. The trajectory has spread along the $1-\delta$ contour,
+which corresponds to the region with highest gating entropy.
+These results confirm that the joint gating entropy relieves the myopia of active learning
+by considering the information gain over the trajectory.
 
 *** Environment 1 :noexport:
 **** Data Step 0 Epoch 1494 :ignore:
@@ -14001,6 +14009,29 @@ All plots show a slice of the input space with constant zero controls.}
 \label{fig-explorative-traj-opt-7-step-\stepNum-epoch-\epochNum}
 \end{figure}
 #+END_EXPORT
+
+*** env 1 text :ignore:
+
+*Balancing*
+These results suggest that balancing the state difference and the joint gating entropy terms in
+cref:eq-explorative-traj-opt results in exploration to the target state $\targetState$
+without getting stuck in a local minima.
+Intuitively, this objective favours maximum entropy trajectories whose centre of mass is closest
+to the target state $\targetState$.
+It is worth noting that not all settings of the
+cost matrices, $\stateCostMatrix$ and $\controlCostMatrix$, resulted in the algorithm converging in the
+experiments.
+
+# However, using only the state difference term with the mode chance constraints leads to the optimisation getting
+# stuck in local optima and never exploring to the target state.
+# This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
+# optimisation where the trajectory is stuck at the mode boundary.
+The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
+suggests that using only the joint gating entropy term
+with the mode chance constraints prevents exploration towards the target state. This
+happens when there is a mode boundary between the start state $\state_0$ and the target
+state $\targetState$. In this case, the objective explores away form the mode boundary and
+does not explore towards the target state $\targetState$.
 
 ** Discussion & Future Work
 This section discusses the method presented in this chapter and proposes some directions for future work.
