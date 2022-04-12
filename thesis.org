@@ -657,6 +657,7 @@ Use with
 {{{acronym(pilco,PILCO,Probabilistic Inference for Learning COntrol)}}}
 
 {{{acronym(gpssm,GPSSM,Gaussian Process State Space Model)}}}
+{{{acronym(bald,BALD,Bayesian Active Learning by Disagreement)}}}
 
 * Frontmatter :ignore:
 #+BEGIN_EXPORT latex
@@ -1088,6 +1089,29 @@ $\pykGivenxNegF$ contains a GP conditional with complexity
 #+BEGIN_EXPORT latex
 \renewcommand{\targetState}{\ensuremath{\state_f}}
 #+END_EXPORT
+*** Domains :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+%\renewcommand{\stateDomain}{\ensuremath{\mathcal{S}}}
+\renewcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+\renewcommand{\modeDomain}{\ensuremath{\mathcal{A}}}
+%\renewcommand{\inputDomain}{\ensuremath{\mathcal{X}}}
+\renewcommand{\inputDomain}{\ensuremath{\mathcal{Z}}}
+
+%\renewcommand{\state}{\ensuremath{\mathbf{s}}}
+\renewcommand{\state}{\ensuremath{\mathbf{x}}}
+
+\renewcommand{\nominalDynamics}{\ensuremath{\mathbf{n}}}
+\renewcommand{\unknownDynamics}{\ensuremath{\mathbf{f}}}
+\renewcommand{\nominalDynamicsK}{\ensuremath{\mode{\mathbf{n}}}}
+\renewcommand{\unknownDynamicsK}{\ensuremath{\mode{\mathbf{f}}}}
+
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{T}}
+\newcommand{\inputDim}{\ensuremath{d}}
+\newcommand{\InputDim}{\ensuremath{D}}
+#+END_EXPORT
+
 ** Intro :ignore:
 # *Dynamical Systems*
 # The modern world is pervaded with dynamical systems that we seek to control to achieve a desired behaviour.
@@ -1303,22 +1327,22 @@ dynamics with low /epistemic uncertainty/?
 # In some cases, it may even lead to catastrophic failure.
 
 ** Illustrative Example label:illustrative_example
-*** intro :ignore:
+*** intro :ignore:noexport:
 # The methods developed throughout this dissertation are evaluated on an illustrative 2D quadcotper navigation example.
 The methods developed throughout this dissertation are motivated by a 2D quadcopter navigation example.
 See cref:fig-problem-statement for a schematic of the environment and details of the problem.
 The goal is to fly the quadcopter from an initial state $\state_0$, to a target state $\state_{f}$.
 However, it considers a quadcopter operating in an environment subject to spatially varying wind --
 induced by a fan -- where the system can be represented by two dynamics modes,
-- Mode 1 :: an inoperable, /turbulent/ mode in front of the fan,
-- Mode 2 :: a /non-turbulent/ mode everywhere else.
+- Mode 1 :: a /non-turbulent/ dynamics mode away from the fan,
+- Mode 2 :: an inoperable, /turbulent/ dynamics mode in front of the fan.
 The turbulent dynamics mode is subject to higher drift (in the negative $x$ direction) and
 to higher diffusion (aka process noise).
 It is hard to know the exact turbulent dynamics due to complex and uncertain interactions between the
 quadcopter and the wind field.
 Further to this, it is believed that controlling the system in the turbulent dynamics mode may be infeasible.
 This is because the unpredictability of the turbulence may cause catastrophic failure.
-Therefore, when flying the quadcopter from an initial state $\state_0$, to a target state $\state_{f}$
+Therefore, when flying the quadcopter from an initial state $\state_0$, to a target state $\state_{f}$,
 it is desirable to find trajectories that avoid entering this turbulent dynamics mode.
 However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
 To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
@@ -1367,6 +1391,132 @@ whilst avoiding the turbulent dynamics mode.}
 # \label{fig-problem-statement}
 # \end{figure}
 # #+END_EXPORT
+*** intro :ignore:
+# The methods developed throughout this dissertation are evaluated on an illustrative 2D quadcotper navigation example.
+The methods developed throughout this dissertation are motivated by a 2D quadcopter navigation example.
+See cref:fig-problem-statement for a schematic of the environment and details of the problem.
+The goal is to fly the quadcopter from an initial state $\state_0$, to a target state $\state_{f}$.
+However, it considers a quadcopter operating in an environment subject to spatially varying wind --
+induced by a fan -- where the system can be represented by two dynamics modes,
+- Mode 1 :: a /non-turbulent/ dynamics mode away from the fan,
+- Mode 2 :: an inoperable, /turbulent/ dynamics mode in front of the fan.
+The turbulent dynamics mode is subject to higher drift (in the negative $x$ direction) and
+to higher diffusion (aka process noise).
+It is hard to know the exact turbulent dynamics due to complex and uncertain interactions between the
+quadcopter and the wind field.
+Further to this, it is believed that controlling the system in the turbulent dynamics mode may be infeasible.
+This is because the unpredictability of the turbulence may cause catastrophic failure.
+Therefore, when flying the quadcopter from an initial state $\state_0$, to a target state $\state_{f}$,
+it is desirable to find trajectories that avoid entering this turbulent dynamics mode.
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+%\includegraphics[width=1.0\textwidth]{./images/point-mass-problem-statement-scenario-4.pdf}
+\includegraphics[width=1.0\textwidth]{./images/quadcopter-domain-collocation-ppt.png}
+\caption{\label{fig-problem-statement}\textbf{Quadcopter navigation problem}
+Diagram showing a top down view of an environment, representing a quadcopter
+subject to two dynamics modes: 1) a turbulent dynamics mode
+induced by a fan (green) and 2) a non-turbulent dynamics mode everywhere else (blue).
+The goal is to find trajectories from a start state $\state_0$, to the target state $\targetState$ (red star),
+whilst avoiding the turbulent dynamics mode.}
+\end{figure}
+#+END_EXPORT
+
+*** Problem Statement
+More formally, this dissertation considers nonlinear, stochastic, multimodal dynamical systems,
+#+BEGIN_EXPORT latex
+\begin{subequations}
+\begin{align}
+\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
+&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \nonumber \\
+\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
+\end{align}
+\end{subequations}
+#+END_EXPORT
+with continuous states $\state_t \in \stateDomain \subseteq \R^\StateDim$, continuous controls
+$\control_t \in \controlDomain \subseteq \R^\ControlDim$ and a discrete time index $t$.
+The discrete mode indicator function
+$\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\}$,
+$\alpha : \stateDomain \rightarrow \modeDomain = \{1,\ldots,\ModeInd\}$,
+indicates which of the $\ModeInd$ underlying dynamics modes
+$\{\mode{\latentFunc} : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
+and associated noise models
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$
+governs the system at a given time step $\timeInd$.
+
+The state difference between time $\timeInd$ and $\timeInd+1$ is denoted
+$\Delta \state_{\timeInd+1} = \state_{\timeInd+1} - \state_{\timeInd}$.
+At any given time step $t$, one of the $\ModeInd$ dynamics modes
+$\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
+and associated noise models
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
+$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
+are selected by a discrete mode indicator variable,
+$\alpha_t \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$.
+This work considers systems that are stochastic (subject to process noise), but
+are not subject to observation noise.
+Thus, the $\mode{\bm\epsilon}$ term solely represents the process noise.
+
+It considers systems where the underlying dynamics modes are defined by disjoint state domains.
+That is, each dynamics mode is defined by its state domain
+$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
+$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for $i \neq j$.
+Each mode's dynamics are then given by,
+#+BEGIN_EXPORT latex
+\begin{align}
+\mode{\latentFunc}: \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain.
+\end{align}
+#+END_EXPORT
+Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
+and enter another mode.
+Ideally, this work seeks to enforce the controlled system to remain in a given mode.
+
+The overall goal is to navigate from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
+-- to the target state $\targetState$, whilst guaranteeing that the controlled
+system remains in the desired dynamics mode.
+Formally, a mode remaining controlled system is defined as follows.
+#+BEGIN_EXPORT latex
+\begin{definition}[Mode Remaining] \label{def-mode-remaining-explore}
+Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
+Given an inital state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy \in \Pi$,
+the controlled system is said to be mode-remaining iff:
+\begin{align} \label{eq-mode-remaining-def-explore}
+\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+&\in \mode{\stateDomain} \quad \forall \timeInd
+\end{align}
+\end{definition}
+#+END_EXPORT
+Notice that  the controller
+$\policy : \stateDomain \times \mathbb{Z} \rightarrow \controlDomain$ is defined
+generally. That is, it may take the form of a deterministic feedback policy or an
+open-loop set of controls without state feedback.
+It is assumed that $\Pi$ is the set of deterministic policies.
+
+Given this definition of a mode remaining controlled system, this work seeks to solve,
+#+BEGIN_EXPORT latex
+\begin{subequations} \label{eq-mode-explore-problem}
+\begin{align}
+\min_{\policy \in \Pi} \quad &J(\policy) \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\epsilon},
+\quad \modeVar(\state_{\timeInd}) = \modeInd \\
+%&\text{\cref{eq-mode-remaining-def-explore}} \\
+&\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+\in \desiredStateDomain \quad \forall \timeInd \in \{0, \ldots, \TimeInd-1 \} \\
+%\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+%&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\state_{0} = \state_0 \\
+&\state_\TimeInd = \targetState,
+\end{align}
+\end{subequations}
+#+END_EXPORT
+where $J : \Pi \rightarrow \R$ denotes the objective function.
+Note that the objective function is not of primary importance in this work.
+The novelty of this problem arises from remaining in the desired dynamics modes $\desiredMode$, when
+the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
+To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
+to solve this problem.
+# However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
 
 *** Motivation label:to_motivation :noexport:
 #+BEGIN_EXPORT latex
@@ -11495,12 +11645,11 @@ Following previous chapters, this work considers nonlinear, stochastic, multimod
 #+END_EXPORT
 with states $\state \in \stateDomain$, controls $\control \in \controlDomain$ and a discrete time index $\timeInd$.
 The discrete mode indicator variable
-$\alpha_{\timeInd} \in \modeDomain = \mathbb{Z} \cap [1,\ModeInd]$,
+$\alpha_{\timeInd} \in \modeDomain = \{1,\ldots,\ModeInd\}$,
 indicates which of the $\ModeInd$ underlying dynamics modes
 $\{\mode{\latentFunc} : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
 and associated noise models
-$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
-$\bm\Sigma_{\bm\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$
 governs the system at a given time step $\timeInd$.
 
 # #+BEGIN_EXPORT latex
@@ -11535,7 +11684,7 @@ generally. That is, it may take the form of a deterministic feedback policy or a
 open-loop set of controls without state feedback.
 It is assumed that $\Pi$ is the set of deterministic policies.
 
-Given this definition of a mode remaining controlled system, this work seeks to formally solve,
+Given this definition of a mode remaining controlled system, this work seeks to solve,
 #+BEGIN_EXPORT latex
 \begin{subequations} \label{eq-mode-explore-problem}
 \begin{align}
@@ -11560,16 +11709,23 @@ cref:eq-mode-explore-problem resembles the problem statement from cref:chap-traj
 except that it does not assume a priori access to the environment. As
 such, it does not have access to a historical data set of state transitions which it can
 use to learn a predictive dynamics model. Instead, it must incrementally explore
-the environment, without violating the mode remaining constraints. However, given
-that the underlying dynamics modes and how the system switches between them are
-not fully known a priori,
-it is not possible to guarantee that the controlled system remains in the desired dynamics mode.
+the environment, without violating the mode remaining constraints.
+# However, given
+# that the underlying dynamics modes and how the system switches between them are
+# /not fully known a priori/,
+# it is not possible to guarantee that the controlled system remains in the desired dynamics mode.
 
-For two reasons, this work relaxes the requirement to keeping the system in the desired mode with high probability.
-Firstly, given the dynamics model is learned from observations, it is not possible to find trajectories that
+Given the dynamics model is learned from observations, it is not possible to find trajectories that
 are mode remaining according to  cref:def-mode-remaining-explore.
+This work relaxes the requirement to keeping the system in the desired mode with high probability.
 Secondly, the agent will not be able to explore the environment if it is
 mode remaining according to  cref:def-mode-remaining-explore
+
+# For two reasons, this work relaxes the requirement to keeping the system in the desired mode with high probability.
+# Firstly, given the dynamics model is learned from observations, it is not possible to find trajectories that
+# are mode remaining according to  cref:def-mode-remaining-explore.
+# Secondly, the agent will not be able to explore the environment if it is
+# mode remaining according to  cref:def-mode-remaining-explore
 #+BEGIN_EXPORT latex
 \begin{definition}[$\delta$-mode remaining] \label{def-delta-mode-remaining}
 Let $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ denote a multimodal dynamical system
@@ -12238,38 +12394,56 @@ policy are $\delta-\text{mode remaining}$ under the dynamics, however, this is l
 # 4. Explore the environment, whilst ensuring the controlled system is $\delta-\text{mode remaining}$.
 
 ** Preliminary Results
-This section presents some initial results on the illustrative quadcotper navigation
-problem from cref:illustrative_example using the simulator from cref:sec-traj-opt-results-simulated.
-In particular, \modeOpt is tested in Environment 1 from cref:sec-traj-opt-results-simulated.
+*** intro :ignore:
+This section presents some initial results for \modeOpt on the illustrative quadcotper navigation problem
+from cref:illustrative_example.
+In particular, it is tested in the simulated Environment 1 from cref:sec-traj-opt-results-simulated.
 See cref:sec-traj-opt-results-simulated for more details on the environment and the simulator set up.
 
-cref:fig-explorative-traj-opt-7-initial shows the start/target states $\state_0/\targetState$,
+cref:fig-explorative-traj-opt-7-initial shows the start state $\state_0$, the target state $\targetState$,
 the initial data set $\dataset_0$ (blue crosses) and the mode boundary.
 The turbulent dynamics mode is the region within the mode boundary and the desired dynamics mode is everywhere else.
 These are overlyaed on the \acrshort{mosvgpe}'s gating network posterior after training on the initial data set $\dataset_0$.
 cref:fig-explorative-data-over-prob-7-initial shows the probability mass function over the mode indicator variable
 where the probability of being in the desired dynamics mode $\desiredMode=2$ is high around the initial data set.
-It tends to $0.5$ away from the data, i.e. maximum entropy for a Categorial distribution.
-cref:fig-explorative-data-over-svgp-7-initial shows the \acrshrot{gp} posterior over the desired mode's gating function.
+It tends to $0.5$ away from the data, i.e. maximum entropy for a Categorical distribution.
+cref:fig-explorative-data-over-svgp-7-initial shows the \acrshort{gp} posterior over the desired mode's gating function.
 The posterior variance (right) is low around the initial data set and high everywhere else.
-These figures are useful for visualising \modeOpt.
-To further aid visualisation, the $1-\delta$ contour is marked on all plots (purple line).
-The experiments use $\delta=0.2$ which corresponds to the $\Pr(\modeVar=\desiredMode \mid \state) =0.8$ contour.
+To further aid visualisation, the $\Pr(\modeVar=\desiredMode \mid \state, \dataset_{0:i}) = 1-\delta$
+contour is marked on all plots (purple line).
+Intuitively, \modeOpt seeks to expand the $1-\delta$ contour until the target state $\targetState$ lies within the contour.
+# The experiments use $\delta=0.2$ which corresponds to the $\Pr(\modeVar=\desiredMode \mid \state) =0.8$ contour.
 
-*** Model Learning
+*** Experiment Configuration
+This section provides details on how the experiments were configured.
+
+*Initial data set $\dataset_0$*
+The initial data set was collected by simulating $15$ random trajectories from the start state $\state_0$ and
+terminating them when they left the initial state domain $\initialStateDomain$.
+This resulted in an initial data set of $118$ state transitions.
+
 # To begin with, $\NumData$ state transitions were sampled from the simulator with $\Delta \timeInd = 0.25s$.
-Following the experiments in cref:sec-traj-opt-results
+*Model learning* Following the experiments in cref:chap-traj-opt-results
 this section instantiated the \acrshort{mosvgpe} dynamics model with $\ModeInd=2$ experts, one to represent
 each of the dynamics modes.
 Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a constant mean function.
 The gating network used a single gating function with
 a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
+At each \modeOpt iteration an early stopping callback was used to terminate the dynamics model training.
+The early stopping callback used a min delta of $0$ and a patience of $500$.
+This meant that training terminated after 500 epochs of no improvement.
 
-*Initial data set $\dataset_0$*
-The initial data set was collected from $15$ random trajectories from the start state $\state_0$ that were
-terminated when they left the initial state domain $\initialStateDomain$.
-This resulted in an initial data set with $118$ elements.
-
+*Explorative controller*
+The explorative controller $\explorativeController$ was initialised with a horizon of $\TimeInd=15$.
+At each \modeOpt iteration the previous solution was used as the initial solution for the trajectory optimiser.
+In all experiments \modeOpt was configured with $\delta=0.2$, which corresponds to mode chance constraints
+with a satisfaction probability of 0.8. That is, that mode chance constraints were given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mode-chance-constraints-0.8}
+\Pr( \modeVar_{\timeInd} = \desiredMode \mid \state_0, \control_{0:\timeInd}, \bm{\modeVar}_{0:t-1}=\desiredMode) \geq 0.8 \quad
+\forall \in \{0, \ldots, \TimeInd-1\}.
+\end{align}
+#+END_EXPORT
 
 *** Comparison of Exploration Terms
 *** state diff vs entropy vs :ignore:noexport:
@@ -12308,7 +12482,7 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mo
 \begin{figure}
 \centering
 %\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
-\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=0.6\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_19.pdf}
+\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=0.5\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_17.pdf}
 \caption{\textbf{State difference only}
 Results when solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with only the state difference
 term, i.e. $J(f, \pi) = - \sum_{\timeInd=1}^{\TimeInd-1}
@@ -12327,32 +12501,39 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on the des
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
 \adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-diag/trajectories_over_mixing_probs_step_1.pdf}
-\subcaption{Factorised entropy $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd}
-H \left[ \desiredGatingFunction(\state_{\timeInd}) \mid \state_{\timeInd}, \dataset_{0:i-1} \right]$}
+\subcaption{Factorised entropy \cref{eq-factorised-entropy}}
 \label{fig-entropy-mvn-diag-traj-opt-over-prob-7}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
 \adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf}
-\subcaption{Joint entropy $J(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right]$}
+\subcaption{Joint entropy \cref{eq-joint-entropy}}
 \label{fig-entropy-mvn-full-cov-traj-opt-over-prob-7}
 \end{minipage}
 \caption{\textbf{Comparison of joint/factorised entropy objectives}
-Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different entropy
-objectives.
-(\subref{fig-entropy-mvn-diag-traj-opt-over-prob-7}) shows
-the results assuming the distribution is factorised over time, i.e.
-summing the entropy at each time step, instead of considering the full joint distribution over the trajectory.
-The trajectory collapses onto a single location of high entropy.
-(\subref{fig-entropy-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
-considering the full joint entropy over a trajectory.
+Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with
+(\subref{fig-entropy-mvn-diag-traj-opt-over-prob-7})
+the sum of the marginal entropy at each time step (factorised entropy) and
+(\subref{fig-entropy-mvn-full-cov-traj-opt-over-prob-7})
+the full joint entropy over a trajectory.
+The trajectory found with the factorised entroyp collapses onto a single location of high entropy.
 The optimised controls are rolled out in the desired mode’s
 GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+%Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different entropy
+%objectives.
+%(\subref{fig-entropy-mvn-diag-traj-opt-over-prob-7}) shows
+%the results assuming the distribution is factorised over time, i.e.
+%summing the entropy at each time step, instead of considering the full joint distribution over the trajectory.
+%The trajectory collapses onto a single location of high entropy.
+%(\subref{fig-entropy-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
+%considering the full joint entropy over a trajectory.
+%The optimised controls are rolled out in the desired mode’s
+%GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
 \label{fig-entropy-comparison-traj-opt-7}
 \end{figure}
 #+END_EXPORT
 
-*** state diff vs entropy vs :ignore:
+*** state diff vs entropy vs :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -12401,7 +12582,12 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mo
 #+END_EXPORT
 
 *** state diff text :ignore:
-*State difference only?*
+This section evaluates the different terms in the explorative controller's objective (cref:eq-explorative-traj-opt).
+In particular, it motivates why the entropy based term was combined with the state difference term.
+It then shows why the joint gating entropy over a trajectory was used,
+instead of summing the marginal entropy at each time step, as is done in cite:buisson-fenetActively2020.
+
+*State difference term*
 A simple exploration strategy is to favour trajectories whose centre of mass is closer to the target state.
 This corresponds to solving the constrained optimisation in cref:eq-explorative-traj-opt
 with only the state difference term.
@@ -12409,28 +12595,57 @@ However, using only the state difference term with the mode chance constraints l
 stuck in local optima and never exploring to the target state.
 This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
 optimisation where the trajectory is stuck at the mode boundary.
-Intuitively, a strategy which favours searching regions of the state space which have not previously observed
+If the strategy searched more to the left it would be able to collect data, expand
+the mode chance constraints by reducing the model's epistemic uncertainty and thus be able to
+explore around the mode boundary.
+However, the mode chance constraints have induced a local optima that prevents \modeOpt from exploring in this direction.
+Intuitively, a strategy which favours searching regions of the state space which have not previously been observed
 could likely avoid the local optima in cref:fig-explorative-state-diff-traj-opt-over-prob-7.
-This intuition motivates the joint gating entropy term in cref:eq-explorative-traj-opt.
-This term should guide exploration into regions of the model with high epistemic uncertainty.
+This intuition motivated adding the gating entropy term in cref:eq-explorative-traj-opt.
+# This term should guide exploration into regions of the model with high epistemic uncertainty.
+# In cref:fig-explorative-state-diff-traj-opt-over-prob-7 this would likely correspond to searching more to the left
+
+# However, using only the state difference term with the mode chance constraints leads to the optimisation getting
+# stuck in local optima and never exploring to the target state.
+# This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
+# optimisation where the trajectory is stuck at the mode boundary.
+# The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
+# suggests that using only the joint gating entropy term
+# with the mode chance constraints prevents exploration towards the target state. This
+# happens when there is a mode boundary between the start state $\state_0$ and the target
+# state $\targetState$. In this case, the objective explores away form the mode boundary and
+# does not explore towards the target state $\targetState$.
 
 *** entropy comparison text :ignore:
 *Joint vs factorised entropy*
-This section compares the joint gating entropy term in cref:eq-explorative-traj-opt with the sum of individual
-entropy's over the trajectory, which is referred to as the factorised entropy.
-cref:fig-entropy-comparison-traj-opt-7 shows the trajectories found at the first iteration
+Before combining the state difference and entropy terms into a single objective, the choice of gating entropy
+is now compared. In particular, the joint gating entropy term in cref:eq-explorative-traj-opt, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-joint-entropy}
+J_{\text{joint}}(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right],
+\end{align}
+#+END_EXPORT
+is compared with the sum of marginal
+entropies over the trajectory, which is referred to as the factorised entropy and given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-factorised-entropy}
+J_{\text{fact}}(f, \pi) = \sum_{\timeInd=1}^{\TimeInd}
+H \left[ \desiredGatingFunction(\state_{\timeInd}) \mid \state_{\timeInd}, \dataset_{0:i-1} \right].
+\end{align}
+#+END_EXPORT
+cref:fig-entropy-comparison-traj-opt-7 shows the trajectories found at the first \modeOpt iteration
 when using the two entropy objectives.
 The factorised entropy objective, show in
-cref:fig-explorative-mvn-diag-traj-opt-over-prob-7, shows that the entire trajectory collapses onto a single state
+cref:fig-entropy-mvn-diag-traj-opt-over-prob-7, shows that the entire trajectory collapses onto a single state
 of high entropy.
 This is an undesirable behaviour because it does not maximise the information gain along the entire trajectory.
-In contrast, the result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7 consider the joint entropy over
+In contrast, the result in cref:fig-entropy-mvn-full-cov-traj-opt-over-prob-7 considers the joint entropy over
 the entire trajectory. The trajectory has spread along the $1-\delta$ contour,
 which corresponds to the region with highest gating entropy.
 These results confirm that the joint gating entropy relieves the myopia of active learning
 by considering the information gain over the trajectory.
 
-*** Environment 1 :noexport:
+*** Exploration in Environment 1
 **** Data Step 0 Epoch 1494 :ignore:
 #+BEGIN_EXPORT latex
 \renewcommand{\stepNum}{0}
@@ -14012,48 +14227,102 @@ All plots show a slice of the input space with constant zero controls.}
 
 *** env 1 text :ignore:
 
-*Balancing*
-These results suggest that balancing the state difference and the joint gating entropy terms in
+This section now evaluates the objective in cref:eq-explorative-traj-opt, which contains both the state difference
+term and the joint gating entropy term.
+Figures ref:fig-explorative-traj-opt-7-step-0-epoch-0 to ref:fig-explorative-traj-opt-7-step-22-epoch-1494
+visualise \modeOpt during its exploration phase.
+Each \modeOpt iteration $i$ is visualised with three figures,
+1. The data set $\dataset_{0:i}$ collected from previous iterations is overlayed on the gating network *before* training on it.
+2. It is then overlayed on the gating network posterior *after* training on it,
+   - These figures show how the model's epistemic uncertainty reduces after training on the updated data set.
+     Moreover, they show how the mode chance constraints expand at each iteration.
+     The mode chance constraints are shown by the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:i}) = 0.8$ contour.
+3. The trajectory found by the explorative controller $\explorativeController$ under the updated dynamical model
+   is overlayed on the updated gating network posterior.
+
+# These three figures visualise a single \modeOpt step.
+*Iteration $i=1$*
+cref:fig-explorative-traj-opt-7-step-1-epoch-0,fig-explorative-traj-opt-7-step-1-epoch-1494,fig-explorative-traj-opt-7-2
+visualise iteration $i=1$.
+cref:fig-explorative-traj-opt-7-step-1-epoch-0,fig-explorative-traj-opt-7-step-1-epoch-1494 show how the
+gating network changes after training on $\dataset_1$.
+The purple lines representing the
+$\Pr(\alpha=\desiredMode \mid \state, \dataset_{0}) = 0.8$ contour
+in cref:fig-explorative-data-over-prob-7-step-1-epoch-0
+and the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:1}) = 0.8$ contour
+in cref:fig-explorative-data-over-prob-7-step-1-epoch-1494
+show how the mode chance constraints expand after training on $\dataset_1$.
+The region between the contours indicates the newly explorable region.
+This shows that reducing the model's epistemic uncertainty leads to the mode chance constraints expanding the
+explorable region.
+If this region stops expanding then \modeOpt will not be able to explore.
+Exploration can likely be guaranteed by relaxing $\delta$, however,
+such analysis of exploration guarantees is left for future work.
+It is also worth noting that relaxing $\delta$ too far corresponds to removing the mode chance constraints.
+
+# $\Pr(\alpha=\desiredMode \mid \state) = 0.8$ contours in
+# cref:fig-explorative-data-over-prob-7-step-1-epoch-0,fig-explorative-data-over-prob-7-step-1-epoch-1494 shows
+# how the mode chance constraints expand after training on the $\dataset_1$.
+# The area between the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:i-1}) = 0.8$ contour
+# in cref:fig-explorative-data-over-prob-7-step-1-epoch-0
+# and the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:i}) = 0.8$ contour
+# in cref:fig-explorative-data-over-prob-7-step-1-epoch-1494 indicates the newly explorable region.
+
+cref:fig-explorative-data-over-svgp-7-step-1-epoch-0,fig-explorative-data-over-svgp-7-step-1-epoch-1494
+show how the \acrshort{gp} posterior over the desired mode's gating function changed after training on
+$\dataset_{0:1}$.
+The right hand plots visualise the posterior variance and show how it decreased around the
+new observations.
+Similarly, the left hand plots visualise the posterior mean and show how the gating function increased around
+the new observations.
+This is because it believed they belong to the desired dynamics mode.
+
+Finally, cref:fig-explorative-traj-opt-7-2 shows the trajectory found by the
+explorative controller $\explorativeController$ under the updated dynamics model.
+The trajectory explores along the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:1}) = 0.8$ contour towards
+the target state $\targetState$.
+cref:fig-explorative-traj-opt-over-svgp-7-step-2 shows that the trajectory spreads over regions of high
+posterior variance.
+This suggests that combining the state difference term and the joint gating entropy term is
+effective for finding trajectories that explore towards the target state $\targetState$.
+
+*Leaving the desired dynamics mode $\desiredMode$*
+It is worth noting that \modeOpt can never learn where a mode boundary is without observing state transitions from
+outside of the desired dynamics mode.
+
+*Final iteration*
+
+*Exploration*
+The results
+in  Figures ref:fig-explorative-traj-opt-7-step-0-epoch-0 to ref:fig-explorative-traj-opt-7-step-22-epoch-1494
+suggest that balancing the state difference and the joint gating entropy terms in
 cref:eq-explorative-traj-opt results in exploration to the target state $\targetState$
 without getting stuck in a local minima.
 Intuitively, this objective favours maximum entropy trajectories whose centre of mass is closest
 to the target state $\targetState$.
 It is worth noting that not all settings of the
-cost matrices, $\stateCostMatrix$ and $\controlCostMatrix$, resulted in the algorithm converging in the
-experiments.
-
-# However, using only the state difference term with the mode chance constraints leads to the optimisation getting
-# stuck in local optima and never exploring to the target state.
-# This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
-# optimisation where the trajectory is stuck at the mode boundary.
-The result in cref:fig-explorative-mvn-full-cov-traj-opt-over-prob-7
-suggests that using only the joint gating entropy term
-with the mode chance constraints prevents exploration towards the target state. This
-happens when there is a mode boundary between the start state $\state_0$ and the target
-state $\targetState$. In this case, the objective explores away form the mode boundary and
-does not explore towards the target state $\targetState$.
+cost matrices, $\stateCostMatrix$ and $\controlCostMatrix$, resulted in \modeOpt converging in the experiments.
+As mentioned previously, the performance of \modeOpt's exploration is dependent on the interplay between
+the entropy term, the state difference term and the mode chance constraints.
+As such, the convergence of \modeOpt likely depends on the cost matrices,
+$\stateCostMatrix$, $\controlCostMatrix$ and the mode satisfaction probability given by $\delta$.
+The results shown here are an initial step showing that in \modeOpt can work in practice.
+However, further analysis is left for future work.
 
 ** Discussion & Future Work
-This section discusses the method presented in this chapter and proposes some directions for future work.
-
-*Exploration-exploitation trade-off*
-The method presented in this chapter side-
-steps the exploration-exploitation trade-off which is common in MBRL. It dos so by
-separating the exploration into the explorative controller $\explorativeController$  and the exploitation
-into the mode remaining controller $\modeController$ and selecting the relevant strategy by
-evaluating the mode chance constraints.
-
-*Entropy of what?*
-Greedy entropy-based exploration in $\modeVar$ is less good.
-Tries to search where $\Pr(\modeVar=\desiredMode \state= 0.5$ (uniform) even though the gating network may
-by certain, i.e. have a low posterior variance.
-In this case the \acrfull{bald} objective  from cite:houlsbyBayesian2011 may be a better option
-
-*$\delta-\text{mode remaining}$*
+This section discusses \modeOpt and proposes some directions for future work.
 
 *Exploration guarantees*
-The method presented in this chapter has no exploration
-guarantees. That is, given enough time, it is not guaranteed to have explored enough
+\modeOpt side-steps the exploration-exploitation trade-off which is common in MBRL.
+It does so by separating the exploration into the explorative controller $\explorativeController$
+and the exploitation into the mode remaining controller $\modeController$.
+The mode chance constraints are then used to see if the exploitative mode controller $\modeController$
+can find a $\delta-\text{mode remaining}$ trajectory to the target state.
+If it cannot, it falls back on the explorative controller $\explorativeContrller$ to find informative trajectories,
+collect data and reduce the model's epistemic uncertainty.
+Although this approach principally side-steps the  exploration-exploitation trade-off,
+it does not have any exploration guarantees.
+That is, given enough time, it is not guaranteed to have explored enough
 such that $\delta-\text{mode remaining}$ trajectories to the target state can be found. Further
 to this, some experiments showed that the constrained optimisation can get stuck
 exploring away from the target state. As such, an interesting direction for future
@@ -14063,44 +14332,74 @@ guarantee exploration. A more simple (empirical) approach may quantify the rate
 at which the gating network’s epistemic uncertainty is reducing and use it to relax
 $\delta$ if the agent has stopped exploring.
 
-In practice it is straightforward to tune the parameters by visual inspection. This
-is because the method assumes access to an initial dynamics model trained on the
-initial data set .
-
-The objective used in this chapter is concerned with exploration. It resembles the
-
-
-It contains a term targeting exploration towards the target state and a term favour-
-ing exploration in regions of the state space where the gating network is uncertain.
-Using the term targeting exploration towards the target state by in conjunction with
-the $\delta-\text{mode remaining}$ chance constraints may lead to the strategy getting stuck
-in local optima.
-
-It contains a term favouring uncertainty exploration The entropy term It should be
-noted that in some environments this behaviour may get the strategy stuck in local
-optima. Add parameter to balance entropy and state difference terms to get sub
-linear regret?
-
 *Myopic active learning*
 This work has shown that relieving the myopia of active
-learning in dynamical systems – by conditioning the entropy on previous time steps
-has a positive impact on performance. It is worth noting that this was only possible
-because the gating network is based on GPs. Therefore, this method is not widely
-applicable in all MoGPE dynamics models.
+learning in dynamical systems – by considering the joint entropy over a trajectory --
+has a positive impact on performance. However, it is worth noting that this was only possible
+because the gating network is based on GPs.
+As such, this method is not widely applicable in all MoGPE dynamics models.
+
+# $\mathcal{H}\left[\desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i} \right]$.
+# The exploration strategy used in \modeOpt considers the joint entropy of the desired mode's gating function
+# over the trajectory.
+*Information criterion*
+An alternative approach is to consider the entropy of the mode indicator variable $\modeVar$.
+However, the joint distribution over the \acrshort{mosvgpe} mode indicator variable is factorised over time.
+As such, the entropy at each time step does not consider the information gain along the rest of the trajectory.
+However, the \acrshort{mosvgpe}'s gating function \acrshort{gp} can be conditioned on all other time steps to
+achieve this behaviour.
+For example, consider using the entropy of the following distribution,
+#+BEGIN_EXPORT latex
+\begin{align}
+P\left(\modeVar_{\timeInd} \mid \state_{\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset_{0:i} \right) =
+\int P\left(\modeVar_{\timeInd} \mid \desiredGatingFunction(\state_{\timeInd})\right)
+p\left(\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset_{0:i} \right)
+\text{d} \desiredGatingFunction(\state_{\timeInd})
+\end{align}
+#+END_EXPORT
+where the gating function posterior is conditioned on all other time steps
+$\desiredGatingFunction(\stateTraj_{\neg\timeInd})$.
+The entropy of this distribution considers the information gain along the rest of trajectory via the
+gating function \acrshort{gp}.
+Although not tested here, this objective may not obtain good performance.
+This is because the maximum entropy of a Categorical variable corresponds to a uniform distribution.
+As mentioned in cref:chap-dynamics, \acrshort{mogpe} models may tend to a uniform distribution for a number of reasons.
+In some cases, they tend to a uniform distribution at the boundary between modes, even though they are very confident,
+i.e have low epistemic uncertainty.
+As such, this objective may favour trajectories at mode boundaries which it has already observed.
+In turn, this may lead to the strategy getting stuck in a local optima at a mode boundary.
+A popular approach to active learning for binary classification is \acrfull{bald}
+citep:houlsbyBayesian2011.
+\acrshort{bald} alleviates this issue by considering the following objective (in the myopic setting),
+#+BEGIN_EXPORT latex
+\begin{align}
+\arg \max_{\state_{\timeInd}}
+H\left(\modeVar_{\timeInd} \mid \state_{\timeInd}, \dataset_{0:i} \right) -
+\E_{\desiredGatingFunction(\state_{\timeInd}) \sim p(\desiredGatingFunction(\state_{\timeInd}) \mid \dataset_{0:i}) }
+\left[
+H\left(\modeVar_{\timeInd} \mid \state_{\timeInd}, \desiredGatingFunction(\state_{\timeInd}) \right)
+\right].
+\end{align}
+#+END_EXPORT
+Intuitively, this objective seeks the state $\state_{\timeInd}$ for which the parameters under the posterior
+disagree about the outcome the most. Hence the name.
+Extending this objective to dynamical systems is an interesting direction for future work.
 
 *Inducing points*
 The method presented in this chapter initialised each of the sparse
-GPs in the MoSVGPE dynamics model with a fixed number of inducing points. Although this
+\acrshort{gp}s in the \acrshort{mosvgpe} dynamics model with a fixed number of inducing points. Although this
 approach worked well in the experiments, it is unlikely that this will
 always be the case. For example, consider exploring much larger environments, i.e.
-environments with larger state domains. In these environments, the MoSVGPE’s
-ability to accurately model an ever increasing data set will decrease. This is due
+environments with larger state domains. In these environments, the
+\acrshort{mosvgpe}'s
+ability to accurately model an ever increasing data set with a fixed number of inducing points will decrease.
+This is due
 to the sparse approximation’s ability to model the true non-parametric model deteriorating as
 the number of data points increases. See cite:burtRates2019 for details
 on rates of convergence for sparse GPs. As such, an interesting direction for future
 work is to study methods for dynamically adding new inducing points to each GP.
 
-*Fix gating network parameters during training?*
+*Fixing model parameters during training*
 During its initial iterations,
 \modeOpt only explores the desired dynamics mode and does not observe any state
 transitions belonging to another mode. As a result, the lengthscale of the gating network GPs increases.
@@ -14110,47 +14409,83 @@ the entire domain. When this happens, the $\delta-\text{mode remaining}$ chance 
 expand the explorable region significantly further than the observed data. This is
 undesirable because it leads to trajectories leaving the desired dynamics mode significantly more.
 In practice, fixing the kernel’s hyperparameters (e.g. lengthscale
-and signal variance) after training on the initial data set , appeared to alleviate this
+and signal variance) after training on the initial data set $\dataset_0$, appeared to alleviate this
 issue. However, it is left to future work to study this in more depth.
 
 
-
-
-This chapter is concerned with exploration in multimodal dynamical systems
-where the underlying dynamics modes and how the system switches between them are /not fully known a priori/.
-In particular, it is interested in exploring a single desired dynamics
-mode whilst avoiding entering any of the other modes.
-This is a challenging problem because the agent must observe regions outside of the desired dynamics mode
+*$\delta-\text{mode remaining}$*
+Exploring a single dynamics mode in multimodal dynamical systems
+where the underlying dynamics modes and how the system switches between them, are /not fully known a priori/,
+is a hard problem.
+This is because the agent must observe regions outside of the desired dynamics mode
 in order to know that a particular region does not belong to the desired mode.
-Based on this logic, this chapter utilises the model from Chapter ref:chap-dynamics
-to design an information theoretic trajectory optimisation algorithm
-that
+The $\delta-\text{mode remaining}$ exploration strategy proposed in cref:sec-exploration
+resulted in the agent leaving the desired dynamics mode multiple times in the experiments.
+In future work it would be interesting to study this in more detail.
+For example, how often must the agent leave the desired dynamics mode in order to accurately learn the mode boundary?
+How often does the agent fail when leaving the desired dynamics mode in practice?
+# Maybe it's possible to synthesise a feedback controller with guarantees on being able to control
+# the agent back into the desired dynamics mode?
 
 
+# *Tuning parameters*
+# In practice it is straightforward to tune the parameters by visual inspection. This
+# is because the method assumes access to an initial dynamics model trained on the
+# initial data set .
+
+# It contains a term targeting exploration towards the target state and a term favour-
+# ing exploration in regions of the state space where the gating network is uncertain.
+# Using the term targeting exploration towards the target state by in conjunction with
+# the $\delta-\text{mode remaining}$ chance constraints may lead to the strategy getting stuck
+# in local optima.
+
+# It contains a term favouring uncertainty exploration The entropy term It should be
+# noted that in some environments this behaviour may get the strategy stuck in local
+# optima. Add parameter to balance entropy and state difference terms to get sub
+# linear regret?
+
+
+
+*Related work*
 To the best of our knowledge, there is no previous work addressing exploration of
 a single dynamics mode in multimodal dynamical systems.
-cite:schreiterSafe2015 use a GP classifier to identify safe and unsafe regions
-when learning GP dynamics models in an active learning setting.
+cite:schreiterSafe2015 use a \acrshort{gp} classifier to identify safe and unsafe regions
+when learning \acrshort{gp} dynamics models in an active learning setting.
 However, they assume that they can directly observe whether a particular
 data point from the environment belongs to either the safe or unsafe regions.
 In contrast, this chapter is concerned with scenarios where the mode cannot be directly observed from the
-environment, but instead, is inferred by a probabilistic dynamics model.
+environment, but instead, is inferred by the probabilistic dynamics model.
 
-Utilising mutual information for active learning has been well motivated by, for example,
-cite:krauseNearOptimal2008.
-They highlight that mutual information may lead to a more accurate model than differential entropy.
-It has also been shown that minimising the mutual information  is the same as minimising the expected posterior
-uncertainty (conditional entropy) in the model cite:ertinMaximum2003.
+# It should be noted that in some environments this behaviour may get the strategy stuck in local
+# optima.
+# Add parameter to balance entropy and state difference terms to get sub linear regret?
 
-It should be noted that in some environments this behaviour may get the strategy stuck in local
-optima.
-Add parameter to balance entropy and state difference terms to get sub linear regret?
-
-- provable regret
-- relax constraint if not improving
-- guarantees on exploration by relaxing $\delta$ and/or other params - like UCB
+# - guarantees on exploration by relaxing $\delta$ and/or other params - like UCB
 
 ** Conclusion
+This chapter has presented a novel strategy for exploring multimodal dynamical systems whilst remaining
+in a desired dynamics mode with high probability.
+Moreover, it has proposed how this exploration strategy can be combined with the dynamics model from cref:chap-dynamics,
+the $\delta-\text{mode remaining}$ trajectory optimisation algorithms from cref:chap-traj-opt-control and the
+$\delta-\text{mode remaining}$ chance constraints from cref:eq-mode-chance-constraint-explore, to
+approximately solve the problem in cref:eq-mode-explore-problem.
+That is, it can control multimodal dynamical systems -- where the underlying dynamics modes and how the
+system switches between them, are /not fully known a priori/ --
+from a start state $\state_0$, to a target state $\targetState$ whilst guaranteeing
+that the system remains in a desired dynamics mode with high probability.
+
+\modeOpt was tested on the illustrative quadcotper example, verifying that the algorithm can work in practice.
+Further testing in different environments and analysis of how the optimisation parameters impacts exploration,
+is left for future work.
+
+# and provable exploration guarantees are left for future work.
+
+# This chapter has presented initial results verifying that the algorithm can work in practice.
+
+# However, there still remains further work.
+# For example, evaluating \modeOpt in different environments and analysing how the optimisation parameters
+# impact exploration.
+
 * Conclusion
 ** Future Work
 *** Ideas for continuing the work in this dissertation
@@ -14185,362 +14520,7 @@ Use sensors to observe regions of the environment before interacting with them.
 *Model-free approaches*
 This dissertation solely focused on model-based algorithms.
 
-* Active Learning
-** Bayesian Information Theoretic Active Learning
-Following cite:houlsbyBayesian2011 this section introduces Bayesian
-information theoretic active learning.
-The Bayesian framework assumes that there are some latent parameters $\params$,
-that control the dependence between the inputs $\input \in \inputDomain$
-and the outputs $p(\output \mid \input, \params)$.
-Given observations of the system
-$\mathcal{D} = \{(\input_\timeInd, \output_\timeInd)\}_{\timeInd=1}^\TimeInd$,
-it is assumed that the posterior over the parameters given the data
-$p(\params \mid \dataset)$
-has been inferred.
-The goal of information theoretic active learning is to reduce the number of
-possible hypothesis as fast as possible, i.e. minimise the uncertainty associated
-with the parameters using Shannon's entropy citep:coverElements2006.
-#+BEGIN_EXPORT latex
-\newcommand{\crv}{\ensuremath{X}}
-\newcommand{\density}{\ensuremath{p(\crv)}}
-\begin{myquote}
-\textbf{Differential Entropy}
-Let $\crv$ be a continuos random variable, with a probability density
-$\density$,
-whose support is a set $\mathcal{X}$.
-The differential entropy $H(\crv)$ is then defined as,
-\begin{align} \label{eq-differential-entropy}
-H(\crv) = - \int_{\mathcal{X}} \density \text{log} \density \text{d} \crv.
-\end{align}
-\end{myquote}
-#+END_EXPORT
-Data points $\dataset^*$ should thus be selected according to,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-posterior-entropy}
-\text{arg}\underset{\dataset^*}{\min}
-H(\params \mid \dataset^*)
-= \text{arg}\underset{\dataset^*}{\min}
-- \int p(\params \mid \dataset^*) \text{log} p(\params \mid \dataset^*) \text{d} \params.
-\end{align}
-#+END_EXPORT
-In general, solving this problem is NP-hard,
-so it is common to approximate it with a myopic greedy approximation.
-cite:krauseNearOptimal2008,dasguptaAnalysis2005 show that a myopic policy can perform near-optimally.
-The objective is then to seek the input $\input$ that maximises the decrease in
-expected posterior entropy,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expected-decrease-entropy}
-\text{arg}\underset{\control}{\max}
-H(\params \mid \dataset)
-- \E_{\output \sim \outputGivenInputData}
-\left[ H(\params \mid \output, \input, \dataset) \right].
-\end{align}
-#+END_EXPORT
-# The expectation requires the unseen output $\output$ and many works have
-An important insight is that minimising cref:eq-expected-decrease-entropy
-is equivalent to minimising the conditional mutual information between
-the output and the parameters $I(\output, \params \mid \input, \dataset$.
-#+BEGIN_EXPORT latex
-\begin{myquote}
-\textbf{Mutual Information}
-Given two sets of random variables, $\mathbf{X}$ and $\mathbf{F}$, with joint density $p(\mathbf{X}, \mathbf{F})$ the
-mutual information \cite{coverElements2006} is given by,
-\begin{align} \label{eq-mutual-information}
-I(\mathbf{X};\mathbf{F}) = \int p(\mathbf{X},\mathbf{F}) \text{log}\frac{p(\mathbf{X},\mathbf{F})}{p(\mathbf{X})p(\mathbf{F})}
-\text{d}\mathb{X} \text{d}\mathb{F},
-\end{align}
-#+END_EXPORT
-and its well known relationship to differential entropy $H(\cdot)$ is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mutual-information-entropy}
-I(\mathbf{X};\mathbf{F}) =  H(\mathbf{X}) - H(\mathbf{X} \mid \mathbf{F}).
-\end{align}
-\end{myquote}
-#+END_EXPORT
-An equivalent objective function can therefore be formulated in the output $\output$
-space as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-output-space-entropy}
-\text{arg}\underset{\input}{\max}
-H(\output \mid \input, \dataset)
-- \E_{\params \sim p(\params \mid\dataset)} \left[ H(\output \mid \input, \params) \right].
-\end{align}
-#+END_EXPORT
-The entropy terms in cref:eq-output-space-entropy are now calculated
-in a (usually) low dimensional output space.
-In the binary classification setting, cref:eq-output-space-entropy simply
-involves calculating the entropy of Bernoulli random variables.
-#+BEGIN_EXPORT latex
-\begin{myquote}
-\textbf{Entropy of Bernoulli Variable}
-Consider a Bernoulli random varialbe $\output$ with probability $p$.
-The entropy of such a Bernoulli random variable is given by,
-\begin{align} \label{eq-entropy-bernoulli}
-H(\alpha) &= h_{\text{Bern}}(p) \\
-h_{\text{Bern}}(p) &= -p \text{log}p - (1-p) \text{log}(1-p),
-\end{align}
-\end{myquote}
-#+END_EXPORT
-Intuitively, the first term in cref:eq-output-space-entropy
-($H(\output \mid \input, \dataset)$) seeks to
-find the input $\input$ where the model is marginally most uncertain about
-its corresponding output $\output$, whilst the
-second term
-$(- \E_{\params \sim p(\params \mid\dataset)} \left[ H(\output \mid \input, \params) \right])$
-prefers inputs whose parameter settings are confident.
-As highlighted by cite:houlsbyBayesian2011, this can be interpreted as finding the
-input $\input$ for which the parameters under the posterior, disagree about
-the output $\output$ the most.
-
-*** Active Learning for GP Classification
-cite:houlsbyBayesian2011 formulate Bayesian active learning in the GP
-binary classification model,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-binary-gp-classification}
-\gatingFunc &\sim \mathcal{GP}(\mu(\cdot), k(\cdot,\cdot)) \\
-\output \mid \gatingFunc, \input &\sim \text{Bernoulli}(\Phi(\gatingFunc(\input)))
-\end{align}
-#+END_EXPORT
-where $\Phi$ represents the Gaussian CDF and $\Phi(\gatingFunc(\input))$ is
-the probability of the (Bernoulli) output variable
-$\alpha$ cite:nickischApproximations2008.
-In this context,  cref:eq-output-space-entropy can be re-written as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-output-space-entropy-gp-classification}
-\text{arg}\underset{\input}{\max}
-H(\output \mid \input, \dataset)
-- \E_{\gatingFunc \sim p(\gatingFunc \mid\dataset)} \left[ H(\output \mid \input, \gatingFunc) \right].
-\end{align}
-#+END_EXPORT
-Their approach introduces approximations to the two terms in
-cref:eq-output-space-entropy-gp-classification.
-They assume that the posterior over the latent function $\gatingFunc$
-is approximated to be Gaussian,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-classification-posterior}
-\gatingFunc \mid \input, \mathcal{D} &\sim \mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset}).
-%\mu_{\input,\dataset} &= k(\input, \allInput) k(\allInput, \allInput)^{-1} \bm\alpha \\
-%\sigma^2_{\input,\dataset}) &= k(\input, \input)
-%- k(\input, \allInput) k(\allInput, \allInput)^{-1} k(\allInput, \input)
-\end{align}
-#+END_EXPORT
-The $\overset{1}{\approx}$ symbol will be used to indicate when such an approximation
-has been exploited.
-The first term in cref:eq-output-space-entropy-gp-classification is approximated as follows,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-entropy--data}
-H(\output \mid \input, \dataset) &\overset{1}{\approx}
-h_{\text{Bern}} \left(\int \Phi(\gatingFunc(\input)) \mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset}) \text{d} \gatingFunc(\input) \right) \\
-&= h_{\text{Bern}} \left( \Phi \left( \frac{\mu_{\input,\dataset}}{\sqrt{\sigma^2_{\input,\dataset} + 1}} \right) \right).
-\end{align}
-#+END_EXPORT
-The second term is approximated as follows,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-entropy-expected-term}
-\E_{\gatingFunc \sim p(\gatingFunc \mid \dataset)}
-\left[H(\output \mid \input, \gatingFunc) \right]
-&\overset{1}{\approx} \int h_{\text{Bern}}(\Phi(\gatingFunc(\input)))
-\mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset})
-\text{d} \gatingFunc(\input) \\
-&\overset{2}{\approx}
-\int \text{exp}\left( -\frac{\gatingFunc(\input)^2}{\pi \text{ln}2} \right)
-\mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset})
-\text{d} \gatingFunc(\input) \\
-&= \frac{C}{\sqrt{\sigma_{\input,\dataset}^2 + C^2}}
-\text{exp}\left( -\frac{\mu_{\input,\dataset}^2}{2\left( \sigma_{\input,\dataset}^2 + C^2 \right)} \right) \label{eq-entropy-expected-term-last}
-\end{align}
-#+END_EXPORT
-where $C = \sqrt{\frac{\pi \text{ln}2}{2}}$.
-This approximation exploits a Taylor expansion of $\text{ln} h_{\text{Bern}}(\Phi(\gatingFunc(\input)))$
-(see supplementary material of cite:houlsbyBayesian2011)
-allowing it to be represented up to $\mathcal{O}(\gatingFunc(\input)^4)$ by a squared
-exponential curve ($\text{exp}(-\gatingFunc(\input)^2/\pi\text{ln}2)$).
-This approximation is referred to as $\overset{2}{\approx}$.
-A simple Gaussian convolution then gives the closed form expression in Eq.
-ref:eq-entropy-expected-term-last.
-The objective in cref:eq-output-space-entropy-gp-classification can then be approximated as,
-#+BEGIN_EXPORT latex
-\newcommand{\approxEntropy}{\ensuremath{\hat{H}}}
-\begin{align} \label{eq-approximate-output-space-entropy-obj}
-\text{arg}\max_{\input}
-\approxEntropy(\output)
-\end{align}
-#+END_EXPORT
-where,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-approximate-output-space-entropy}
-\approxEntropy(\output)
-\coloneqq
-h_{\text{Bern}} \left( \Phi \left( \frac{\mu_{\input,\dataset}}{\sqrt{\sigma^2_{\input,\dataset} + 1}} \right) \right)
-+ \frac{C}{\sqrt{\sigma_{\input,\dataset}^2 + C^2}}
-\text{exp}\left( -\frac{\mu_{\input,\dataset}^2}{2\left( \sigma_{\input,\dataset}^2 + C^2 \right)} \right)
-\end{align}
-#+END_EXPORT
-The objective is smooth and differentiable for most practically relevant kernels of $\input$, so
-gradient-based optimisation can be used to find the maximally informative $\input$.
-
-
-# #+BEGIN_EXPORT latex
-# \begin{myquote}
-# \textbf{Entropy of Bernoulli Variable}
-# Consider the probit case, where the value of the output $\output$,
-# given latent gating function $\gatingFunc(\input)$, takes a Bernoulli
-# distribution with probability $\Phi(\gatingFunc(\input))$,
-# where $\Phi$ represents the Gaussian CDF.
-# The entropy of such a Bernoulli random variable is given by,
-# \begin{align} \label{eq-entropy-bernoulli}
-# H(\alpha \mid \control, \gatingFunc) &= H_{\mathcal{Bern}}(\Phi(\gatingFunc(\control))) \\
-# H_{\mathcal{Bern}}(p) &= -p \text{log}p - (1-p) \text{log}(1-p),
-# \end{align}
-# where the probability $\Phi(\gatingFunc(\input))$ has been denoted $p$.
-# \end{myquote}
-# #+END_EXPORT
-
-** Bayesian Information Theoretic Exploration Strategy
-#+BEGIN_EXPORT latex
-\newcommand{\posterior}{\ensuremath{p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \control_{\timeInd})}}
-#+END_EXPORT
-
-# The /static/ active learning problem addressed previously is fundamentally different
-# to the problem in dynamical systems.
-# In the /static/ problem, it is possible to query any point in the input domain.
-# As such, it is open to a clean information-theoretic treatment.
-# In the /dynamic/ problem, the system must be steered through the
-# unknown dynamics $\dynamics$ by a sequence of controls $\controlTraj$.
-In dynamical systems an arbitrary state $\state$ cannot be sampled, so instead, the dynamics must be steered
-to $\state$ through the unknown dynamics $\dynamicsFunc$ through a sequence of controls $\control$.
-Thus, there is information gain along the trajectory which must also be
-considered.
-As highlighted by cite:buisson-fenetActively2020, information gain in dynamical systems is therefore
-fundamentally different to the /static/ problem addressed by cite:krauseNearOptimal2008
-and cite:houlsbyBayesian2011.
-The goal here is to pick the most informative control trajectory $\controlTraj$ whilst observing $\stateTraj$.
-
-Recent work has addressed active learning in (unimodal) GP dynamics models
-citep:buisson-fenetActively2020 and (unimodal)
-GP state-space models citep:caponeLocalized2020.
-cite:schreiterSafe2015 consider safe exploration for active learning where they distinguish safe and unsafe regions
-with a binary GP classifier, which is learned separately to the dynamics model. Their exploration strategy considers
-the differential entropy of the posterior GP associated with the dynamics model and they use the GP classifier to
-define a set of constraints.
-
-This chapter resembles cite:schreiterSafe2015
-except that it exploits the coupled learning of the dynamics modes and the gating network, instead of learning
-a separate \acrshort{gp} classifier to distinguish safe and unsafe regions.
-The exploration strategy is then projected onto the posterior GP(s) associated with the gating network.
-The coupled learning provides well-calibrated uncertainty estimates in the gating network, making it a
-good choice for information-based exploration.
-
-In order to calculate the approximate entropy objective in the output space $\approxEntropy(\output_{\timeInd})$
-(cref:eq-approximate-output-space-entropy-obj)
-at a given time step $\timeInd$, the posterior $\posterior$ over the gating function is required.
-After the first time step this distribution is calculated as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-posterior-0}
-p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \control_{\timeInd})&=
-p(\state_0)
-\int p(\gatingFunc(\state_{1}, \control_{1}) \mid \state_{0}, \control_{0})
-p(\state_{1} \mid \state_{0}, \control_{0}) p(\control_{0}) \text{d}\state_0
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mutual-information}
-p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \control_{\timeInd})&=
-p(\state_0) \prod_{\timeInd=1}^{\timeInd}
-\int p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \state_{\timeInd}, \control_{\timeInd})
-p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_{\timeInd}) \text{d}\state_\timeInd
-\end{align}
-#+END_EXPORT
-
-
-#+BEGIN_EXPORT latex
-\newcommand{\gatingOutput}{\ensuremath{h(\singleInput)}}
-\newcommand{\gatingTransition}{\ensuremath{p(\gatingOutput \mid \state_\timeInd, \control_\timeInd)}}
-\begin{align} \label{eq-mutual-information}
-\underset{\stateTraj \in \stateDomain^\TimeInd, \controlTraj \in \controlDomain^\TimeInd}{\text{argmax}} \approxEntropy(\stateTraj, \controlTraj) &=
-\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd \approxEntropy_{\timeInd}(\state_{\timeInd}, \control_{\timeInd})
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-classification-posterior}
-\gatingFunc \mid \input, \mathcal{D} &\sim \mathcal{N}(\gatingFunc(\input) \mid \mu_{\input,\dataset}, \sigma^2_{\input,\dataset}).
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\newcommand{\gatingOutput}{\ensuremath{h(\singleInput)}}
-\newcommand{\gatingTransition}{\ensuremath{p(\gatingOutput \mid \state_\timeInd, \control_\timeInd)}}
-\begin{align} \label{eq-mutual-information}
-\underset{\stateTraj \in \stateDomain^\TimeInd, \controlTraj \in \controlDomain^\TimeInd}{\text{argmax}} H(\stateTraj, \controlTraj) &=
-\underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
-&= \underset{\state \in \stateDomain, \control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
-\text{log} \gatingTransition \text{d} \gatingOutput
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mutual-information}
-\underset{\control \in \controlDomain}{\text{argmax}} H(\stateTraj, \controlTraj) &=
-\underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\state_{\timeInd}, \control_{\timeInd}) \\
-&= \underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd - \int \gatingTransition
-\text{log} \gatingTransition \text{d} \gatingOutput \\
-\end{align}
-#+END_EXPORT
-
-
-The exploration strategy introduced in this chapter builds on the approximate
-entropy objective in cref:eq-approximate-output-space-entropy.
-
-
-is a selective
-sampling approach based on the differential entropy of the GP posterior
-over the desired modes gating function.
-The
-Considering a full discriminative model,
-discover the dependence of the mode indicator variable $\modeVar \in \modeDomain$
-on the state-control input $\input \in \inputDomain$
-
-
-
-
-
-prediction with uncertain input
-
-
-We consider a fully discriminative model where the goal of active learning is to discover the dependence of some variable y ∈ Y on an input variable x ∈ X . The key idea in active learning is that the learner chooses the input queries xi ∈ X and observes the system’s response yi, rather than passively receiving
-(xiyi) pairs.
-
-
-
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq--entropy-model}
-\E_{\gatingFunc \sim p(\gatingFunc \mid \mathcal{D})} \left[ H(\alpha \mid \control, \gatingFunc) \right]
-&\approx \int h \left( \Phi(\gatingFunc(\state, \control)) \mathcal{N}(\gatingFunc(\state, \control) \mid \mu_\gatingFunc, \sigma^2_\gatingFunc) \text{d} \gatingFunc(\state, \control)
-\end{align}
-#+END_EXPORT
-
-An approximated mutual information exploration criterion is used
-
-entropy
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mutual-information}
-\underset{\control \in \controlDomain}{\text{argmax}} H(\gatingFunc(\stateTraj, \controlTraj) \mid \controlTraj) &=
-\underset{\control \in \controlDomain}{\text{argmax}} \sum_{\timeInd=1}^\TimeInd H_{\timeInd}(\gatingFunc(\state_{\timeInd}, \control_{\timeInd}) \mid \control_\timeInd)
-\end{align}
-#+END_EXPORT
-where
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mutual-information}
-p(\gatingFunc(\state_{1:\TimeInd}, \control_{1:\TimeInd}) \mid \control_{1:\TimeInd})&=
-p(\state_0) \prod_{\timeInd=1}^{\TimeInd-1}
-\int p(\gatingFunc(\state_{\timeInd}, \control_{\timeInd} \mid \state_{\timeInd}, \control_{\timeInd})
-p(\state_{\timeInd} \mid \state_{\timeInd-1}, \control_{\timeInd-1}) p(\control_{\timeInd}) \text{d}\state_\timeInd
-\end{align}
-#+END_EXPORT
+Reactive strategy which would automatically turn back when encountering hard to control dynamics
 
 * Appendix
 ** Multivariate Normals
