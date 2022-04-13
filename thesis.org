@@ -651,6 +651,7 @@ Use with
 {{{acronym(hmm,HMM,Hidden Markov Model)}}}
 {{{acronym(svi,SVI,Stochastic Variational Inference)}}}
 {{{acronym(soc,SOC,Stochastic Optimal Control)}}}
+{{{acronym(mpc,MPC,Model Predictive Control)}}}
 
 {{{acronym(pets,PETS,Probabilistic Ensembles with Trajectory Sampling)}}}
 {{{acronym(pipps,PIPPS,Probabilistic Inference for Particle-based Policy Search)}}}
@@ -15192,24 +15193,15 @@ However, further analysis is left for future work.
 
 ** Discussion & Future Work
 This section discusses \modeOpt and proposes some directions for future work.
-First of all, it should be noted that more experiments are required to fully test $\modeOpt$.
 
-Compare myopic vs non-myopic entropy in MPC loop vs mutual information
-
-*Task horizon*
-Combine offline policy search with online planning to get the best of both approaches.
-Optimise a policy using a policy search algorithm, which learns a critic $Q$ as a by-product.
-
-Initialise the trajectory optimisation algorithm using the learned policy and use the learned critic $Q$ to bootstrap
-at the end of the prediction horizon.
-
-*Multimodal transition dynamics*
-Although not tested here, \modeOpt is theoretically sound and should be applicable in environments with more than
-two dynamics modes.
-However, the exploration strategy uses the joint entropy of desired mode's gating function over a trajectory.
-
-works in binary setting.
-What about general mulitmodal setting?
+*Further experiments*
+First of all, it should be noted that the work presented in this chapter is a first step
+at combining the work in this dissertation to solve the
+mode remaining navigation problem in cref:eq-mode-explore-problem.
+As such, more experiments are required to fully test $\modeOpt$.
+For example, further experiments are required to validate the exploration strategy in environments with more
+than two dynamics modes.
+Further to this, experiments in a real-world environment are required.
 
 *Exploration guarantees*
 \modeOpt side-steps the exploration-exploitation trade-off which is common in MBRL.
@@ -15231,25 +15223,45 @@ guarantee exploration. A more simple (empirical) approach may quantify the rate
 at which the gating network’s epistemic uncertainty is reducing and use it to relax
 $\delta$ if the agent has stopped exploring.
 
-*Myopic active learning*
-This work has shown that relieving the myopia of active
-learning in dynamical systems – by considering the joint entropy over a trajectory --
-has a positive impact on performance. However, it is worth noting that this was only possible
-because the gating network is based on GPs.
+*Myopic vs non-myopic active learning*
+In dynamical systems, myopic learning corresponds to selecting the next control by only considering the information gain
+form the subsequent state.
+In contrast, non-myopic learning selects the next control by considering the
+information gain over the next $\TimeInd$ states.
+The exploration strategy presented in this chapter selected the next $\TimeInd$ controls by considering
+the information gain over the next $\TimeInd$ states.
+In future work it would be interesting to put the exploration strategy into an \acrshort{mpc} loop, such that it
+selects the next control, by considering the information gain over the next $\TimeInd$ states.
+This would enabled a better comparison of myopic and non-myopic strategies.
+
+*Information criterion*
+The exploration strategy presented in this chapter has shown that the \acrshort{gp}-based gating network
+is useful for active learning when considering trajectories over a horizon.
+This is because the \acrshort{gp}s model the joint distribution over the gating function values along a trajectory.
+This enabled the exploration strategy to find trajectories where each time step is aware of the information gain
+of other time steps.
+This is useful for finding non-myopic trajectories as it increases the information gain over the entire trajectory.
+However, this has only been verified by visual inspection and further analysis is left for future work.
+It is also worth noting that the exploration strategy is only possible because the gating
+network is based on \acrshort{gp}s.
 As such, this method is not widely applicable in all \acrshort{mogpe} dynamics models.
 
 # $\mathcal{H}\left[\desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i} \right]$.
 # The exploration strategy used in \modeOpt considers the joint entropy of the desired mode's gating function
 # over the trajectory.
-*Information criterion*
 An alternative approach is to consider the entropy of the mode indicator variable $\modeVar$.
-However, the joint distribution over the \acrshort{mosvgpe} mode indicator variable is factorised over time.
-As such, the entropy at each time step does not consider the information gain along the rest of the trajectory.
+However, in general, the joint distribution over the mode indicator variable in \acrshort{mogpe} models
+is factorised over time.
+As such, there is no way to condition the entropy at a given time step on all other time steps.
+Therefore, it is not immediately clear how the information gain along the entire trajectory can be considered.
+This would make \modeOpt applicable with a wider range of \acrshort{mogpe} dynamics models and
+is an interesting direction for future work.
+
 However, the \acrshort{mosvgpe}'s gating function \acrshort{gp} can be conditioned on all other time steps to
 achieve this behaviour.
-For example, consider using the entropy of the following distribution,
+For example, consider using the entropy of the following probability mass function,
 #+BEGIN_EXPORT latex
-\begin{align}
+\begin{align} \nonumber
 P\left(\modeVar_{\timeInd} \mid \state_{\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset_{0:i} \right) =
 \int P\left(\modeVar_{\timeInd} \mid \desiredGatingFunction(\state_{\timeInd})\right)
 p\left(\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset_{0:i} \right)
@@ -15258,14 +15270,15 @@ p\left(\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj, \desiredGating
 #+END_EXPORT
 where the gating function posterior is conditioned on all other time steps
 $\desiredGatingFunction(\stateTraj_{\neg\timeInd})$.
-The entropy of this distribution considers the information gain along the rest of trajectory via the
+The entropy of this distribution considers the information gain along the rest of the trajectory via the
 gating function \acrshort{gp}.
 Although not tested here, this objective may not obtain good performance.
 This is because the maximum entropy of a Categorical variable corresponds to a uniform distribution.
 As mentioned in cref:chap-dynamics, \acrshort{mogpe} models may tend to a uniform distribution for a number of reasons.
-In some cases, they tend to a uniform distribution at the boundary between modes, even though they are very confident,
-i.e have low epistemic uncertainty.
-As such, this objective may favour trajectories at mode boundaries which it has already observed.
+They tend to a uniform distribution when they are not very confident (have high epistemic uncertainty) but they also
+tend to a uniform distribution at the boundary between modes, when they are very confident
+(have low epistemic uncertainty).
+As such, this objective may keep exploring mode boundaries which it has already observed.
 In turn, this may lead to the strategy getting stuck in a local optima at a mode boundary.
 A popular approach to active learning for binary classification is \acrfull{bald}
 citep:houlsbyBayesian2011.
@@ -15281,8 +15294,18 @@ H\left(\modeVar_{\timeInd} \mid \state_{\timeInd}, \desiredGatingFunction(\state
 \end{align}
 #+END_EXPORT
 Intuitively, this objective seeks the state $\state_{\timeInd}$ for which the parameters under the posterior
-disagree about the outcome the most. Hence the name.
+disagree about the outcome the most, hence the name.
 Extending this objective to dynamical systems is an interesting direction for future work.
+
+*More than 2 modes*
+Although not tested here, \modeOpt is theoretically sound and should be applicable in environments with more than
+two dynamics modes.
+However, the exploration strategy uses the joint entropy of desired mode's gating function over a trajectory.
+Further experiments are required to see if this strategy works when the \acrshort{mosvgpe} dynamics model is
+instantiated with more than two experts.
+This is because when using more than two experts the \acrshort{mosvgpe} model uses the Softmax likelihood
+with a gating function for each expert.
+In contrast, the two expert case uses the Bernoulli likelihood with a single gating function.
 
 *Inducing points*
 The method presented in this chapter initialised each of the sparse
@@ -15322,7 +15345,7 @@ The $\delta-\text{mode remaining}$ exploration strategy proposed in cref:sec-exp
 resulted in the agent leaving the desired dynamics mode multiple times in the experiments.
 In future work it would be interesting to study this in more detail.
 For example, how often must the agent leave the desired dynamics mode in order to accurately learn the mode boundary?
-How often does the agent fail when leaving the desired dynamics mode in practice?
+And, how often does the agent fail when leaving the desired dynamics mode in practice?
 # Maybe it's possible to synthesise a feedback controller with guarantees on being able to control
 # the agent back into the desired dynamics mode?
 
@@ -15342,6 +15365,37 @@ How often does the agent fail when leaving the desired dynamics mode in practice
 # noted that in some environments this behaviour may get the strategy stuck in local
 # optima. Add parameter to balance entropy and state difference terms to get sub
 # linear regret?
+
+# *Task horizon*
+# A potential limitation of $\modeOpt$ is that the trajectory optimisation algorithms entangle the task and model horizons.
+# It is well known that many \acrshort{mbrl} algorithms fail on long-horizon tasks due to
+# compounding model errors citep:jannerWhen2019.
+# Therefore,
+# That is, the learned dynamics model is used to plan the entire task horizon is the
+
+
+
+*Policy learning*
+Another interesting direction for future work is to explore learning a state feedback policy for the explorative
+controller using policy search.
+For example, the trajectory optimisation algorithm could be used for guided policy search cite:levineGuided2013.
+It should also be straightforward to check that trajectories under a feedback
+policy are $\delta-\text{mode remaining}$ under the dynamics.
+
+Combine offline policy search with online planning to get the best of both approaches.
+Optimise a policy using a policy search algorithm, which learns a critic $Q$ as a by-product.
+
+
+Initialise the trajectory optimisation algorithm using the learned policy and use the learned critic $Q$ to bootstrap
+at the end of the prediction horizon.
+
+
+
+
+# This work has shown that relieving the myopia of active
+# learning in dynamical systems – by considering the joint entropy over a trajectory --
+# has a positive impact on performance.
+
 
 
 
@@ -15367,15 +15421,17 @@ in a desired dynamics mode with high probability.
 Moreover, it has proposed how this exploration strategy can be combined with the dynamics model from cref:chap-dynamics,
 the $\delta-\text{mode remaining}$ trajectory optimisation algorithms from cref:chap-traj-opt-control and the
 $\delta-\text{mode remaining}$ chance constraints from cref:eq-mode-chance-constraint-explore, to
-approximately solve the problem in cref:eq-mode-explore-problem.
+approximately solve the mode remaining navigation problem in cref:eq-mode-explore-problem.
 That is, it can control multimodal dynamical systems -- where the underlying dynamics modes and how the
 system switches between them, are /not fully known a priori/ --
 from a start state $\state_0$, to a target state $\targetState$ whilst guaranteeing
 that the system remains in a desired dynamics mode with high probability.
 
 \modeOpt was tested on the illustrative quadcotper example, verifying that the algorithm can work in practice.
-Further testing in different environments and analysis of how the optimisation parameters impacts exploration,
-is left for future work.
+However, the method presented in this chapter has not been fully tested in environments with more than two modes,
+nor has it been tested on a real-world system.
+Further testing and analysis of \modeOpt is left for future work.
+# how the optimisation parameters impacts exploration,
 
 # and provable exploration guarantees are left for future work.
 
@@ -15386,6 +15442,7 @@ is left for future work.
 # impact exploration.
 
 * Conclusion
+A central objective of this dissertation
 ** Future Work
 *** Ideas for continuing the work in this dissertation
 
