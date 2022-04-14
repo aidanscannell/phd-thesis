@@ -1293,17 +1293,16 @@ to the environment, and the uncertainty introduced by learning from observations
 # Therefore, any control strategy deployed in the real-world should ensure the safety of itself and
 # its surrounding environment.
 
-Many dynamical systems exhibit multimodalities (in their transition dynamics), where some dynamics modes
+Many dynamical systems exhibit multimodalities (in their transition dynamics), where some of the dynamics modes
 \parmarginnote{multimodal systems}
-are believed to be /inoperable/ or /undesirable/.
+are believed to be /inoperable/ or are /undesirable/.
 These multimodalities may be due to spatially varying model parameters, for example,
 process noise terms modelling aircraft turbulence, or friction coefficients modelling
 surface-tyre interactions for ground vehicles over different terrain.
-In these systems, it is desirable to avoid entering specific dynamics mode that are believed to be /inoperable/.
+In these systems, it is desirable to avoid entering specific dynamics modes that are believed to be /inoperable/.
 Perhaps they are hard to control due to stability, or the mode switch itself is hard to control.
 Or perhaps it is desirable to avoid specific modes for /efficiency/ or /performance/ reasons.
-Given these motivations, this dissertation is interested in control techniques for
-driving dynamical systems from an initial state,
+Given these motivations, this dissertation is interested in controlling dynamical systems from an initial state,
 to a target state, whilst avoiding specific dynamics modes.
 
 # In particular, it is primarily interested in controlling a quadcopter in an environment
@@ -1314,7 +1313,7 @@ to a target state, whilst avoiding specific dynamics modes.
 
 Model-based control comprises a powerful set of techniques for finding controls of /constrained/ dynamical
 \parmarginnote{model-based control}
-systems, given a transition dynamics model describing the evolution of the controlled system.
+systems, given a dynamics model describing the evolution of the controlled system.
 It is commonly used for controlling aircraft, robotic manipulators, and walking
 robots citep:vonstrykDirect1992,bettsSurvey1998,gargUnified2010.
 One caveat is that it requires a relatively accurate mathematical model of the system.
@@ -1346,7 +1345,7 @@ This concept is known as /epistemic uncertainty/ and is reduced in the limit of 
 Correctly quantifying uncertainty is crucial for intelligent decision-making.
 #+BEGIN_EXPORT latex
 \begin{myquote}
-\textbf{Epistemic Uncertainty}
+\textbf{Epistemic uncertainty}
 is the uncertainty attributed to incomplete knowledge about a phenomenon that limits our ability to model it.
 It manifests in parameters taking a range of values, there being a range of viable models,
 the level of modelling detail, and statistical confidence.
@@ -1372,10 +1371,10 @@ If the dynamics are not fully /known a priori/, an agent will not be able to con
 risk-averse trajectory to the target state.
 How can the agent explore its environment, in turn reducing the /epistemic uncertainty/
 associated with its dynamics model?
-It is assumed that complete knowledge of the transition dynamics and how they
-switch between modes is /not known a priori/.
-Therefore, it is interested in jointly inferring the mode /constraints/ alongside the underlying dynamics modes,
-through repeated interactions with the system.
+This dissertation assumes that complete knowledge of the underlying dynamics modes and how the system
+switches between them, is /not fully known a priori/.
+Therefore, it is interested in jointly inferring the underlying dynamics modes, as well as how the system switches
+between them, through repeated interactions with the system.
 Once the agent has explored enough, how can the learned model be exploited to plan risk-averse trajectories
 that attempt to remain in a desired dynamics mode, and in regions of the learned
 dynamics with low /epistemic uncertainty/?
@@ -1515,7 +1514,7 @@ See cref:fig-problem-statement for a schematic of the environment and details of
 The goal is to fly the quadcopter from an initial state $\state_0$, to a target state $\state_{f}$.
 However, it considers a quadcopter operating in an environment subject to spatially varying wind --
 induced by a fan -- where the system can be represented by two dynamics modes,
-- Mode 1 :: a /non-turbulent/ dynamics mode away from the fan,
+- Mode 1 :: an /operable/ dynamics mode away from the fan,
 - Mode 2 :: an inoperable, /turbulent/ dynamics mode in front of the fan.
 The turbulent dynamics mode is subject to higher drift (in the negative $x$ direction) and
 to higher diffusion (aka process noise).
@@ -1845,116 +1844,6 @@ The main goals of the trajectory optimisation in this Chapter can be summarised 
 # \end{figure}
 # #+END_EXPORT
 
-*** Motivation label:to_motivation
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}{1.0\textwidth}
-\centering
-\includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/baseline-svgp-traj-opt/trajectories_over_desired_gating_mask.pdf}
-\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
-\label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
-\end{minipage}
-\begin{minipage}{1.0\textwidth}
-\centering
-\includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
-\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
-\label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
-\end{minipage}
-\caption{Trajectory optimisation results obtained using a SVGP dynamics model trained on different data sets.
-The optimised control trajectories are rolled out in the SVGP dynamics model (magenta) and in the environment (cyan).
-The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
-White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
-The hashed box indicates a subset of the environment that has not been observed.}
-\label{fig-traj-opt-over-gating-mask-svgp-baseline}
-\end{figure}
-#+END_EXPORT
-Given a historical data set of state transitions from the environment,
-a common approach is to first learn a single-step dynamics model using a Gaussian process
-citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
-This learned dynamics model can then be leveraged for model-based control.
-
-cref:fig-traj-opt-over-gating-mask-svgp-all-baseline demonstrates the shortcomings of performing trajectory
-optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
-It shows that the GP is not able to learn a representation of the dynamics which is true to the underlying system.
-This is because it cannot model the multimodal behaviour present in the environment.
-The optimised controls successfully drive the GP dynamics from the start state $\state_0$,
-to the target state $\targetState$.
-However, as the GP dynamics model does not correspond to the true underlying dynamics,
-the optimised controls do not successfully navigate to the target state $\targetState$ in the environment.
-This example demonstrates the issues associated with learning a dynamics model that cannot model the discontinuities
-associated with multimodal transition dynamics.
-Further to this, it demonstrates the more general shortcomings of model-based control when leveraging learned
-dynamics models that cannot represent the true underlying dynamics.
-# This motivates cref:chap-dynamics that looks at learning representations of multimodal dynamical systems.
-# This example demonstrates the issues associated with learning a dynamics model that cannot correctly identify
-# the underlying dynamics modes.
-# without deploying a technique that can infer both the underlying dynamics modes
-# and how the system switches between them.
-# The optimised controls are rolled out in the SVGP dynamics model (magenta)
-# and in the environment (cyan) to highlight the issues with both approaches.
-
-In contrast,
-cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline shows results after training on state transitions from
-only the desired (operable) dynamics mode.
-It is able to accurately predict state transitions in the desired dynamics mode.
-However, as this approach only considers the dynamics of the desired mode,
-trajectories in the environment deviate from those planned in the learned dynamics model when they pass through the
-turbulent mode.
-This approach is problematic because the trajectory does not reach the target state $\targetState$,
-nor does it avoid the turbulent dynamics mode, which may lead to catastrophic failure.
-It is also worth noting here that the underlying dynamics modes and how the system switches between them,
-are /not fully known a priori/.
-As such, partitioning the data set and learning the dynamics model in
-cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline is not possible in realistic scenarios.
-
-#+BEGIN_EXPORT latex
-\begin{myquote}
-Following standard methodologies, these trajectories were found by minimising the expected cost
-under the state distribution, resulting from cascading single-step predictions through the GP dynamics model.
-A terminal state cost term ensured trajectories ended at the target state and
-a quadratic integral control cost term regularised the controls to encode the notion of
-"minimal effort" trajectories.
-\end{myquote}
-#+END_EXPORT
-
-
-
-
-# #+BEGIN_EXPORT latex
-# \begin{myquote}
-# Following standard methodologies, trajectories were found by minimising the expected cost under the state distribution,
-# resulting from cascading single-step predictions through the SVGP dynamics model.
-# The cost function consisted of a quadratic integral control cost and a terminal state cost.
-# \end{myquote}
-# #+END_EXPORT
-\todo{update fig-traj-opt-baseline with trajectories which don't use nominal mean function so that they deviate in the region with high epistemic uncertainty.}
-
-
-# The first example in cref:fig-traj-opt-over-gating-mask-svgp-all-baseline demonstrates the issues of
-# learning a dynamics model without deploying a technique that can infer both the underlying dynamics modes
-# and how the system switches between them.
-# cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline then demonstrates the
-# difficulties of finding trajectories from the start state $\state_0$, to the target state $\targetState$,
-# without avoiding the turbulent dynamics mode.
-
-
-
-# #+BEGIN_EXPORT latex
-# \begin{figure}[t!]
-# \centering
-# \includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
-# \caption{\label{fig-traj-opt-baseline}
-# Trajectory optimisation results obtained using a SVGP dynamics model trained only on state transitions from the
-# desired (non-turbulent) dynamics mode.
-# To demonstrate the methods shortcomings, the optimised controls are rolled out in the desired
-# mode's GP dynamics (magenta) and in the environment (cyan).
-# The state trajectories are overlayed on the gating mask, indicating where each mode governs the dynamics.
-# White indicates the turbulent dynamics mode and red indicates the operable mode.
-# The hashed box indicates a subset of the environment that has not been observed.}
-# \end{figure}
-# #+END_EXPORT
-
 ** Contributions
 This dissertation explores mode remaining control in multimodal dynamical systems that explicitly reasons
 about the uncertainties that arise during learning and control.
@@ -1972,9 +1861,9 @@ The primary contributions of this dissertation are as follows:
   # As such, it strives to address the issues previously mentioned
   # by learning representations of multimodal dynamical systems that correctly identify the underlying dynamics modes and
   # how the system switches between them.
-- cref:chap-traj-opt-control: investigates model-based control methods that leverage the probabilistic model
+- cref:chap-traj-opt-control: investigates model-based control techniques that leverage the probabilistic model
   from cref:chap-dynamics to solve the mode remaining control problem in cref:eq-main-problem.
-  Due to the complexity of the problem, it
+  Due to the complexity of the problem, this chapter
   assumes prior access to the environment, such that a data set of state transitions $\mathcal{D}$ has been collected
   and used to train the model. It presents three control methods that
   leverage the learned dynamics model's latent structure to solve the mode remaining control problem.
@@ -2170,6 +2059,116 @@ cite:moerlandLearning2017 study the use of deep generative models and
 cite:kaiserBayesian2020 propose a Bayesian model that learns independent
 dynamics modes whilst maintaining a
 probabilistic belief over which mode is responsible for predicting at a given input location.
+
+* Motivation label:to_motivation
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}{1.0\textwidth}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/baseline-svgp-traj-opt/trajectories_over_desired_gating_mask.pdf}
+\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
+\label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
+\end{minipage}
+\begin{minipage}{1.0\textwidth}
+\centering
+\includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
+\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
+\label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
+\end{minipage}
+\caption{Trajectory optimisation results obtained using a SVGP dynamics model trained on different data sets.
+The optimised control trajectories are rolled out in the SVGP dynamics model (magenta) and in the environment (cyan).
+The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
+White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
+The hashed box indicates a subset of the environment that has not been observed.}
+\label{fig-traj-opt-over-gating-mask-svgp-baseline}
+\end{figure}
+#+END_EXPORT
+Given a historical data set of state transitions from the environment,
+a common approach is to first learn a single-step dynamics model using a Gaussian process
+citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
+This learned dynamics model can then be leveraged for model-based control.
+
+cref:fig-traj-opt-over-gating-mask-svgp-all-baseline demonstrates the shortcomings of performing trajectory
+optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
+It shows that the GP is not able to learn a representation of the dynamics which is true to the underlying system.
+This is because it cannot model the multimodal behaviour present in the environment.
+The optimised controls successfully drive the GP dynamics from the start state $\state_0$,
+to the target state $\targetState$.
+However, as the GP dynamics model does not correspond to the true underlying dynamics,
+the optimised controls do not successfully navigate to the target state $\targetState$ in the environment.
+This example demonstrates the issues associated with learning a dynamics model that cannot model the discontinuities
+associated with multimodal transition dynamics.
+Further to this, it demonstrates the more general shortcomings of model-based control when leveraging learned
+dynamics models that cannot represent the true underlying dynamics.
+# This motivates cref:chap-dynamics that looks at learning representations of multimodal dynamical systems.
+# This example demonstrates the issues associated with learning a dynamics model that cannot correctly identify
+# the underlying dynamics modes.
+# without deploying a technique that can infer both the underlying dynamics modes
+# and how the system switches between them.
+# The optimised controls are rolled out in the SVGP dynamics model (magenta)
+# and in the environment (cyan) to highlight the issues with both approaches.
+
+In contrast,
+cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline shows results after training on state transitions from
+only the desired (operable) dynamics mode.
+It is able to accurately predict state transitions in the desired dynamics mode.
+However, as this approach only considers the dynamics of the desired mode,
+trajectories in the environment deviate from those planned in the learned dynamics model when they pass through the
+turbulent mode.
+This approach is problematic because the trajectory does not reach the target state $\targetState$,
+nor does it avoid the turbulent dynamics mode, which may lead to catastrophic failure.
+It is also worth noting here that the underlying dynamics modes and how the system switches between them,
+are /not fully known a priori/.
+As such, partitioning the data set and learning the dynamics model in
+cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline is not possible in realistic scenarios.
+
+#+BEGIN_EXPORT latex
+\begin{myquote}
+Following standard methodologies, these trajectories were found by minimising the expected cost
+under the state distribution, resulting from cascading single-step predictions through the GP dynamics model.
+A terminal state cost term ensured trajectories ended at the target state and
+a quadratic integral control cost term regularised the controls to encode the notion of
+"minimal effort" trajectories.
+\end{myquote}
+#+END_EXPORT
+
+
+
+
+# #+BEGIN_EXPORT latex
+# \begin{myquote}
+# Following standard methodologies, trajectories were found by minimising the expected cost under the state distribution,
+# resulting from cascading single-step predictions through the SVGP dynamics model.
+# The cost function consisted of a quadratic integral control cost and a terminal state cost.
+# \end{myquote}
+# #+END_EXPORT
+\todo{update fig-traj-opt-baseline with trajectories which don't use nominal mean function so that they deviate in the region with high epistemic uncertainty.}
+
+
+# The first example in cref:fig-traj-opt-over-gating-mask-svgp-all-baseline demonstrates the issues of
+# learning a dynamics model without deploying a technique that can infer both the underlying dynamics modes
+# and how the system switches between them.
+# cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline then demonstrates the
+# difficulties of finding trajectories from the start state $\state_0$, to the target state $\targetState$,
+# without avoiding the turbulent dynamics mode.
+
+
+
+# #+BEGIN_EXPORT latex
+# \begin{figure}[t!]
+# \centering
+# \includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
+# \caption{\label{fig-traj-opt-baseline}
+# Trajectory optimisation results obtained using a SVGP dynamics model trained only on state transitions from the
+# desired (non-turbulent) dynamics mode.
+# To demonstrate the methods shortcomings, the optimised controls are rolled out in the desired
+# mode's GP dynamics (magenta) and in the environment (cyan).
+# The state trajectories are overlayed on the gating mask, indicating where each mode governs the dynamics.
+# White indicates the turbulent dynamics mode and red indicates the operable mode.
+# The hashed box indicates a subset of the environment that has not been observed.}
+# \end{figure}
+# #+END_EXPORT
 
 * Motivation
 ** Motivation label:to_motivation
@@ -15444,6 +15443,7 @@ Further testing and analysis of \modeOpt is left for future work.
 
 * Conclusion
 A central objective of this dissertation
+
 ** Future Work
 *** Ideas for continuing the work in this dissertation
 
@@ -15472,6 +15472,7 @@ Taylor expansion of the cost function.
 
 *** Alternative approaches
 
+controlling the mode switch may be difficult
 Use sensors to observe regions of the environment before interacting with them.
 
 *Model-free approaches*
