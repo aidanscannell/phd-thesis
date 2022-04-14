@@ -12610,7 +12610,7 @@ is then given by,
 p(\desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1})
 &\approx q(\desiredGatingFunction(\stateTraj))
 = \mathcal{N} \left(\desiredGatingFunction(\stateTraj) \mid \desiredGatingMeanFunc(\stateTraj),
-\desiredGatingCovFunc(\stateTraj, \stateTraj'))
+\desiredGatingCovFunc(\stateTraj, \stateTraj))
 \end{align}
 #+END_EXPORT
 where $\desiredGatingMeanFunc(\cdot)$ and $\desiredGatingCovFunc(\cdot, \cdot)$ are
@@ -12622,14 +12622,14 @@ sparse \acrshort{gp} mean and covariance functions, given by,
 \desiredGatingKernel(\stateTraj, \gatingInducingInput)
 \desiredGatingKernel(\gatingInducingInput, \gatingInducingInput)^{-1}
 \hat{\mathbf{m}}_{\desiredMode}  \\
-\desiredGatingCovFunc(\stateTraj, \stateTraj') &=
-\desiredGatingKernel(\stateTraj, \stateTraj')
+\desiredGatingCovFunc(\stateTraj, \stateTraj) &=
+\desiredGatingKernel(\stateTraj, \stateTraj)
 + \desiredGatingKernel(\stateTraj, \gatingInducingInput)
 \desiredGatingKernel(\gatingInducingInput, \gatingInducingInput)^{-1}
 \left( \hat{\mathbf{S}}_{\desiredMode}
 - \desiredGatingKernel(\gatingInducingInput, \gatingInducingInput) \right)
 \desiredGatingKernel(\gatingInducingInput, \gatingInducingInput)^{-1}
-\desiredGatingKernel(\gatingInducingInput, \stateTraj'),
+\desiredGatingKernel(\gatingInducingInput, \stateTraj),
 \end{align}
 \normalsize
 #+END_EXPORT
@@ -12637,12 +12637,12 @@ where $\desiredGatingKernel$ and
 $\gatingInducingInput$ are the kernel and inducing inputs
 associated with the desired mode's gating function respectively.
 This sparse approximation arises because the \acrshort{mosvgpe} model uses sparse \acrshort{gp}s and
-approximates the posterior with
+approximates the posterior with,
 #+BEGIN_EXPORT latex
 \begin{align}
 q(\desiredGatingFunction(\stateTraj)) = \int p(\desiredGatingFunction(\stateTraj) \mid \desiredGatingFunction(\gatingInducingInput))
 q(\desiredGatingFunction(\gatingInducingInput))
-\text{d} \desiredGatingFunction(\gatingInducingInput)
+\text{d} \desiredGatingFunction(\gatingInducingInput),
 \end{align}
 #+END_EXPORT
 where
@@ -12986,11 +12986,11 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mo
 \begin{figure}
 \centering
 %\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
-\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=0.5\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_17.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=0.5\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_17.pdf}
 \caption{\textbf{State difference only}
 Results when solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with only the state difference
-term, i.e. $J(f, \pi) = - \sum_{\timeInd=1}^{\TimeInd-1}
-\E \left[ (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$.
+term, i.e. $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd-1}
+\E \left[ - (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$.
 It shows the iteration where the optimisation gets stuck and no longer explores.
 The optimised controls are rolled out in the desired mode’s
 GP dynamics (magenta) and in the environment (cyan) and are overlayed on the desired mode’s mixing probability.}
@@ -13004,23 +13004,23 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on the des
 \centering
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-diag/trajectories_over_mixing_probs_step_1.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-diag/trajectories_over_mixing_probs_step_1.pdf}
 \subcaption{Factorised entropy \cref{eq-factorised-entropy}}
 \label{fig-entropy-mvn-diag-traj-opt-over-prob-7}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} 0 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf}
 \subcaption{Joint entropy \cref{eq-joint-entropy}}
 \label{fig-entropy-mvn-full-cov-traj-opt-over-prob-7}
 \end{minipage}
-\caption{\textbf{Comparison of joint/factorised entropy objectives}
+\caption{\textbf{Comparison of factorised/joint entropy objectives}
 Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with
 (\subref{fig-entropy-mvn-diag-traj-opt-over-prob-7})
-the sum of the marginal entropy at each time step (factorised entropy) and
+the sum marginal entropies at each time step (factorised entropy) and
 (\subref{fig-entropy-mvn-full-cov-traj-opt-over-prob-7})
 the full joint entropy over a trajectory.
-The trajectory found with the factorised entroyp collapses onto a single location of high entropy.
+The trajectory found with the factorised entropy collapses onto a single location of high entropy.
 The optimised controls are rolled out in the desired mode’s
 GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
 %Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with different entropy
@@ -15376,21 +15376,22 @@ And, how often does the agent fail when leaving the desired dynamics mode in pra
 
 
 *Policy learning*
-Another interesting direction for future work is to explore learning a state feedback policy for the explorative
-controller using policy search.
-For example, the trajectory optimisation algorithm could be used for guided policy search cite:levineGuided2013.
-It should also be straightforward to check that trajectories under a feedback
-policy are $\delta-\text{mode remaining}$ under the dynamics.
+Another interesting direction for future work is to learn an explorative state feedback controller using policy search.
+For example, the explorative trajectory optimisation algorithm in cref:eq-explorative-traj-opt could be used for
+guided policy search cite:levineGuided2013.
+Alternatively, it could be used for policy optimisation by reformulating it as a sum of discounted rewards
+with the mode chance constraints implemented via Lagrange multipliers.
+Given a learned state feedback policy, it should be straightforward to verify that it is
+$\delta-\text{mode remaining}$ under the dynamics using the mode chance constraints.
+# It should also be straightforward to check that trajectories under a feedback
+# policy are $\delta-\text{mode remaining}$ under the dynamics.
 
-Combine offline policy search with online planning to get the best of both approaches.
-Optimise a policy using a policy search algorithm, which learns a critic $Q$ as a by-product.
+# Combine offline policy search with online planning to get the best of both approaches.
+# Optimise a policy using a policy search algorithm, which learns a critic $Q$ as a by-product.
+# Initialise the trajectory optimisation algorithm using the learned policy and use the learned critic $Q$ to bootstrap
+# at the end of the prediction horizon.
 
-
-Initialise the trajectory optimisation algorithm using the learned policy and use the learned critic $Q$ to bootstrap
-at the end of the prediction horizon.
-
-
-
+# As highlighted in cite:mackayInformationBased1992
 
 # This work has shown that relieving the myopia of active
 # learning in dynamical systems – by considering the joint entropy over a trajectory --
