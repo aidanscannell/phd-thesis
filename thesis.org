@@ -51,6 +51,9 @@
 #+LATEX_HEADER: \usepackage{amsmath,amssymb,amsfonts}
 #+LATEX_HEADER: \usepackage{graphicx}
 #+LATEX_HEADER: \usepackage{todonotes}
+
+xspace for space after text in newcommands
+#+LATEX_HEADER: \usepackage{xspace}
 *** Font Awesome icons
 #+LATEX_HEADER: \usepackage{fontawesome}
 *** Maths cancel
@@ -11938,7 +11941,7 @@ the mode chance constraints.
 * Mode Remaining Exploration for Model-Based Reinforcement Learning label:chap-active-learning
 #+begin_export latex
 \epigraph{Real knowledge is to know the extent of one’s ignorance.”}{\textit{Confucius (Philosopher, 551–479BC).}}
-\renewcommand{\modeOpt}{ModeOpt }
+\renewcommand{\modeOpt}{ModeOpt\xspace}
 #+end_export
 ** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -15442,48 +15445,178 @@ Further testing and analysis of \modeOpt is left for future work.
 # impact exploration.
 
 * Conclusion
-A central objective of this dissertation
+The main objective of this dissertation was to solve the mode remaining navigation problem in cref:eq-main-problem.
+That is, to control a multimodal dynamical system -- where neither the underlying dynamics
+modes, nor how the system switches between them, are /known a priori/ --
+to a target state, whilst remaining in a desired dynamics mode.
+Based on well-established methods from Bayesian statistics and machine learning, this dissertation proposed \modeOpt,
+a general framework for approximately solving the mode remaining navigation problem.
+
+At the core of \modeOpt is a fully Bayesian approach to learning multimodal dynamical systems, named \acrfull{mosvgpe},
+that accurately identifies the underlying dynamics modes, as well as how the system switches between them.
+Further to this, it learns informative /latent structure/ that \modeOpt leverages to encode mode remaining behaviour.
+The methods ability to learn factorised representations of multimodal data sets whilst retaining well-calibrated
+uncertainty estimates, was validated on a real-world quadcopter data set, as well on the motorcyle data set.
+Further to this, its applicability to learning dynamics models for model-based control
+was validated in two simulated environments.
+
+# The power of this method arises from its \acrshort{gp}-based gating network.
+# The complexity issues associated with \acrshort{gp}-based gating networks are overcome by
+# a variational inference scheme based on sparse \acrshort{gp} approximations,
+# which provides scalability via stochastic gradient methods.
+# The methods ability to learn factorised representations of multimodal data sets with well calibrated uncertainty
+# estimates, was validated on a real-world quadcopter data set, as well on the motorcyle data set.
+# Further to this, its applicability to learning dynamics models for model-based control
+# was validated in two simulated environments.
+
+As this dissertation has focused on model-based techniques that leverage a learned dynamics model,
+it had to relax the requirement of remaining in a desired dynamics mode,
+to remaining in a desired dynamics mode with high probability.
+Initially, when not much of the environment has been observed, it is not possible to find trajectories to the target
+state that remain in the desired mode with high probability.
+This is due to the learned dynamics model having high epistemic uncertainty.
+In this scenario, \modeOpt reduces the model's epistemic uncertainty by exploring the environment and
+updating the dynamics model with new data.
+\modeOpt sidesteps the exploration-exploitation trade-off which is common in \acrshort{mbrl} algorithms by
+introducing a set of chance constraints.
+That is, \modeOpt does not need an objective function that changes its exploration-exploitation balance as it gathers
+more data.
+The mode chance constraints are a powerful tool that allow \modeOpt to deploy a separate controller during the
+explorative and exploration phases.
+
+An explorative trajectory optimisation algorithm that leverages the \acrshort{gp}-based gating network is proposed.
+Experiments confirm that the explorative controller is effective at maximising the
+information gain over the entire trajectory and targeting exploration towards the target state.
+However, further analysis of the exploration strategy is left for future work.
+
+Three exploitative trajectory optimisation algorithms that find trajectories
+to the target state, whilst attempting to remain in the desired dynamics mode are proposed.
+Two of the methods show how the latent geometry of the \acrshort{gp}-based gating network
+can be leveraged to encode mode remaining behaviour,
+whilst the third approach shows how this can be achieved by extending the control-as-inference framework
+to multimodal dynamical systems.
+Their ability to remain in a desired dynamics mode was tested in two simulated environments.
+Both the direct optimal control via Riemannian energy approach in cref:sec-traj-opt-energy
+and the control-as-inference approach in cref:chap-traj-opt-inference  performed well in the experiments.
+
+This dissertation provided experimental evidence that \modeOpt can work in practice.
+
+# Given this relaxation, it proposed three different trajectory optimisation algorithms that find trajectories
+# to the target state, whilst attempting to remain in the desired dynamics mode.
+# Two of the methods show how the latent geometry of the \acrshort{gp}-based gating network
+# can be leveraged to encode mode remaining behaviour,
+# whilst the third approach shows how this can be achieved by extending the control-as-inference framework
+# to multimodal dynamical systems.
+# Their ability to remain in a desired dynamics mode was tested in two simulated environments.
+# Both the direct optimal control via Riemannian energy approach in cref:sec-traj-opt-energy
+# and the control-as-inference approach in cref:chap-traj-opt-inference  performed well in the experiments.
+
+# As this dissertation has focused on model-based techniques that leverage a learned dynamics model,
+# it had to relax the requirement of remaining in a desired dynamics mode,
+# to remaining in a desired dynamics mode with high probability.
+# Given this relaxation, it proposed three different trajectory optimisation algorithms that find trajectories
+# to the target state, whilst attempting to remain in the desired dynamics mode.
+# Two of the methods show how the latent geometry of the \acrshort{gp}-based gating network
+# can be leveraged to encode mode remaining behaviour,
+# whilst the third approach shows how this can be achieved by extending the control-as-inference framework
+# to multimodal dynamical systems.
+# Their ability to remain in a desired dynamics mode was tested in two simulated environments.
+# Both the direct optimal control via Riemannian energy approach in cref:sec-traj-opt-energy
+# and the control-as-inference approach in cref:chap-traj-opt-inference  performed well in the experiments.
+
+
+# Initially, when not much of the environment has been observed, it is not possible to find trajectories to the target
+# state that remain in the desired mode with high probability.
+# This is due to the learned dynamics model having high epistemic uncertainty.
+# In this scenario, \modeOpt reduces the model's epistemic uncertainty by exploring the environment and
+# updating the dynamics model with new data.
+# \modeOpt sidesteps the exploration-exploitation trade-off which is common in \acrshort{mbrl} algorithms by
+# introducing a set of chance constraints.
+# That is, \modeOpt does not need an objective function that changes its exploration-exploitation balance as it gathers
+# more data.
+# The mode chance constraints are a powerful tool that allow \modeOpt to deploy a separate controller
+# during the exploration phase.
+# They are then used to check if trajectories to the target state -- found with the exploitative
+# mode controller -- remain in the desired dynamics mode with high probability.
+# An explorative trajectory optimisation algorithm that leverages the \acrshort{gp}-based gating network is proposed.
+# Experiments confirm that the approach is effective at maximising the information gain over the entire trajectory
+# and targeting exploration towards the target state.
+# Further to this, \modeOpt
+# However, further analysis of the exploration strategy is left for future work.
+
+
+# and serve as the basic
+# building block
+
+
+# This dissertation has focused on model-based techniques that leverage a learned dynamics model.
+# As such, it had to relax the requirement of remaining in a desired dynamics mode from cref:eq-main-problem,
+# to remaining in a desired dynamics mode with high probability.
+# Given this relaxation, it proposed three different trajectory optimisation algorithms that find trajectories
+# to the target state which attempt to remain in the desired dynamics mode.
+# These algorithms were tested in simulation
+
 
 ** Future Work
-*** Ideas for continuing the work in this dissertation
-
-*Deploy on real-world systems*
-
-*Exploration guarantees*
+There are many promising directions for future work.
+Some are extensions of the work in this dissertation, whilst others are alternative approaches to solving the mode
+remaining navigation problem in cref:eq-main-problem.
 
 *Higher-dimensional problems*
-Higher-dimensional state-control spaces, for example, models with image inputs.
+\modeOpt is mostly restricted to lower dimensional problems due to the difficulties of defining \acrshort{gp} priors
+in high dimensions.
+In \acrshort{mbrl} there has been interesting progress learning better statistical models and scaling them
+up to higher-dimensional problems, for example, using Bayesian neural networks.
+This is an interesting direction for future work as it may lead to more practical algorithms.
 
-*Real-time control?*
-The trajectory optimisation algorithm in this chapter is only concerned with
-the aforementioned exploration and is not intended to run fast enough for
-real-time MPC.
-Although not explored here, the algorithm could be used for guided policy
-search in a model-based reinforcement learning setting
-cite:levineGuided2013,levineVariational2013,okadaVariational2020.
-Alternatively, one could explore approximations enabling the approach to
-work for real time MPC e.g. linearising the dynamics and/or a second order
-Taylor expansion of the cost function.
-\todo{should this be cost of value function??}
+*External sensing*
+$\modeOpt$ uses internal sensing to obtain information on the robot, such as where it is and how fast it is travelling.
+It then uses this information to infer the separation between the underlying dynamics modes from state transitions.
+However, in some applications, it may be possible to infer the separation between the underlying dynamics modes
+using external sensors.
+For example, in autonomous driving, the friction coefficients associated with different road surfaces may
+define a set of dynamics modes.
+In this setting, cameras could likely be used to detect changes in road surface and thus
+the separation between the underlying dynamics modes.
+Although not applicable in all settings,
+this is a promising direction for future work, as the agent would never have to enter the undesired dynamics mode.
 
-*Policy gradient*
+# *Deploy on real-world systems*
+# There are several aspects of $\modeOpt$ which should to be developed before deploying on real-world systems.
 
-*Guided policy search*
+*Real-time control*
+Both \modeOpt's mode remaining controller $\modeController$ and its
+explorative controller $\explorativeController$ rely on slow trajectory optimisation algorithms.
+As such, they cannot be dropped straight into an \acrshort{mpc} loop to obtain a closed-loop controller.
+There are multiple directions for future work that could address this.
+For example, the trajectory optimisation algorithms could be used for guided policy
+search in a \acrshort{mbrl} setting citep:levineGuided2013,levineVariational2013,okadaVariational2020.
+Alternatively, the trajectory optimisation algorithms could be made faster
+so that they could be used for real-time \acrshort{mpc}, for example, via locally linear dynamics approximations.
 
-*** Alternative approaches
+*Model-free approaches*
+This dissertation has solely focused on model-based approaches for solving the mode remaining navigation problem in
+cref:eq-main-problem.
+However, it may be possible to solve it with model-free methods.
+For example, model-free reinforcement learning methods may be able to learn a reactive policy
+which automatically turns backs when it encounters hard to control dynamics.
+Although out of the scope of this dissertation, there is potential work in this direction.
 
+*Mode switch*
 controlling the mode switch may be difficult
 Use sensors to observe regions of the environment before interacting with them.
 
-*Model-free approaches*
-This dissertation solely focused on model-based algorithms.
+*Exploration guarantees*
 
-Reactive strategy which would automatically turn back when encountering hard to control dynamics
+*Invariant sets*
+
+
+
 
 * Appendix
-** Multivariate Normals
-** Derivatives of a Gaussian Process
-** Results
+** Multivariate Normals :noexport:
+** Derivatives of a Gaussian Process :noexport:
+** Parameter Settings
 *** Velocity Controlled Quadcopter Experiments
 Table ref:tab-params-quadcopter contains the optimisation settings and initial values for the optimisable parameters
 that were used to train the model on the velocity controlled quadcopter data set in  Section ref:sec-brl-experiment.
