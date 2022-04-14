@@ -849,6 +849,40 @@ until it can find a trajectory to the target state that does not violate the cha
 # 800 words max
 #+BEGIN_EXPORT latex
 \begin{SingleSpace}
+In order to mitigate risk due to Covid-19 lab closures, many of the methods in this dissertaion were validated in
+simulation, as opposed to in real-world experiments.
+
+A real-world state transition data set was collected by flying a quadcopter aroudnd the lab with constant controls.
+It was used to train the \acrshort{mosvgpe} model in \cref{sec-brl-experiment}
+and to train a \acrshort{mosvgpe} model to test the mode remaining trajectory optimisation algorithm presented in
+\cref{sec-traj-opt-collocation}.
+These results are a step towards validating that the methods presented in this dissertaion work on real-world systems.
+However, this constant controls data set cannot be used to learn a dyanmics model for the control methods
+in \cref{chap-traj-opt-inference,sec-traj-opt-energy} (due to the lack of controls).
+It was also not possible to collect a new data set, due to lab closures.
+Instead, we decided to use a simulator to generate a data set.
+This had the added benefit that the simulator could be used to test the mode remaining trajectory optimisation
+algorithms in \cref{chap-traj-opt-inference,sec-traj-opt-energy},
+as well as the explorative trajectory optimisation algorithm in \cref{chap-active-learning}.
+
+%It was used to train the model in cref:sec-traj-opt-collocation,sec-brl-experiment
+%was collected before the pandemic.
+
+%cref:sec-traj-opt-collocation
+%evaluate the mode remaining
+%trajectory optimisation method in cref:sec-traj-opt-collocation,sec-brl-experiment
+
+%In particular, the real-world data set used to train the model in cref:sec-traj-opt-collocation,sec-brl-experiment
+%was collected with constant control to simplify data collection.
+
+%However, this real-world data set is not applicable for learning the dyanmics model needed for the control methods
+%in cref:chap-traj-opt-inference,sec-traj-opt-energy.
+%Due to lab closures, it was not possible to collect a new data set, so it was decided to use a
+%simulator to generate a data set.
+%Further to this, the simulator enabled the mode remaining trajectory optimisation algorithms
+%in cref:chap-traj-opt-inference,sec-traj-opt-energy,
+%as well as the explorative trajectory optimisation algorithm in cref:chap-active-learning to evaluated.
+
 \end{SingleSpace}
 #+END_EXPORT
 
@@ -874,7 +908,43 @@ until it can find a trajectory to the target state that does not violate the cha
 :END:
 #+BEGIN_EXPORT latex
 \begin{SingleSpace}
-\initial{H}ere goes the dedication.
+\initial{I} am deeply grateful to my two supervisors, Arthur Richards and Carl Henrik Ek.
+Thank you for taking me on as a student and your continued support.
+Your expertise and willigness to explore new ideas has made my PhD extrememly enjoyable.
+
+I am profoundly grateful to Arthur Richards for believing in me,
+It is thanks to you I am
+
+giving me the opportunity to explore.
+
+sharing many interesting discussions and their continued support
+
+I'd also like to thank Carl for his countelss tips with bikes and Emacs.
+I especially enjoyed wathcing your transition to the Emacs X Window Manager.
+I hope that one day I can live in a fully
+
+I would also like to thank the Reddit users that supported me through my journey with RSI.
+It seems like a life time ago since I was consiering giving up my PhD and all hopes of a career in programming.
+Your support gave me the confidence that I needed to overcome my RSI. I am eteranlly grateful.
+
+I am grateful to my friends, especially everyone in VCH. You have made my time in Bristol so much fun!
+I also want to thank my family for be amazing and always being their to support me.
+I am especially grateful to my mum for th giving me
+
+# Thank you for the endless proof reading
+
+%have made so many amazing memories and I no
+%it will always put a smile on my face.
+
+# Without you I am not sure I would have maintained a healthy work life
+
+
+I with to thank my
+
+I am
+
+I acknowledge the financial support toward this PhD from EPSRC
+
 \end{SingleSpace}
 #+END_EXPORT
 * TOC and Mainmatter :ignore:
@@ -15206,6 +15276,8 @@ However, further analysis is left for future work.
 ** Discussion & Future Work
 This section discusses \modeOpt and proposes some directions for future work.
 
+*Closed-loop control*
+
 *Further experiments*
 First of all, it should be noted that the work presented in this chapter is a first step
 at combining the work in this dissertation to solve the
@@ -15619,7 +15691,6 @@ Use sensors to observe regions of the environment before interacting with them.
 *Exploration guarantees*
 
 *Invariant sets*
-
 
 * Appendix
 ** Multivariate Normals :noexport:
