@@ -640,6 +640,7 @@ Use with
 {{{glossaryentry(LaTeX,\LaTeX,A document preparation system,LaTeX)}}}
 {{{glossaryentry(Real Numbers,$\real$,The set of Real numbers,Real Numbers)}}}
 
+{{{acronym(brl,BRL,Bristol Robotics Laboratory)}}}
 {{{acronym(mogpe,MoGPE,Mixtures of Gaussian Process Experts)}}}
 {{{acronym(moe,MoE,Mixture of Experts)}}}
 {{{acronym(mosvgpe,MoSVGPE,Mixtures of Sparse Variational Gaussian Process Experts)}}}
@@ -847,23 +848,26 @@ until it can find a trajectory to the target state that does not violate the cha
 :UNNUMBERED: t
 :END:
 # 800 words max
+# http://www.bristol.ac.uk/academic-quality/pg/pgrcode/annex17/
 #+BEGIN_EXPORT latex
 \begin{SingleSpace}
 In order to mitigate risk due to Covid-19 lab closures, many of the methods in this dissertaion were validated in
 simulation, as opposed to in real-world experiments.
 
-A real-world state transition data set was collected by flying a quadcopter aroudnd the lab with constant controls.
-It was used to train the \acrshort{mosvgpe} model in \cref{sec-brl-experiment}
+A real-world state transition data set was collected by flying a quadcopter around the \acrfull{brl} with constant controls.
+This data set was used to train the \acrshort{mosvgpe} model in \cref{sec-brl-experiment}
 and to train a \acrshort{mosvgpe} model to test the mode remaining trajectory optimisation algorithm presented in
 \cref{sec-traj-opt-collocation}.
 These results are a step towards validating that the methods presented in this dissertaion work on real-world systems.
-However, this constant controls data set cannot be used to learn a dyanmics model for the control methods
+However, this constant controls data set could not be used to learn a dyanmics model for the control methods
 in \cref{chap-traj-opt-inference,sec-traj-opt-energy} (due to the lack of controls).
-It was also not possible to collect a new data set, due to lab closures.
+Due to Covid-19 lab closures, it was also not possible to collect a new real-world data set that could be used
+to train the dynamics model (with controls).
 Instead, we decided to use a simulator to generate a data set.
 This had the added benefit that the simulator could be used to test the mode remaining trajectory optimisation
 algorithms in \cref{chap-traj-opt-inference,sec-traj-opt-energy},
-as well as the explorative trajectory optimisation algorithm in \cref{chap-active-learning}.
+as well as the explorative trajectory optimisation algorithm in \cref{chap-active-learning},
+without requiring aceess to the \acrshort{brl}.
 
 %It was used to train the model in cref:sec-traj-opt-collocation,sec-brl-experiment
 %was collected before the pandemic.
@@ -1720,85 +1724,6 @@ the underlying dynamics modes and how the system switches between them, are \tex
 To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
 to solve this problem.
 # However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
-*** Problem Statement
-# The overall goal is to navigate from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
-# -- to the target state $\targetState$, whilst guaranteeing that the controlled
-# system remains in the desired dynamics mode.
-
-More formally, this dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
-#+BEGIN_EXPORT latex
-\begin{subequations} \label{eq-dynamics-main}
-\begin{align}
-\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
-&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
-\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \nonumber \\
-\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
-\end{align}
-\end{subequations}
-#+END_EXPORT
-with continuous states $\state_t \in \stateDomain \subseteq \R^\StateDim$, continuous controls
-$\control_t \in \controlDomain \subseteq \R^\ControlDim$ and a discrete time index $t$.
-The discrete mode indicator function
-$\alpha : \stateDomain \rightarrow \modeDomain$
-indicates which of the $\ModeInd$ underlying dynamics modes
-$\{\mode{\latentFunc} : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
-and associated noise models
-$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$,
-governs the system at a given time step $\timeInd$.
-The output of the mode indicator function is referred to as the mode indicator variable and is given
-by $\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\}$.
-
-It considers systems where the underlying dynamics modes are defined by disjoint state domains.
-That is, each dynamics mode is defined by its state domain
-$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
-$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for $i \neq j$.
-Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
-and enter another mode.
-Ideally, this work seeks to enforce the controlled system to remain in a given mode.
-Formally, a mode remaining controlled system is defined as follows.
-#+BEGIN_EXPORT latex
-\begin{definition}[Mode Remaining] \label{def-mode-remaining-main}
-Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
-Given an inital state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy \in \Pi$,
-the controlled system is said to be mode-remaining iff:
-\begin{align} \label{eq-mode-remaining-def-main}
-\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
-&\in \mode{\stateDomain} \quad \forall \timeInd
-\end{align}
-\end{definition}
-#+END_EXPORT
-Notice that  the controller
-$\policy : \stateDomain \times \mathbb{Z} \rightarrow \controlDomain$ is defined
-generally. That is, it may take the form of a deterministic feedback policy or an
-open-loop set of controls without state feedback.
-It is assumed that $\Pi$ is the set of deterministic policies.
-
-Given this definition of a mode remaining controlled system, this dissertation seeks to solve,
-#+BEGIN_EXPORT latex
-\begin{subequations} \label{eq-main-problem}
-\begin{align}
-\min_{\policy \in \Pi} \quad &J(\dynamicsFunc, \policy) \\
-\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\bm\epsilon},
-\quad \modeVar(\state_{\timeInd}) = \modeInd \\
-%&\text{\cref{eq-mode-remaining-def-explore}} \\
-&\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
-\in \desiredStateDomain \quad \forall \timeInd \in \{0, \ldots, \TimeInd-1 \} \\
-%\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-%&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-&\state_{0} = \state_0 \\
-&\state_\TimeInd = \targetState,
-\end{align}
-\end{subequations}
-#+END_EXPORT
-where $J : \Pi \rightarrow \R$ denotes the objective function.
-Note that the objective function is not of primary importance in this work.
-The novelty of this problem arises from remaining in the desired dynamics mode $\desiredMode$, when
-the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
-and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
-To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
-to solve the problem in cref:eq-main-problem.
-# However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
-
 *** Motivation label:to_motivation :noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}[t!]
@@ -1927,6 +1852,94 @@ The main goals of the trajectory optimisation in this Chapter can be summarised 
 # \end{figure}
 # #+END_EXPORT
 
+** Problem Statement
+# The overall goal is to navigate from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
+# -- to the target state $\targetState$, whilst guaranteeing that the controlled
+# system remains in the desired dynamics mode.
+All of the methods in this dissertation relate back to this mode remaining navigation problem.
+For this reason, the problem is formally defined here.
+
+This dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
+#+BEGIN_EXPORT latex
+\begin{subequations} \label{eq-dynamics-main}
+\begin{align}
+\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
+&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \nonumber \\
+\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
+\end{align}
+\end{subequations}
+#+END_EXPORT
+with continuous states $\state_t \in \stateDomain \subseteq \R^\StateDim$, continuous controls
+$\control_t \in \controlDomain \subseteq \R^\ControlDim$ and a discrete time index $t$.
+The discrete mode indicator function
+$\alpha : \stateDomain \rightarrow \modeDomain$
+indicates which of the $\ModeInd$ underlying dynamics modes
+$\{\mode{\latentFunc} : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
+and associated noise models
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$,
+governs the system at a given time step $\timeInd$.
+It considers systems where the underlying dynamics modes are defined by disjoint state domains.
+That is, each dynamics mode is defined by its state domain
+$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
+$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for $i \neq j$.
+The output of the mode indicator function is referred to as the mode indicator variable and is given by
+$\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\} = \mathbb{Z} \cap [1, \ModeInd]$.
+Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
+and enter another mode.
+Ideally, this work seeks to enforce the controlled system to remain in a given mode.
+Formally, a mode remaining controlled system is defined as follows.
+# It considers systems where the underlying dynamics modes are defined by disjoint state domains.
+# That is, each dynamics mode is defined by its state domain
+# $\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
+# $\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for $i \neq j$.
+# Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
+# and enter another mode.
+# Ideally, this work seeks to enforce the controlled system to remain in a given mode.
+# Formally, a mode remaining controlled system is defined as follows.
+#+BEGIN_EXPORT latex
+\begin{definition}[Mode Remaining] \label{def-mode-remaining-main}
+Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
+Given an inital state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy \in \Pi$,
+the controlled system is said to be mode-remaining iff:
+\begin{align} \label{eq-mode-remaining-def-main}
+\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+&\in \mode{\stateDomain} \quad \forall \timeInd
+\end{align}
+\end{definition}
+#+END_EXPORT
+Notice that  the controller
+$\policy : \stateDomain \times \mathbb{Z} \rightarrow \controlDomain$ is defined
+generally. That is, it may take the form of a deterministic feedback policy or an
+open-loop set of controls without state feedback.
+It is assumed that $\Pi$ is the set of deterministic policies.
+
+Given this definition of a mode remaining controlled system, this dissertation seeks to solve,
+#+BEGIN_EXPORT latex
+\begin{subequations} \label{eq-main-problem}
+\begin{align}
+\min_{\policy \in \Pi} \quad &J(\dynamicsFunc, \policy) \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\bm\epsilon},
+\quad \modeVar(\state_{\timeInd}) = \modeInd \\
+%&\text{\cref{eq-mode-remaining-def-explore}} \\
+&\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+\in \desiredStateDomain \quad \forall \timeInd \in \{0, \ldots, \TimeInd-1 \} \\
+%\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+%&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\state_{0} = \state_0 \\
+&\state_\TimeInd = \targetState,
+\end{align}
+\end{subequations}
+#+END_EXPORT
+where $J : \Pi \rightarrow \R$ denotes the objective function.
+Note that the objective function is not of primary importance in this work.
+The novelty of this problem arises from remaining in the desired dynamics mode $\desiredMode$, when
+the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
+and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
+To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
+to solve the problem in cref:eq-main-problem.
+# However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
+
 ** Contributions
 This dissertation explores mode remaining control in multimodal dynamical systems that explicitly reasons
 about the uncertainties that arise during learning and control.
@@ -1948,7 +1961,7 @@ The primary contributions of this dissertation are as follows:
   from cref:chap-dynamics to solve the mode remaining control problem in cref:eq-main-problem.
   Due to the complexity of the problem, this chapter
   assumes prior access to the environment, such that a data set of state transitions $\mathcal{D}$ has been collected
-  and used to train the model. It presents three control methods that
+  and used to train the model. It presents three trajectory optimisation algorithms that
   leverage the learned dynamics model's latent structure to solve the mode remaining control problem.
 - cref:chap-active-learning: then considers the more realistic scenario of not having prior access
   to the environment. As such, the agent does not have access to a historical data set for model learning.
@@ -2675,8 +2688,9 @@ The main goals of this chapter can be summarised as follows,
 
 The probabilistic model constructed in this chapter
 resembles a \acrfull{mogpe} with a \acrshort{gp}-based gating network and  is named \acrfull{mosvgpe}.
-Following other \acrshort{mogpe} methods, the \acrshort{mosvgpe} is evaluated on the motorcyle data set citep:Silverman1985.
-It is then tested on the real-world quadcopter data set from the illustrative example detailed in cref:illustrative_example.
+Following other \acrshort{mogpe} methods, \acrshort{mosvgpe} is evaluated on the motorcyle data set citep:Silverman1985.
+It is then tested on a real-world quadcopter data set representing the illustrative
+example detailed in cref:illustrative_example.
 The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub[fn::Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].]
 citep:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper.
 
