@@ -1925,7 +1925,7 @@ Given this definition of a mode remaining controlled system, this dissertation s
 \quad \modeVar(\state_{\timeInd}) = \modeInd \\
 %&\text{\cref{eq-mode-remaining-def-explore}} \\
 &\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
-\in \desiredStateDomain \quad \forall \timeInd \in \{0, \ldots, \TimeInd-1 \} \\
+\in \desiredStateDomain \\
 %\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
 %&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
 &\state_{0} = \state_0 \\
@@ -6947,7 +6947,7 @@ it can successfully learn a factorised representation of a real-world, multimoda
 \newcommand{\stateDiffMean}{\ensuremath{\bm\mu_{\stateDiff_\timeInd}}}
 \newcommand{\stateDiffCov}{\ensuremath{\bm\Sigma_{\stateDiff_\timeInd}}}
 
-\renewcommand{\transitionDistK}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVar_{\timeInd}=\modeInd)}}
+\renewcommand{\transitionDistK}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVar_{\timeInd}=\desiredMode)}}
 #+END_EXPORT
 ** Intro :ignore:
 This chapter is concerned with controlling /unknown/ or /partially unknown/, multimodal dynamical systems,
@@ -6980,7 +6980,7 @@ the mode indicator variable.
 cref:chap-traj-opt-results evaluates and compares all three methods using the illustrative
 example from cref:illustrative_example.
 The work in this chapter is implemented in JAX and TensorFlow/GPflow and is available on GitHub[fn::Code accompanying
-cref:sec-traj-opt-collocation can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt and]]
+cref:sec-traj-opt-collocation can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]] and
 [[https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems]]
 and code accompanying cref:sec-traj-opt-energy can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]].]
 citep:jax2018github,tensorflow2015-whitepaper,GPflow2017.
@@ -7559,7 +7559,8 @@ cref:fig-traj-opt-gating-network-gp shows the GP posterior associated with the d
 after training
 \acrshort{mosvgpe} on the historical data set of state transitions from the quadcopter experiment in cref:illustrative_example.
 The work in this chapter is based on the observation that
-Goals 1 and 2 can be encoded as finding length minimising trajectories on the desired mode's gating function.
+Goals 1 and 2 can be encoded as finding length minimising trajectories on the manifold parameterised by the
+desired mode's gating function.
 Intuitively, the length of a trajectory from $\mathbf{x}_0$ to $\mathbf{x}_f$ on the
 manifold given by the desired mode's gating function,
 increases when it passes over the contours; analogous to climbing a hill.
@@ -7568,8 +7569,8 @@ those that attempt to follow the contours, and as a result,
 remain in a single mode by not climbing up or down any hills.
 This section will review the relevant concepts from Riemannian geometry and show how they can be used
 to encode Goals 1 and 2.
-cref:sec-prob-geo then extends the concepts to probabilistic geometries in order to encode Goal 3.
-The relevant concepts from Riemannian geometry, that are needed to formalise this intuition, are now introduced.
+cref:sec-prob-geo then extends these concepts to probabilistic geometries in order to encode Goal 3.
+# The relevant concepts from Riemannian geometry, that are needed to formalise this intuition, are now introduced.
 
 # Now that the relevant concepts from Riemannian geometry have been introduced, the objective function
 # for the first trajectory optimisation can be detailed.
@@ -7691,7 +7692,7 @@ can then be calculated with,
 #+END_EXPORT
 
 cref:fig-traj-opt-gating-network-gp shows the GP posterior over the desired mode's gating function,
-$\desiredGatingFunction : \stateDomain \times \controlDomain \rightarrow \gatingCodomain$.
+$\desiredGatingFunction : \stateDomain \rightarrow \gatingCodomain$.
 Consider finding
 length minimising trajectories on the manifold $\desiredManifold=\desiredGatingFunction(\gatingDomain)$
 associated with the desired mode's gating function, where the metric is given by,
@@ -7701,7 +7702,7 @@ associated with the desired mode's gating function, where the metric is given by
 \desiredJacobian &= \frac{\partial \desiredGatingFunction}{\partial \manifoldInput(t)} \in \R^{1 \times \GatingDim}.
 \end{align}
 #+END_EXPORT
-These trajectories will attempt to remain in the desired dynamics mode $\desiredMode$, encoding Goal 1 and 2.
+These trajectories will attempt to remain in the desired dynamics mode $\desiredMode$, encoding Goals 1 and 2.
 However, length minimising trajectories subject to this metric do not encode Goal 3.
 That is, they will not avoid regions of the learned dynamics, which cannot be predicted confidently due to
 high /epistemic uncertainty/.
@@ -7826,7 +7827,8 @@ The expected value of the metric tensor in cref:eq-metric-dist is given by,
 \end{align}
 #+END_EXPORT
 Importantly, this expected metric tensor includes a covariance term $\covJac$,
-which implies that lengths on the manifold increase in areas of high covariance.
+which implies that lengths on the manifold calculated under this expected metric will
+increase in areas of high covariance.
 This is a desirable behaviour because it encourages length minimising trajectories
 to avoid regions of the learned dynamics with high epistemic uncertainty,
 encoding Goal 3.
@@ -7979,7 +7981,7 @@ in cref:eq-manifold-length-G.
 Given this observation, computing geodesics involves finding a solution to cref:eq-2ode
 with $\manifoldInput(t_0) = \manifoldInput_0$ and $\manifoldInput(t_f) = \manifoldInput_f$.
 This is a boundary value problem (BVP) with a smooth solution so it can be solved using
-any BVP solver, e.g. (multiple) shooting and collocation methods.
+any BVP solver, e.g. (multiple) shooting or collocation methods.
 # #+BEGIN_EXPORT latex
 # \begin{align} \label{eq-length-objective}
 # \text{Length(\gatingFunc(\stateTraj))}
@@ -8023,7 +8025,7 @@ The derivative of the collocation states w.r.t. time
 $\{\dot{\stateCol}_{i+\frac{1}{2}}, \ddot{\stateCol}_{i+\frac{1}{2}}\}_{i=0}^{I-1}$
 are obtained algebraically via the polynomials.
 The collocation constraints then enforce
-the collocation state derivatives interpolated by the polynomials $\{\ddot{\stateCol}_{i+\frac{1}{2}} \}_{i=0}^{I-1}$,
+the second derivative of the collocation states interpolated by the polynomials $\{\ddot{\stateCol}_{i+\frac{1}{2}} \}_{i=0}^{I-1}$,
 to equal the geodesic \acrshort{ode} $f_G$ at the collocation points.
 This is achieved through the collocation defects,
 # #+BEGIN_EXPORT latex
@@ -8058,7 +8060,7 @@ This is achieved through the collocation defects,
 # This is achieved through the collocation defects,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-defect}
-\Delta\ddot{\stateCol}_{i+\frac{1}{2}} &= \ddot{\stateCol}_{i+\frac{1}{2}} - f_G(t_{i+\frac{1}{2}}, \stateCol_{i+\frac{1}{2}}, \dot{\stateCol}_{i+\frac{1}{2}}) = 0 \quad \forall i \in  \{ 0, \ldots, I-1\}
+\Delta\ddot{\stateCol}_{i+\frac{1}{2}} &= \ddot{\stateCol}_{i+\frac{1}{2}} - f_G(t_{i+\frac{1}{2}}, \stateCol_{i+\frac{1}{2}}, \dot{\stateCol}_{i+\frac{1}{2}}) = 0 \quad \forall i \in  \{ 0, \ldots, I-1\},
 \end{align}
 #+END_EXPORT
 where $\ddot{\stateCol}_{i+\frac{1}{2}}, \dot{\stateCol}_{i+\frac{1}{2}}, \stateCol_{i+\frac{1}{2}}$
@@ -8351,7 +8353,7 @@ the state trajectory is enforced to match the integral of the dynamics with resp
 
 Similar to the previous approach, this method builds on the observation that
 length minimising trajectories on the Riemannian manifold $\manifold$,
-associated with the desired mode's gating function $\manifoldFunction$, encodes the goals.
+associated with the desired mode's gating function $\desiredGatingFunction$, encodes the goals.
 Further to this, this method exploits the fact that length minimising trajectories on a Riemannian manifold $\manifold$,
 are also energy minimising trajectories citep:carmoRiemannian1992.
 As such, mode remaining behaviour can be encoded through the minimisation of
@@ -8469,6 +8471,9 @@ The second stage approximates the calculation of the expected Riemannian energy 
 \renewcommand{\singleInput}{\ensuremath{\hat{\state}_\timeInd}}
 \renewcommand{\singleOutput}{\ensuremath{\Delta\state_{\timeInd+1}}}
 
+\newcommand{\desiredExpertKernel}{\ensuremath{k_{\desiredMode}}}
+\newcommand{\desiredExpertInducingInput}{\ensuremath{\bm\zeta_{\desiredMode}}}
+
 \newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput)}}
 \newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput)}}
 %\newcommand{\expertInducingVariational}{\ensuremath{q(\mode{\latentFunc}(\expertInducingInput))}}
@@ -8514,16 +8519,17 @@ using the desired dynamics GP, whose transition density is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-dynamics-gp}
 \transitionDistK
-&= \mathcal{N} \left( \mode{\latentFunc}(\singleInput) \mid
-\mode{\mathbf{A}} \mode{\mathbf{m}},
-\expertKernel(\singleInput, \singleInput)
-+ (\mode{\mathbf{S}} - \expertKernel(\expertInducingInput,\expertInducingInput))
-\mode{\mathbf{A}}^T
+&= \mathcal{N} \left( \latentFunc_{\desiredMode}(\singleInput) \mid
+\mathbf{A}_{\desiredMode} \mathbf{m}_{\desiredMode},
+\desiredExpertKernel(\singleInput, \singleInput)
++ (\mathbf{S}_{\desiredMode} - \desiredExpertKernel(\desiredExpertInducingInput,\desiredExpertInducingInput))
+\mathbf{A}_{\desiredMode}^T
 \right)
 \end{align}
 #+END_EXPORT
 where
-$\mode{\mathbf{A}} = \expertKernel(\singleInput, \expertInducingInput)\left(\expertKernel(\expertInducingInput, \expertInducingInput)\right)^{-1}$.
+$\mathbf{A}_{\desiredMode} = \desiredExpertKernel(\singleInput, \desiredExpertInducingInput)\desiredExpertKernel(\desiredExpertInducingInput, \desiredExpertInducingInput)^{-1}$
+and $\singleInput=(\state_{\timeInd}, \control_{\timeInd})$.
 Cascading single-step predictions requires recursively mapping uncertain state-control inputs through
 the desired mode's dynamics GP, i.e. recursively calculating the following integral,
 #+BEGIN_EXPORT latex
@@ -8535,8 +8541,7 @@ p(\state_{\timeInd+1} \mid \state_0, \control_{0:\timeInd}, \bm\modeVar_{0:\time
 with $p(\state_0) = \delta(\state_0)$.
 Approximate closed-form solutions exist for propagating Normally distributed states and controls
 through GP models
-citep:girardGaussian2003,kussGaussian2006,quinonero-candelaPropagation2003.
-\todo{correct girard citation}
+citep:girardApproximate2004,kussGaussian2006,quinonero-candelaPropagation2003.
 This work exploits the moment-matching approximation
 implemented in the =uncertain_conditional= from GPflow citep:GPflow2017.
 For more details on the approximation see Section 7.2.1 of cite:kussGaussian2006.
@@ -8571,7 +8576,7 @@ The conditions to be $\delta-\text{mode remaining}$ can be enforced with chance 
 #+END_EXPORT
 These constraints enforce the system to remain in the desired dynamics mode with satisfaction probability
 $\satisfactionProb=1-\delta$, at each time step.
-As the \acrshort{mosvgpe} model assumes that the mode indicator variable $\modeVar$,
+As the \acrshort{mosvgpe} model assumes that the mode indicator variable $\modeVar$
 depends on the state via the gating function, this probability is calculated as follows,
 #+BEGIN_EXPORT latex
 \small
@@ -8651,8 +8656,8 @@ $\stateDiff_{\timeInd} \sim \mathcal{N}(\stateDiffMean, \stateDiffCov)$ can be c
 #+BEGIN_EXPORT latex
 \begin{myquote} \label{}
 The expected metric tensor encourages trajectories to 1) follow contours on the desired mode's gating function,
-hence avoiding changing modes,
-and 2) avoid entering regions where it is uncertain which mode governs the dynamics.
+encoding Goal 2, i.e. mode remaining behaviour,
+and to 2) avoid entering regions where it is uncertain which mode governs the dynamics, i.e. Goal 3.
 The expectation over the state difference then encourages trajectories to remain in regions of the desired dynamics mode with
 low uncertainty.
 \end{myquote}
@@ -8819,7 +8824,6 @@ giving the likelihood,
 \optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
 \end{align}
 #+END_EXPORT
-\todo{compare different fmons?}
 # #+BEGIN_EXPORT latex
 # \todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
 # \begin{myquote}
@@ -9220,7 +9224,7 @@ optimal trajectory, taking expectations over trajectories
 i.e. calculating $\log p(\optimalVarTraj \mid \state_0)$,
 is not equivalent to expected cost minimisation.
 cite:rawlikStochastic2013 extend the concepts from  cite:toussaintRobot2009 to show the general relation
-to classical \acrshort{soc}.
+to classical \acrfull{soc}.
 For a given policy $\policy$, they introduce the posterior distribution over state-control trajectories as,
 # They introduce a prior policy, $\priorPolicy$, and the distribution over state-control trajectories
 # under this policy is given by,
@@ -9288,14 +9292,14 @@ policies, the problem,
 - \underbrace{\E_{\controlledPolicyDist(\stateTraj)} \left[ H(\policy) \right]}_{\text{max entropy term}},
 \end{align}
 #+END_EXPORT
-is equivalent to the \acrfull{soc} problem in cref:eq-mode-soc-problem, with a modified integral cost,
+is equivalent to the \acrfull{soc} problem, with a modified integral cost,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-cost-per-stage}
 \hat{\costFunc}(\state_\timeInd, \control_\timeInd) = \costFunc(\state_\timeInd, \control_\timeInd)
-- \frac{1}{\temperature} \log \priorPolicy(\control_\timeInd \mid \state_\timeInd),
+- \frac{1}{\temperature} \log \priorPolicy(\control_\timeInd \mid \state_\timeInd).
 \end{align}
 #+END_EXPORT
-and no mode remaining constraint.
+# and no mode remaining constraint.
 The problem in cref:eq-kl-control finds trajectories that balance
 minimising expected costs
 $\E_{\controlledPolicyDist(\stateTraj, \controlTraj)} \left[ \costFunc(\stateTraj, \controlTraj) \right]$
@@ -9376,7 +9380,7 @@ This section details how the control-as-inference framework can be extended to m
 used to encode mode remaining behaviour.
 cref:eq-traj-opt-gating-network-prob-post-inf shows the probability mass function over the expert indicator variable
 after training \acrshort{mosvgpe} on the historical data set of state transitions from the
-quadcopter experiment in cref:illustrative_example.
+quadcopter navigation problem in cref:illustrative_example.
 Intuitively, the goal is to find trajectories that remain in regions of the dynamics with high probability of
 remaining in the desired dynamics mode.
 
@@ -9409,6 +9413,7 @@ remaining in the desired dynamics mode.
       \node[obs, below=of x1] (a1) {$\modeVar_0$};
       \node[obs, right=of a1] (a2) {$\modeVar_1$};
       \node[obs, right=of a2] (a3) {$\modeVar_2$};
+      \node[obs, right=of a3] (a4) {$\modeVar_3$};
 
       \draw[post] (x1)--(x2);
       \draw[post] (x2)--(x3);
@@ -9430,11 +9435,12 @@ remaining in the desired dynamics mode.
       \draw[->] (x3) to [out=100,in=240] (o3);
 
       \draw[->] (x1)--(a1);
-      \draw[->] (u1) to [out=-90,in=30] (a1);
+      %\draw[->] (u1) to [out=-90,in=30] (a1);
       \draw[->] (x2)--(a2);
-      \draw[->] (u2) to [out=-90,in=30] (a2);
+      %\draw[->] (u2) to [out=-90,in=30] (a2);
       \draw[->] (x3)--(a3);
-      \draw[->] (u3) to [out=-90,in=30] (a3);
+      %\draw[->] (u3) to [out=-90,in=30] (a3);
+      \draw[->] (x4)--(a4);
     \end{tikzpicture}
     }
   \caption{Graphical model with optimality and mode indicator variables.}
@@ -9720,7 +9726,7 @@ Given this, the ELBO is given by,
 \underbrace{\E_{ q(\state_{\timeInd} \mid \state_0, \modeVarTraj_{0:\timeInd-1})}
 \left[ \log \modeProb\right]}_{\text{mode remaining term}} \nonumber \\
 &\quad - \sum_{\timeInd=0}^{\TimeInd-1}
-\text{KL}\left(\controlVarDist \mid\mid \policy(\control_\timeInd \mid \state_\timeInd) \right)  \coloneqq \mathcal{L},
+\text{KL}\left(\controlVarDist \mid\mid \policy(\control_\timeInd \mid \state_\timeInd) \right)  \coloneqq \mathcal{L}_{\text{mode}},
 \end{align}
 #+END_EXPORT
 where for notational conciseness the terminal values have been omitted.
@@ -9728,7 +9734,7 @@ Assuming a uniform prior policy $\policy(\control_\timeInd \mid \state_\timeInd)
 term reducing to an entropy term and a constant,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-traj-opt-elbo}
-\mathcal{L} = &-\sum_{\timeInd=0}^{\TimeInd}
+\mathcal{L}_{\text{mode}} = &-\sum_{\timeInd=0}^{\TimeInd}
 \underbrace{\E_{q(\state_{\timeInd} \mid \state_0, \modeVarTraj_{0:\timeInd-1}) \controlVarDist }
 \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]}_{\text{expected cost}}
 + \sum_{\timeInd=0}^{\TimeInd} \underbrace{\E_{ q(\state_{\timeInd} \mid \state_0, \modeVarTraj_{0:\timeInd-1})}
@@ -9757,7 +9763,8 @@ The control problem is then given by,
 &+ \sum_{\timeInd=0}^{\TimeInd} \underbrace{\E_{q(\state_{\timeInd} \mid \state_0, \modeVarTraj_{0:\timeInd-1})} \left[
 \log \modeProb \right]}_{\text{mode remaining term}} \nonumber \\
  &+ \sum_{\timeInd=0}^{\TimeInd-1} \underbrace{\mathcal{H}(\control_{\timeInd})}_{\text{entropy}} \\
-\text{s.t.}& \quad \cref{eq-state-control-unc-prop-inf}, &
+&\text{s.t. \cref{eq-state-control-unc-prop-inf}}
+%\text{s.t.}& \quad \cref{eq-state-control-unc-prop-inf}, &
 \end{align}
 \end{subequations}
 #+END_EXPORT
