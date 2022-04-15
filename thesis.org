@@ -6953,7 +6953,7 @@ it can successfully learn a factorised representation of a real-world, multimoda
 This chapter is concerned with controlling /unknown/ or /partially unknown/, multimodal dynamical systems,
 given a single-step predictive dynamics model learned using the \acrshort{mosvgpe} method from cref:chap-dynamics.
 In particular, it is concerned with /mode remaining/ trajectory optimisation, which
-is formally defined in cref:def-mode-remaining.
+is formally defined in cref:def-mode-remaining-main.
 Informally, /mode remaining/ trajectory optimisation attempts to find trajectories
 from an initial state $\state_0$ -- in a desired dynamics mode -- to a target state $\state_f$,
 whilst remaining in the desired dynamics mode.
@@ -6968,7 +6968,7 @@ The remainder of this chapter is organised as follows.
 cref:sec-problem-statement formally states the problem.
 cref:chap-traj-opt-geometry details two methods that leverage the geometry of the \acrshort{mosvgpe} gating network.
 The first method in cref:sec-traj-opt-collocation
-resembles an indirect control method as it solves the necessary conditions which /indirectly/ represent the
+resembles an indirect optimal contro method as it solves the necessary conditions which /indirectly/ represent the
 original optimal control problem.
 In contrast, the second method in cref:sec-traj-opt-energy takes the more standard approach and directly solves the
 optimal control problem.
@@ -6984,6 +6984,8 @@ cref:sec-traj-opt-collocation can be found @ [[https://github.com/aidanscannell/
 [[https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems]]
 and code accompanying cref:sec-traj-opt-energy can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]].]
 citep:jax2018github,tensorflow2015-whitepaper,GPflow2017.
+An initial version of the indirect optimal control via latent geodesics method presented in cref:sec-traj-opt-collocation
+is published in cite:scannellTrajectory2021.
 
 # The remainder of this chapter is organised as follows.
 # cref:sec-problem-statement formally states the problem
@@ -7005,10 +7007,101 @@ citep:jax2018github,tensorflow2015-whitepaper,GPflow2017.
 # control framework.
 # Finally, this section evaluates the two approaches using the illustrative example from cref:illustrative_example.
 
-
-\todo{cite ICRA paper}
-
 ** Problem Statement label:sec-problem-statement
+The goal of this chapter is to solve the mode remaining navigation problem in cref:problem-statement-main.
+However, this chapter only considers mode remaining trajectory optimisation and does not consider
+state feedback controllers.
+This mode remaining trajectory optimisation problem is given by,
+#+BEGIN_EXPORT latex
+\begin{subequations} \label{eq-mode-soc-problem}
+\begin{align}
+\min_{\controlTraj} \sum_{\timeInd=0}^{\TimeInd} &\costFunc(\state_\timeInd, \control_\timeInd) \\
+%\min_{\controlTraj} \sum_{\timeInd=0}^{\TimeInd} &J(\state_\timeInd, \control_\timeInd) \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar(\state_{\timeInd}) = \modeInd  \quad &\forall \timeInd \in \{0, \ldots,\TimeInd-1\} \\
+%\text{s.t.} \quad &\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \epsilon,
+%\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon}) \\
+%&\text{\cref{eq-mode-remaining-def}} \\
+&\dynamicsFunc(\state_{\timeInd}, \control_{\timeInd}) \in \desiredStateDomain \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\} \\
+%\state_{\timeInd} &\in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\state_0 = \state_0 \\
+&\state_\TimeInd = \targetState.
+\end{align}
+\end{subequations}
+#+END_EXPORT
+That is, given a desired dynamics mode $\desiredMode$, this work seeks to find a control
+trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
+to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
+target state $\targetState \in \desiredStateDomain$, over a horizon $\TimeInd$,
+whilst minimising a cost function, $\costFunc: \stateDomain \times \controlDomain \rightarrow \R$
+and keeping the system in the desired dynamics mode $\desiredMode$.
+To simplify notation, the state and control trajectories are denoted
+as $\stateTraj = \state_{1:T}$ and $\controlTraj = \control_{0:T-1}$ respectively.
+
+Given that neither the underlying dynamics modes, nor how the system switches between them, are /known a priori/,
+it is not possible to solve cref:eq-mode-soc-problem with the mode remaining guarantee in cref:def-mode-remaining-main.
+However, well-calibrated uncertainty estimates associated with a learned dynamics model make it possible to
+find mode remaining trajectories with high probability.
+Therefore, this work relaxes the requirement to finding mode remaining trajectories with high probability.
+#+BEGIN_EXPORT latex
+\begin{definition}[$\delta$-mode remaining] \label{def-delta-mode-remaining}
+Let $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ denote a multimodal dynamical system
+and $\desiredMode$ a desired dynamics mode defined by its state domain $\desiredStateDomain \subseteq \stateDomain$.
+Given an initial state $\state_0 \in \desiredStateDomain$ and $\delta \in (0,1]$,
+a system is said to be $\delta$-mode remaining under the controls $\controlTraj$ iff:
+\begin{align}
+\Pr( \forall \timeInd \in \{0,\ldots,\TimeInd-1\} : \dynamicsFunc(\state_{\timeInd},\control_{\timeInd}) &\in \desiredStateDomain,
+\control_{\timeInd} \in \controlDomain) \geq 1 - \delta
+\end{align}
+\end{definition}
+#+END_EXPORT
+Trajectories satisfying this $\delta-\text{mode remaining}$ definition
+are guaranteed to remain in the desired dynamics mode with probability
+up to $1-\delta$. Therefore, smaller $\delta$ values correspond to higher confidence of remaining in the desired
+dynamics mode.
+
+This chapter further assumes prior access to the environment, such that a data set of state transitions has previously
+been collected and used to learn a single-step dynamics model using the \acrshort{mosvgpe} method from cref:chap-dynamics.
+#+BEGIN_EXPORT latex
+\begin{assumption} \label{}
+A data set $\dataset$ of state transitions has previously been collected from the system and used to learn
+a single-step dynamics model using the \acrshort{mosvgpe} method from \cref{chap-dynamics}.
+%A single-step dynamics model has been learned using
+%the \acrshort{mosvgpe} method from \cref{chap-dynamics} and a data set $\dataset$ of state transitions
+%from the system.
+\end{assumption}
+#+END_EXPORT
+# The novelty of this problem arises from the mode remaining behaviour.
+# To the best of our knowledge, there is no prior work addressing how to find
+# trajectories that remain in a desired dynamics mode,
+# when knowledge of how the system switches between the dynamics modes is /not known a priori/.
+
+
+Given this learned dynamics model, it is assumed that a desired dynamics mode $\desiredMode$ is either known, or
+can easily be identified.
+This is a realistic assumption as the parameters associated with each dynamics GP can be used to identify
+different behaviours.
+For example, the noise variance associated with each mode's dynamics GP models its process noise.
+If it is desirable to avoid modes with high process noise, then they can easily be identified by their noise
+variances.
+#+BEGIN_EXPORT latex
+\begin{assumption} \label{}
+A desired dynamics mode $\desiredMode$ is known.
+\end{assumption}
+#+END_EXPORT
+Given a learned dynamics model and a desired dynamics mode $\desiredMode$,
+the goals of the trajectory optimisation in this chapter can be summarised as follows,
+- Goal 1 :: Navigate to a target state $\targetState$,
+- Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$,
+- Goal 3 :: Avoid regions of the learned dynamics with high /epistemic uncertainty/,
+  - in the desired dynamics mode  $\latentFunc_{\desiredMode}$, i.e. where the underlying dynamics are not known,
+  - in the gating network $\modeVar$, i.e. where it is not known which mode governs the dynamics.
+Goal 3 arises due to learning the dynamics model from observations.
+The learned model may not be able to confidently predict which mode governs the dynamics at a given region.
+This is due to lack of training observations and is known as /epistemic uncertainty/.
+It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
+
+** Problem Statement label:sec-problem-statement :noexport:
 # #+BEGIN_EXPORT latex
 # \begin{align}
 # \mode{\latentFunc} : \stateDomain \times \controlDomain \rightarrow \stateDomain \quad \text{if} \quad \modeVar=\modeInd,
@@ -11860,11 +11953,11 @@ Overall, the direct optimal control approach performed significantly better than
 Firstly, two of the direct optimal control experiments in Environment 1 were able to remain in the desired dynamics mode,
 whilst the indirect geodesic control experiments could not.
 Further to this, the direct optimal control approach worked in Environment 2, where it was not possible to get the
-indirect control method working, without engineering the initial solution.
+indirect optimal contro method working, without engineering the initial solution.
 Not only did the direct optimal control approach perform better in the experiments, but it is also significantly easier
 to configure.
 That is, setting the optimisation parameters is straightforward.
-In contrast, setting the parameters for the indirect control method is not.
+In contrast, setting the parameters for the indirect optimal contro method is not.
 In particular, setting the upper and lower bounds for the collocation constraints is pernickety.
 In conclusion, the direct optimal control method is the preferred geometry-based method for finding mode remaining
 trajectories.
@@ -11894,10 +11987,10 @@ That is, $\lambda$ should remain at $1.0$ unless it is immediately clear how it 
 # - Avoiding regions of high epistemic uncertainty in the gating network does not always lead to higher probabilities
 #    of remaining in the desired dynamics mode under cref:eq-mode-probability-all-unc,
 #    - This further suggests that care should be taken if/when adjusting $\lambda$.
-# - The indirect control method's collocation solver is susceptible to local optima around its initial state trajectory,
+# - The indirect optimal contro method's collocation solver is susceptible to local optima around its initial state trajectory,
 #    - Although this can be overcome by engineering the initial solution, in practice, it makes it difficult to
 #      get the method working.
-# - The variational inference strategy used to recover the controls for the indirect control method cannot always
+# - The variational inference strategy used to recover the controls for the indirect optimal contro method cannot always
 #    recover the correct controls,
 #    - This is a big limitation that makes the method fail in some environments.
 #    # - This may be due to the collocation solver's state trajectory not satisfying the dynamics constraints, or,
@@ -11916,23 +12009,23 @@ This section compares the three control methods presented in
 cref:sec-traj-opt-collocation,sec-traj-opt-energy,chap-traj-opt-inference
 and suggests future work to address their limitations.
 cref:tab-geometry-control-comparison offers a succinct comparison of the three approaches.
-# The main drawback of the indirect control method is that it does not enforce the dynamics constraints.
+# The main drawback of the indirect optimal contro method is that it does not enforce the dynamics constraints.
 
 
 #+begin_table
-#+LATEX: \caption{Comparison of the indirect control via latent geodesics method from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannian energy method from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{chap-traj-opt-inference}.}
+#+LATEX: \caption{Comparison of the indirect optimal contro via latent geodesics method from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannian energy method from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{chap-traj-opt-inference}.}
 #+LATEX: \label{tab-geometry-control-comparison}
 #+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center t :placement [!t] :align lccc
-|                                                    | Control as Inference | Indirect Control | direct optimal control |
-|----------------------------------------------------+----------------------+------------------+----------------|
-| Dynamics constraints guaranteed?                   | \checkmark           | \times           | \checkmark     |
-| Considers epistemic uncertainty in dynamics?       | \checkmark           | \times           | \checkmark     |
-| Considers epistemic uncertainty in gating network? | \checkmark           | \checkmark       | \checkmark     |
-| Can remain in *multiple* modes?                    | \checkmark           | \times           | \times         |
-| Boundary conditions guaranteed?                    | \times               | \checkmark       | \times         |
-| $\delta-\text{mode remaining}$?                    | \checkmark           | \times           | \checkmark     |
-| Continuous time trajectory?                        | \times               | \checkmark       | \times         |
+|                                                    | Control as Inference | Indirect Optimal Control | Direct Optimal Control |
+|----------------------------------------------------+----------------------+--------------------------+------------------------|
+| Dynamics constraints guaranteed?                   | \checkmark           | \times                   | \checkmark             |
+| Considers epistemic uncertainty in dynamics?       | \checkmark           | \times                   | \checkmark             |
+| Considers epistemic uncertainty in gating network? | \checkmark           | \checkmark               | \checkmark             |
+| Can remain in *multiple* modes?                    | \checkmark           | \times                   | \times                 |
+| Boundary conditions guaranteed?                    | \times               | \checkmark               | \times                 |
+| $\delta-\text{mode remaining}$?                    | \checkmark           | \times                   | \checkmark             |
+| Continuous time trajectory?                        | \times               | \checkmark               | \times                 |
 # | Decouples goals?                                   | \checkmark       | \checkmark     |
 #+LATEX: }
 #+end_table
@@ -11947,9 +12040,9 @@ This can be seen as a method for approximating the integration of the controlled
 considering the epistemic uncertainty associated with learning from observations.
 The chance constraints ensure the controlled system is $\delta-\text{mode remaining}$, which
 makes the approximate dynamics integration valid.
-In contrast, the indirect control method does not find trajectories that are guaranteed to satisfy the dynamics
+In contrast, the indirect optimal contro method does not find trajectories that are guaranteed to satisfy the dynamics
 constraints.
-This is a limiting factor that makes the indirect control method less appealing.
+This is a limiting factor that makes the indirect optimal contro method less appealing.
 Therefore, methods for incorporating the dynamics constraints into the indirect method are an interesting
 direction for future work.
 # However, future work could attempt to enforce the dynamics constraints in the indirect method.
@@ -11959,7 +12052,7 @@ direction for future work.
 # Further to this, the maximum entropy control behaviour
 
 
-# Future work could consider extending the indirect control method to enforce the dynamics constraints.
+# Future work could consider extending the indirect optimal contro method to enforce the dynamics constraints.
 # Further to this,
 # *Uncertainty aware*
 *Decision-making under uncertainty*
@@ -11969,7 +12062,7 @@ This expression considers the epistemic uncertainty associated with the learned 
 both in the desired dynamics mode and in the gating network.
 Similarly for the control-as-inference method, the \acrshort{elbo} principally handles the uncertainty
 in both the desired dynamics mode and gating network.
-In contrast, the indirect control method ignores the uncertainty accumulated by cascading single-step predictions through
+In contrast, the indirect optimal contro method ignores the uncertainty accumulated by cascading single-step predictions through
 the learned dynamics model.
 That is, it considers the uncertainty associated with the gating network and ignores any uncertainty
 in the desired dynamics mode.
@@ -12068,7 +12161,7 @@ The direct optimal control and control-as-inference methods required control reg
 Although the discrete time steps of the trajectory appear to satisfy the constraints and minimise the cost,
 in reality, the continuous-time trajectory may pass through the undesired mode.
 This is a general problem that arises when solving continuous-time problems in discrete-time.
-In contrast, the indirect control method uses a collocation solver where the cost can be evaluated at arbitrary
+In contrast, the indirect optimal contro method uses a collocation solver where the cost can be evaluated at arbitrary
 points along the continuous-time trajectory.
 An interesting direction for future work is to extend the direct optimal control and control-as-inference methods
 to find trajectories in continuous-time.
