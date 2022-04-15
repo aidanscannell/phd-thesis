@@ -1852,7 +1852,7 @@ The main goals of the trajectory optimisation in this Chapter can be summarised 
 # \end{figure}
 # #+END_EXPORT
 
-** Problem Statement
+** Problem Statement label:problem-statement-main
 # The overall goal is to navigate from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
 # -- to the target state $\targetState$, whilst guaranteeing that the controlled
 # system remains in the desired dynamics mode.
@@ -1879,6 +1879,8 @@ $\{\mode{\latentFunc} : \mode{\stateDomain} \times \controlDomain \rightarrow \s
 and associated noise models
 $\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$,
 governs the system at a given time step $\timeInd$.
+This work considers systems that are stochastic (subject to process noise) but
+are not subject to observation noise. Thus, the $\mode{\bm\epsilon}$ term solely represents the process noise.
 It considers systems where the underlying dynamics modes are defined by disjoint state domains.
 That is, each dynamics mode is defined by its state domain
 $\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
@@ -2443,10 +2445,13 @@ With this in mind, the main goals of this chapter are to construct a model which
 %\renewcommand{\state}{\ensuremath{\mathbf{s}}}
 \renewcommand{\state}{\ensuremath{\mathbf{x}}}
 
-\renewcommand{\nominalDynamics}{\ensuremath{\mathbf{n}}}
-\renewcommand{\unknownDynamics}{\ensuremath{\mathbf{f}}}
-\renewcommand{\nominalDynamicsK}{\ensuremath{\mode{\mathbf{n}}}}
-\renewcommand{\unknownDynamicsK}{\ensuremath{\mode{\mathbf{f}}}}
+%\renewcommand{\nominalDynamics}{\ensuremath{\mathbf{n}}}
+%\renewcommand{\unknownDynamics}{\ensuremath{\mathbf{f}}}
+%\renewcommand{\nominalDynamicsK}{\ensuremath{\mode{\mathbf{n}}}}
+%\renewcommand{\unknownDynamicsK}{\ensuremath{\mode{\mathbf{f}}}}
+
+\renewcommand{\unknownDynamics}{\ensuremath{f}}
+\renewcommand{\unknownDynamicsK}{\ensuremath{\mode{f}}}
 
 \newcommand{\timeInd}{\ensuremath{t}}
 \newcommand{\TimeInd}{\ensuremath{T}}
@@ -2920,7 +2925,7 @@ With this notation, the regression problem can be written as,
 # is denoted $\fknd = \fkd (\singleInput)$,
 # for all dimensions as $\fkn$ and at all data points as $\Fk$.
 
-** Problem Statement
+** Problem Statement :noexport:
 \todo{change t-1 to t and t to t+1 to be consistent with control section}
 This work considers /unknown/, or /partially unknown/,  multimodal,
 stochastic, nonlinear dynamical systems,
@@ -2980,6 +2985,169 @@ This is a regression problem,
 \end{align}
 #+END_EXPORT
 where both the latent dynamics functions $\unknownDynamics$ and how the system switches between them
+$\modeVar$, must be inferred from observations.
+A single observation is denoted as $(\singleInput, \singleOutput) = ((\state_{t},\control_{t}), \Delta \state_{t+1})$.
+The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
+and the set of all outputs as $\allOutput \in \R^{\NumData \times 1}$.
+With this notation, the regression problem can be written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc-regression-simple}
+\singleOutput
+= \mode{\latentFunc}(\singleInput) + \mode{\epsilon}
+\quad \text{if} \quad \modeVarK.
+\end{align}
+#+END_EXPORT
+
+
+# from inputs $\singleInput$ to
+# outputs $\singleOutput$,
+
+
+# Given this notation, our task is to learn the mapping $\f$, from inputs $\singleInput$ to
+# outputs $\singleOutput$,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-disc}
+# \singleOutput = \mode{\latentFunc} (\singleInput) + \mode{\epsilon}
+# \quad \text{if} \quad \modeVarK,
+# \end{align}
+# #+END_EXPORT
+# where the mapping switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
+
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+# A time series of observations from time $a$ to time $b$ (inclusive)
+# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+# The concatenation of the state and control domains is
+# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+# A single state-control input is denoted as
+# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+# $\allInput$, and the set of all outputs as $\allOutput$.
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
+# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
+# $\NumTimesteps$ steps per episode.
+# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+
+
+# giving the data set,
+# $~{\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}}$.
+
+# This chapter assumes access to a historical data set, $\dataset$, comprising state transitions
+# from $\NumEpisodes$ trajectories (episodes), sampled with a fixed time step, $\Delta t=t_*$, resulting in
+# $\NumTimesteps$ steps per episode.
+# This gives a data set with $N = \NumEpisodes \NumTimesteps$ elements.
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{ \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps} \right\}_{\numEpisodes=1}^{\NumEpisodes}$.
+# We abuse notation (considering time indexing) and denote the data set
+# $\mathcal{D} = \left\{ (\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t} \right\}_{\numTimesteps=1}^{\NumTimesteps}$.
+
+# We combine the independent episodes to get the data set
+# $\mathcal{D} = \left\{(\mathbf{x}_{t-1}, \mathbf{u}_{t-1}), \Delta\mathbf{x}_{t}\right\}_{t=1}^{T}$
+# where we have abused the time indexing notation.
+
+# This work learns a discrete-time representation of cref:eq-multimodal-dynamics-cont,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-multimodal-dynamics-disc}
+# \singleOutput = \fk (\singleState, &\singleControl ; \Delta t = t_*) + \mode{\epsilon_{t-1}}
+# \quad \text{if} \quad \modeVarK,
+# \end{align}
+# #+END_EXPORT
+# where $\state_t \in \R^D$ and $\control_t \in \R^F$ are the states and controls
+# at time $t$ respectively, and $\alpha_t \in \modeDomain = \{1, \dotsc, \ModeInd\}$ is the mode indicator variable (that
+# indicates one of $\ModeInd$ dynamics modes) at time $t$.
+
+# A time series of observations from time $a$ to time $b$ (inclusive)
+# is denoted by $\mathbf{x}_{a:b}$ (analogously for other variables).
+# The concatenation of the state and control domains is
+# denoted $\inputDomain \coloneqq \stateDomain \times \controlDomain$.
+# A single state-control input is denoted as
+# $\singleInput = (\state_{t-1}, \control_{t-1})$, all inputs are denoted as
+# $\allInput$, and the set of all outputs as $\allOutput$.
+# The $\stateDim^{\text{th}}$ dimension of the $\modeInd^{\text{th}}$ mode's latent transition dynamics
+# function $\fk$, evaluated at $\singleInput$,
+# is denoted $\fknd = \fkd (\singleInput)$,
+# for all dimensions as $\fkn$ and at all data points as $\Fk$.
+
+** Problem Statement
+This work considers learning representations of /unknown/, or /partially unknown/,  multimodal,
+stochastic, nonlinear dynamical systems.
+That is, it seeks to learn the dynamics from the problem statement in cref:problem-statement-main.
+This chapter modifies the dynamics from cref:eq-dynamics-main to consider mapping
+a state and control at a given time step to the state difference at the next time step, as opposed to the next state.
+The dynamics are given by,
+#+BEGIN_EXPORT latex
+%\begin{align} \label{eq-multimodal-dynamics-disc}
+%\Delta \state_{\timeInd+1}
+%&= \unknownDynamics(\state_{t}, \control_{t}; \Delta t = t_*) + \bm\epsilon & \nonumber \\
+%&= \unknownDynamicsK (\state_{\timeInd}, \control_{\timeInd} ; \Delta t = t_*) + \mode{\bm\epsilon}
+%&\text{if} \quad \modeVar(\state_{\timeInd}) = \modeInd
+%\end{align}
+\begin{subequations} \label{eq-multimodal-dynamics-disc}
+\begin{align}
+\Delta \state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd; \Delta t = t_*) + \bm\epsilon \\
+&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd; \Delta t = t_*) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \nonumber \\
+\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
+\end{align}
+\end{subequations}
+#+END_EXPORT
+with continuous states $\state_t \in \stateDomain \subseteq \R^\StateDim$, continuous controls
+$\control_t \in \controlDomain \subseteq \R^\ControlDim$ and time index $t$.
+The state difference between time $\timeInd$ and $\timeInd+1$ is denoted
+$\Delta \state_{\timeInd+1} = \state_{\timeInd+1} - \state_{\timeInd}$.
+At any given time step $t$, one of the $\ModeInd$ dynamics modes
+$\{\unknownDynamicsK : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+and associated noise models
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
+$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
+are selected by a discrete mode indicator function
+$\alpha : \stateDomain \rightarrow \modeDomain$.
+The output of the mode indicator function is referred to as the mode indicator variable and is denoted
+$\alpha_{\timeInd} = \alpha(\state_{\timeInd})$ with domain
+$\alpha_{\timeInd} \in \modeDomain = \{1,\ldots,\ModeInd\}$.
+
+# The output of the mode indicator function is referred to as the mode indicator variable and is given by
+# $\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\}$.
+# The nominal dynamics
+# $\{\nominalDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+# represents our /a priori/ knowledge of the dynamics (i.e. the assumed dynamics)
+# and the additive dynamics
+# $\{\unknownDynamicsK : \stateDomain \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
+# represents the initially unknown dynamics, which are to be learned from observations.
+
+
+This chapter assumes access to historical data comprising state transitions from $\NumEpisodes$ trajectories
+of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
+The data set has ${N=ET}$ elements
+and we abuse notation by appending the independent trajectories along
+time to get the data set $\mathcal{D}=\{(\state_{\timeInd},\control_{\timeInd}),\Delta \state_{t+1}\}^\NumData_{\timeInd=1}$.
+
+To ease notation, our modelling only considers a single output dimension.
+The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
+To further ease notation, the state-control input domain is denoted
+$\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}$
+and a single state-control input is dentoed
+$\singleInput = (\state_{\timeInd},\control_{\timeInd})$.
+Given this formulation, the goal of this chapter is to learn the mapping $\unknownDynamics$,
+which switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
+This is a regression problem,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-multimodal-dynamics-disc-regression}
+\underbrace{\Delta \state_{t+1}}_{\text{\singleOutput}}
+= \underbrace{\unknownDynamicsK(\state_{t}, \control_{t} ; \Delta t = t_*)}_{\text{\mode{\latentFunc} (\singleInput)}}
++ \mode{\epsilon}
+\quad \text{if} \quad \modeVarK,
+\end{align}
+#+END_EXPORT
+where both the latent dynamics functions $\{\unknownDynamicsK\}_{\modeInd=1}^{\ModeInd}$
+and how the system switches between them
 $\modeVar$, must be inferred from observations.
 A single observation is denoted as $(\singleInput, \singleOutput) = ((\state_{t},\control_{t}), \Delta \state_{t+1})$.
 The set of all inputs is denoted as $\allInput \in \R^{\NumData \times \InputDim$
@@ -3256,8 +3424,8 @@ their mixing probabilities $\Pr(\modeVarK \mid \gatingParams)$.
 *Mixture of Experts* The \acrfull{moe} model citep:jacobsAdaptive1991 is
 an extension where the mixing probabilities
 depend on the input variable $\moeGatingPosterior$, and are
-collectively referred to as the *gating network*.
-The individual component densities $\moeExpertPosterior$ are then referred to as *experts*,
+collectively referred to as the /gating network/.
+The individual component densities $\moeExpertPosterior$ are then referred to as /experts/,
 as at different regions in the input space, different components are responsible for predicting.
 Given $\ModeInd$ experts $\moeExpertPosterior$, each with parameters $\expertParamsK$,
 the MoE marginal likelihood is given by,
@@ -3273,6 +3441,9 @@ where $\singleModeVar$ is the expert indicator variable assigning observations t
 The probability mass function over the expert indicator variable is referred to as the gating network and
 indicates which expert governs the model at a given input location.
 See cite:yukselTwenty2012 for a survey of \acrshort{moe} methods.
+Note the correspondence between the expert indicator variable $\singleModeVar$
+and the mode indicator variable from cref:eq-multimodal-dynamics-disc.
+
 *** Nonparametric Mixtures of Experts :ignore:
 
 \newline
