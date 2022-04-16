@@ -10255,6 +10255,11 @@ the dynamics constraints, whilst ensuring trajectories are $\delta-\text{mode re
 # dynamics model with high epistemic uncertainty.
 
 * Quadcopter Experiments - Mode Remaining Trajectory Optimisation label:chap-traj-opt-results
+#+BEGIN_EXPORT latex
+\newcommand{\ig}{IG\xspace}
+\newcommand{\dre}{DRE\xspace}
+\newcommand{\cai}{CaI\xspace}
+#+END_EXPORT
 ** maths :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\deltaTime}{\ensuremath{\Delta \timeInd}}
@@ -10799,15 +10804,15 @@ using four performance indicators:
 3. The state variance accumulated from cascading single-step predictions,
    #+BEGIN_EXPORT latex
     \begin{align} \label{eq-metric-state-var}
-    \sum_{\timeInd=1}^{\TimeInd} \mathbb{V}[\state_{\timeInd}].
+    \mathbb{V}[\stateTraj] = \sum_{\timeInd=1}^{\TimeInd} \mathbb{V}[\state_{\timeInd}].
     \end{align}
    #+END_EXPORT
    This will increase when a trajectory passes through regions of the desired dynamics mode with high epistemic uncertainty.
 4. The gating function variance accumulated from cascading single-step predictions,
    #+BEGIN_EXPORT latex
     \begin{align} \label{eq-metric-gating-var}
-    \sum_{\timeInd=1}^{\TimeInd}
-    \mathbb{V}[\gatingFunc_{\desiredMode}(\state_{\timeInd})].
+    \mathbb{V}[\desiredGatingFunction(\stateTraj)] = \sum_{\timeInd=1}^{\TimeInd}
+    \mathbb{V}[\desiredGatingFunction(\state_{\timeInd})].
     \end{align}
    #+END_EXPORT
    This will increase when a trajectory passes through regions of the gating network with high epistemic uncertainty.
@@ -10863,29 +10868,33 @@ whilst minimising the variance accumulated over a trajectory, i.e. maximise cref
 
 *** Table :ignore:
 #+begin_table
-#+LATEX: \caption{\textbf{Results in simulated environments} Comparison of the  indirect optimal control method from \cref{sec-traj-opt-collocation}, the direct geodesic control method from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{sec-traj-opt-inference}, with max entropy (VI gauss) and without (VI dirac). All methods are evaluated in the two simulated environments. The performance measures are summed over the collocation points for the indirect geodesic control method and over each time step for the direct optimal control method and the control-as-inference method. The "Mode prob" column calculates the probability at each time step without marginalising the state and gating function uncertainty whereas the "Mode prob with unc." marginalises both the state and gating function uncertainty at each time step. The target state column indicates if the trajectory reached the target state in the environment ($\checkmark$ both), only under the desired mode's dynamics \acrshort{gp} ($\checkmark$ dynamics only) or not at all ($\times$).}
+#+LATEX: \caption{\textbf{Results in simulated environments} Comparison of the  indirect optimal control via latent geodesics method (\ig) from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannain energy method (\dre) from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{sec-traj-opt-inference}, with max entropy (\cai gauss) and without max entropy (\cai dirac). All methods are evaluated in the two simulated environments. The performance measures are summed over the collocation points for the indirect optimal control method and over each time step for the direct optimal control method and the control-as-inference method. The "Mode prob" column calculates the probability of being in the desired dynamics mode at each time step without marginalising the state and gating function uncertainty over the trajectory. In contrast the "Mode prob with unc." marginalises both the state and gating function uncertainty at each time step. The target state column indicates if the trajectory reached the target state in the environment ($\checkmark$ both), only under the desired mode's dynamics \acrshort{gp} ($\checkmark$ dynamics only) or not at all ($\times$).}
 #+LATEX: \label{tab-results-sim-envs}
 #+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center t :placement [!b] :align clccccccc
-|-----+------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
-| Env | Method     | $\lambda$ | Mode prob                       | Mode prob with unc.              | State unc.               | Gating unc.                                          | Riemannian energy                                | Target state                       |
-|     |            |           | cref:eq-mode-probability-no-unc | cref:eq-mode-probability-all-unc | $\mathbb{V}[\stateTraj]$ | $\mathbb{V}[\gatingFunc_{\desiredMode}(\stateTraj)]$ | cref:eq-approximate-trajectory-riemannian-energy | $\state_{\TimeInd}==\targetState$? |
-|-----+------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
-|     | Direct     | $0.5$     | $16.96$                         | $16.22$                          | $8.69$                   | $346.62$                                             | $238.29$                                         | $\checkmark$ both                  |
-|     | Direct     | $1.0$     | $18.51$                         | $16.98$                          | $8.70$                   | $367.16$                                             | $222.07$                                         | $\checkmark$ both                  |
-|     | Direct     | $20.0$    | $15.32$                         | $14.62$                          | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                         | $\times$ dynamics only             |
-|   1 | Indirect   | $0.5$     | $20.91$                         | $16.77$                          | $8.70$                   | $404.51$                                             | $180.10$                                         | $\times$ dynamics only             |
-|     | Indirect   | $1.0$     | $\mathbf{20.98}$                | $18.10$                          | $8.72$                   | $388.51$                                             | $\mathbf{173.84}$                                | $\times$ dynamics only             |
-|     | Indirect   | $20.0$    | $12.64$                         | $13.00$                          | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                         | $\times$ dynamics only             |
-|     | VI (gauss) | N/A       | $20.94$                         | $\mathbf{19.99}$                 | $8.74$                   | $208.62$                                             | $287.52$                                         | $\checkmark$ both                  |
-|     | VI (dirac) | N/A       | $20.96$                         | $19.58$                          | $8.73$                   | $258.27$                                             | $237.32$                                         | $\checkmark$ both                  |
-|-----+------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
-|     | Direct     | $0.01$    | $\mathbf{20.98}$                | $\mathbf{20.80}$                 | $1.79$                   | $497.47$                                             | $275.00$                                         | $\checkmark$ both                  |
-|     | Direct     | $0.5$     | $20.96$                         | $20.34$                          | $1.42$                   | $367.47$                                             | $182.06$                                         | $\checkmark$ both                  |
-|   2 | Direct     | $1.0$     | $\mathbf{20.98}$                | $20.68$                          | $\mathbf{1.28}$          | $\mathbf{334.47}$                                    | $144.16$                                         | $\checkmark$ both                  |
-|     | Direct     | $5.0$     | $20.81$                         | $20.13$                          | $1.37$                   | $374.13$                                             | $\mathbf{134.33}$                                | $\checkmark$ both                  |
-|     | VI (gauss) | N/A       | $\mathbf{20.98}$                | $20.72$                          | $1.75$                   | $596.67$                                             | $442.88$                                         | $\checkmark$ both                  |
-|     | VI (dirac) | N/A       | $\mathbf{20.98}$                | $20.61$                          | $1.56$                   | $644.35$                                             | $534.39$                                         | $\checkmark$ both                  |
+|-----+-----------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
+| Env | Method          | $\lambda$ | Mode prob                       | Mode prob with unc.              | State unc.               | Gating unc.                                          | Riemannian energy                                | Target state                       |
+|     |                 |           | cref:eq-mode-probability-no-unc | cref:eq-mode-probability-all-unc | $\mathbb{V}[\stateTraj]$ | $\mathbb{V}[\gatingFunc_{\desiredMode}(\stateTraj)]$ | cref:eq-approximate-trajectory-riemannian-energy | $\state_{\TimeInd}==\targetState$? |
+|-----+-----------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
+|     | \ig             | $0.5$     | $16.96$                         | $16.22$                          | $8.69$                   | $346.62$                                             | $238.29$                                         | $\times$ dynamics only             |
+|     | \ig             | $1.0$     | $18.51$                         | $16.98$                          | $8.70$                   | $367.16$                                             | $222.07$                                         | $\times$ dynamics only             |
+|     | \ig             | $20.0$    | $15.32$                         | $14.62$                          | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                         | $\times$ dynamics only             |
+|   1 | \dre            | $0.5$     | $20.91$                         | $16.77$                          | $8.70$                   | $404.51$                                             | $180.10$                                         | $\checkmark$ both                  |
+|     | \dre            | $1.0$     | $\mathbf{20.98}$                | $18.10$                          | $8.72$                   | $388.51$                                             | $\mathbf{173.84}$                                | $\checkmark$ both                  |
+|     | \dre            | $20.0$    | $12.64$                         | $13.00$                          | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                         | $\times$ dynamics only             |
+|     | \cai (gauss)    | N/A       | $20.94$                         | $\mathbf{19.99}$                 | $8.74$                   | $208.62$                                             | $287.52$                                         | $\checkmark$ both                  |
+|     | \cai (dirac)    | N/A       | $20.96$                         | $19.58$                          | $8.73$                   | $258.27$                                             | $237.32$                                         | $\checkmark$ both                  |
+|-----+-----------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
+|     | \ig             | $0.5$     | $18.98$                         | $19.22$                          | $1.53$                   | $495.11$                                             | $249.85$                                         | $\times$                           |
+|     | \ig             | $1.0$     | $18.98$                         | $19.16$                          | $1.39$                   | $522.60$                                             | $285.92$                                         | $\times$                           |
+|     | \ig (mid point) | $1.0$     | $17.55$                         | $17.80$                          | $1.57$                   | $553.00$                                             | $213.82$                                         | $\times$                           |
+|     | \ig             | $5.0$     | $18.98$                         | $19.17$                          | $1.44$                   | $503.94$                                             | $215.75$                                         | $\times$                           |
+|     | \dre            | $0.01$    | $\mathbf{20.98}$                | $\mathbf{20.80}$                 | $1.79$                   | $497.47$                                             | $275.00$                                         | $\checkmark$ both                  |
+|   2 | \dre            | $0.5$     | $20.96$                         | $20.34$                          | $1.42$                   | $367.47$                                             | $182.06$                                         | $\checkmark$ both                  |
+|     | \dre            | $1.0$     | $\mathbf{20.98}$                | $20.68$                          | $\mathbf{1.28}$          | $\mathbf{334.47}$                                    | $144.16$                                         | $\checkmark$ both                  |
+|     | \dre            | $5.0$     | $20.81$                         | $20.13$                          | $1.37$                   | $374.13$                                             | $\mathbf{134.33}$                                | $\checkmark$ both                  |
+|     | \cai (gauss)    | N/A       | $\mathbf{20.98}$                | $20.72$                          | $1.75$                   | $596.67$                                             | $442.88$                                         | $\checkmark$ both                  |
+|     | \cai (dirac)    | N/A       | $\mathbf{20.98}$                | $20.61$                          | $1.56$                   | $644.35$                                             | $534.39$                                         | $\checkmark$ both                  |
 #+LATEX: }
 #+end_table
 
@@ -11016,81 +11025,85 @@ However, in practice, setting a high terminal state cost matrix $\terminalStateC
 
 **** Goal 2 - Remain in the Desired Mode
 The experiments are now evaluated at their ability to remain in the desired dynamics mode,
-that is, their ability to satisfy Goal 2.
+that is, their ability to achieve Goal 2.
 
 ***** Indirect optimal control :ignore:
 \newline
 
-None of the indirect optimal control experiments in
-cref:fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5,fig-geodesic-mid-point-traj-opt-5
-were able to successfully remain in the desired dynamics mode.
-In the experiments in
-cref:fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5,
-which were initialised with straight line trajectories, the collocation solver was not able to escape the
-local optima induced by the straight line trajectories.
-This is indicated by the collocation state trajectories (yellow) passing directly through the turbulent dynamics
-mode.
-Issues with local optima (in the collocation solver) were overcome for $\lambda=1.0$, by initialising the state
-trajectory to pass through $[-2.0, -2.0]$.
-With this initalisation the collocation state trajectory (yellow) in  cref:fig-geodesic-mid-point-traj-opt-5
-was able to remain in the desired dynamics mode.
-However, it should be noted that the need to initialise the collocation solver in this way
-limits the direct optimal control method's applicability.
-For example, how should the initial solution be set in environments where the state-space cannot
-be visualised as easily?
-In contrast, the direct optimal control method requires little to no human input to initalise the optimisation.
+# None of the indirect optimal control experiments in
+# cref:fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5,fig-geodesic-mid-point-traj-opt-5
+# were able to successfully remain in the desired dynamics mode.
 
 
-*Indirect optimal control*
-None of the indirect geodesic control experiments
-in cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7,fig-geodesic-low-traj-opt-5,fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5,fig-geodesic-mid-point-traj-opt-5
-were able to successfully remain in the desired dynamics mode.
-This is shown by the dynamics trajectories (magenta) passing over the mode boundary into the turbulent dynamics mode.
-
-This is further emphasised by the environment trajectory (cyan) deviating from the
-dynamics trajectory (magenta) when it passes into the turbulent dynamics mode.
-This is due to the strong wind field blowing the quadcopter in the negative $x$ direction.
-Although none of the indirect geodesic control experiments successfully remained in the desired dynamics mode,
-they have exhibited mode remaining behaviour.
+*Indirect geodesic control \ig*
+None of the indirect geodesic control experiments were able to successfully remain in the desired dynamics mode.
+This is shown by the collocation trajectories (yellow) passing over the mode boundary
+into the turbulent dynamics mode in
+cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7,fig-geodesic-low-traj-opt-5,fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5.
+In Environment 1, although none of the indirect geodesic control
+experiments successfully remained in the desired dynamics mode, they did exhibited mode remaining behaviour.
 That is, the trajectories with $\lambda=0.5$ in cref:fig-geodesic-low-traj-opt-7
 and with $\lambda=1.0$ in cref:fig-geodesic-traj-opt-7,
 navigate to the left and almost reach the mode boundary.
+However, they were not able to find solutions that remained in the desired mode for the entire trajectory.
+
+In the Environment 2 experiments initialised with straight line trajectories
+(cref:fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5),
+the collocation solver was not able to escape the local optima induced by the initial solution.
+This is indicated by the collocation state trajectories (yellow) passing directly through the turbulent dynamics
+mode.
+Issues with local optima (in the collocation solver) were overcome for $\lambda=1.0$, by initialising the collocation
+trajectory with two straight lines that passed through a mid point at $[-2.0, -2.0]$.
+This trajectory is named $\ig (mid point)$.
+Given this initialisation the collocation state trajectory (yellow) in  cref:fig-geodesic-mid-point-traj-opt-5
+was able to remain in the desired dynamics mode.
+These results indicate that the performance of the collocation solver is dependent on the initial trajectory.
+It should be noted that the need to initialise the collocation solver in this way
+limits the method's applicability.
+For example, how should the initial solution be set in environments where the state-space cannot
+be visualised as easily?
+
+
+
+# This is further emphasised by the environment trajectory (cyan) deviating from the
+# dynamics trajectory (magenta) when it passes into the turbulent dynamics mode.
+# This is due to the strong wind field blowing the quadcopter in the negative $x$ direction.
 # This is further indicated in cref:tab-results-sim-envs, where the probability of remaining in the desired
 # dynamics mode is higher than the experiments with $\lambda=20.0$.
 
-In practice, setting the lower and upper bounds on the collocation constraints in SciPy is awkward
-and impacts how much mode remaining behaviour is exhibited.
-Setting the bounds too loose results in trajectories not satisfying the geodesic ODE and
-setting them too tight leads to the constrained optimisation exiting with an error.
-These issues could potentially be resolved by casting the constrained optimisation into an unconstrained optimisation
-using Lagrange multipliers. However, this is left for future work.
-
 ***** Direct optimal control :ignore:
 \newline
-*Direct optimal control*
-All but one of the direct optimal control experiments were able to successfully remain in the desired dynamics mode.
+*Direct optimal control \dre*
+All but one of the \dre experiments were able to successfully remain in the desired dynamics mode.
 This is indicated by none of the dynamics trajectories (magenta) passing over the mode boundary into
 the turbulent dynamics mode in
 cref:fig-riemannian-energy-low-2-traj-opt-5,fig-riemannian-energy-low-traj-opt-5,fig-riemannian-energy-traj-opt-5,fig-riemannian-energy-high-traj-opt-5.
-cref:tab-results-sim-envs shows that the
-trajectories found with $\lambda=0.01$ and $\lambda=1.0$ in
-cref:fig-riemannian-energy-low-traj-opt-5
-and
-cref:fig-riemannian-energy-traj-opt-5
+cref:tab-results-sim-envs shows that the trajectory found with \dre $\lambda=1.0$ obtained
+the highest probability of remaining in the desired dynamics mode for Environment 1.
+Similarly, in Environment 2 the trajectories found with \dre $\lambda=0.01$ and \dre $\lambda=1.0$ in
+cref:fig-riemannian-energy-low-traj-opt-5 and cref:fig-riemannian-energy-traj-opt-5
 respectively, obtained the highest probability of remaining in the desired dynamics mode.
-From visual inspection of
+From visual inspection of cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,
+the trajectory found with \dre $\lambda=1.0$ has more clearance from the turbulent dynamics
+mode than for \dre $\lambda=0.5$ and \dre $\lambda=20.0$.
+This appears to be due to the covariance term pushing the trajectory away
+from the region of high epistemic uncertainty in the gating network.
+These results confirm that the covariance term in the expected Riemannian metric can encode the notion of avoiding
+regions of high epistemic uncertainty in the gating network.
+However, this is not always the case.
+
+Close inspection of
 cref:fig-riemannian-energy-low-2-traj-opt-5,fig-riemannian-energy-low-traj-opt-5,fig-riemannian-energy-traj-opt-5,fig-riemannian-energy-high-traj-opt-5
-it is clear that the trajectory found with $\lambda=0.01$ achieved a lower probability
+shows that the trajectory found with \dre $\lambda=0.01$ achieved a lower probability
 because it has the most clearance from the desired dynamics mode.
-Interestingly, although the trajectory found with $\lambda=1.0$
+Interestingly, although the trajectory found with \dre $\lambda=1.0$
 passed through less regions of high epistemic uncertainty, indicated by lower
 state and gating variance in cref:tab-results-sim-envs,
 it obtained a lower probability of remaining in the desired dynamics mode
 when considering the epistemic uncertainty (cref:eq-mode-probability-all-unc).
-Further to this, the trajectory found with $\lambda=0.01$ obtained the lowest probability even though it
+Further to this, the trajectory found with \dre $\lambda=0.01$ obtained the lowest probability even though it
 accumulated the most state and gating variance in comparison to the other $\lambda$ values.
-In contrast to the experiments in Environment 1,
-this indicates that avoiding regions of high epistemic uncertainty does not necessarily increase the
+This indicates that avoiding regions of high epistemic uncertainty does not necessarily increase the
 probability of remaining in the desired dynamics mode under cref:eq-mode-probability-all-unc.
 This is because the mode probability is calculated using both the gating function's mean and variance.
 In these experiments, the influence of the gating function mean must have had a higher impact on
@@ -11098,8 +11111,8 @@ the mode probability than the variance.
 # Intuitively, this suggests that if the model's interpolation/extrapolation believes a region belongs
 # Although the model is uncertain, if its interpolation/extrapolation suggest that the
 
-
-The trajectory found with $\lambda=5.0$ obtained the lowest probability of remaining in the desired dynamics mode.
+The trajectory found with \dre $\lambda=5.0$ in Environment 2 obtained the lowest probability of
+remaining in the desired dynamics mode.
 Increasing the relevance of the covariance term in the expected Riemannian metric
 is equivalent to decreasing the relevance of the mode remaining term.
 As a result, the optimisation has favoured avoiding regions of high epistemic uncertainty
@@ -11115,67 +11128,29 @@ of high epistemic uncertainty does not necessarily lead to higher probabilities.
 # contour following that achieves the mode remaining behaviour.
 The second half of the trajectories in the left hand plots of
 cref:fig-riemannian-energy-low-2-traj-opt-over-svgp-5,fig-riemannian-energy-low-traj-opt-over-svgp-5,fig-riemannian-energy-traj-opt-over-svgp-5,fig-riemannian-energy-high-traj-opt-over-svgp-5
-show the contour following that achieves the mode remaining behaviour.
+show the contour following that achieves the mode remaining behaviour in Environment 2.
 It can also be seen that
 as the value of $\lambda$ increases, the trajectories exhibit less contour following on the gating function's
 mean.
 This is because increasing the relevance of the covariance term in the Riemannian metric tensor
 alters the optimisation landscape, which in turn reduces the contour following behaviour.
 
-
-The two direct optimal control experiments in cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,
-with $\lambda =0.5$ and $\lambda=1.0$ respectively,
-were able to successfully remain in the desired dynamics mode, and thus,
-navigate to the target state in the environment (cyan).
-This is demonstrated by their dynamics trajectories (magenta) and their environment trajectories
-(cyan), not passing over the mode boundary into the turbulent dynamics mode.
-These results are confirmed by cref:tab-results-sim-envs where the trajectory found with $\lambda=1.0$ obtained
-the highest probability of remaining in the desired dynamics mode for Environment 1.
-From visual inspection, the trajectory found with $\lambda=1.0$ also has more clearance from the turbulent dynamics
-mode than for $\lambda=0.5$ and $\lambda=20.0$.
-This appears to be due to the covariance term pushing the trajectory away
-from the region of high epistemic uncertainty in the gating network.
-These results confirm that the covariance term in the expected Riemannian metric encodes the notion of avoiding
-regions of high epistemic uncertainty in the gating network.
-# Further, this suggests that avoiding regions of high epistemic uncertainty in the gating network can improve
-# the mode remaining behaviour.
-
-# The lower relevance of the covariance term in the expected Riemannian metric with $\lambda=0.5$
-# has allowed the trajectory to pass
-# through regions of the gating network with high epistemic uncertainty.
-# This is quantified in cref:tab-results-sim-envs as it is the trajectory with the highest accumulated gating
-# variance.
-
-
-# Interestingly, the trajectory found with $\lambda=0.5$ obtained the second highest probability
-# when not considering the epistemic from the learned dynamics model (cref:eq-mode-probability-no-unc),
-# but only the third highest when considering the epistemic uncertainty (cref:eq-mode-probability-all-unc).
-# This is due to the lower relevance of the covariance term in the expected Riemannian metric
-# This can be seen in the bottom right plot of cref:fig-riemannian-energy-low-traj-opt-7 where the trajectory
-# passes straight over the region of highest gating function variance in the middle of the environment.
-# This is quantified in cref:tab-results-sim-envs as it is the trajectory with the highest accumulated gating
-# variance.
-# From visual inspection, the trajectory found with $\lambda=1.0$ has more clearance from the turbulent dynamics
-# mode.
-# This is due to the higher relevance of the covariance term pushing the trajectory away from the region of high
-# epistemic uncertainty in the gating network.
-# These results confirm that the covariance term in the expected Riemannian metric encodes the notion of avoiding
-# regions of high epistemic uncertainty in the gating network.
-
-However, the trajectory found with $\lambda=20.0$ in cref:fig-riemannian-energy-high-traj-opt-7
+It is also worth highlighting that
+the trajectory found with \dre $\lambda=20.0$ in cref:fig-riemannian-energy-high-traj-opt-7
 did not successfully remain in the desired dynamics mode.
 This indicates that setting the relevance of the covariance term too high can have a negative impact on performance.
 This is likely due to the optimisation landscape favouring trajectories that
 avoid the region of high posterior variance in the gating network more than following a true geodesic path
 on the mean of the gating function.
-As such, these results suggest that care should be taken when adjusting the value of $\lambda$.
+These results suggest that care should be taken when adjusting the value of $\lambda$.
 # This is most likely due to the trajectory optimiser finding a local optima when $\lambda=20.0$.
 
 ***** Control-as-inference :ignore:
 \newline
 
+*Control as inference \cai*
 It is clear from
-cref:fig-mode-conditioning-no-max-entropy-traj-opt-7,fig-mode-conditioning-max-entropy-traj-opt-7,
+cref:fig-mode-conditioning-no-max-entropy-traj-opt-7,fig-mode-conditioning-max-entropy-traj-opt-7,fig-mode-conditioning-no-max-entropy-traj-opt-5,fig-mode-conditioning-max-entropy-traj-opt-5,
 that all of the control-as-inference experiments found trajectories that
 remained in the desired dynamics mode.
 Visual inspection of
@@ -11183,15 +11158,20 @@ cref:fig-mode-conditioning-no-max-entropy-traj-opt-7,fig-mode-conditioning-max-e
 show that the maximum entropy control term resulted in a trajectory with more clearance from the
 mode boundary.
 This is a desirable behaviour that is expected from the maximum entropy control term.
-This observation is confirmed in cref:tab-results-sim-envs,
-where the experiments with maximum entropy
+This observation is confirmed in cref:tab-results-sim-envs, where the experiments with maximum entropy
 control obtained higher probabilities of remaining in the desired dynamics mode when considering the
 model's epistemic uncertainty.
 
-Overall, the control-as-inference experiments achieved the best mode remaining behaviour.
-This is indicated by them obtaining the highest probabilities of remaining in the desired
-dynamics mode when considering the model's epistemic uncertainty and the second and third highest probabilities
-when not.
+In Environment 2, both of the control-as-inference experiments
+in  cref:fig-mode-conditioning-no-max-entropy-traj-opt-5,fig-mode-conditioning-max-entropy-traj-opt-5
+found discrete-time trajectories that remained in the desired dynamics mode.
+This is indicated by none of the trajectories time steps being in the turbulent dynamics mode.
+However, when interpolating the discrete-time trajectory for the experiment without
+maximum entropy control, shown in
+cref:fig-mode-conditioning-no-max-entropy-traj-opt-5,
+the trajectory crosses the mode boundary.
+This is an undesirable behaviour because in non simulated environments this would correspond to the trajectory
+entering the turbulent dynamics mode.
 
 # Both of the control-as-inference experiments obtained high probabilities of
 # remaining in the desired dynamics mode when not marginalising the model's epistemic uncertainty.
@@ -11209,7 +11189,22 @@ when not.
 # This is because for $\lambda=20.0$ (cref:fig-riemannian-energy-high-traj-opt-7) the loss landscape favours
 # avoiding the region of high posterior variance in the gating network, over remaining the desired dynamics mode.
 # In this setting, increasing $\lambda$ has a negative impact on performance
-***** mode remaining :ignore:
+***** Summary :ignore:
+*Summary*
+In practice, setting the lower and upper bounds on the collocation constraints in SciPy is awkward
+and impacts how much mode remaining behaviour is exhibited.
+Setting the bounds too loose results in trajectories not satisfying the geodesic ODE and
+setting them too tight leads to the constrained optimisation exiting with an error.
+These issues could potentially be resolved by casting the constrained optimisation into an unconstrained optimisation
+using Lagrange multipliers. However, this is left for future work.
+In contrast, the direct optimal control method requires little to no human input to initialise the optimisation.
+Overall, the direct optimal control and the control-as-inference with maximum entropy control experiments
+achieved the best mode remaining behaviour.
+This is indicated by them consistently obtaining the highest probabilities of remaining in the desired
+dynamics mode when considering the model's epistemic uncertainty and the second and third highest probabilities
+when not.
+
+***** mode remaining :ignore:noexport:
 \newline
 
 
@@ -11248,28 +11243,49 @@ model's epistemic uncertainty.
 # This indicates that the maximum entropy term
 
 **** Goal 3 - Avoid Regions of High Epistemic Uncertainty
-*Epistemic uncertainty*
 Finally, the methods are evaluated at their ability to avoid regions of the dynamics with high epistemic uncertainty.
 cref:tab-results-sim-envs shows the state variance and the gating function variance accumulated over
 each trajectory.
-In all experiments, the state variance accumulated over the trajectory (from cascading single-step predictions
-via moment matching) were fairly similar.
+In all Environment 1experiments,
+the state variance accumulated over the trajectory (from cascading single-step predictions via moment matching)
+were fairly similar.
 This is due to the dynamics of the simulator being simple enough that the desired mode's GP
 can confidently interpolate into the turbulent dynamics mode and the region which has not been observed.
 In the latter case, it is up to the gating network to model the epistemic uncertainty arising from limited
 training data.
-# In this case, the dynamics model explains epistemic uncertainty is explained by the gating network
-# In this case, the complexity of the dynamics arises from the multmodaility which the model explains by
-# assigning the second dynamics mode to a second expert.
-# regions of the
 
-In the indirect geodesic control experiments with $\lambda=1.0$ and $\lambda=0.5$, the trajectories navigate
+In contrast to the experiments in Environment 1, the state variance accumulated over each trajectory does vary
+between experiments in Environment 2.
+However, the results in  cref:tab-results-sim-envs suggest that the state variance does not have a large impact
+on the mode remaining behaviour.
+This is indicated by no correlation between the mode probability and the state variance,
+which is likely due to the state variance being extremely low.
+
+
+***** Indirect optimal control :ignore:
+\newline
+
+*Indirect optimal control*
+In the \ig experiments in Environment 1 with $\lambda=1.0$ and $\lambda=0.5$, the trajectories navigate
 directly over the region of high posterior variance associated with the gating function.
 This can be seen in the bottom right plots of cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7.
-In contrast, the indirect geodesic control experiment with $\lambda=20.0$ (in cref:fig-geodesic-high-traj-opt-7)
+In contrast, the \ig experiment with $\lambda=20.0$ (in cref:fig-geodesic-high-traj-opt-7)
 avoided this region.
 However, it should be noted that
 this uncertainty avoiding behaviour came at the cost of passing straight through the turbulent dynamics mode.
+In Environment 2 the \ig experiments did not remain in the desired dynamics mode, nor did they exhibit
+any uncertainty avoiding behaviour.
+As mentioned previously, this is likely due to the collocation solver getting stuck in local optima.
+
+***** Direct optimal control :ignore:
+\newline
+*Direct optimal control*
+In Environment 2 the trajectory found with \dre $\lambda=1.0$ accumulated the
+least state and gating function variance.
+In contrast, the result for \dre $\lambda=0.01$ accumulated the highest state and gating variance, whilst also
+obtaining the highest probability of remaining in the desired dynamics mode.
+As mentioned earlier, this result suggests that avoiding regions of high epistemic uncertainty is not the most
+important factor for obtaining the highest probability of remaining in the desired dynamics mode.
 
 Similarly for the direct optimal control experiments, setting $\lambda=20.0$ resulted in the trajectory passing
 straight through the turbulent dynamics mode.
@@ -11293,6 +11309,19 @@ In this case, the effect of adjusting the tunable $\lambda$ parameter is complex
 be best to just leave it at $\lambda=1.0$.
 # It is worth noting here that the experiments in Environment 2 do demonstrate a
 # scenario where it is beneficial to adjust the $\lambda$ parameter.
+
+***** Control-as-inference :ignore:
+\newline
+
+***** epistemic uncertainty :ignore:
+\newline
+
+*Epistemic uncertainty*
+# In this case, the dynamics model explains epistemic uncertainty is explained by the gating network
+# In this case, the complexity of the dynamics arises from the multmodaility which the model explains by
+# assigning the second dynamics mode to a second expert.
+# regions of the
+
 
 The control-as-inference experiments in
 cref:fig-mode-conditioning-no-max-entropy-traj-opt-over-svgp-7,fig-mode-conditioning-max-entropy-traj-opt-over-svgp-7
@@ -11330,7 +11359,101 @@ via the marginalisation over the latent variables.
 # This is most likely due to the trajectory optimiser finding a local optima when $\lambda=20.0$.
 # In contrast, the loss landscape non
 
-*** Environment 1
+***** epistemic uncertainty :ignore:
+\newline
+
+
+*Epistemic uncertainty*
+Each experiment's ability to avoid regions of high epistemic uncertainty is now evaluated.
+
+In contrast to the experiments in Environment 1, the state variance accumulated over each trajectory does vary
+between experiments.
+However, the results in  cref:tab-results-sim-envs suggest that the state variance does not have a large impact
+on the mode remaining behaviour.
+This is indicated by no correlation between the mode probability and the state variance,
+which is likely due to the state variance being extremely low.
+The trajectory found with $\lambda=1.0$ accumulated the least state and gating function variance.
+In contrast, the result for $\lambda=0.01$ accumulated the highest state and gating variance, whilst also
+obtaining the highest probability of remaining in the desired dynamics mode.
+As mentioned earlier, this result suggests that avoiding regions of high epistemic uncertainty is not the most
+important factor for obtaining the highest probability of remaining in the desired dynamics mode.
+
+The control-as-inference experiment with maximum entropy control,
+shown in cref:fig-mode-conditioning-max-entropy-over-svgp-traj-opt-5,
+obtained a lower accumulation of gating function variance than the experiment without maximum entropy control.
+Relative to the geometry-based methods, the trajectories found with the control-as-inference method, shown in
+cref:fig-mode-conditioning-max-entropy-traj-opt-5,fig-mode-conditioning-no-max-entropy-traj-opt-5,
+do not exhibit as much uncertainty avoiding behaviour in the gating network.
+In fact, they obtained higher accumulations of gating function variance by quite a margin.
+In contrast, in Environment 1, the trajectories found with the control-as-inference method
+obtained some of the most uncertainty avoiding behaviour, indicated by some of the
+lowest accumulated gating function variance.
+This change in behaviour is due to the relevance of the uncertainty avoiding behaviour being automatically
+handled by the marginalisation of the gating function in cref:eq-traj-opt-elbo.
+
+Although marginalisation is a principled way of handing uncertainty, in this scenario,
+it can be conjectured otherwise.
+First note that the quantitative performance measures do not tell the full story.
+This is because in the region with no observations, it is perfectly plausible that there
+is another region belonging to the turbulent dynamics mode, or a different dynamics mode altogether.
+In this case, the trajectory found with $\lambda=5.0$ is most likely to avoid entering the turbulent dynamics mode.
+This is because it avoids the region of high epistemic uncertainty associated with no observations.
+The probability of remaining in the desired dynamics mode does not capture this notion.
+There are two reasons for this.
+Firstly, the gating network is overconfident in this region due to learning a long lengthscale.
+This could be overcome by fixing the lengthscale a priori.
+However, there is a second issue due to the fundamental modelling approximation made by GPs.
+The GP-based gating network is not aware that the region with no observations is so large that it could fit
+another turbulent dynamics mode inside it.
+This is due to the Squared Exponential kernel function relying on point-wise calculations to build the covariance
+matrix.
+Future work could explore kernel functions that capture structure at a mode level (shape etc),
+as opposed to simple point-wise structure.
+# \todo[inline]{is this spatial awareness? What to call this? More than point-wise structure,
+# Such a kernel could learn the shape of a dynamics mode, for example, the turbulent region induced by a fan.
+# Such a kernel would be aware if a region is large enough for another
+# This problem could be
+# That is, the kernel function is not able to detect if
+
+\todo[inline]{Carl you mentioned something about the kernel using pointwise calculations which make it impossible to model this. Not sure if what I've written here fully captures what you meant?}
+# This overconfidence arises due to the gating network learning a long lengthscale.
+# One approach to mitigate this behaviour, is to fix the lengthscale.
+# However, it may not be obvious how to set this value a priori.
+
+# This overconfidence in the gating network arises from the gating network evaluating the covariance between
+# each new point
+# the
+# However, when adopting a kernel function that cannot capture this behaviour, increasing the relevance of
+# the covariance term in the expected Riemannian metric appears to
+
+The results for $\lambda=0.01$, $\lambda=0.5$ and $\lambda=1.0$ in cref:tab-results-sim-envs,
+follow the results for Environment 1, suggesting
+that increasing $\lambda$ leads to more uncertainty avoiding behaviour in the gating network.
+The result for $\lambda=5.0$ in cref:tab-results-sim-envs does not follow this trend.
+However, visual inspection of the right hand plots of
+cref:fig-riemannian-energy-traj-opt-over-svgp-5,fig-riemannian-energy-high-traj-opt-over-svgp-5
+show that the trajectories for $\lambda=1.0$ and $\lambda=5.0$, are initially similar whilst they
+avoid the region with high epistemic uncertainty in the gating network.
+The increased relevance of the covariance term with $\lambda=5.0$ then appears to have had a negative impact on
+the trajectories ability to remain in the desired dynamics mode.
+This can be seen in cref:fig-riemannian-energy-high-traj-opt-over-svgp-5,
+where the trajectory passes very close to the mode boundary.
+Again, this further emphasises the difficulty in setting $\lambda$ due to complex interactions between
+the mode remaining behaviour and the uncertainty avoiding behaviour.
+
+
+# Without decoupling the uncertainty avoiding behaviour from the mode remaining behaviour,
+# it is not possible to find trajectories which avoid entering the region of high epistemic uncertainty in the
+# gating network.
+# However, as mentioned previously, it is not always clear how to balance these two behaviours.
+# As shown in cref:fig-riemannian-energy-high-traj-opt-5,
+# increasing the uncertainty avoiding behaviour can have a detrimental impact on the mode remaining behaviour.
+# In contrast, the control-as-inference method does not provide a mechanism for adjusting the relevance
+# of each behaviour.
+# However, the marginalisation of uncertainty in the \acrshort{elbo}
+# (cref:eq-traj-opt-inference) is principled and requires no human input.
+
+*** Environment 1 :ignore:
 **** Geodesic collocation 0.5 :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}
@@ -11571,7 +11694,7 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \end{figure}
 #+END_EXPORT
 
-*** Environment 2
+*** Environment 2 :ignore:
 **** blah :ignore:
 \newline
 
@@ -11906,100 +12029,6 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \label{fig-mode-conditioning-no-max-entropy-traj-opt-5}
 \end{figure}
 #+END_EXPORT
-
-**** epistemic uncertainty :ignore:
-\newline
-
-
-*Epistemic uncertainty*
-Each experiment's ability to avoid regions of high epistemic uncertainty is now evaluated.
-Because the indirect optimal control experiments failed to remain in the desired dynamics mode they are not considered here.
-In contrast to the experiments in Environment 1, the state variance accumulated over each trajectory does vary
-between experiments.
-However, the results in  cref:tab-results-sim-envs suggest that the state variance does not have a large impact
-on the mode remaining behaviour.
-This is indicated by no correlation between the mode probability and the state variance,
-which is likely due to the state variance being extremely low.
-The trajectory found with $\lambda=1.0$ accumulated the least state and gating function variance.
-In contrast, the result for $\lambda=0.01$ accumulated the highest state and gating variance, whilst also
-obtaining the highest probability of remaining in the desired dynamics mode.
-As mentioned earlier, this result suggests that avoiding regions of high epistemic uncertainty is not the most
-important factor for obtaining the highest probability of remaining in the desired dynamics mode.
-
-The control-as-inference experiment with maximum entropy control,
-shown in cref:fig-mode-conditioning-max-entropy-over-svgp-traj-opt-5,
-obtained a lower accumulation of gating function variance than the experiment without maximum entropy control.
-Relative to the geometry-based methods, the trajectories found with the control-as-inference method, shown in
-cref:fig-mode-conditioning-max-entropy-traj-opt-5,fig-mode-conditioning-no-max-entropy-traj-opt-5,
-do not exhibit as much uncertainty avoiding behaviour in the gating network.
-In fact, they obtained higher accumulations of gating function variance by quite a margin.
-In contrast, in Environment 1, the trajectories found with the control-as-inference method
-obtained some of the most uncertainty avoiding behaviour, indicated by some of the
-lowest accumulated gating function variance.
-This change in behaviour is due to the relevance of the uncertainty avoiding behaviour being automatically
-handled by the marginalisation of the gating function in cref:eq-traj-opt-elbo.
-
-Although marginalisation is a principled way of handing uncertainty, in this scenario,
-it can be conjectured otherwise.
-First note that the quantitative performance measures do not tell the full story.
-This is because in the region with no observations, it is perfectly plausible that there
-is another region belonging to the turbulent dynamics mode, or a different dynamics mode altogether.
-In this case, the trajectory found with $\lambda=5.0$ is most likely to avoid entering the turbulent dynamics mode.
-This is because it avoids the region of high epistemic uncertainty associated with no observations.
-The probability of remaining in the desired dynamics mode does not capture this notion.
-There are two reasons for this.
-Firstly, the gating network is overconfident in this region due to learning a long lengthscale.
-This could be overcome by fixing the lengthscale a priori.
-However, there is a second issue due to the fundamental modelling approximation made by GPs.
-The GP-based gating network is not aware that the region with no observations is so large that it could fit
-another turbulent dynamics mode inside it.
-This is due to the Squared Exponential kernel function relying on point-wise calculations to build the covariance
-matrix.
-Future work could explore kernel functions that capture structure at a mode level (shape etc),
-as opposed to simple point-wise structure.
-# \todo[inline]{is this spatial awareness? What to call this? More than point-wise structure,
-# Such a kernel could learn the shape of a dynamics mode, for example, the turbulent region induced by a fan.
-# Such a kernel would be aware if a region is large enough for another
-# This problem could be
-# That is, the kernel function is not able to detect if
-
-\todo[inline]{Carl you mentioned something about the kernel using pointwise calculations which make it impossible to model this. Not sure if what I've written here fully captures what you meant?}
-# This overconfidence arises due to the gating network learning a long lengthscale.
-# One approach to mitigate this behaviour, is to fix the lengthscale.
-# However, it may not be obvious how to set this value a priori.
-
-# This overconfidence in the gating network arises from the gating network evaluating the covariance between
-# each new point
-# the
-# However, when adopting a kernel function that cannot capture this behaviour, increasing the relevance of
-# the covariance term in the expected Riemannian metric appears to
-
-The results for $\lambda=0.01$, $\lambda=0.5$ and $\lambda=1.0$ in cref:tab-results-sim-envs,
-follow the results for Environment 1, suggesting
-that increasing $\lambda$ leads to more uncertainty avoiding behaviour in the gating network.
-The result for $\lambda=5.0$ in cref:tab-results-sim-envs does not follow this trend.
-However, visual inspection of the right hand plots of
-cref:fig-riemannian-energy-traj-opt-over-svgp-5,fig-riemannian-energy-high-traj-opt-over-svgp-5
-show that the trajectories for $\lambda=1.0$ and $\lambda=5.0$, are initially similar whilst they
-avoid the region with high epistemic uncertainty in the gating network.
-The increased relevance of the covariance term with $\lambda=5.0$ then appears to have had a negative impact on
-the trajectories ability to remain in the desired dynamics mode.
-This can be seen in cref:fig-riemannian-energy-high-traj-opt-over-svgp-5,
-where the trajectory passes very close to the mode boundary.
-Again, this further emphasises the difficulty in setting $\lambda$ due to complex interactions between
-the mode remaining behaviour and the uncertainty avoiding behaviour.
-
-
-# Without decoupling the uncertainty avoiding behaviour from the mode remaining behaviour,
-# it is not possible to find trajectories which avoid entering the region of high epistemic uncertainty in the
-# gating network.
-# However, as mentioned previously, it is not always clear how to balance these two behaviours.
-# As shown in cref:fig-riemannian-energy-high-traj-opt-5,
-# increasing the uncertainty avoiding behaviour can have a detrimental impact on the mode remaining behaviour.
-# In contrast, the control-as-inference method does not provide a mechanism for adjusting the relevance
-# of each behaviour.
-# However, the marginalisation of uncertainty in the \acrshort{elbo}
-# (cref:eq-traj-opt-inference) is principled and requires no human input.
 
 ** Conclusion
 *** intro :ignore:
