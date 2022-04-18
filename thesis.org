@@ -10272,14 +10272,14 @@ the dynamics constraints, whilst ensuring trajectories are $\delta-\text{mode re
 #+END_EXPORT
 ** intro :ignore:
 The three /mode remaining/ trajectory optimisation algorithms presented in
-cref:chap-traj-opt-control are evaluated on a simulated version
+cref:chap-traj-opt-control were evaluated on a simulated version
 of the illustrative example from cref:illustrative_example, i.e.
 flying a velocity controlled quadcopter from an initial state $\state_0$, to a target
 state $\state_{f}$, whilst avoiding the turbulent dynamics mode.
-The methods are further evaluated on a second simulated velocity controlled quadcopter navigation problem.
+The methods were further evaluated on a second simulated velocity controlled quadcopter navigation problem.
 See cref:fig-environments for schematics of the two environments.
 The turbulent dynamics modes (green) are subject to higher drift due to the wind field created by the fan.
-It is also subject to higher diffusion (aka process noise) resulting from the turbulence induced by the fan.
+They are also subject to higher diffusion (aka process noise) resulting from the turbulence induced by the fan.
 Although the exact turbulent dynamics are not known, they are believed to be difficult to control.
 This is due to the high process noise which may lead to catastrophic failure.
 It is therefore desirable to find trajectories that avoid entering this turbulent dynamics mode.
@@ -10323,11 +10323,11 @@ It is therefore desirable to find trajectories that avoid entering this turbulen
 # \end{figure}
 # #+END_EXPORT
 
-The collocation solver from the indirect geodesic control method in cref:chap-traj-opt-geometry
+The collocation solver from the indirect optimal control via latent geodesics method in cref:chap-traj-opt-geometry
 was tested on a real-world quadcopter state transition data set.
 Note that the data set was collected with constant controls so the controls could not be recovered from
 the full \acrshort{mosvgpe} dynamics model, nor could the
-direct control method from cref:chap-traj-opt-geometry or the control-as-inference method from
+direct optimal control method from cref:chap-traj-opt-geometry or the control-as-inference method from
 cref:chap-traj-opt-inference be tested.
 Nevertheless, the results are a small step towards validating the methods applicability to real-world systems.
 All three control methods were then tested in the two simulated environments so that they could be compared.
@@ -10627,7 +10627,7 @@ cref:fig-dataset-scenario-both shows the two environments as well as the state t
 sampled from them.
 In Environment 2, the turbulent dynamics mode and the unobserved regions are in different locations to
 Environment 1.
-Further to this, the region no observations does not overlap the mode boundary like in Environment 1.
+Further to this, the region with no observations does not overlap the mode boundary like in Environment 1.
 # This enabled the ability of the control methods at avoiding regions of high epistemic uncertainty
 # to be tested.
 
@@ -10687,7 +10687,7 @@ cref:fig-traj-opt-gating-network-7,fig-traj-opt-gating-network-5 show the gating
 on the data sets from Environment 1 and Environment 2 respectively.
 In both environments
 Expert 1 represents the turbulent dynamics mode and Expert 2 represents the operable, desired dynamics mode.
-This results from Expert 2 learning much higher drift and process noise than Expert 1.
+This results from Expert 1 learning much higher drift and process noise than Expert 2.
 
 # Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} and a constant mean function.
 # The gating network used a single gating function with
@@ -10766,7 +10766,7 @@ let us restate the goals from cref:chap-traj-opt-control:
   - Goal 3.2 :: in the gating network $\modeVar$, i.e. where it is not known which mode governs the dynamics.
 
 # This chapter evaluates the performance of trajectories using four performance indicators:
-This performance of the trajectory optimisation algorithms in the simulated environments are evaluated
+The performance of the trajectory optimisation algorithms are evaluated
 using four performance indicators:
 1. Probability of remaining in the desired mode with the model's uncertainty marginalised,
    calculated using cref:eq-mode-chance-constraint-integral,
@@ -10778,7 +10778,6 @@ using four performance indicators:
    #+END_EXPORT
    This probability will decrease when a trajectory leaves the desired mode and when it
    passes through regions of the learned dynamics with high uncertainty.
-   The can be used to
 2. Probability of remaining in the desired mode without the model's uncertainty marginalised,
    #+BEGIN_EXPORT latex
    \begin{align} \label{eq-mode-probability-no-unc}
@@ -10801,14 +10800,14 @@ using four performance indicators:
    #  #+END_EXPORT
    # - The direct optimal control method also calculates the probability of being in the desired dynamics mode
    #   but it also marginalises the state uncertainty along the trajectory,
-3. The state variance accumulated from cascading single-step predictions,
+3. Goal 3.1 was measured using the state variance accumulated from cascading single-step predictions,
    #+BEGIN_EXPORT latex
     \begin{align} \label{eq-metric-state-var}
     \mathbb{V}[\stateTraj] = \sum_{\timeInd=1}^{\TimeInd} \mathbb{V}[\state_{\timeInd}].
     \end{align}
    #+END_EXPORT
    This will increase when a trajectory passes through regions of the desired dynamics mode with high epistemic uncertainty.
-4. The gating function variance accumulated from cascading single-step predictions,
+4. Goal 3.2 was measured using the gating function variance accumulated from cascading single-step predictions,
    #+BEGIN_EXPORT latex
     \begin{align} \label{eq-metric-gating-var}
     \mathbb{V}[\desiredGatingFunction(\stateTraj)] = \sum_{\timeInd=1}^{\TimeInd}
@@ -10817,15 +10816,17 @@ using four performance indicators:
    #+END_EXPORT
    This will increase when a trajectory passes through regions of the gating network with high epistemic uncertainty.
 The methods' ability to remain in the desired dynamics mode $\desiredMode$, that is, to accomplish Goal 2,
-is measured using the probability of remaining in the desired dynamics mode cref:eq-mode-probability-all-unc.
-The secondary goals of avoiding regions of the learned dynamics model with high epistemic uncertainty
+is measured using the probability of remaining in the desired dynamics mode cref:eq-mode-probability-no-unc.
+The secondary goal of avoiding regions of the learned dynamics model with high epistemic uncertainty
 in the desired dynamics mode (Goal 3.1), is measured by summing the state variance cref:eq-metric-state-var
 over each trajectory.
 Similarly, each method's ability to avoid regions of the gating network with high epistemic
-uncertainty (Goal 3.2), is measured by summing the gating function variance cref:eq-metric-gating-var over each
-trajectory.
+uncertainty in the gating network (Goal 3.2),
+is measured by summing the gating function variance cref:eq-metric-gating-var over each trajectory.
 Intuitively, the goal is to maximise the probability of being in the desired mode,
-whilst minimising the variance accumulated over a trajectory, i.e. maximise cref:eq-mode-probability-all-unc.
+whilst minimising the variance accumulated over a trajectory.
+This corresponds to maximising the probability of remaining in the desired dynamics mode
+with all of the model's epistemic uncertainty marginalised, i.e. maximising cref:eq-mode-probability-all-unc.
 
 # Intuitively, the goal is to maximise the probability of being in the desired mode,
 # whilst minimising the variance accumulated over a trajectory, i.e. maximise cref:eq-mode-probability-all-unc.
@@ -10868,33 +10869,33 @@ whilst minimising the variance accumulated over a trajectory, i.e. maximise cref
 
 *** Table :ignore:
 #+begin_table
-#+LATEX: \caption{\textbf{Results in simulated environments} Comparison of the  indirect optimal control via latent geodesics method (\ig) from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannain energy method (\dre) from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{sec-traj-opt-inference}, with max entropy (\cai gauss) and without max entropy (\cai dirac). All methods are evaluated in the two simulated environments. The performance measures are summed over the collocation points for the indirect optimal control method and over each time step for the direct optimal control method and the control-as-inference method. The "Mode prob" column calculates the probability of being in the desired dynamics mode at each time step without marginalising the state and gating function uncertainty over the trajectory. In contrast the "Mode prob with unc." marginalises both the state and gating function uncertainty at each time step. The target state column indicates if the trajectory reached the target state in the environment ($\checkmark$ both), only under the desired mode's dynamics \acrshort{gp} ($\checkmark$ dynamics only) or not at all ($\times$).}
+#+LATEX: \caption{\textbf{Results in simulated environments} Comparison of the  indirect optimal control via latent geodesics method (\ig) from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannain energy method (\dre) from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{sec-traj-opt-inference}, with max entropy (\cai gauss) and without max entropy (\cai dirac). All methods are evaluated in the two simulated environments. The performance measures are summed over the collocation points for the indirect optimal control method and over each time step for the direct optimal control method and the control-as-inference method. The "Mode prob" column calculates the probability of being in the desired dynamics mode at each time step without marginalising the state and gating function uncertainty over the trajectory. In contrast the "Mode prob with unc." marginalises both the state and gating function uncertainty at each time step. The target state column indicates if the trajectory reached the target state in the environment ($\checkmark$ both), only under the desired mode's dynamics \acrshort{gp} ($\checkmark$ dynamics) or not at all ($\times$).}
 #+LATEX: \label{tab-results-sim-envs}
 #+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center t :placement [!b] :align clccccccc
-|-----+-----------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
-| Env | Method          | $\lambda$ | Mode prob                       | Mode prob with unc.              | State unc.               | Gating unc.                                          | Riemannian energy                                | Target state                       |
-|     |                 |           | cref:eq-mode-probability-no-unc | cref:eq-mode-probability-all-unc | $\mathbb{V}[\stateTraj]$ | $\mathbb{V}[\gatingFunc_{\desiredMode}(\stateTraj)]$ | cref:eq-approximate-trajectory-riemannian-energy | $\state_{\TimeInd}==\targetState$? |
-|-----+-----------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
-|     | \ig             | $0.5$     | $16.96$                         | $16.22$                          | $8.69$                   | $346.62$                                             | $238.29$                                         | $\times$ dynamics only             |
-|     | \ig             | $1.0$     | $18.51$                         | $16.98$                          | $8.70$                   | $367.16$                                             | $222.07$                                         | $\times$ dynamics only             |
-|     | \ig             | $20.0$    | $15.32$                         | $14.62$                          | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                         | $\times$ dynamics only             |
-|   1 | \dre            | $0.5$     | $20.91$                         | $16.77$                          | $8.70$                   | $404.51$                                             | $180.10$                                         | $\checkmark$ both                  |
-|     | \dre            | $1.0$     | $\mathbf{20.98}$                | $18.10$                          | $8.72$                   | $388.51$                                             | $\mathbf{173.84}$                                | $\checkmark$ both                  |
-|     | \dre            | $20.0$    | $12.64$                         | $13.00$                          | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                         | $\times$ dynamics only             |
-|     | \cai (gauss)    | N/A       | $20.94$                         | $\mathbf{19.99}$                 | $8.74$                   | $208.62$                                             | $287.52$                                         | $\checkmark$ both                  |
-|     | \cai (dirac)    | N/A       | $20.96$                         | $19.58$                          | $8.73$                   | $258.27$                                             | $237.32$                                         | $\checkmark$ both                  |
-|-----+-----------------+-----------+---------------------------------+----------------------------------+--------------------------+------------------------------------------------------+--------------------------------------------------+------------------------------------|
-|     | \ig             | $0.5$     | $18.98$                         | $19.22$                          | $1.53$                   | $495.11$                                             | $249.85$                                         | $\times$                           |
-|     | \ig             | $1.0$     | $18.98$                         | $19.16$                          | $1.39$                   | $522.60$                                             | $285.92$                                         | $\times$                           |
-|     | \ig (mid point) | $1.0$     | $17.55$                         | $17.80$                          | $1.57$                   | $553.00$                                             | $213.82$                                         | $\times$                           |
-|     | \ig             | $5.0$     | $18.98$                         | $19.17$                          | $1.44$                   | $503.94$                                             | $215.75$                                         | $\times$                           |
-|     | \dre            | $0.01$    | $\mathbf{20.98}$                | $\mathbf{20.80}$                 | $1.79$                   | $497.47$                                             | $275.00$                                         | $\checkmark$ both                  |
-|   2 | \dre            | $0.5$     | $20.96$                         | $20.34$                          | $1.42$                   | $367.47$                                             | $182.06$                                         | $\checkmark$ both                  |
-|     | \dre            | $1.0$     | $\mathbf{20.98}$                | $20.68$                          | $\mathbf{1.28}$          | $\mathbf{334.47}$                                    | $144.16$                                         | $\checkmark$ both                  |
-|     | \dre            | $5.0$     | $20.81$                         | $20.13$                          | $1.37$                   | $374.13$                                             | $\mathbf{134.33}$                                | $\checkmark$ both                  |
-|     | \cai (gauss)    | N/A       | $\mathbf{20.98}$                | $20.72$                          | $1.75$                   | $596.67$                                             | $442.88$                                         | $\checkmark$ both                  |
-|     | \cai (dirac)    | N/A       | $\mathbf{20.98}$                | $20.61$                          | $1.56$                   | $644.35$                                             | $534.39$                                         | $\checkmark$ both                  |
+|-----+-----------------+-----------+------------------------------------+-------------------------------------+--------------------------+------------------------------------------------------+-----------------------------------------------------+------------------------------------|
+| Env | Method          | $\lambda$ | Mode prob                          | Mode prob with unc.                 | State unc.               | Gating unc.                                          | Riemannian energy                                   | Target state                       |
+|     |                 |           | Eq. ref:eq-mode-probability-no-unc | Eq. ref:eq-mode-probability-all-unc | $\mathbb{V}[\stateTraj]$ | $\mathbb{V}[\gatingFunc_{\desiredMode}(\stateTraj)]$ | Eq. ref:eq-approximate-trajectory-riemannian-energy | $\state_{\TimeInd}==\targetState$? |
+|-----+-----------------+-----------+------------------------------------+-------------------------------------+--------------------------+------------------------------------------------------+-----------------------------------------------------+------------------------------------|
+|     | \ig             | $0.5$     | $16.96$                            | $16.22$                             | $8.69$                   | $346.62$                                             | $238.29$                                            | $\times$ dynamics              |
+|     | \ig             | $1.0$     | $18.51$                            | $16.98$                             | $8.70$                   | $367.16$                                             | $222.07$                                            | $\times$ dynamics              |
+|     | \ig             | $20.0$    | $15.32$                            | $14.62$                             | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                            | $\times$ dynamics              |
+|   1 | \dre            | $0.5$     | $20.91$                            | $16.77$                             | $8.70$                   | $404.51$                                             | $180.10$                                            | $\checkmark$ both                  |
+|     | \dre            | $1.0$     | $\mathbf{20.98}$                   | $18.10$                             | $8.72$                   | $388.51$                                             | $\mathbf{173.84}$                                   | $\checkmark$ both                  |
+|     | \dre            | $20.0$    | $12.64$                            | $13.00$                             | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                            | $\times$ dynamics              |
+|     | \cai (gauss)    | N/A       | $20.94$                            | $\mathbf{19.99}$                    | $8.74$                   | $208.62$                                             | $287.52$                                            | $\checkmark$ both                  |
+|     | \cai (dirac)    | N/A       | $20.96$                            | $19.58$                             | $8.73$                   | $258.27$                                             | $237.32$                                            | $\checkmark$ both                  |
+|-----+-----------------+-----------+------------------------------------+-------------------------------------+--------------------------+------------------------------------------------------+-----------------------------------------------------+------------------------------------|
+|     | \ig             | $0.5$     | $18.98$                            | $19.22$                             | $1.53$                   | $495.11$                                             | $249.85$                                            | $\times$                           |
+|     | \ig             | $1.0$     | $18.98$                            | $19.16$                             | $1.39$                   | $522.60$                                             | $285.92$                                            | $\times$                           |
+|     | \ig (mid point) | $1.0$     | $17.55$                            | $17.80$                             | $1.57$                   | $553.00$                                             | $213.82$                                            | $\times$                           |
+|     | \ig             | $5.0$     | $18.98$                            | $19.17$                             | $1.44$                   | $503.94$                                             | $215.75$                                            | $\times$                           |
+|     | \dre            | $0.01$    | $\mathbf{20.98}$                   | $\mathbf{20.80}$                    | $1.79$                   | $497.47$                                             | $275.00$                                            | $\checkmark$ both                  |
+|   2 | \dre            | $0.5$     | $20.96$                            | $20.34$                             | $1.42$                   | $367.47$                                             | $182.06$                                            | $\checkmark$ both                  |
+|     | \dre            | $1.0$     | $\mathbf{20.98}$                   | $20.68$                             | $\mathbf{1.28}$          | $\mathbf{334.47}$                                    | $144.16$                                            | $\checkmark$ both                  |
+|     | \dre            | $5.0$     | $20.81$                            | $20.13$                             | $1.37$                   | $374.13$                                             | $\mathbf{134.33}$                                   | $\checkmark$ both                  |
+|     | \cai (gauss)    | N/A       | $\mathbf{20.98}$                   | $20.72$                             | $1.75$                   | $596.67$                                             | $442.88$                                            | $\checkmark$ both                  |
+|     | \cai (dirac)    | N/A       | $\mathbf{20.98}$                   | $20.61$                             | $1.56$                   | $644.35$                                             | $534.39$                                            | $\checkmark$ both                  |
 #+LATEX: }
 #+end_table
 
@@ -10904,10 +10905,12 @@ Three settings of the tunable $\lambda$ parameter --
 which determines the relevance of the covariance term in the expected Riemannian metric -- were tested for
 each of the geometry-based methods in Environment 1.
 In Environment 2, four different settings of the $\lambda$ parameter were tested for the
-direct control method and three settings were tested for the indirect optimal control method.
+direct optimal control method and three settings were tested for the indirect optimal control method.
 This was due to the indirect optimal control method's collocation solver failing with $\lambda=0.01$.
-The control-as-inference method in cref:sec-traj-opt-inference was tested with and without maximum entropy behaviour,
-i.e. with Gaussian and deterministic controls.
+The control-as-inference (\cai) method from cref:sec-traj-opt-inference was tested with
+Gaussian controls (gauss) and with deterministic (dirac) controls.
+This enabled the maximum entropy control resulting from Gaussian controls to be compared to a baseline
+without maximum entropy control.
 cref:tab-results-sim-envs summarises all of the results from both environments.
 The experiments for the indirect optimal control method are not included in cref:tab-results-sim-envs
 because none of them found trajectories to the target state.
@@ -10921,12 +10924,12 @@ with two straight lines, between $\state_0$, $[-2.0, -2.0]$ and $\targetState$.
 This is because the indirect geodesic control experiments struggled to find solutions in Environment 2
 -- due to local optima -- without adjusting the initial solution.
 
-cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7
-show the results using the indirect geodesic control method in cref:sec-traj-opt-collocation,
-cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,fig-riemannian-energy-high-traj-opt-7
-show the results using the direct optimal control method in cref:sec-traj-opt-energy and
-cref:fig-mode-conditioning-max-entropy-traj-opt-7,fig-mode-conditioning-no-max-entropy-traj-opt-7
-show the results using  the control-as-inference method in cref:sec-traj-opt-inference.
+cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7,fig-geodesic-low-traj-opt-5,fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-mid-point-traj-opt-5
+show the results using the indirect geodesic control method from cref:sec-traj-opt-collocation,
+cref:fig-riemannian-energy-low-traj-opt-7,fig-riemannian-energy-traj-opt-7,fig-riemannian-energy-high-traj-opt-7,fig-riemannian-energy-low-traj-opt-5,fig-riemannian-energy-traj-opt-5,fig-riemannian-energy-high-traj-opt-5,fig-riemannian-energy-low-2-traj-opt-5
+show the results using the direct optimal control method from cref:sec-traj-opt-energy and
+cref:fig-mode-conditioning-max-entropy-traj-opt-7,fig-mode-conditioning-no-max-entropy-traj-opt-7,fig-mode-conditioning-max-entropy-traj-opt-5,fig-mode-conditioning-no-max-entropy-traj-opt-5
+show the results using  the control-as-inference method from cref:sec-traj-opt-inference.
 The top row of each figure shows the optimised trajectories overlayed on each mode's mixing probability.
 This is useful for seeing how well trajectories remain in regions of the learned dynamics model with high
 probability of being in the desired mode.
@@ -10945,7 +10948,7 @@ Deviation between these two trajectories is undesirable as it indicates that the
 2. drive the system into regions of the learned model with high epistemic uncertainty.
 For the indirect geodesic control experiments, the state trajectory found by the collocation solver
 is also overlayed (yellow).
-cref:tab-results-sim-envs summarises all of the results from the simulated experiments.
+# cref:tab-results-sim-envs summarises all of the results from the simulated experiments.
 
 # In the indirect geodesic control experiments, the yellow trajectory represents the state trajectory found by the
 # collocation solver on the geodesic ODE.
@@ -13353,8 +13356,9 @@ Extending the method in cref:sec-exploration to use a feedback policy is left fo
 
 ** Preliminary Results
 *** intro :ignore:
-This section presents initial results using the exploration strategy from cref:sec-exploration to solve
-the illustrative quadcotper navigation problem in cref:illustrative_example.
+This section presents initial results solving
+the illustrative quadcotper navigation problem in cref:illustrative_example
+using the exploration strategy from cref:sec-exploration.
 In particular, it shows results using the simulated Environment 1 from cref:sec-traj-opt-results-simulated.
 See cref:sec-traj-opt-results-simulated for more details on the environment and the simulator set up.
 
@@ -13384,7 +13388,7 @@ Each mode's dynamics GP used a Squared Exponential kernel with \acrshort{ard} an
 The gating network used a single gating function with
 a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
 At each \modeOpt iteration an early stopping callback was used to terminate the dynamics model training.
-The early stopping callback used a min delta of $0$ and a patience of $500$.
+The early stopping callback used a min delta of $0$ and a patience of $1200$.
 This meant that training terminated after 500 epochs of no improvement.
 
 *Explorative controller*
@@ -13472,7 +13476,7 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on the des
 \caption{\textbf{Comparison of factorised/joint entropy objectives}
 Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with
 (\subref{fig-entropy-mvn-diag-traj-opt-over-prob-7})
-the sum marginal entropies at each time step (factorised entropy) and
+the sum of marginal entropies at each time step (factorised entropy) and
 (\subref{fig-entropy-mvn-full-cov-traj-opt-over-prob-7})
 the full joint entropy over a trajectory.
 The trajectory found with the factorised entropy collapses onto a single location of high entropy.
@@ -13541,6 +13545,8 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mo
 #+END_EXPORT
 
 **** state diff text :ignore:
+\newline
+
 *State difference term*
 A simple exploration strategy is to favour trajectories whose centre of mass is closer to the target state.
 This corresponds to solving the constrained optimisation in cref:eq-explorative-traj-opt
@@ -13572,9 +13578,12 @@ regions of high epistemic uncertainty.
 # does not explore towards the target state $\targetState$.
 
 **** entropy comparison text :ignore:
+\newline
+
 *Joint vs factorised entropy*
-Before combining the state difference and entropy terms into a single objective, the choice of gating entropy
-is now compared. In particular, the joint gating entropy term in cref:eq-explorative-traj-opt, given by,
+Before combining the state difference and entropy terms into a single objective,
+the impact of different gating entropy objectives evaluated.
+In particular, the joint gating entropy term in cref:eq-explorative-traj-opt, given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-joint-entropy}
 J_{\text{joint}}(f, \pi) = H \left[ \desiredGatingFunction(\stateTraj) \mid \stateTraj, \dataset_{0:i-1} \right],
@@ -13584,12 +13593,12 @@ is compared with the sum of marginal
 entropies over the trajectory, which is referred to as the factorised entropy and given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-factorised-entropy}
-J_{\text{fact}}(f, \pi) = \sum_{\timeInd=1}^{\TimeInd}
+J_{\text{fact}}(f, \pi) = \sum_{\timeInd=0}^{\TimeInd}
 H \left[ \desiredGatingFunction(\state_{\timeInd}) \mid \state_{\timeInd}, \dataset_{0:i-1} \right].
 \end{align}
 #+END_EXPORT
 cref:fig-entropy-comparison-traj-opt-7 shows the trajectories found at the first \modeOpt iteration
-when using the two entropy objectives.
+when using these two entropy objectives.
 The factorised entropy objective, show in
 cref:fig-entropy-mvn-diag-traj-opt-over-prob-7, has collapsed the entire trajectory onto a single state
 of high entropy.
@@ -15189,18 +15198,40 @@ All plots show a slice of the input space with constant zero controls.}
 \newline
 # This section now evaluates the objective in cref:eq-explorative-traj-opt, which contains both the state difference
 # term and the joint gating entropy term.
-This section presents initial results of the exploration strategy from cref:eq-explorative-traj-opt,
-at exploring the simulated Environment 1 in cref:sec-traj-opt-results-simulated.
-Figures ref:fig-explorative-traj-opt-7-step-0-epoch-0 to ref:fig-explorative-traj-opt-7-step-22-epoch-1494
-visualise \modeOpt during its exploration phase.
-Each \modeOpt iteration $i$ is visualised with three figures,
-1. The data set $\dataset_{0:i}$ collected from previous iterations is overlayed on the gating network *before* training on it.
-2. It is then overlayed on the gating network *after* training on it,
-   - These figures show how the model's epistemic uncertainty reduces after training on the updated data set.
-     Moreover, they show how the mode chance constraints expand at each iteration.
-     The mode chance constraints are shown by the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:i}) = 0.8$ contour.
-3. The trajectory found by the explorative controller $\explorativeController$ under the updated dynamical model
-   is overlayed on the updated gating network posterior.
+This section presents initial results of \modeOpt's exploration strategy.
+The results show the strategy successfully exploring the simulated Environment 1 in cref:sec-traj-opt-results-simulated.
+The results presented here show how the desired mode's mixing probability and the gating function's variance
+changes during each iteration.
+Each \modeOpt iteration $i$ is visualised with a set of four subfigures showing how the desired mode's
+mixing probability changes and a set of four subfigures showing how the gating function's variance changes.
+1. The first subfigure overlays the data set $\dataset_{0:i}$ collected from previous iterations on the gating network
+   posterior *after* training on it.
+   For example, cref:fig-explorative-data-over-prob-7-step-0-epoch-0-expansion shows the initial data set $\dataset_0$
+   overlayed on the desired mode's mixing probability *after* training on it.
+   Similarly cref:fig-explorative-data-over-variance-7-step-0-epoch-0-expansion show the gating function variance after
+   training on it.
+2. The second subfigure overlays the trajectory found by the explorative controller $\explorativeController$
+   on the gating network posterior before training on the trajectory.
+   cref:fig-explorative-traj-opt-over-prob-7-step-1-expansion,fig-explorative-traj-opt-over-variance-7-step-1-expansion
+   show the explorative trajectory found at the first \modeOpt iteration.
+3. The third subfigure shows the updated data set $\dataset_{0:i+1}$ after collecting data with the explorative controller.
+   It shows this data set overlayed on the gating network *before* training on it.
+   cref:fig-explorative-data-over-prob-7-step-1-epoch-0-expansion shows $\dataset_{0:1}$ overlayed on the desired
+   mode's mixing probability *after* training on $\dataset_{0}$ (but *before* training on $\dataset_{0:1}$).
+4. The fourth subfigure shows the gating network posterior *after* training on the updated data set $\dataset_{0:i+1}$.
+   For example
+   cref:fig-explorative-data-over-prob-7-step-1-epoch-1494-expansion shows the desired mode's mixing probability after
+   training on $\dataset_{0:1}$.
+
+cref:fig-explorative-traj-opt-over-prob-7-1 shows how the desired mode's mixing probability changes during
+the first iteration of \modeOpt and cref:fig-explorative-traj-opt-over-variance-7-1 shows how the gating
+function's variance changes.
+Together they show how the model's epistemic uncertainty reduces after collecting and training on new data
+and how this lead to the mode chance constraints expanding at each iteration.
+The mode chance constraints are shown by the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:i}) = 0.8$ contour.
+
+# cref:fig-explorative-traj-opt-over-prob-7-1 and cref:fig-explorative-traj-opt-over-variance-7-1
+# visualise the first iteration of \modeOpt.
 
 *** Step 0 Figs :ignore:noexport:
 **** Data Step 0 Epoch 1494 :ignore:
@@ -15270,25 +15301,25 @@ All plots show a slice of the input space with constant zero controls.}
 \centering
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_0_epoch_0.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_0_epoch_0.pdf}
 \subcaption{$\dataset_0$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0})$}
 \label{fig-explorative-data-over-prob-7-step-0-epoch-0-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_1.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf}
 \subcaption{Explorative trajectory over $\Pr(\modeVar = 2 \mid \state, \dataset_{0})$}
 \label{fig-explorative-traj-opt-over-prob-7-step-1-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_1_epoch_0.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_1_epoch_0.pdf}
 \subcaption{$\dataset_{0:1}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0})$}
 \label{fig-explorative-data-over-prob-7-step-1-epoch-0-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_1_epoch_1494.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_1_epoch_last.pdf}
 \subcaption{$\dataset_{0:1}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:1})$}
 \label{fig-explorative-data-over-prob-7-step-1-epoch-1494-expansion}
 \end{minipage}
@@ -15316,25 +15347,25 @@ the desired mode's mixing probability after training on the updated data set $\d
 \centering
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_0_epoch_0.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_0_epoch_0.pdf}
 \subcaption{$\dataset_0$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0} \right]$}
 \label{fig-explorative-data-over-variance-7-step-0-epoch-0-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_1.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_desired_gating_gp_step_1.pdf}
 \subcaption{Explorative trajectory over $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0} \right]$}
 \label{fig-explorative-traj-opt-over-variance-7-step-1-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_1_epoch_0.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_1_epoch_0.pdf}
 \subcaption{$\dataset_{0:1}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0} \right]$}
 \label{fig-explorative-data-over-variance-7-step-1-epoch-0-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_1_epoch_1494.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_1_epoch_last.pdf}
 \subcaption{$\dataset_{0:1}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:1} \right]$}
 \label{fig-explorative-data-over-variance-7-step-1-epoch-1494-expansion}
 \end{minipage}
@@ -15355,34 +15386,308 @@ the desired mode's mixing probability after training on the updated data set $\d
 \end{figure}
 #+END_EXPORT
 
-*** Step 4:5 Prob Figs :ignore:
+*** Initial model text :ignore:
+\newline
+
+*Initial model*
+cref:fig-explorative-data-over-prob-7-step-0-epoch-0-expansion,fig-explorative-data-over-variance-7-step-0-epoch-0-expansion
+shows the initial data set $\dataset_0$ (blue crosses) overlayed on the gating network after training on it.
+cref:fig-explorative-data-over-prob-7-step-0-epoch-0-expansion
+shows that the probability of being in the desired dynamics mode $\desiredMode=2$ is high (red)
+around the initial data set.
+It tends to $0.5$ away from the data, which corresponds to maximum entropy for a Categorical distribution.
+cref:fig-explorative-data-over-variance-7-step-0-epoch-0-expansion
+shows that the gating function's posterior variance is low around the initial data set and high everywhere else.
+Intuitively, \modeOpt seeks to expand the explorable region so that
+$\delta-\text{mode remaining}$ trajectories to the target state can be found.
+As such, it seeks to reduce the model's epistemic uncertainty by decreasing the gating function's variance.
+In turn, this will increase the region that the model believes belongs to the desired dynamics mode.
+This is visualised by the chance constraint contour $\Pr(\modeVar=\desiredMode \mid \state, \dataset_{0:i})=0.8$
+expanding as \modeOpt collects more data and trains on it.
+
+*Iteration $\mathbf{i=1}$*
+cref:fig-explorative-traj-opt-over-prob-7-1,fig-explorative-traj-opt-over-prob-7-1
+visualises the first iteration $i=1$ of \modeOpt.
+Given the dynamics model after training on the initial data set $\dataset_0$,
+the explorative controller $\explorativeController$ found the trajectory in
+cref:fig-explorative-data-over-variance-7-step-1-epoch-0-expansion,fig-explorative-data-over-prob-7-step-1-epoch-0-expansion
+The trajectory explores towards the target state $\targetState$, which
+is the goal of the state difference term in cref:eq-explorative-traj-opt.
+cref:fig-explorative-data-over-variance-7-step-1-epoch-0-expansion
+shows that the trajectory has also spread over regions of the desired
+mode's gating function with high posterior variance.
+This is the goal of the joint gating entropy term in cref:eq-explorative-traj-opt.
+cref:fig-explorative-data-over-prob-7-step-1-epoch-1494-expansion,fig-explorative-data-over-variance-7-step-1-epoch-1494-expansion
+show how the gating network changes after training on $\dataset_1$.
+The gating function's posterior variance has decreased around the new observations.
+The purple lines representing the
+$\Pr(\alpha=\desiredMode \mid \state, \dataset_{0}) = 0.8$ contour in
+cref:fig-explorative-data-over-prob-7-step-1-epoch-0-expansion,fig-explorative-data-over-variance-7-step-1-epoch-0-expansion
+and the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:1}) = 0.8$ contour in
+cref:fig-explorative-data-over-prob-7-step-1-epoch-1494-expansion,fig-explorative-data-over-variance-7-step-1-epoch-1494-expansion
+show how the mode chance constraints expand after training on $\dataset_1$.
+The region between the contours represents the newly explorable region.
+This shows that reducing the model's epistemic uncertainty leads to the explorable region expanding under the
+mode chance constraints.
+This result indicates that in this environment, setting $\delta=0.2$ enables exploration outside of the initial
+state domain $\initialStateDomain$.
+# If this region stops expanding then \modeOpt will not be able to explore.
+# This observation will be easier to see in later iterations.
+
+*** Step 2:3 Prob Figs :ignore:
 #+BEGIN_EXPORT latex
-\renewcommand{\stepNum}{4}
-\renewcommand{\stepNumNext}{5}
-\renewcommand{\lastEpoch}{1494}
+\renewcommand{\stepNum}{2}
+\renewcommand{\stepNumNext}{3}
+\renewcommand{\lastEpoch}{last}
 \begin{figure}
 \centering
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\lastEpoch.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNum_epoch_\lastEpoch.pdf}
 \subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
 \label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNumNext.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_\stepNumNext.pdf}
 \subcaption{Explorative trajectory over $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
 \label{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNumNext_epoch_0.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_0.pdf}
 \subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
 \label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNumNext_epoch_\lastEpoch.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNumNext})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over mode probability}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the desired mode's mixing probability.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-prob-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** Step 2:3 Variance Figs :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{2}
+\renewcommand{\stepNumNext}{3}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNum_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_desired_gating_gp_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNumNext} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over gating function variance}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the \acrshort{gp} variance associated with the desired mode's gating function.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-variance-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** Step 3:4 Prob Figs :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{3}
+\renewcommand{\stepNumNext}{4}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNum_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNumNext})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over mode probability}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the desired mode's mixing probability.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-prob-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** Step 3:4 Variance Figs :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{3}
+\renewcommand{\stepNumNext}{4}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNum_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_desired_gating_gp_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNumNext} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over gating function variance}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the \acrshort{gp} variance associated with the desired mode's gating function.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-variance-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** iteration 3 text :ignore:
+\newline
+
+# cref:fig-explorative-traj-opt-over-prob-7-1,fig-explorative-traj-opt-over-prob-7-1
+*Iteration $\mathbf{i=3}$*
+cref:fig-explorative-traj-opt-over-prob-7-2 shows the third iteration
+where the $\delta-\text{mode remaining}$ chance constraints have expanded the explorable domain such that it
+intersects with the undesired dynamics mode.
+This is indicated by the purple $0.8$ contour intersecting with the purple line labelled mode boundary.
+As a result, the trajectory found by the explorative controller in
+cref:fig-explorative-traj-opt-over-prob-7-step-3-expansion leaves the desired dynamics mode and is subject to the
+turbulent dynamics mode.
+This is shown by the trajectory crossing the mode boundary (purple line) and also by
+the environment trajectory (cyan) deviating from the dynamics trajectory (magenta) due to the high drift associated
+with the turbulent dynamics mode.
+#+BEGIN_EXPORT latex
+\begin{remark}
+It is worth noting that \modeOpt can never learn where a mode boundary is without observing state transitions from
+outside of the desired dynamics mode.
+\end{remark}
+#+END_EXPORT
+cref:fig-explorative-data-over-prob-7-step-3-epoch-last-expansion
+shows that given these new observations the \acrshort{mosvgpe}'s gating network is able to infer that the
+state transitions belong to another dynamics mode.
+However, the explorable domain still intersected the mode boundary after training.
+
+*** Step 4:5 Prob Figs :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{4}
+\renewcommand{\stepNumNext}{5}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNum_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_last.pdf}
 \subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNumNext})$}
 \label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
 \end{minipage}
@@ -15409,30 +15714,30 @@ the desired mode's mixing probability after training on the updated data set $\d
 #+BEGIN_EXPORT latex
 \renewcommand{\stepNum}{4}
 \renewcommand{\stepNumNext}{5}
-\renewcommand{\lastEpoch}{1494}
+\renewcommand{\lastEpoch}{last}
 \begin{figure}
 \centering
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\lastEpoch.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNum_epoch_last.pdf}
 \subcaption{$\dataset_{0:\stepNum}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
 \label{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/trajectories_over_desired_gating_gp_step_\stepNumNext.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_desired_gating_gp_step_\stepNumNext.pdf}
 \subcaption{Explorative trajectory over $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
 \label{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNumNext_epoch_0.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_0.pdf}
 \subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
 \label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}
 \end{minipage}
 \begin{minipage}[r]{0.48\columnwidth}
 \centering
-\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNumNext_epoch_\lastEpoch.pdf}
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_last.pdf}
 \subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNumNext} \right]$}
 \label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
 \end{minipage}
@@ -15455,32 +15760,322 @@ the desired mode's mixing probability after training on the updated data set $\d
 \end{figure}
 #+END_EXPORT
 
-*** Initial model text :ignore:
+*** iteration 4 text :ignore:
 \newline
 
-*Initial model*
-cref:fig-explorative-data-7-step-0-epoch-0 shows the initial data set $\dataset_0$ (blue crosses)
-overlayed on the gating network after training on it.
-cref:fig-explorative-data-over-prob-7-step-0-epoch-0 shows the probability mass function over the mode indicator variable
-where the probability of being in the desired dynamics mode $\desiredMode=2$ is high around the initial data set.
-It tends to $0.5$ away from the data, which corresponds to maximum entropy for a Categorical distribution.
-cref:fig-explorative-data-over-svgp-7-step-0-epoch-0 shows the \acrshort{gp} posterior over the
-desired mode's gating function.
-The posterior variance (right) is low around the initial data set and high everywhere else.
-Given this learned dynamics model, the explorative controller $\explorativeController$ found the
-trajectory in cref:fig-explorative-traj-opt-7-1.
-The trajectory explores towards the target state $\targetState$, which
-is the goal of the state difference term in cref:eq-explorative-traj-opt.
-cref:fig-explorative-traj-opt-over-svgp-7-step-1 shows that the trajectory has also spread over regions of the desired
-mode's gating function with high posterior variance.
-This is the goal of the joint gating entropy term in cref:eq-explorative-traj-opt.
-Close inspection of the trajectory in cref:fig-explorative-traj-opt-7-step-1
-and the initial data set (blue crosses) in cref:fig-explorative-data-over-svgp-7-initial,
-show that the trajectory passes through regions of the constrained domain that were not observed in the initial
-data set.
-This indicates that (in this environment) setting $\delta=0.2$ enables exploration outside of the initial
-state domain $\initialStateDomain$.
-This observation is easier to see in later iterations.
+*Iteration 4*
+cref:fig-explorative-traj-opt-over-prob-7-3 shows the fourth iteration where once again
+the explorative controller found a trajectory which left the desired dynamics mode.
+Although not desirable, this is necessary for inferring the mode boundary.
+cref:fig-explorative-data-over-prob-7-step-4-epoch-last-expansion shows that after training on the new
+data set $\dataset_{0:4}$ the explorable domain no longer intersects with the mode boundary.
+As a result, the explorative trajectory found at the next iteration (in
+cref:fig-explorative-traj-opt-over-prob-7-step-5-expansion) did not leave the desired dynamics mode.
+That is, the mode chance constraints successfully restricted the domain such that the trajectory did not leave
+the desired dynamics mode.
+Further to this, the trajectory optimiser was able to explore around the mode boundary without leaving the desired
+dynamics mode.
+
+*** Step 5:6 Prob Figs :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{5}
+\renewcommand{\stepNumNext}{6}
+\renewcommand{\stepNumNextNext}{7}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNum_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNumNext})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over mode probability}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the desired mode's mixing probability.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-prob-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** Step 5:6 Variance Figs :ignore:noexport:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{5}
+\renewcommand{\stepNumNext}{6}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNum_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_desired_gating_gp_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNumNext} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over gating function variance}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the \acrshort{gp} variance associated with the desired mode's gating function.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-variance-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** Step 10:11 Prob Figs :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{10}
+\renewcommand{\stepNumNext}{11}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNum_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNumNext})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over mode probability}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the desired mode's mixing probability.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-prob-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** Step 10:11 Variance Figs :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{10}
+\renewcommand{\stepNumNext}{11}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNum_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_desired_gating_gp_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNumNext} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over gating function variance}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the \acrshort{gp} variance associated with the desired mode's gating function.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-variance-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** Step 11:12 Prob Figs :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{11}
+\renewcommand{\stepNumNext}{12}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNum_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNumNext_epoch_last.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNumNext})$}
+\label{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over mode probability}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the desired mode's mixing probability.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-prob-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-prob-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-prob-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-prob-7-\stepNum}
+\end{figure}
+#+END_EXPORT
+
+*** Step 11:12 Variance Figs :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\stepNum}{11}
+\renewcommand{\stepNumNext}{12}
+\renewcommand{\lastEpoch}{last}
+\begin{figure}
+\centering
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNum_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/trajectories_over_desired_gating_gp_step_\stepNumNext.pdf}
+\subcaption{Explorative trajectory over $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_0.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNum} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}
+\end{minipage}
+\begin{minipage}[r]{0.48\columnwidth}
+\centering
+\adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNumNext_epoch_\lastEpoch.pdf}
+\subcaption{$\dataset_{0:\stepNumNext}$ overlayed on $\mathbb{V}\left[\desiredGatingFunction(\state) \mid \state, \dataset_{0:\stepNumNext} \right]$}
+\label{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}
+\end{minipage}
+\caption{\textbf{\modeOpt iteration $\mathbf{i=\stepNum:\stepNumNext}$ over gating function variance}
+Visualisation of \modeOpt iteration $i=\stepNum:\stepNumNext$ in Environment 1 overlayed
+on the \acrshort{gp} variance associated with the desired mode's gating function.
+It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
+-- expanding after training on data collected using the explorative controller $\explorativeController$.
+(\subref{fig-explorative-data-over-variance-7-step-\stepNum-epoch-0-expansion}) shows the
+data set $\dataset_{0:\stepNum}$
+(blue crosses) overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+(\subref{fig-explorative-traj-opt-over-variance-7-step-\stepNumNext-expansion}) shows the trajectory found by the explorative
+controller under this learned dynamics model.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+(\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-0-expansion}) shows the updated data set $\dataset_{0:\stepNumNext}$
+overlayed on the desired mode's mixing probability after training on $\dataset_{0:\stepNum}$.
+Finally, (\subref{fig-explorative-data-over-variance-7-step-\stepNumNext-epoch-\lastEpoch-expansion}) shows
+the desired mode's mixing probability after training on the updated data set $\dataset_{0:\stepNumNext}$.}
+\label{fig-explorative-traj-opt-over-variance-7-\stepNum}
+\end{figure}
+#+END_EXPORT
 
 *** Step 1 Figs :ignore:noexport:
 **** Data Step 1 Epoch 0 :ignore:
@@ -15575,59 +16170,46 @@ All plots show a slice of the input space with constant zero controls.}
 \end{figure}
 #+END_EXPORT
 
-*** Iteration 1 text :ignore:
+*** Final Iteration text :ignore:
 \newline
-# These three figures visualise a single \modeOpt step.
-*Iteration $\mathbf{i=1}$*
-cref:fig-explorative-traj-opt-7-step-1-epoch-0,fig-explorative-traj-opt-7-step-1-epoch-1494,fig-explorative-traj-opt-7-2
-visualise iteration $i=1$.
-cref:fig-explorative-traj-opt-7-step-1-epoch-0,fig-explorative-traj-opt-7-step-1-epoch-1494 show how the
-gating network changes after training on $\dataset_1$.
-The purple lines representing the
-$\Pr(\alpha=\desiredMode \mid \state, \dataset_{0}) = 0.8$ contour
-in cref:fig-explorative-data-over-prob-7-step-1-epoch-0
-and the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:1}) = 0.8$ contour
-in cref:fig-explorative-data-over-prob-7-step-1-epoch-1494
-show how the mode chance constraints expand after training on $\dataset_1$.
-The region between the contours indicates the newly explorable region.
-This shows that reducing the model's epistemic uncertainty leads to the mode chance constraints expanding the
-explorable region.
-If this region stops expanding then \modeOpt will not be able to explore.
-Exploration can likely be guaranteed by relaxing $\delta$, however,
-such analysis of exploration guarantees is left for future work.
-It is also worth noting that relaxing $\delta$ too far corresponds to removing the mode chance constraints.
-
-# $\Pr(\alpha=\desiredMode \mid \state) = 0.8$ contours in
-# cref:fig-explorative-data-over-prob-7-step-1-epoch-0,fig-explorative-data-over-prob-7-step-1-epoch-1494 shows
-# how the mode chance constraints expand after training on the $\dataset_1$.
-# The area between the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:i-1}) = 0.8$ contour
-# in cref:fig-explorative-data-over-prob-7-step-1-epoch-0
-# and the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:i}) = 0.8$ contour
-# in cref:fig-explorative-data-over-prob-7-step-1-epoch-1494 indicates the newly explorable region.
-
-cref:fig-explorative-data-over-svgp-7-step-1-epoch-0,fig-explorative-data-over-svgp-7-step-1-epoch-1494
-show how the \acrshort{gp} posterior over the desired mode's gating function changed after training on
-$\dataset_{0:1}$.
-The right hand plots visualise the posterior variance and show how it decreased around the
-new observations.
-Similarly, the left hand plots visualise the posterior mean and show how the gating function increased around
-the new observations.
-This is because it believed they belong to the desired dynamics mode.
-
-Finally, cref:fig-explorative-traj-opt-7-2 shows the trajectory found by the
-explorative controller $\explorativeController$ under the updated dynamics model.
-The trajectory explores along the $\Pr(\alpha=\desiredMode \mid \state, \dataset_{0:1}) = 0.8$ contour towards
-the target state $\targetState$.
-cref:fig-explorative-traj-opt-over-svgp-7-step-2 shows that the trajectory spreads over regions of high
-posterior variance.
-This suggests that combining the state difference term and the joint gating entropy term is
-effective for finding trajectories that explore towards the target state $\targetState$.
-
-*Leaving the desired dynamics mode $\desiredMode$*
-It is worth noting that \modeOpt can never learn where a mode boundary is without observing state transitions from
-outside of the desired dynamics mode.
 
 *Final iteration*
+cref:fig-explorative-traj-opt-over-prob-7-11,fig-explorative-traj-opt-over-variance-7-11
+show the final iteration of the exploration phase.
+The mode chance constraints have expanded such that the target state $\targetState$ lies within the explorable domain.
+
+
+*Discrete-time*
+Although the discrete time-steps of the explorable trajectory in
+cref:fig-explorative-traj-opt-over-prob-7-11,fig-explorative-traj-opt-over-variance-7-11
+is $\delta-\text{mode remaining}$, the continuous-time trajectory appears to intersect the end of the mode boundary.
+This is not an intended behaviour and ideally would be avoided.
+This behaviour arises because the gating entropy term favours trajectories which spread out over the domain.
+Although not tested here, this could likely be solved by reducing how far a time step can travel.
+This could be achieved by introducing constraints of the controls or by
+learning a higher resolution model (i.e. with a smaller time step $\Delta t$)
+Both of these approaches would decrease how far a time step can travel and therefore the likelihood of a
+time step jumping over a mode boundary.
+
+
+
+
+*** Discussion :ignore:
+*Better information criterion*
+As the gating function's posterior variance is used to guide exploration it
+is interesting to analyse how it changes during each \modeOpt iteration.
+Intuitively, as \modeOpt gathers more data, the gating function's variance decreases.
+However, the mode boundary, i.e. the mode chance constraints, introduce some interesting behaviour.
+For example, at the start of \modeOpt the shape of the region of low gating function variance is very
+similar to the shape of the desired mode's mixing probability.
+This can be seen in
+cref:fig-explorative-traj-opt-over-prob-7-1,fig-explorative-traj-opt-over-variance-7-1 where they are both either
+high or low around the data set.
+However, when the gating network starts learning the mode boundary at iteration $i=3:4$
+(in cref:fig-explorative-traj-opt-over-prob-7-3,fig-explorative-traj-opt-over-variance-7-3)
+the shape of the
+desired mode's mixing probability changes and no longer matches the gating function's posterior variance.
+
 
 *Exploration*
 The results
@@ -15643,7 +16225,9 @@ As mentioned previously, the performance of \modeOpt's exploration is dependent 
 the entropy term, the state difference term and the mode chance constraints.
 As such, the convergence of \modeOpt likely depends on the cost matrices,
 $\stateCostMatrix$, $\controlCostMatrix$ and the mode satisfaction probability given by $\delta$.
-The results shown here are an initial step showing that in \modeOpt can work in practice.
+Exploration can likely be guaranteed by relaxing $\delta$, however,
+relaxing $\delta$ too far corresponds to removing the mode chance constraints.
+Nevertheless the results shown here are an initial step showing that \modeOpt can work in practice.
 However, further analysis is left for future work.
 
 ** Discussion & Future Work
