@@ -1488,7 +1488,7 @@ surface-tyre interactions for ground vehicles over different terrain.
 In these systems, it is desirable to avoid entering specific dynamics modes that are believed to be /inoperable/.
 Perhaps they are hard to control due to stability, or the mode switch itself is hard to control.
 Or perhaps it is desirable to avoid specific modes for /efficiency/ or /performance/ reasons.
-Given these motivations, this dissertation is interested in controlling dynamical systems from an initial state,
+Given these motivations, this dissertation is focused on controlling dynamical systems from an initial state,
 to a target state, whilst avoiding specific dynamics modes.
 
 # In particular, it is primarily interested in controlling a quadcopter in an environment
@@ -1506,12 +1506,15 @@ One caveat is that it requires a relatively accurate mathematical model of the s
 Traditionally, these mathematical models are built using first principles based on physics.
 However, accurately modelling the underlying transition dynamics can be challenging and
 lead to the introduction of model errors.
-For example, incorrectly specifying model parameters, or
-models themselves (modelling a nonlinear system to be linear, or a multimodal system to be unimodal).
-Incorrectly specifying these model parameters (and their associated uncertainty)
-can have a detrimental impact on controller performance,
-and is an active area of research in the robust
-and stochastic optimal control communities citep:freemanRobust1996,stengelStochastic1986.
+These model errors may be due to incorrectly specifying model parameters, or the
+models themselves.
+For example, modelling a nonlinear system to be linear, or a multimodal system to be unimodal.
+Incorrectly specifying these model parameters, and their associated uncertainty,
+can have a detrimental impact on controller performance.
+Handling these issues is a central goal of robust and stochastic optimal
+control citep:freemanRobust1996,stengelStochastic1986.
+# and is an active area of research in the robust
+# and stochastic optimal control communities citep:freemanRobust1996,stengelStochastic1986.
 # For example, model parameters might be,
 # 1) hard to specify accurately, e.g. friction coefficients associated with surfaces,
 # 2) assumed constant when in reality they vary spatially, e.g. process noise terms modelling the effect of
@@ -1558,8 +1561,8 @@ risk-averse trajectory to the target state.
 How can the agent explore its environment, in turn reducing the /epistemic uncertainty/
 associated with its dynamics model?
 This dissertation assumes that complete knowledge of the underlying dynamics modes and how the system
-switches between them, is /not fully known a priori/.
-Therefore, it is interested in jointly inferring the underlying dynamics modes, as well as how the system switches
+switches between them, are /not fully known a priori/.
+Therefore, a central interest is jointly inferring the underlying dynamics modes, as well as how the system switches
 between them, through repeated interactions with the system.
 Once the agent has explored enough, how can the learned model be exploited to plan risk-averse trajectories
 that attempt to remain in a desired dynamics mode, and in regions of the learned
@@ -1639,7 +1642,7 @@ induced by a fan -- where the system can be represented by two dynamics modes,
 - Mode 1 :: a /non-turbulent/ dynamics mode away from the fan,
 - Mode 2 :: an inoperable, /turbulent/ dynamics mode in front of the fan.
 The turbulent dynamics mode is subject to higher drift (in the negative $x$ direction) and
-to higher diffusion (aka process noise).
+to higher diffusion (process noise).
 It is hard to know the exact turbulent dynamics due to complex and uncertain interactions between the
 quadcopter and the wind field.
 Further to this, it is believed that controlling the system in the turbulent dynamics mode may be infeasible.
@@ -1703,7 +1706,7 @@ induced by a fan -- where the system can be represented by two dynamics modes,
 - Mode 1 :: an /operable/ dynamics mode away from the fan,
 - Mode 2 :: an inoperable, /turbulent/ dynamics mode in front of the fan.
 The turbulent dynamics mode is subject to higher drift (in the negative $x$ direction) and
-to higher diffusion (aka process noise).
+to higher diffusion (process noise).
 It is hard to know the exact turbulent dynamics due to complex and uncertain interactions between the
 quadcopter and the wind field.
 Further to this, it is believed that controlling the system in the turbulent dynamics mode may be infeasible.
@@ -1960,8 +1963,10 @@ The main goals of the trajectory optimisation in this Chapter can be summarised 
 All of the methods in this dissertation relate back to this mode remaining navigation problem.
 For this reason, the problem is formally defined here.
 
-This dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
 #+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Mode remaining navigation problem}
+This dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
 \begin{subequations} \label{eq-dynamics-main}
 \begin{align}
 \state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
@@ -1970,7 +1975,6 @@ This dissertation considers nonlinear, stochastic, multimodal dynamical systems,
 \mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
 \end{align}
 \end{subequations}
-#+END_EXPORT
 with continuous states $\state_t \in \stateDomain \subseteq \R^\StateDim$, continuous controls
 $\control_t \in \controlDomain \subseteq \R^\ControlDim$ and a discrete time index $t$.
 The discrete mode indicator function
@@ -1992,15 +1996,6 @@ Notice that each mode's transition dynamics are free to leave their state space 
 and enter another mode.
 Ideally, this work seeks to enforce the controlled system to remain in a given mode.
 Formally, a mode remaining controlled system is defined as follows.
-# It considers systems where the underlying dynamics modes are defined by disjoint state domains.
-# That is, each dynamics mode is defined by its state domain
-# $\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
-# $\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for $i \neq j$.
-# Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
-# and enter another mode.
-# Ideally, this work seeks to enforce the controlled system to remain in a given mode.
-# Formally, a mode remaining controlled system is defined as follows.
-#+BEGIN_EXPORT latex
 \begin{definition}[Mode Remaining] \label{def-mode-remaining-main}
 Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
 Given an inital state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy \in \Pi$,
@@ -2010,7 +2005,6 @@ the controlled system is said to be mode-remaining iff:
 &\in \mode{\stateDomain} \quad \forall \timeInd
 \end{align}
 \end{definition}
-#+END_EXPORT
 Notice that  the controller
 $\policy : \stateDomain \times \mathbb{Z} \rightarrow \controlDomain$ is defined
 generally. That is, it may take the form of a deterministic feedback policy or an
@@ -2018,7 +2012,6 @@ open-loop set of controls without state feedback.
 It is assumed that $\Pi$ is the set of deterministic policies.
 
 Given this definition of a mode remaining controlled system, this dissertation seeks to solve,
-#+BEGIN_EXPORT latex
 \begin{subequations} \label{eq-main-problem}
 \begin{align}
 \min_{\policy \in \Pi} \quad &J(\dynamicsFunc, \policy) \\
@@ -2033,7 +2026,6 @@ Given this definition of a mode remaining controlled system, this dissertation s
 &\state_\TimeInd = \targetState,
 \end{align}
 \end{subequations}
-#+END_EXPORT
 where $J : \Pi \rightarrow \R$ denotes the objective function.
 Note that the objective function is not of primary importance in this work.
 The novelty of this problem arises from remaining in the desired dynamics mode $\desiredMode$, when
@@ -2041,6 +2033,9 @@ the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
 and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
 To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
 to solve the problem in cref:eq-main-problem.
+\end{myquote}
+#+END_EXPORT
+
 # However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
 
 ** Contributions
@@ -3535,7 +3530,7 @@ p(\mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) =\ &\mathcal{N}\left(
 #+END_EXPORT
 where $\K_{mm}$ is the covariance function evaluated between all inducing inputs $\Z$, and
 $\K_{nm}$ is the covariance function evaluated between the data inputs $\mathbf{X}$ and the inducing inputs $\Z$.
-This joint distribution can be re-written using the properties of multivariate Normal distributions as,
+This joint distribution can be re-written using the properties of multivariate normal distributions as,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-sparse-gp-joint-cond}
 p(\mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) &= p(\mathbf{f} \mid \u) p(\u \mid \mathbf{Z}) \\
@@ -5163,21 +5158,21 @@ have previously been sampled from the system at a constant frequency, i.e. with 
 # inference in the model.
 
 # This chapter is motivated by synergising model learning and control.
+\todo{update ref to motivation}
 Following the motivation in cref:to_motivation, this chapter
 seeks to correctly identify the underlying dynamics modes, whilst inferring
 latent structure that can be exploited for control.
 The main goals of this chapter can be summarised as follows,
 1. accurately /identify/ the true underlying dynamics modes,
 2. learn /latent spaces/ for planning/control,
-   - rich with information regarding the mode switching behaviour.
-
+   # - rich with information regarding the mode switching behaviour.
 The probabilistic model constructed in this chapter
 resembles a \acrfull{mogpe} with a \acrshort{gp}-based gating network and  is named \acrfull{mosvgpe}.
 Following other \acrshort{mogpe} methods, \acrshort{mosvgpe} is evaluated on the motorcyle data set citep:Silverman1985.
 It is then tested on a real-world quadcopter data set representing the illustrative
 example detailed in cref:illustrative_example.
-The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub[fn::Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].]
-citep:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper.
+# The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub[fn::Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].]
+# citep:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper.
 
 
 
@@ -5617,7 +5612,7 @@ and a single state-control input is dentoed
 $\singleInput = (\state_{\timeInd},\control_{\timeInd})$.
 Given this formulation, the goal of this chapter is to learn the mapping $\unknownDynamics$,
 which switches between $\ModeInd$ different functions $\mode{\latentFunc}$.
-This is a regression problem,
+This can be cast as a regression problem,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-multimodal-dynamics-disc-regression}
 \underbrace{\Delta \state_{t+1}}_{\text{\singleOutput}}
@@ -5873,6 +5868,10 @@ With this notation, the regression problem can be written as,
 ** Preliminaries
 Gaussian processes are the state-of-the art approach for Bayesian nonparametric regression
 and they provide a powerful mechanism for encoding expert domain knowledge.
+They are flexible enough to model arbitrary smooth functions with the simplicity of only requiring
+inference over a small number of interpretable parameters, such as
+lengthscales and the contributions of signal and noise variance in the data.
+These properties are induced by the /covariance function/ which models the covariance between observations.
 As such, \acrshort{mogpe} methods are a promising direction for modelling multimodal systems.
 This section recaps the \acrshort{mogpe} concepts that this chapter builds upon.
 *** mixture models :ignore:
@@ -6365,6 +6364,14 @@ methodologies cite:vanderwilkFramework2020.
 Motivated by improving identifiability and learning latent spaces for control,
 this work adopts a GP-based gating network resembling a GP classification model,
 similar to that used in the original \acrshort{mogpe} model citep:trespMixtures2000a.
+The \acrshort{gp}-based gating network can be used to constrain the set of
+admissible functions through the placement of informative \acrshort{gp} priors on the gating functions.
+Further to this, in cref:chap-traj-opt-control, the geometry of the \acrshort{gp}-based gating network is
+used to encode mode remaining behaviour into control strategies.
+cref:chap-active-learning then leverages the power of the \acrshort{gp}-based gating network to construct an
+explorative trajectory optimisation algorithm that considers information gain over trajectories,
+as opposed to myopically maximising the information gain at the next state.
+
 The marginal likelihood is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-marginal-likelihood-assign}
@@ -6871,7 +6878,8 @@ p(\GatingFunc(\allInput), \LatentFunc(\allInput) \mid \allInput, \allOutput, \ga
 \end{align}
 #+END_EXPORT
 where the denominator is the marginal likelihood from cref:eq-marginal-likelihood-assign.
-Exact inference in our model is intractable, so we resort to a variational approximation.
+Exact inference in our model is intractable, due to the marginalisation over the set of expert indicator variables.
+For this reason we resort to a variational approximation.
 The rich structure of our model makes it hard to construct an ELBO that can
 be evaluated in closed-form, whilst accurately modelling the complex dependencies.
 Further to this, the marginal likelihood is extremely expensive to evaluate,
@@ -6890,6 +6898,8 @@ by utilising stochastic gradient-based optimisation.
 factorised across observations and a set of global variables.
 The marginalisation over the set of expert indicator variables $\allModeVar$
 in cref:eq-np-moe-marginal-likelihood is prohibitive to \acrshort{svi}.
+This is because \acrshort{svi} requires a set of local variables factorised over data but the
+marginalisation considers the sets of assignments for the entire data set.
 Following the approach by cite:titsiasVariational2009, the probability space is augmented
 with a set of $\NumInducing$ inducing variables for each GP.
 However, instead of collapsing these inducing variables they are explicitly
@@ -7531,7 +7541,7 @@ noise models.
 # \gatingsVariational &= \prod_{\modeInd=1}^\ModeInd \E_{\gatingInducingVariational} \left[ \singleLatentGatingGivenInducing \right].
 # \end{align}
 # #+END_EXPORT
-As each GP's inducing variables are Normally distributed, the functional form of the
+As each GP's inducing variables are normally distributed, the functional form of the
 variational posteriors are given by,
 #+BEGIN_EXPORT latex
 \begin{align}
@@ -8035,7 +8045,7 @@ That is, a data set collected onboard a DJI Tello quadcopter flying in an enviro
 \renewcommand{\predictedSingleOutput}{\ensuremath{\hat{\y}^*_{\numTest}}}
 #+END_EXPORT
 
-Each experiment was carried out on a system with an Intel Core i9 CPU at 2.4GHz with 16GB DDR4 RAM.
+# Each experiment was carried out on a system with an Intel Core i9 CPU at 2.4GHz with 16GB DDR4 RAM.
 All data sets were split into test and training sets with $70\%$ for training and $30\%$ for testing.
 In order to evaluate and compare the full predictive posteriors the Negative Log Predictive Probability (NLPP)
 is computed on the test set.
@@ -8700,8 +8710,9 @@ of $0.01$ and Squared Exponential kernels for all GPs.}
 **** intro :ignore:
 # The goal of this dissertation is to control a DJI Tello quadcopter in an indoor environment
 # subject to two modes of operation characterised by turbulence.
-In order to verify that \acrshort{mosvgpe} works on real-world systems,
-it was tested on a real-world quadcopter data set following the illustrative example detailed
+# In order to verify that \acrshort{mosvgpe} works on real-world systems,
+As this work is motivated by learning representations of real-world dynamical systems, it was
+tested on a real-world quadcopter data set following the illustrative example detailed
 in cref:illustrative_example.
 The data set was collected at the Bristol Robotics Laboratory using
 a velocity controlled DJI Tello quadcopter and a Vicon tracking system.
@@ -9439,7 +9450,8 @@ from an initial state $\state_0$ -- in a desired dynamics mode -- to a target st
 whilst remaining in the desired dynamics mode.
 
 The \acrshort{mosvgpe} method from cref:chap-dynamics was intentionally formulated with latent variables
-to represent the mode switching behaviour and its associated uncertainty.
+-- to represent the mode switching behaviour and its associated uncertainty -- so that they could be leveraged
+to encode mode remaining behaviour into control strategies.
 This chapter unleashes the power of these latent variables by making decisions under their uncertainty.
 # The methods presented in this chapter are model-based control techniques that leverage
 # a single-step predictive dynamics model learned using the \acrshort{mosvgpe} method from cref:chap-dynamics.
@@ -9456,16 +9468,15 @@ cref:chap-traj-opt-inference then introduces an alternative approach to mode rem
 does not leverage the geometry of the gating network.
 Instead, it extends the control-as-inference framework and encodes mode remaining behaviour via conditioning on
 the mode indicator variable.
-
 cref:chap-traj-opt-results evaluates and compares all three methods using the illustrative
 example from cref:illustrative_example.
-The work in this chapter is implemented in JAX and TensorFlow/GPflow and is available on GitHub[fn::Code accompanying
-cref:sec-traj-opt-collocation can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]] and
-[[https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems]]
-and code accompanying cref:sec-traj-opt-energy can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]].]
-citep:jax2018github,tensorflow2015-whitepaper,GPflow2017.
 An initial version of the indirect optimal control via latent geodesics method presented in cref:sec-traj-opt-collocation
 is published in cite:scannellTrajectory2021.
+# The work in this chapter is implemented in JAX and TensorFlow/GPflow and is available on GitHub[fn::Code accompanying
+# cref:sec-traj-opt-collocation can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]] and
+# [[https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems][\icon{\faGithub}/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems]]
+# and code accompanying cref:sec-traj-opt-energy can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]].]
+# citep:jax2018github,tensorflow2015-whitepaper,GPflow2017.
 
 # The remainder of this chapter is organised as follows.
 # cref:sec-problem-statement formally states the problem
@@ -9489,8 +9500,7 @@ is published in cite:scannellTrajectory2021.
 
 ** Problem Statement label:sec-problem-statement
 The goal of this chapter is to solve the mode remaining navigation problem in cref:problem-statement-main.
-However, this chapter only considers mode remaining trajectory optimisation and does not consider
-state feedback controllers.
+This chapter considers mode remaining trajectory optimisation rather than considering state feedback controllers.
 This mode remaining trajectory optimisation problem is given by,
 #+BEGIN_EXPORT latex
 \begin{subequations} \label{eq-mode-soc-problem}
@@ -9509,7 +9519,7 @@ This mode remaining trajectory optimisation problem is given by,
 \end{align}
 \end{subequations}
 #+END_EXPORT
-That is, given a desired dynamics mode $\desiredMode$, this work seeks to find a control
+That is, given a desired dynamics mode $\desiredMode$, we seek  to find a control
 trajectory $\controlTraj = \control_{0:\TimeInd-1}$,
 to navigate from an initial state $\state_{0} \in \desiredStateDomain$, to a
 target state $\targetState \in \desiredStateDomain$, over a horizon $\TimeInd$,
@@ -10061,11 +10071,10 @@ cref:sec-prob-geo then extends these concepts to probabilistic geometries in ord
 **** Lengths in Euclidean Spaces :ignore:
 \newline
 *Lengths in Euclidean spaces*
-The $l^2$ norm (aka Euclidean norm) provides an intuitive notion for the length of a
-vector $\manifoldInput \in \manifoldDomain \subseteq \R^{\manifoldDomainDim}$
-in a Euclidean space.
-Overloading notation, a continuous time trajectory is also denoted $\trajectory$ and corresponds to
-${\trajectory: [t_0, t_f] \rightarrow \manifoldDomain$.
+The $l^2$ norm (Euclidean norm) provides an intuitive notion for the length of a
+vector $\manifoldInput \in \manifoldDomain \subseteq \R^{\manifoldDomainDim}$ in a Euclidean space.
+A continuous-time trajectory is denoted ${\trajectory: [t_0, t_f] \rightarrow \manifoldDomain$.
+Note that this has overloaded the discrete-time trajectory notation.
 Under the $l^2$ norm, the length of a trajectory $\trajectory$ is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-euclidean-length}
@@ -10251,7 +10260,7 @@ at a new input location $\testInput \in \R^{1 \times \GatingDim}$,
 \end{align}
 assuming that the mean and covariance functions are differentiable.
 As such, the conditional distribution over the Jacobian
-$\testJac$ can be obtained using the properties of multivariate Normals
+$\testJac$ can be obtained using the properties of multivariate normals
 and is given by,
 %\begin{align} \label{eq-predictive-jacobian-dist}
 %\Jac(\cdot)
@@ -10282,12 +10291,12 @@ where the covariance matrices are given by,
 \jacManifoldKernelsN&= \frac{\partial k\left(\testInput, \allInput\right)}{\partial \testInput} \in \R^{\GatingDim \times \NumData} \\
 \hessManifoldKernel &= \frac{\partial^2 k\left(\testInput, \testInput \right)}{\partial \testInput \partial \testInput} \in \R^{\GatingDim \times \GatingDim}.
 \end{align}
-\cref{eq-predictive-jacobian-dist} is a $\GatingDim\text{-dimensional}$ multivariate Normal distribution.
+\cref{eq-predictive-jacobian-dist} is a $\GatingDim\text{-dimensional}$ multivariate normal distribution.
 \end{myquote}
 #+END_EXPORT
 
 Therefore, the metric tensor $\desiredMetricTensor$ in cref:eq-desired-metric-tensor is the outer product of
-two Normally distributed random variables.
+two normally distributed random variables.
 As such, the metric tensor $\desiredMetricTensor$ is also a random variable, following
 a non-central Wishart distribution citep:andersonNonCentral1946,
 #+BEGIN_EXPORT latex
@@ -10608,7 +10617,7 @@ The control inputs $\controlTraj$ are recovered by treating them as latent varia
 \label{eq-control-elbo}
 \end{align}
 #+END_EXPORT
-where each time step of the latent control trajectory is assumed to be Normally distributed,
+where each time step of the latent control trajectory is assumed to be normally distributed,
 #+BEGIN_EXPORT latex
 \begin{align}
 p(\controlTraj) = \prod_{\timeInd=0}^{\TimeInd-1} \mathcal{N}(\control_{\timeInd} \mid \mathbf{0}, \mathbf{I}),
@@ -10918,27 +10927,27 @@ Calculating this expectation is difficult as multi-step predictions in the \acrs
 cannot be calculated in closed-from.
 
 This work adopts a two-stage approximation to obtain a closed-form expression for the expected cost.
-First, multi-step dynamics predictions are approximated to obtain Normally distributed states at
+First, multi-step dynamics predictions are approximated to obtain normally distributed states at
 each time step.
-Given Normally distributed states, calculating the expected terminal and control cost terms in
+Given normally distributed states, calculating the expected terminal and control cost terms in
 cref:eq-mode-soc-problem-geometry-cost is straightforward.
 However, the expected Riemannian energy in cref:eq-mode-soc-problem-geometry-cost has no closed-form expression,
 due to the dependence of metric $\metricTensor$ on the state.
-The second stage approximates the calculation of the expected Riemannian energy under Normally distributed states.
+The second stage approximates the calculation of the expected Riemannian energy under normally distributed states.
 
 # The following issues arise when calculating this expectation:
 # 1) Calculating multi-step predictions in the MoSVSGPE dynamics model cannot be calculated in closed-from,
 #    - This is because the state difference after the first time step is a Gaussian mixture and
 #      propagating Gaussian mixtures through Gaussian processes has no closed-form solution.
-# 2) Unlike the quadratic terminal/control costs  in cref:eq-quadratic-cost-with-energy, the expected Riemannian energy in cref:eq-trajectory-energy has no closed-form expression under Normally distributed states.
+# 2) Unlike the quadratic terminal/control costs  in cref:eq-quadratic-cost-with-energy, the expected Riemannian energy in cref:eq-trajectory-energy has no closed-form expression under normally distributed states.
 # This work adopts a two-stage approximation to obtain a closed-form expression for the expected cost.
-# First, multi-step state predictions under the dynamics are approximated to obtain Normally distributed at
+# First, multi-step state predictions under the dynamics are approximated to obtain normally distributed at
 # each time step.
-# Given Normally distributed states, calculating the expected terminal/control cost terms in
+# Given normally distributed states, calculating the expected terminal/control cost terms in
 # cref:eq-quadratic-cost-with-energy is trivial.
 # However, the expected Riemannian energy in cref:eq-quadratic-cost-with-energy has no closed-form expression,
 # due to the metric's $\metricTensor$ dependence on the state, via the Jacobian.
-# The second stage approximates the calculation of the expected Riemannain energy under Normally distributed states.
+# The second stage approximates the calculation of the expected Riemannain energy under normally distributed states.
 
 # 1) Simulating the \acrshort{mosvgpe} dynamics model to obtain multi-step predictions is not trivial,
 
@@ -11018,12 +11027,11 @@ p(\state_{\timeInd+1} \mid \state_0, \control_{0:\timeInd}, \bm\modeVar_{0:\time
 \end{align}
 #+END_EXPORT
 with $p(\state_0) = \delta(\state_0)$.
-Approximate closed-form solutions exist for propagating Normally distributed states and controls
-through GP models
+Approximate closed-form solutions exist for propagating normally distributed states and controls through GP models
 citep:girardApproximate2004,kussGaussian2006,quinonero-candelaPropagation2003.
-This work exploits the moment-matching approximation
-implemented in the =uncertain_conditional= from GPflow citep:GPflow2017.
-For more details on the approximation see Section 7.2.1 of cite:kussGaussian2006.
+This work exploits the moment-matching approximation from Section 7.2.1 of cite:kussGaussian2006.
+# implemented in the =uncertain_conditional= from GPflow citep:GPflow2017.
+# For more details on the approximation see Section 7.2.1 of cite:kussGaussian2006.
 
 # However, this assumption should be enforced, i.e. the controlled system should remain in the desired mode.
 # As the dynamics model is learned from observations, this work relaxes the requirement to finding
@@ -11080,7 +11088,7 @@ gating functions from cref:eq-predictive-gating.
 # are uncertain, indicated by the marginalisation over $\GatingFunc(\state_{\timeInd})$.
 
 **** Approximate Riemannian Energy
-Given this approach for simulating the \acrshort{mosvgpe} dynamics model, the state at each time step is Normally distributed.
+Given this approach for simulating the \acrshort{mosvgpe} dynamics model, the state at each time step is normally distributed.
 Unlike the terminal and control cost terms in cref:eq-mode-soc-problem-geometry-cost, the expected Riemannian
 energy,
 #+BEGIN_EXPORT latex
@@ -11092,11 +11100,11 @@ energy,
  \stateDiff_\timeInd \right],
 \end{align}
 #+END_EXPORT
-has no closed-form expression under Normally distributed states.
+has no closed-form expression under normally distributed states.
 This is because the metric tensor $\metricTensor$ depends on the Jacobian, which depends on the state.
 However, it is possible to approximate the expected energy to obtain a closed-form expression.
 
-The distribution over the Jacobian when the input location in Normally distributed
+The distribution over the Jacobian when the input location in normally distributed
 $\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)$ can be calculated in closed-form when using the
 Squared Exponential kernel.
 However, this work simplifies the problem and calculates the Jacobian at the state mean of each time step
@@ -11197,7 +11205,7 @@ In most experiments, this strategy was far superior than constraining the optimi
 **** Cost Functions :ignore:noexport:
 *Cost Functions*
 This work primarily focuses on quadratic costs, as they are ubiquitous in control and lead
-to closed-form expectations under Normally distributed states
+to closed-form expectations under normally distributed states
 ${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$
 and controls
 ${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$.
@@ -11223,7 +11231,7 @@ As such, this work adopts the following cost function,
 where $\terminalStateCostMatrix$
 and $\controlCostMatrix$ are user defined,
 real, symmetric, positive semi-definite and positive definite matrices respectively.
-Importantly, the expected value of this cost under Normally distributed states and controls can be
+Importantly, the expected value of this cost under normally distributed states and controls can be
 calculated in closed form with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expected-quadratic-cost}
@@ -12039,9 +12047,9 @@ Whilst the derivation shown here differs from cite:rawlikStochastic2013, the und
 objective are the same.
 
 In variational inference the goal is to approximate a distribution $p(\mathbf{y})$
-with another, potentially simpler distribution $q(\mathbf{y})$.
+with another, simpler distribution $q(\mathbf{y})$.
 Typically this distribution $q(\mathbf{y})$ is selected to be a product of conditional distributions connected in a
-chain or tree, which lends itself to exact inference.
+chain or tree, which lends itself to tractable inference.
 In this work, the goal is to approximate the intractable distribution over optimal trajectories,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-}
@@ -12125,7 +12133,7 @@ Constructing approximate closed-form solutions based on the model in cref:chap-d
 is difficult, due to the exponential growth in the number of Gaussian components.
 Similar to the approach in cref:sec-dynamics-predictions, this chapter obtains multi-step
 predictions by cascading single-step predictions through the desired mode's dynamics GP.
-However, this approach extends the predictions to handle Normally distributed controls
+However, this approach extends the predictions to handle normally distributed controls
 $\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)$.
 Multi-step predictions are then obtained by recursively calculating the following integral,
 #+BEGIN_EXPORT latex
@@ -12154,7 +12162,7 @@ q(\state_{\timeInd+1} \mid \state_0, \modeVarTraj_{0:\timeInd})
 \end{align}
 #+END_EXPORT
 with $q(\state_0) = \delta(\state_0)$.
-Note that the state and control at each time step are Normally distributed.
+Note that the state and control at each time step are normally distributed.
 # For notational conciseness, the variational distribution is denoted
 # $q(\stateTraj, \controlTraj) = q(\stateTraj, \controlTraj \mid \state_0)$,
 # i.e. the dependence on $\state_0$ is dropped.
@@ -12227,7 +12235,7 @@ term reducing to an entropy term and a constant,
 The ELBO in cref:eq-traj-opt-elbo resembles the KL control objective in cref:eq-kl-control-uniform
 but with an extra term encoding the mode remaining behaviour.
 In practice, maximum entropy control is achieved by parameterising the control at each time step to
-be Normally distributed ${\controlVarDist = \mathcal{N}(\control_{\timeInd} \mid \controlMean, \controlCov)}$.
+be normally distributed ${\controlVarDist = \mathcal{N}(\control_{\timeInd} \mid \controlMean, \controlCov)}$.
 The control dimensions are assumed independent so $\controlCov$ becomes diagonal.
 The maximum entropy behaviour can be omitted by using deterministic controls, i.e.
 parameterising them to follow a dirac delta distribution $\controlVarDist = \delta(\control_\timeInd)$.
@@ -12270,7 +12278,7 @@ real, symmetric, positive semi-definite and positive definite matrices respectiv
 This cost function encodes the terminal state boundary condition in cref:eq-mode-soc-problem via a
 quadratic cost that minimises the deviation of the final state $\state_{\TimeInd}$ from the target
 state $\targetState$.
-Importantly, the expected value of this cost under Normally distributed states and controls can be
+Importantly, the expected value of this cost under normally distributed states and controls can be
 calculated in closed-form with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expected-quadratic-cost}
@@ -12293,7 +12301,7 @@ calculated in closed-form with,
 **** Cost Functions :ignore:noexport:
 *Cost Functions*
 This work primarily focuses on quadratic costs, as they are ubiquitous in control and lead
-to closed-form expectations under Normally distributed states
+to closed-form expectations under normally distributed states
 ${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$
 and controls
 ${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$.
@@ -12319,7 +12327,7 @@ As such, this work adopts the following cost function,
 where $\terminalStateCostMatrix$
 and $\controlCostMatrix$ are user defined,
 real, symmetric, positive semi-definite and positive definite matrices respectively.
-Importantly, the expected value of this cost under Normally distributed states and controls can be
+Importantly, the expected value of this cost under normally distributed states and controls can be
 calculated in closed form with,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expected-quadratic-cost}
@@ -12395,10 +12403,10 @@ q(\control_\timeInd) q(\state_\timeInd)
 # \end{align}
 # #+END_EXPORT
 with $q(\state_0) = \delta(\state_0)$.
-This work considers Normally distributed controls
+This work considers normally distributed controls
 ${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$ and
 deterministic controls.
-Approximate closed-form solutions exist for propagating Normally distributed states and controls
+Approximate closed-form solutions exist for propagating normally distributed states and controls
 through GP models
 citep:girardGaussian2003,kussGaussian2006,quinonero-candelaPropagation2003.
 \todo{correct girard citation}
@@ -12431,7 +12439,7 @@ The variational lower bound is then given by sums over each time step,
 
 # This work
 # Consider the problem of predicting the next state $\state_{\timeInd+1}$
-# given multivariate Normally distributed states
+# given multivariate normally distributed states
 # ${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$
 # and controls
 # ${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
@@ -12454,7 +12462,7 @@ The variational lower bound is then given by sums over each time step,
 # = \prod_{\timeInd=0}^{\TimeInd-1} q(\state_{\timeInd+1} \mid \state_0) \controlVarDist.
 # \end{align}
 # #+END_EXPORT
-# where each state and control are Normally
+# where each state and control are normally
 # distributed
 
 **** Approximate Inference for Dynamics Predictions :noexport:
@@ -12563,7 +12571,7 @@ p(\singleInput) = p(\state_{\timeInd}, \control_\timeInd) = p(\state_{\timeInd})
 
 ***** Predictions with Uncertain Inputs
 Consider the problem of predicting the next state  $\state_{\timeInd+1}$
-given multivariate Normally distributed states,
+given multivariate normally distributed states,
 ${\state_{\timeInd} \sim \mathcal{N}(\stateMean, \stateCov)}$,
 and controls,
 ${\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)}$,
@@ -12756,7 +12764,7 @@ state $\state_{f}$, whilst avoiding the turbulent dynamics mode.
 The methods were further evaluated on a second simulated velocity controlled quadcopter navigation problem.
 See cref:fig-environments for schematics of the two environments.
 The turbulent dynamics modes (green) are subject to higher drift due to the wind field created by the fan.
-They are also subject to higher diffusion (aka process noise) resulting from the turbulence induced by the fan.
+They are also subject to higher diffusion (process noise) resulting from the turbulence induced by the fan.
 Although the exact turbulent dynamics are not known, they are believed to be difficult to control.
 This is due to the high process noise which may lead to catastrophic failure.
 It is therefore desirable to find trajectories that avoid entering this turbulent dynamics mode.
@@ -13449,7 +13457,8 @@ However, in Environment 2, the inference strategy was not able to recover the co
 along the collocation solver's state trajectory.
 This can be seen by the dynamics trajectories (magenta) differing from the collocation trajectories (yellow) in
 cref:fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5,fig-geodesic-mid-point-traj-opt-5.
-It is likely that the ELBO in cref:eq-control-elbo-svgp was not able to recover the controls due to a local optima.
+One possible explanation is that the ELBO in cref:eq-control-elbo-svgp was not able
+to recover the controls due to a local optima.
 The collocation state trajectories (yellow) in the experiments in
 cref:fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5
 pass through the turbulent dynamics mode.
@@ -13887,15 +13896,17 @@ The GP-based gating network is not aware that the region with no observations is
 another turbulent dynamics mode inside it.
 This is due to the Squared Exponential kernel function relying on point-wise calculations to build the covariance
 matrix.
-Future work could explore kernel functions that capture structure at a mode level (shape etc),
-as opposed to simple point-wise structure.
+Future work could explore methods that capture higher-order interactions, for example, the size and shape of
+modes.
+# structure at a
+# mode level (shape etc),
+# as opposed to simple point-wise structure.
 # \todo[inline]{is this spatial awareness? What to call this? More than point-wise structure,
 # Such a kernel could learn the shape of a dynamics mode, for example, the turbulent region induced by a fan.
 # Such a kernel would be aware if a region is large enough for another
 # This problem could be
 # That is, the kernel function is not able to detect if
 
-\todo[inline]{Carl you mentioned something about the kernel using pointwise calculations which make it impossible to model this. Not sure if what I've written here fully captures what you meant?}
 # This overconfidence arises due to the gating network learning a long lengthscale.
 # One approach to mitigate this behaviour, is to fix the lengthscale.
 # However, it may not be obvious how to set this value a priori.
@@ -14574,7 +14585,7 @@ That is, $\lambda$ should remain at $1.0$ unless it is immediately clear how it 
 
 *Control-as-inference*
 The control-as-inference method also performed well in all of the experiments.
-The experiments showed that the maximum entropy control obtained from using Normally distributed controls
+The experiments showed that the maximum entropy control obtained from using normally distributed controls
 improves the mode remaining behaviour and works well in practice.
 Both the direct optimal control and the control-as-inference methods are competitive approaches for finding
 mode remaining trajectories.
@@ -14769,7 +14780,7 @@ necessarily separated according to their state domains $\mode{\stateDomain}$.
 This is because it does not rely on the state dependent gating functions.
 
 # *Maximum entropy control*
-# The maximum entropy control that arises from using Normally distributed controls in the control-as-inference method
+# The maximum entropy control that arises from using normally distributed controls in the control-as-inference method
 # improved the mode remaining behaviour in all experiments.
 
 # the single-step dynamics models time step.
@@ -14945,7 +14956,7 @@ where the dynamics model is learned from observations.
 The main contribution of this chapter is an explorative trajectory optimisation algorithm
 that can explore multimodal environments with high probability of remaining in a desired dynamics mode.
 This chapter further proposes an approach to solve the mode remaining navigation problem from cref:problem-statement-main
-by combining all of the work in this dissertation.
+by consolidating all of the work in this dissertation.
 
 This chapter is organised as follows.
 cref:problem-statement-explore formally states the problem and assumptions made in this chapter.
@@ -14956,9 +14967,9 @@ solving the mode remaining navigation problem in cref:problem-statement-main.
 cref:sec-preliminary-results presents some initial results in the simulated
 quadcopter environment.
 Finally, cref:sec-future-work-explore discusses \modeOpt and details some directions for future work.
-The work in this chapter is implemented in TensorFlow/GPflow
-citep:tensorflow2015-whitepaper,GPflow2017
-and is available on GitHub[fn:2:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt.]]].
+# The work in this chapter is implemented in TensorFlow/GPflow
+# citep:tensorflow2015-whitepaper,GPflow2017
+# and is available on GitHub[fn:2:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt.]]].
 
 # This chapter seeks to solve this navigation problem by combining all of the work in this dissertation.
 # To this end, it first hypothesises how the work can be combined to solve the navigation problem.
@@ -15839,7 +15850,7 @@ can be calculated by assuming that the unobserved gating function values $\desir
 are jointly Gaussian with the gating function values at the training inputs $\desiredGatingFunction(\allInput)$.
 The distribution over the desired mode's gating function at $\state_{\timeInd}$ conditioned on the rest of the trajectory
 $p(\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj_{\neg\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset)$
-can be calculated using the properties of multivariate Normal distributions,
+can be calculated using the properties of multivariate normal distributions,
 #+BEGIN_EXPORT latex
 \begin{align}
 p(\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj_{\neg\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset)
