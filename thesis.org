@@ -5580,13 +5580,21 @@ $\Delta \state_{\timeInd+1} = \state_{\timeInd+1} - \state_{\timeInd}$.
 At any given time step $t$, one of the $\ModeInd$ dynamics modes
 $\{\unknownDynamicsK : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$
 and associated noise models
-$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$, where
-$\bm\Sigma_{\mode{\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
-are selected by a discrete mode indicator function
-$\alpha : \stateDomain \rightarrow \modeDomain$.
-The output of the mode indicator function is referred to as the mode indicator variable and is denoted
-$\alpha_{\timeInd} = \alpha(\state_{\timeInd})$ with domain
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$,
+are selected by a discrete mode indicator variable
+$\alpha_{\timeInd}$ with domain
 $\alpha_{\timeInd} \in \modeDomain = \{1,\ldots,\ModeInd\}$.
+This work assumes that the discrete mode indicator variable depends on the state $\state$ such that it is governed by
+a discrete mode indicator function $\alpha : \stateDomain \rightarrow \modeDomain$.
+
+
+# are selected by a discrete mode indicator function
+# $\alpha : \stateDomain \rightarrow \modeDomain$.
+# The output of the mode indicator function is referred to as the mode indicator variable and is denoted
+# $\alpha_{\timeInd} = \alpha(\state_{\timeInd})$ with domain
+# $\alpha_{\timeInd} \in \modeDomain = \{1,\ldots,\ModeInd\}$.
+
+# where $\bm\Sigma_{\mode{\bm\epsilon}} = \text{diag}\left[ \sigma_{\modeInd,1}^{2}, \ldots, \sigma_{\modeInd,\StateDim}^2 \right]$,
 
 # The output of the mode indicator function is referred to as the mode indicator variable and is given by
 # $\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\}$.
@@ -13362,12 +13370,12 @@ with all of the model's epistemic uncertainty marginalised, i.e. maximising cref
 | Env | Method          | $\lambda$ | Mode prob                          | Mode prob with unc.                 | State unc.               | Gating unc.                                          | Riemannian energy                                   | Target state                       |
 |     |                 |           | Eq. ref:eq-mode-probability-no-unc | Eq. ref:eq-mode-probability-all-unc | $\mathbb{V}[\stateTraj]$ | $\mathbb{V}[\gatingFunc_{\desiredMode}(\stateTraj)]$ | Eq. ref:eq-approximate-trajectory-riemannian-energy | $\state_{\TimeInd}==\targetState$? |
 |-----+-----------------+-----------+------------------------------------+-------------------------------------+--------------------------+------------------------------------------------------+-----------------------------------------------------+------------------------------------|
-|     | \ig             | $0.5$     | $16.96$                            | $16.22$                             | $8.69$                   | $346.62$                                             | $238.29$                                            | $\times$ dynamics              |
-|     | \ig             | $1.0$     | $18.51$                            | $16.98$                             | $8.70$                   | $367.16$                                             | $222.07$                                            | $\times$ dynamics              |
-|     | \ig             | $20.0$    | $15.32$                            | $14.62$                             | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                            | $\times$ dynamics              |
+|     | \ig             | $0.5$     | $16.96$                            | $16.22$                             | $8.69$                   | $346.62$                                             | $238.29$                                            | $\times$ dynamics                  |
+|     | \ig             | $1.0$     | $18.51$                            | $16.98$                             | $8.70$                   | $367.16$                                             | $222.07$                                            | $\times$ dynamics                  |
+|     | \ig             | $20.0$    | $15.32$                            | $14.62$                             | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                            | $\times$ dynamics                  |
 |   1 | \dre            | $0.5$     | $20.91$                            | $16.77$                             | $8.70$                   | $404.51$                                             | $180.10$                                            | $\checkmark$ both                  |
 |     | \dre            | $1.0$     | $\mathbf{20.98}$                   | $18.10$                             | $8.72$                   | $388.51$                                             | $\mathbf{173.84}$                                   | $\checkmark$ both                  |
-|     | \dre            | $20.0$    | $12.64$                            | $13.00$                             | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                            | $\times$ dynamics              |
+|     | \dre            | $20.0$    | $12.64$                            | $13.00$                             | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                            | $\times$ dynamics                  |
 |     | \cai (gauss)    | N/A       | $20.94$                            | $\mathbf{19.99}$                    | $8.74$                   | $208.62$                                             | $287.52$                                            | $\checkmark$ both                  |
 |     | \cai (dirac)    | N/A       | $20.96$                            | $19.58$                             | $8.73$                   | $258.27$                                             | $237.32$                                            | $\checkmark$ both                  |
 |-----+-----------------+-----------+------------------------------------+-------------------------------------+--------------------------+------------------------------------------------------+-----------------------------------------------------+------------------------------------|
@@ -13375,7 +13383,6 @@ with all of the model's epistemic uncertainty marginalised, i.e. maximising cref
 |     | \ig             | $1.0$     | $18.98$                            | $19.16$                             | $1.39$                   | $522.60$                                             | $285.92$                                            | $\times$                           |
 |     | \ig (mid point) | $1.0$     | $17.55$                            | $17.80$                             | $1.57$                   | $553.00$                                             | $213.82$                                            | $\times$                           |
 |     | \ig             | $5.0$     | $18.98$                            | $19.17$                             | $1.44$                   | $503.94$                                             | $215.75$                                            | $\times$                           |
-|     | \dre            | $0.01$    | $\mathbf{20.98}$                   | $\mathbf{20.80}$                    | $1.79$                   | $497.47$                                             | $275.00$                                            | $\checkmark$ both                  |
 |   2 | \dre            | $0.5$     | $20.96$                            | $20.34$                             | $1.42$                   | $367.47$                                             | $182.06$                                            | $\checkmark$ both                  |
 |     | \dre            | $1.0$     | $\mathbf{20.98}$                   | $20.68$                             | $\mathbf{1.28}$          | $\mathbf{334.47}$                                    | $144.16$                                            | $\checkmark$ both                  |
 |     | \dre            | $5.0$     | $20.81$                            | $20.13$                             | $1.37$                   | $374.13$                                             | $\mathbf{134.33}$                                   | $\checkmark$ both                  |
@@ -13383,6 +13390,7 @@ with all of the model's epistemic uncertainty marginalised, i.e. maximising cref
 |     | \cai (dirac)    | N/A       | $\mathbf{20.98}$                   | $20.61$                             | $1.56$                   | $644.35$                                             | $534.39$                                            | $\checkmark$ both                  |
 #+LATEX: }
 #+end_table
+# |     | \dre            | $0.01$    | $\mathbf{20.98}$                   | $\mathbf{20.80}$                    | $1.79$                   | $497.47$                                             | $275.00$                                            | $\checkmark$ both                  |
 
 *** Results
 **** intro :ignore:
@@ -13390,15 +13398,16 @@ Three settings of the tunable $\lambda$ parameter --
 which determines the relevance of the covariance term in the expected Riemannian metric -- were tested for
 each of the geometry-based methods in Environment 1.
 In Environment 2, four different settings of the $\lambda$ parameter were tested for the
-direct optimal control method and three settings were tested for the indirect optimal control method.
+direct optimal control (\dre) method and three settings were tested for the indirect optimal control (\ig) method.
 This was due to the indirect optimal control method's collocation solver failing with $\lambda=0.01$.
+
 The control-as-inference (\cai) method from cref:sec-traj-opt-inference was tested with
 Gaussian controls (gauss) and with deterministic (dirac) controls.
-This enabled the maximum entropy control resulting from Gaussian controls to be compared to a baseline
-without maximum entropy control.
+This enabled the maximum entropy control behaviour (resulting from Gaussian controls)
+to be compared to a baseline without maximum entropy control.
 cref:tab-results-sim-envs summarises all of the results from both environments.
-The experiments for the indirect optimal control method are not included in cref:tab-results-sim-envs
-because none of them found trajectories to the target state.
+# The experiments for the indirect optimal control method are not included in cref:tab-results-sim-envs
+# because none of them found trajectories to the target state.
 
 All of the direct optimal control and control-as-inference experiments used a horizon of $\TimeInd=20$ time steps and
 all of the indirect optimal control experiments were initialised with $I=20$ collocation points.
@@ -13428,7 +13437,7 @@ this behaviour.
 
 To further help visualise the results, the optimised controls are rolled out in
 the desired mode's dynamics GP (magenta) and in the environment (cyan).
-Deviation between these two trajectories is undesirable as it indicates that the controls,
+Deviation between these two trajectories is undesirable as it indicates that the controls either,
 1. drive the system out of the desired mode, or,
 2. drive the system into regions of the learned model with high epistemic uncertainty.
 For the indirect geodesic control experiments, the state trajectory found by the collocation solver
@@ -13464,8 +13473,8 @@ cref:fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-
 pass through the turbulent dynamics mode.
 As this region belongs to the turbulent dynamics mode, the desired mode's dynamics GP has high epistemic uncertainty
 in this region.
-This high uncertainty results in the ELBO being low when trajectories pass through this region and
-it is well known that gradient based methods struggle to get out of such local minima.
+This high uncertainty may have resulted in the ELBO being low when trajectories pass through this region.
+It is well known that gradient based methods struggle to get out of such local minima.
 Further to this, the experiment in cref:fig-geodesic-mid-point-traj-opt-5
 was not able to recover the correct controls, even though the collocation state trajectory (yellow)
 does not pass through the turbulent dynamics mode.
@@ -13530,7 +13539,7 @@ This is shown by the collocation trajectories (yellow) passing over the mode bou
 into the turbulent dynamics mode in
 cref:fig-geodesic-low-traj-opt-7,fig-geodesic-traj-opt-7,fig-geodesic-high-traj-opt-7,fig-geodesic-low-traj-opt-5,fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-traj-opt-5,fig-geodesic-high-traj-opt-5,fig-geodesic-low-traj-opt-5.
 In Environment 1, although none of the indirect geodesic control
-experiments successfully remained in the desired dynamics mode, they did exhibited mode remaining behaviour.
+experiments successfully remained in the desired dynamics mode, they did exhibit some mode remaining behaviour.
 That is, the trajectories with $\lambda=0.5$ in cref:fig-geodesic-low-traj-opt-7
 and with $\lambda=1.0$ in cref:fig-geodesic-traj-opt-7,
 navigate to the left and almost reach the mode boundary.
@@ -13543,7 +13552,7 @@ This is indicated by the collocation state trajectories (yellow) passing directl
 mode.
 Issues with local optima (in the collocation solver) were overcome for $\lambda=1.0$, by initialising the collocation
 trajectory with two straight lines that passed through a mid point at $[-2.0, -2.0]$.
-This trajectory is named $\ig (mid point)$.
+This trajectory is named \ig (mid point).
 Given this initialisation the collocation state trajectory (yellow) in  cref:fig-geodesic-mid-point-traj-opt-5
 was able to remain in the desired dynamics mode.
 These results indicate that the performance of the collocation solver is dependent on the initial trajectory.
@@ -13654,7 +13663,7 @@ model's epistemic uncertainty.
 In Environment 2, both of the control-as-inference experiments
 in  cref:fig-mode-conditioning-no-max-entropy-traj-opt-5,fig-mode-conditioning-max-entropy-traj-opt-5
 found discrete-time trajectories that remained in the desired dynamics mode.
-This is indicated by none of the trajectories time steps being in the turbulent dynamics mode.
+This is indicated by none of the trajectories' time steps being in the turbulent dynamics mode.
 However, when interpolating the discrete-time trajectory for the experiment without
 maximum entropy control, shown in
 cref:fig-mode-conditioning-no-max-entropy-traj-opt-5,
@@ -13680,7 +13689,8 @@ entering the turbulent dynamics mode.
 # In this setting, increasing $\lambda$ has a negative impact on performance
 ***** Summary :ignore:
 *Summary*
-In practice, setting the lower and upper bounds on the collocation constraints in SciPy is awkward
+In practice, setting the lower and upper bounds on the indirect optimal control method's
+collocation constraints in SciPy is awkward
 and impacts how much mode remaining behaviour is exhibited.
 Setting the bounds too loose results in trajectories not satisfying the geodesic ODE and
 setting them too tight leads to the constrained optimisation exiting with an error.
@@ -13689,9 +13699,9 @@ using Lagrange multipliers. However, this is left for future work.
 In contrast, the direct optimal control method requires little to no human input to initialise the optimisation.
 Overall, the direct optimal control and the control-as-inference with maximum entropy control experiments
 achieved the best mode remaining behaviour.
-This is indicated by them consistently obtaining the highest probabilities of remaining in the desired
-dynamics mode when considering the model's epistemic uncertainty and the second and third highest probabilities
-when not.
+# This is indicated by them consistently obtaining the highest (or close to) probabilities of remaining in the desired
+# dynamics mode when considering the model's epistemic uncertainty and the second and third highest probabilities
+# when not.
 
 ***** mode remaining :ignore:noexport:
 \newline
@@ -13739,7 +13749,7 @@ In all Environment 1experiments,
 the state variance accumulated over the trajectory (from cascading single-step predictions via moment matching)
 were fairly similar.
 This is due to the dynamics of the simulator being simple enough that the desired mode's GP
-can confidently interpolate into the turbulent dynamics mode and the region which has not been observed.
+can confidently interpolate into both the turbulent dynamics mode and the region which has not been observed.
 In the latter case, it is up to the gating network to model the epistemic uncertainty arising from limited
 training data.
 
@@ -13943,6 +13953,58 @@ the mode remaining behaviour and the uncertainty avoiding behaviour.
 # of each behaviour.
 # However, the marginalisation of uncertainty in the \acrshort{elbo}
 # (cref:eq-traj-opt-inference) is principled and requires no human input.
+
+**** Env 1 All mean /variance :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_gating_function_scenario_7.pdf}
+\caption{\textbf{Environment 1 - Dynamics trajectories on gating function posterior}
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$, using the indirect geodesic control (\ig) method
+from \cref{sec-traj-opt-collocation}
+(top row), the direct riemannian energy (\dre) method from \cref{sec-traj-opt-energy} (middle row) and the
+control-as-inference (\cai) method from \cref{chap-traj-opt-inference} (bottom row).
+The optimised controls are rolled out in the desired mode's GP dynamics and are overlayed on the
+posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.}
+\label{fig-all-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+**** Env 2 All mean /variance :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_gating_function_scenario_5.pdf}
+\caption{\textbf{Environment 2 - Dynamics trajectories on gating function posterior}
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$, using the indirect geodesic control (\ig) method
+from \cref{sec-traj-opt-collocation}
+(top row), the direct riemannian energy (\dre) method from \cref{sec-traj-opt-energy} (middle row) and the
+control-as-inference (\cai) method from \cref{chap-traj-opt-inference} (bottom row).
+The optimised controls are rolled out in the desired mode's GP dynamics and are overlayed on the
+posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.}
+\label{fig-all-traj-opt-7}
+\end{figure}
+#+END_EXPORT
+
+**** All prob /variance :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_prob_and_variance_scenario_7.pdf}
+\caption{\textbf{Indirect geodesic control} $\bm\lambda\mathbf{=0.5}$
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$, using the indirect geodesic control method from \cref{sec-traj-opt-collocation}.
+The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
+The optimised state trajectory from the collocation solver is indicated in yellow.
+The trajectories are overlayed on (\subref{fig-geodesic-low-traj-opt-over-prob-7})
+each mode's mixing probability
+and (\subref{fig-geodesic-low-traj-opt-over-svgp-7})
+the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.}
+\label{fig-all-traj-opt-7}
+\end{figure}
+#+END_EXPORT
 
 *** Environment 1 :ignore:
 **** Geodesic collocation 0.5 :ignore:
