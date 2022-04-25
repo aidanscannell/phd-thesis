@@ -13372,10 +13372,10 @@ with all of the model's epistemic uncertainty marginalised, i.e. maximising cref
 |-----+-----------------+-----------+------------------------------------+-------------------------------------+--------------------------+------------------------------------------------------+-----------------------------------------------------+------------------------------------|
 |     | \ig             | $0.5$     | $16.96$                            | $16.22$                             | $8.69$                   | $346.62$                                             | $238.29$                                            | $\times$ dynamics                  |
 |     | \ig             | $1.0$     | $18.51$                            | $16.98$                             | $8.70$                   | $367.16$                                             | $222.07$                                            | $\times$ dynamics                  |
-|     | \ig             | $20.0$    | $15.32$                            | $14.62$                             | $\mathbf{8.66}$          | $201.45$                                             | $627.74$                                            | $\times$ dynamics                  |
-|   1 | \dre            | $0.5$     | $20.91$                            | $16.77$                             | $8.70$                   | $404.51$                                             | $180.10$                                            | $\checkmark$ both                  |
-|     | \dre            | $1.0$     | $\mathbf{20.98}$                   | $18.10$                             | $8.72$                   | $388.51$                                             | $\mathbf{173.84}$                                   | $\checkmark$ both                  |
-|     | \dre            | $20.0$    | $12.64$                            | $13.00$                             | $8.69$                   | $\mathbf{157.83}$                                    | $349.08$                                            | $\times$ dynamics                  |
+|     | \ig             | $20.0$    | $15.04$                            | $14.92$                             | $\mathbf{8.65}$          | $231.98$                                             | $501.26$                                            | $\times$ dynamics                  |
+|   1 | \dre            | $0.5$     | $20.98$                            | $18.04$                             | $8.71$                   | $388.71$                                             | $171.75$                                            | $\checkmark$ both                  |
+|     | \dre            | $1.0$     | $\mathbf{20.98}$                   | $18.10$                             | $8.72$                   | $370.94$                                             | $\mathbf{156.66}$                                   | $\checkmark$ both                  |
+|     | \dre            | $20.0$    | $13.47$                            | $13.10$                             | $8.64$                   | $\mathbf{164.88}$                                    | $363.98$                                            | $\times$ dynamics                  |
 |     | \cai (gauss)    | N/A       | $20.94$                            | $\mathbf{19.99}$                    | $8.74$                   | $208.62$                                             | $287.52$                                            | $\checkmark$ both                  |
 |     | \cai (dirac)    | N/A       | $20.96$                            | $19.58$                             | $8.73$                   | $258.27$                                             | $237.32$                                            | $\checkmark$ both                  |
 |-----+-----------------+-----------+------------------------------------+-------------------------------------+--------------------------+------------------------------------------------------+-----------------------------------------------------+------------------------------------|
@@ -13447,6 +13447,59 @@ is also overlayed (yellow).
 # In the indirect geodesic control experiments, the yellow trajectory represents the state trajectory found by the
 # collocation solver on the geodesic ODE.
 
+**** All prob :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_prob_both_scenarios.pdf}
+\caption{\textbf{Trajectory optimisation results over the desired mode's mixing probability  $\Pr(\modeVar=\desiredMode \mid \state)$}
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$, using the indirect geodesic control (\ig) method
+from \cref{sec-traj-opt-collocation}
+(top row), the direct riemannian energy (\dre) method from \cref{sec-traj-opt-energy} (middle row) and the
+control-as-inference (\cai) method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
+and Environment 2 (right).
+The optimised controls are rolled out in the desired mode's GP dynamics and are overlayed on the
+desired mode's mixing probability.}
+\label{fig-all-traj-opt-prob-7}
+\end{figure}
+#+END_EXPORT
+
+**** All mean :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_gating_mean_both_scenarios.pdf}
+\caption{\textbf{Trajectory optimisation results over the gating function's posterior mean $\mathbb{E}[h_{\desiredMode}(\state)]$}
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$, using the indirect geodesic control (\ig) method
+from \cref{sec-traj-opt-collocation}
+(top row), the direct riemannian energy (\dre) method from \cref{sec-traj-opt-energy} (middle row) and the
+control-as-inference (\cai) method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
+and Environment 2 (right).
+The optimised controls are rolled out in the desired mode's GP dynamics and are overlayed on the
+posterior mean associated with the desired mode's gating function.}
+\label{fig-all-traj-opt-mean-7}
+\end{figure}
+#+END_EXPORT
+
+**** All variance :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_gating_variance_both_scenarios.pdf}
+\caption{\textbf{Trajectory optimisation results over the gating function's posterior variance $\mathbb{V}[h_{\desiredMode}(\state)]$}
+Trajectory optimisation results after finding trajectories from the start state $\state_0$,
+to the target state $\targetState$, using the indirect geodesic control (\ig) method
+from \cref{sec-traj-opt-collocation}
+(top row), the direct riemannian energy (\dre) method from \cref{sec-traj-opt-energy} (middle row) and the
+control-as-inference (\cai) method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
+and Environment 2 (right).
+The optimised controls are rolled out in the desired mode's GP dynamics and are overlayed on the
+posterior variance associated with the desired mode's gating function.}
+\label{fig-all-traj-opt-variance-7}
+\end{figure}
+#+END_EXPORT
 **** Goal 1 - Navigate to the Target State
 The methods are first evaluated at their ability to navigate to the target state, that is, achieve Goal 1.
 
@@ -13954,7 +14007,7 @@ the mode remaining behaviour and the uncertainty avoiding behaviour.
 # However, the marginalisation of uncertainty in the \acrshort{elbo}
 # (cref:eq-traj-opt-inference) is principled and requires no human input.
 
-**** Env 1 All mean /variance :ignore:
+**** Env 1 All mean /variance :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -13971,7 +14024,7 @@ posterior mean (left) and posterior variance (right) associated with the desired
 \end{figure}
 #+END_EXPORT
 
-**** Env 2 All mean /variance :ignore:
+**** Env 2 All mean /variance :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
@@ -13988,25 +14041,37 @@ posterior mean (left) and posterior variance (right) associated with the desired
 \end{figure}
 #+END_EXPORT
 
-**** All prob /variance :ignore:
+**** Collocation comparison :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}
 \centering
-\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_prob_and_variance_scenario_7.pdf}
-\caption{\textbf{Indirect geodesic control} $\bm\lambda\mathbf{=0.5}$
-Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$, using the indirect geodesic control method from \cref{sec-traj-opt-collocation}.
-The optimised controls are rolled out in the desired mode's GP dynamics (magenta) and in the environment (cyan).
-The optimised state trajectory from the collocation solver is indicated in yellow.
-The trajectories are overlayed on (\subref{fig-geodesic-low-traj-opt-over-prob-7})
-each mode's mixing probability
-and (\subref{fig-geodesic-low-traj-opt-over-svgp-7})
-the posterior mean (left) and posterior variance (right) associated with the desired mode's gating function.}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/collocation_trajectories_over_desired_prob_scenario_7.pdf}
+\caption{Environment 1}
+\label{fig-collocation-over-prob-7}
+\end{minipage}
+\begin{minipage}[r]{\columnwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/collocation_trajectories_over_desired_prob_scenario_5.pdf}
+\caption{Environment 2}
+\label{fig-collocation-over-prob-5}
+\end{minipage}
+\caption{\textbf{Indirect geodesic control \ig}
+This figure shows how well the indirect geodesic control \ig method's inference strategy
+in \cref{eq-control-elbo-svgp} can
+recover the controls from the collocation solver's state trajectory $\bar{\mathbf{z}}$ in each environment.
+The left hand plots show the state trajectory found by the collocation solver $\bar{\mathbf{z}}$.
+The right hand plots show the trajectory $\bar{\mathbf{x}}$ obtained when
+rolling out the controls -- recovered using the
+inference strategy in \cref{eq-control-elbo-svgp} --
+in the desired mode's GP dynamics.
+They are overlayed on the desired mode's mixing probability.}
 \label{fig-all-traj-opt-7}
 \end{figure}
 #+END_EXPORT
 
-*** Environment 1 :ignore:
+*** Environment 1 :ignore:noexport:
 **** Geodesic collocation 0.5 :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}
@@ -14247,7 +14312,7 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \end{figure}
 #+END_EXPORT
 
-*** Environment 2 :ignore:
+*** Environment 2 :ignore:noexport:
 **** blah :ignore:
 \newline
 
