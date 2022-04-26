@@ -9468,7 +9468,7 @@ The remainder of this chapter is organised as follows.
 cref:sec-problem-statement formally states the problem.
 cref:chap-traj-opt-geometry details two methods that leverage the geometry of the \acrshort{mosvgpe} gating network.
 The first method in cref:sec-traj-opt-collocation
-resembles an indirect optimal contro method as it solves the necessary conditions which /indirectly/ represent the
+resembles an indirect optimal control method as it solves the necessary conditions which /indirectly/ represent the
 original optimal control problem.
 In contrast, the second method in cref:sec-traj-opt-energy takes the more standard approach and directly solves the
 optimal control problem.
@@ -13814,20 +13814,6 @@ on the mode remaining behaviour.
 This is indicated by no correlation between the mode probability and the state variance,
 which is likely due to the state variance being extremely low.
 
-***** Indirect optimal control :ignore:
-\newline
-
-*Indirect optimal control via latent geodesics \ig*
-In the indirect geodesic control \ig experiments in Environment 1 with $\lambda=0.5, 1.0$, the trajectories navigate
-directly over the region of high posterior variance associated with the gating function.
-This can be seen in the top left plot in cref:fig-all-traj-opt-variance, by the blue and green diamonds trajectories.
-In contrast, the \ig experiment with $\lambda=20.0$ (orange diamonds) avoided this region.
-However, it should be noted that this uncertainty avoiding behaviour came at the cost
-of passing straight through the turbulent dynamics mode.
-In Environment 2 the \ig experiments did not remain in the desired dynamics mode, nor did they exhibit
-any uncertainty avoiding behaviour.
-As mentioned previously, this is likely due to the collocation solver getting stuck in local optima.
-
 ***** All variance :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}
@@ -13845,6 +13831,22 @@ posterior variance associated with the desired mode's gating function.}
 \label{fig-all-traj-opt-variance}
 \end{figure}
 #+END_EXPORT
+***** Indirect optimal control :ignore:
+\newline
+
+*Indirect optimal control via latent geodesics \ig*
+In the indirect geodesic control \ig experiments in Environment 1 with $\lambda=0.5, 1.0$, the trajectories navigate
+directly over the region of high posterior variance associated with the gating function.
+This can be seen in the top left plot in cref:fig-all-traj-opt-variance, by the blue and green diamonds trajectories.
+In contrast, the \ig experiment with $\lambda=20.0$ (orange diamonds) avoided this region.
+However, this uncertainty avoiding behaviour came at the cost
+of passing straight through the turbulent dynamics mode.
+In Environment 2 the \ig experiments did not remain in the desired dynamics mode, nor did they exhibit
+any uncertainty avoiding behaviour.
+As mentioned previously, this was due to the collocation solver getting stuck in local optima induced by the
+initial solution as well as the inference strategy struggling to recover controls to execute the state trajectory
+found by the collocation solver.
+
 ***** Direct optimal control :ignore:
 \newline
 
@@ -13855,26 +13857,27 @@ obtaining the lowest accumulation of gating function variance out of all the exp
 The middle left plot in cref:fig-all-traj-opt-variance
 shows that the trajectory found with \dre $\lambda=20.0$ (orange stars)
 avoids the region of high gating function variance.
-However, this comes at the cost of leaving the desired dynamics mode.
-This result confirms that the covariance term in the expected Riemannian metric can encode the notion of avoiding
+However, similarly to the \ig experiments, this came at the cost of leaving the desired dynamics mode.
+These results confirm that the covariance term in the expected Riemannian metric can encode the notion of avoiding
 regions of high epistemic uncertainty in the gating network.
 However, it also suggests that adjusting $\lambda$ to avoid regions of high epistemic uncertainty
 in the gating network is not always favourable and may result in the optimisation landscape favouring trajectories
-that leave the desired dynamics mode.
+that leave the desired dynamics mode;
+essentially defeating the goal of introducing the $\lambda$ parameter in the first place.
 
 In Environment 2 the trajectory found with \dre $\lambda=1.0$ accumulated the
 least state and gating function variance.
 Interestingly, cref:tab-results-sim-envs indicates that the experiment with \dre $\lambda=5.0$
 resulted in less uncertainty avoiding behaviour.
-In Environment 2, the \dre $\lambda=1.0$ experiment which accumulated the least amount of state and gating
+Further to this, the \dre $\lambda=1.0$ experiment which accumulated the least amount of state and gating
 function variance obtained the second highest probability of remaining in the desired dynamics mode
 when considering the model's epistemic uncertainty.
-Although this result may suggest that avoiding regions of high epistemic uncertainty is favourable for
-remaining in the desired dynamics mode, when combined with the result in Environment 1 it is not possible
+This result suggests that avoiding regions of high epistemic uncertainty is favourable for
+remaining in the desired dynamics mode, however, when combined with the result in Environment 1 it is not possible
 to draw this conclusion.
-Further to this, not only has increasing the value of $\lambda$ not always led to the most uncertainty avoiding
-behaviour, but achieving the most uncertainty avoiding behaviour has not always been beneficial, as indicated
-by the Environment 1 results with \dre $\lambda=20.0$.
+Not only did increasing the value of $\lambda$ not always lead to an increase in the uncertainty avoiding
+behaviour, but increasing the uncertainty avoiding behaviour was also not always found to be beneficial,
+as indicated by the Environment 1 results with \dre $\lambda=20.0$.
 
 # In contrast, the result for \dre $\lambda=0.01$ accumulated the highest state and gating variance, whilst also
 # obtaining the highest probability of remaining in the desired dynamics mode.
@@ -13917,27 +13920,33 @@ be best to just leave it at $\lambda=1.0$.
 \newline
 
 *Control-as-inference \cai*
-The control-as-inference experiments in Environment 1, shown in the bottom left plot of
-cref:fig-all-traj-opt-variance
-also navigates to the left of the region of high epistemic uncertainty in the gating network.
+The control-as-inference experiments in Environment 1,
+avoid the region of high epistemic uncertainty in the gating network.
+This is shown by the \cai (gauss) (black circles) and the \cai (dira) (pink circles) in the bottom left plot
+of cref:fig-all-traj-opt-variance, navigating far to the left around the region of high gating function variance.
 This uncertainty avoiding behaviour is confirmed in cref:tab-results-sim-envs
-where they have lowest amounts of accumulated gating function variance out of the trajectories which remained
-in the desired dynamics mode.
+where the \cai experiments accumulated the least amount of gating function variance out
+of all the trajectories which remained in the desired dynamics mode.
 However, in Environment 2, the \cai experiments
 did not exhibit as much uncertainty avoiding behaviour in the gating network.
 In fact, they obtained higher accumulations of gating function variance by quite a margin.
+As mentioned earlier, this result suggests that avoiding regions of high epistemic uncertainty is not the most
+important factor for obtaining the highest probability of remaining in the desired dynamics mode.
 This change in behaviour is due to the relevance of the uncertainty avoiding behaviour being automatically
 handled by the marginalisation of the gating function in cref:eq-traj-opt-elbo.
-This shows that the \acrshor{elbo} in cref:eq-traj-opt-elbo encodes uncertainty avoiding behaviour
-via the marginalisation over the latent variables.
+
+
+# This shows that the \acrshort{elbo} in cref:eq-traj-opt-elbo encodes uncertainty avoiding behaviour
+# via the marginalisation over the latent variables.
 
 Although marginalisation is a principled way of handing uncertainty, in this scenario,
 it can be conjectured otherwise.
 First note that the quantitative performance measures do not tell the full story.
 This is because in the region with no observations, it is perfectly plausible that there
 is another region belonging to the turbulent dynamics mode, or a different dynamics mode altogether.
-In this case, the trajectory found with $\lambda=5.0$ is most likely to avoid entering the turbulent dynamics mode.
-This is because it avoids the region of high epistemic uncertainty associated with no observations.
+In this case, the trajectory found with \dre $\lambda=5.0$ is most likely to
+avoid entering the turbulent dynamics mode, because it avoids the region of
+high epistemic uncertainty associated with no observations.
 The probability of remaining in the desired dynamics mode does not capture this notion.
 There are two reasons for this.
 Firstly, the gating network is overconfident in this region due to learning a long lengthscale.
@@ -13950,8 +13959,12 @@ matrix.
 Future work could explore methods that capture higher-order interactions, for example, the size and shape of
 modes.
 
+In both environments the \cai (guass) experiments with maximum entropy control obtained lower
+accumulations of gating function variance than the \cai (dirac) experiments without maximum entropy control.
+This further confirms that the maximum entropy control behaviour improves the performance of the control-as-inference
+method.
 
-***** epistemic uncertainty :ignore:
+***** epistemic uncertainty :ignore:noexport:
 \newline
 
 
@@ -14080,25 +14093,6 @@ posterior mean (left) and posterior variance (right) associated with the desired
 \label{fig-all-traj-opt-7}
 \end{figure}
 #+END_EXPORT
-
-**** Summary :ignore:
-*Summary*
-The indirect optimal control via latent geodesics \ig method did not perform very well.
-Further to this, setting the bounds on the collocation solver's constraints is awkward
-and impacts how much mode remaining behaviour is exhibited.
-Setting the bounds too loose results in trajectories not satisfying the geodesic ODE and
-setting them too tight leads to the constrained optimisation exiting with an error.
-In contrast, the direct optimal control via Riemannian energy \dre method requires
-little to no human input to initialise the optimisation.
-Overall, the direct optimal control and the control-as-inference with maximum entropy control experiments
-achieved the best mode remaining behaviour.
-# This is indicated by them consistently obtaining the highest (or close to) probabilities of remaining in the desired
-# dynamics mode when considering the model's epistemic uncertainty and the second and third highest probabilities
-# when not.
-
-*Overall* Visual inspection combined with the results in cref:tab-results-sim-envs,
-indicate that the direct optimal control method with $\lambda=1.0$ was the highest performing experiment in Environment 1.
-Not only does the trajectory avoid regions of the learned dynamics
 
 
 *** Environment 1 :ignore:noexport:
@@ -14684,25 +14678,26 @@ This section details the main findings and insights obtained from the experiment
 the methods and future work.
 
 *Geometry-based methods*
-The indirect optimal control method's collocation solver is susceptible to local optima around its initial state trajectory.
+The indirect geodesic control \ig method's collocation solver is susceptible to local optima around
+its initial state trajectory.
 Although this can be overcome by engineering the initial solution, in practice, it makes it difficult to
 get the method working.
 On top of this, the variational inference strategy used to recover the controls cannot always recover the correct controls.
 This may be due to the collocation solver's state trajectory not satisfying the dynamics constraints, or,
 due to the variational inference getting stuck in local optima.
-Regardless, this is a big limitation that makes the indirect optimal control method fail in some environments.
+Regardless, this is a big limitation that makes the indirect geodesic control \ig method fail in some environments.
 
-Overall, the direct optimal control approach performed significantly better than the indirect optimal control method in the experiments.
-Firstly, two of the direct optimal control experiments in Environment 1 were able to remain in the desired dynamics mode,
-whilst the indirect geodesic control experiments could not.
-Further to this, the direct optimal control approach worked in Environment 2, where it was not possible to get the
-indirect optimal contro method working, without engineering the initial solution.
-Not only did the direct optimal control approach perform better in the experiments, but it is also significantly easier
+Overall, the \dre approach performed significantly better than \ig in the experiments.
+Firstly, two of the \dre experiments in Environment 1 were able to remain in the desired dynamics mode,
+whilst the \ig experiments could not.
+Further to this, the \dre approach worked in Environment 2, where it was not possible to get the
+\ig method working, without engineering the initial solution.
+Not only did the \dre approach perform better in the experiments, but it is also significantly easier
 to configure.
 That is, setting the optimisation parameters is straightforward.
-In contrast, setting the parameters for the indirect optimal contro method is not.
+In contrast, setting the parameters for the \ig method is not.
 In particular, setting the upper and lower bounds for the collocation constraints is pernickety.
-In conclusion, the direct optimal control method is the preferred geometry-based method for finding mode remaining
+In conclusion, the \dre method is the preferred geometry-based method for finding mode remaining
 trajectories.
 
 *How to set $\lambda$?*
@@ -14730,10 +14725,10 @@ That is, $\lambda$ should remain at $1.0$ unless it is immediately clear how it 
 # - Avoiding regions of high epistemic uncertainty in the gating network does not always lead to higher probabilities
 #    of remaining in the desired dynamics mode under cref:eq-mode-probability-all-unc,
 #    - This further suggests that care should be taken if/when adjusting $\lambda$.
-# - The indirect optimal contro method's collocation solver is susceptible to local optima around its initial state trajectory,
+# - The indirect optimal control method's collocation solver is susceptible to local optima around its initial state trajectory,
 #    - Although this can be overcome by engineering the initial solution, in practice, it makes it difficult to
 #      get the method working.
-# - The variational inference strategy used to recover the controls for the indirect optimal contro method cannot always
+# - The variational inference strategy used to recover the controls for the indirect optimal control method cannot always
 #    recover the correct controls,
 #    - This is a big limitation that makes the method fail in some environments.
 #    # - This may be due to the collocation solver's state trajectory not satisfying the dynamics constraints, or,
@@ -14741,41 +14736,77 @@ That is, $\lambda$ should remain at $1.0$ unless it is immediately clear how it 
 
 
 *Control-as-inference*
-The control-as-inference method also performed well in all of the experiments.
+The control-as-inference \cai method performed well in all of the experiments.
 The experiments showed that the maximum entropy control obtained from using normally distributed controls
 improves the mode remaining behaviour and works well in practice.
-Both the direct optimal control and the control-as-inference methods are competitive approaches for finding
-mode remaining trajectories.
+
+
+*Overall*
+The results in cref:tab-results-sim-envs indicate that the \cai (gauss) experiments were the highest performing
+in both environments.
+They obtained the highest probability of remaining in the desired dynamics mode when considering the model's epistemic
+uncertainty.
+Visual inspection combined with the results in cref:tab-results-sim-envs, further
+indicate that the \dre $\lambda=1.0$ experiments performed well in both environments.
+Not only did the \dre experiments avoid leaving the desired dynamics mode but they also avoided the region
+of the gating network with high epistemic uncertainty more so than the \cai experiments.
+Both the direct optimal control via Riemannain energy \dre and the control-as-inference with maximum entropy control
+\cai (gauss) methods are competitive approaches for finding mode remaining trajectories.
+# Overall, the direct optimal control via Riemannain energy \dre and the control-as-inference with maximum
+# entropy control \cai (gauss) methods were the highest performing in the experiments.
+
+# The indirect geodesic control via latent geodesics \ig method did not perform very well in the experiments.
+# Further to this, setting the bounds on it's collocation solver's constraints is awkward
+# and impacts how much mode remaining behaviour is exhibited.
+# Setting the bounds too loose results in trajectories not satisfying the geodesic ODE whilst
+# setting them too tight leads to the constrained optimisation exiting with an error.
+# In contrast, the direct optimal control via Riemannian energy \dre method requires
+# little to no human input to initialise the optimisation.
 
 *** Discussion & Future Work
 This section compares the three control methods presented in
 cref:sec-traj-opt-collocation,sec-traj-opt-energy,chap-traj-opt-inference
 and suggests future work to address their limitations.
 cref:tab-geometry-control-comparison offers a succinct comparison of the three approaches.
-# The main drawback of the indirect optimal contro method is that it does not enforce the dynamics constraints.
+# The main drawback of the indirect optimal control method is that it does not enforce the dynamics constraints.
 
 
+# #+begin_table
+# #+LATEX: \caption{Comparison of the indirect optimal control via latent geodesics \ig method from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannian energy \dre method from \cref{sec-traj-opt-energy} and the control-as-inference \cai method from \cref{chap-traj-opt-inference}.}
+# #+LATEX: \label{tab-geometry-control-comparison}
+# #+LATEX: \resizebox{\textwidth}{!}{
+# #+ATTR_LATEX: :center t :placement [!t] :align lccc
+# |                                                    | \cai       | \ig        | \dre       |
+# |----------------------------------------------------+------------+------------+------------|
+# | Dynamics constraints guaranteed?                   | \checkmark | \times     | \checkmark |
+# | Considers epistemic uncertainty in dynamics?       | \checkmark | \times     | \checkmark |
+# | Considers epistemic uncertainty in gating network? | \checkmark | \checkmark | \checkmark |
+# | Can remain in *multiple* modes?                    | \checkmark | \times     | \times     |
+# | Boundary conditions guaranteed?                    | \times     | \checkmark | \times     |
+# | $\delta-\text{mode remaining}$?                    | \checkmark | \times     | \checkmark |
+# | Continuous time trajectory?                        | \times     | \checkmark | \times     |
+# # | Decouples goals?                                   | \checkmark       | \checkmark     |
+# #+LATEX: }
+# #+end_table
 #+begin_table
-#+LATEX: \caption{Comparison of the indirect optimal contro via latent geodesics method from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannian energy method from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{chap-traj-opt-inference}.}
+#+LATEX: \caption{Comparison of the indirect optimal control via latent geodesics \ig method from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannian energy \dre method from \cref{sec-traj-opt-energy} and the control-as-inference \cai method from \cref{chap-traj-opt-inference}.}
 #+LATEX: \label{tab-geometry-control-comparison}
-#+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center t :placement [!t] :align lccc
-|                                                    | Control as Inference | Indirect Optimal Control | Direct Optimal Control |
-|----------------------------------------------------+----------------------+--------------------------+------------------------|
-| Dynamics constraints guaranteed?                   | \checkmark           | \times                   | \checkmark             |
-| Considers epistemic uncertainty in dynamics?       | \checkmark           | \times                   | \checkmark             |
-| Considers epistemic uncertainty in gating network? | \checkmark           | \checkmark               | \checkmark             |
-| Can remain in *multiple* modes?                    | \checkmark           | \times                   | \times                 |
-| Boundary conditions guaranteed?                    | \times               | \checkmark               | \times                 |
-| $\delta-\text{mode remaining}$?                    | \checkmark           | \times                   | \checkmark             |
-| Continuous time trajectory?                        | \times               | \checkmark               | \times                 |
+|                                                    | \cai       | \ig        | \dre       |
+|----------------------------------------------------+------------+------------+------------|
+| Dynamics constraints guaranteed?                   | \checkmark | \times     | \checkmark |
+| Considers epistemic uncertainty in dynamics?       | \checkmark | \times     | \checkmark |
+| Considers epistemic uncertainty in gating network? | \checkmark | \checkmark | \checkmark |
+| Can remain in *multiple* modes?                    | \checkmark | \times     | \times     |
+| Boundary conditions guaranteed?                    | \times     | \checkmark | \times     |
+| $\delta-\text{mode remaining}$?                    | \checkmark | \times     | \checkmark |
+| Continuous time trajectory?                        | \times     | \checkmark | \times     |
 # | Decouples goals?                                   | \checkmark       | \checkmark     |
-#+LATEX: }
 #+end_table
 
 *Dynamics constraints*
-Both the control-as-inference method presented in cref:chap-traj-opt-inference
-and the direct Riemannian energy approach presented in
+Both the control-as-inference \cai method presented in cref:chap-traj-opt-inference
+and the direct Riemannian energy \dre approach presented in
 cref:sec-traj-opt-energy find trajectories that satisfy the dynamics constraints, i.e. the learned dynamics.
 They achieve this by enforcing the distribution over state trajectories,
 to match the distribution from cascading single-step predictions through the desired mode's dynamics \acrshort{gp}.
@@ -14783,10 +14814,10 @@ This can be seen as a method for approximating the integration of the controlled
 considering the epistemic uncertainty associated with learning from observations.
 The chance constraints ensure the controlled system is $\delta-\text{mode remaining}$, which
 makes the approximate dynamics integration valid.
-In contrast, the indirect optimal contro method does not find trajectories that are guaranteed to satisfy the dynamics
-constraints.
-This is a limiting factor that makes the indirect optimal contro method less appealing.
-Therefore, methods for incorporating the dynamics constraints into the indirect method are an interesting
+In contrast, the indirect geodesic control \ig method does not find trajectories that are
+guaranteed to satisfy the dynamics constraints.
+This is a limiting factor that makes the indirect geodesic \ig method less appealing.
+Therefore, methods for incorporating the dynamics constraints into \ig are an interesting
 direction for future work.
 # However, future work could attempt to enforce the dynamics constraints in the indirect method.
 
@@ -14795,17 +14826,17 @@ direction for future work.
 # Further to this, the maximum entropy control behaviour
 
 
-# Future work could consider extending the indirect optimal contro method to enforce the dynamics constraints.
+# Future work could consider extending the indirect optimal control method to enforce the dynamics constraints.
 # Further to this,
 # *Uncertainty aware*
 *Decision-making under uncertainty*
 The combination of the approximate dynamics integration and the chance constraints
-in the direct optimal control method, leads to a closed-form expression for the expected cost.
+in the \dre method, leads to a closed-form expression for the expected cost.
 This expression considers the epistemic uncertainty associated with the learned dynamics model,
 both in the desired dynamics mode and in the gating network.
-Similarly for the control-as-inference method, the \acrshort{elbo} principally handles the uncertainty
+Similarly for the control-as-inference \cai method, the \acrshort{elbo} principally handles the uncertainty
 in both the desired dynamics mode and gating network.
-In contrast, the indirect optimal contro method ignores the uncertainty accumulated by cascading single-step predictions through
+In contrast, the \ig method ignores the uncertainty accumulated by cascading single-step predictions through
 the learned dynamics model.
 That is, it considers the uncertainty associated with the gating network and ignores any uncertainty
 in the desired dynamics mode.
@@ -14822,7 +14853,7 @@ due to simple dynamics -- so most of the epistemic uncertainty was captured by t
 This work only considered the moment matching approximation for propagating uncertainty through the probabilistic
 dynamics model.
 cite:chuaDeep2018 test different uncertainty propagation schemes in Bayesian neural networks.
-It would be interesting to test sampling-based approaches for the direct optimal control approach.
+It would be interesting to test sampling-based approaches for the \dre approach.
 For example, to see the impact of calculating the expected Riemannian energy over a trajectory without approximations.
 # In particular, calculating the expected Riemannian metric would require less assumptions.
 # In particular, calculating the expected Riemannian metric would require less assumptions.
@@ -14847,7 +14878,7 @@ Without decoupling the uncertainty avoiding behaviour from the mode remaining be
 it is not possible to find trajectories which avoid entering the region of high epistemic uncertainty in the
 gating network.
 The geometry-based approaches provide a mechanism to set the relevance of the covariance term, i.e. decouple the goals.
-This is achieved by augmenting the expected Riemannian metric tensor with the user-tunable weight
+This was achieved by augmenting the expected Riemannian metric tensor with the user-tunable weight
 parameter $\lambda$, that can be adjusted to determine the relevance of the covariance term.
 The experiments show that although adjusting $\lambda$ can be beneficial in some scenarios, it is not necessarily straight
 forward to set.
@@ -14856,7 +14887,8 @@ Therefore, care should be taken when setting $\lambda$.
 The control-as-inference method does not provide a mechanism for adjusting the relevance of each behaviour.
 Instead, it relies on the marginalisation of the latent variables in the \acrshort{elbo}
 (cref:eq-traj-opt-inference) to automatically handle it, without requiring human input.
-This works well in practice whilst also making the method easier to configure.
+This works well in practice but may be a limitation if it is desirable to decouple the goals and
+balance the mode remaining and uncertainty avoiding behaviour.
 
 # However, as mentioned previously, it is not always clear how to balance these two behaviours.
 # As shown in cref:fig-riemannian-energy-high-traj-opt-5,
@@ -14867,7 +14899,7 @@ This works well in practice whilst also making the method easier to configure.
 Although not tested, the approaches are theoretically sound and should be applicable in systems with more
 than two dynamics modes.
 However, it is interesting to consider if this is even necessary given the goals.
-For example, in the quadcopter experiment, the transition dynamics model was intentionally instantiated
+For example, in the quadcopter experiment, the dynamics model was intentionally instantiated
 with two dynamics modes, even though there could be more in reality.
 The desired dynamics mode was engineered to have a noise variance that was deemed operable.
 The other dynamics mode was then used to explain away all of the inoperable modes.
@@ -14875,38 +14907,37 @@ In most scenarios, a similar approach could be followed.
 Nevertheless, it is interesting to consider systems with more than two modes.
 This is because the main goal is to avoid entering the inoperable dynamics mode, not just remain in a desired
 dynamics mode.
-Although not tested here, the control-as-inference method should be able to remain
-in more than one desired dynamics modes.
-This can be achieved by slightly altering the mode conditioning to condition on a set of modes.
+Although not tested here, the control-as-inference \cai method should be able to remain
+in more than one desired dynamics mode.
+This can be achieved by conditioning on a set of modes.
 In contrast, the geometry-based methods in cref:chap-traj-opt-geometry are only capable of remaining in a single
 dynamics mode.
 
-*Mode remaining guarantee*
-None of the method provide theoretical guarantees that the trajectories will remain in the desired dynamics mode.
-However, the chance constraints can be evaluated to check if a trajectory is $\delta-\text{mode remaining}$.
-Recent work by
-cite:berkenkampSafe2019,berkenkampSafe2017,kollerLearningBased2018
-consider the use of invariant sets to synthesise closed-loop controllers/policies, that are guaranteed to
-remain in a given set of states.
-Their work considers safe sets defined by Lyapanov stability but it would be interesting to extend their
-concepts to synthesise $\delta-\text{mode remaining}$ controllers
-$\pi_{\desiredMode} : \desiredStateDomain  \rightarrow \controlDomain$,
-with theoretical guarantees of the form,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-invariant-set-controller}
-\Pr( \dynamicsFunc(\state_\timeInd, \pi_{\desiredMode}(\state_\timeInd)) \in \desiredStateDomain, \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]  ) \ge 1 - \delta.
-\end{align}
-#+END_EXPORT
+# *Mode remaining guarantee*
+# cite:berkenkampSafe2019,berkenkampSafe2017,kollerLearningBased2018
+# consider the use of invariant sets to synthesise closed-loop controllers/policies, that are guaranteed to
+# remain in a given set of states.
+# Their work considers safe sets defined by Lyapanov stability but it would be interesting to extend their
+# concepts to synthesise $\delta-\text{mode remaining}$ controllers
+# $\pi_{\desiredMode} : \desiredStateDomain  \rightarrow \controlDomain$,
+# with theoretical guarantees of the form,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-invariant-set-controller}
+# \Pr( \dynamicsFunc(\state_\timeInd, \pi_{\desiredMode}(\state_\timeInd)) \in \desiredStateDomain, \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd]  ) \ge 1 - \delta.
+# \end{align}
+# #+END_EXPORT
+# # None of the method provide theoretical guarantees that the trajectories will remain in the desired dynamics mode.
+# # However, the chance constraints can be evaluated to check if a trajectory is $\delta-\text{mode remaining}$.
 
 *Continuous-time trajectories*
-The direct optimal control and control-as-inference methods required control regularisation to prevent state transitions that
+The \dre and \cai methods required control regularisation to prevent state transitions that
 "jump" over the undesired mode.
-Although the discrete time steps of the trajectory appear to satisfy the constraints and minimise the cost,
+Although the discrete-time steps of the trajectory appear to satisfy the constraints and minimise the cost,
 in reality, the continuous-time trajectory may pass through the undesired mode.
 This is a general problem that arises when solving continuous-time problems in discrete-time.
-In contrast, the indirect optimal contro method uses a collocation solver where the cost can be evaluated at arbitrary
+In contrast, the \ig method uses a collocation solver where the cost can be evaluated at arbitrary
 points along the continuous-time trajectory.
-An interesting direction for future work is to extend the direct optimal control and control-as-inference methods
+An interesting direction for future work is to extend the \dre and \cai methods
 to find trajectories in continuous-time.
 For example, cite:mukadamContinuoustime2018,dongMotion2016  use \acrshort{gp}s for continuous-time trajectories
 when solving motion planning via probabilistic inference.
@@ -14924,15 +14955,15 @@ flying at low speed may not.
 # process noise.
 
 *Dynamics models*
-The control-as-inference method can be deployed in a wider range of dynamics models than the geometry-based
+The control-as-inference \cai method can be deployed in a wider range of dynamics models than the geometry-based
 methods.
 First of all, it is not limited to differentiable mean and covariance functions for the gating function GPs.
 Secondly, it can be deployed in dynamics models learned with any \acrshort{mogpe} method.
 This is because all \acrshort{mogpe} methods consist of a probability mass function over the expert indicator
 variable.
-In contrast, the geometry-based methods are limited to the \acrshort{mosvgpe} method because of it's GP-based
-gating network.
-Further to this, the control-as-inference method is applicable in systems where the dynamics mode's are not
+In contrast, the geometry-based methods are limited to the \acrshort{mosvgpe} method because they depend on
+it's GP-based gating network.
+Further to this, the \cai method is applicable in systems where the dynamics modes are not
 necessarily separated according to their state domains $\mode{\stateDomain}$.
 This is because it does not rely on the state dependent gating functions.
 
@@ -14975,25 +15006,25 @@ multimodal dynamical systems, whilst attempting to remain in a desired dynamics 
 # moment matching leads to closed-form gradients
 
 *** Summary
-This chapter has evaluated and compared the indirect geodesic control method from cref:sec-traj-opt-collocation,
-the direct optimal control method from cref:sec-traj-opt-energy and the control-as-inference method from
-cref:chap-traj-opt-inference.
+This chapter has evaluated and compared the indirect optimal control via latent geodesics \ig
+method from cref:sec-traj-opt-collocation,
+the direct optimal control via Riemannain energy \dre method from cref:sec-traj-opt-energy and the
+control-as-inference \cai method from cref:chap-traj-opt-inference.
 The methods' abilities to navigate to a target state, whilst remaining in a desired dynamics mode,
 were evaluated on two velocity controlled quadcopter navigation problems.
 The results in this chapter have verified that the latent geometry of the \acrshort{mosvgpe} gating
 network can be used to encode mode remaining behaviour into control strategies.
-However, the results indicate that the indirect geodesic control method is not only the lowest performing
+However, the results indicate that the indirect geodesic control \ig method is not only the lowest performing
 method but is also the hardest method to configure.
-In contrast, the direct optimal control and control-as-inference methods work well in practice,
-whilst being much easier to configure.
+In contrast, the \dre and \cai methods work well in practice, whilst being much easier to configure.
 
 Although the geometry-based methods have a tunable parameter $\lambda$ for balancing the mode remaining
 and the uncertainty avoiding behaviour, it does not work well in practice.
-In contrast, the control-as-inference method automatically balances the behaviours by marginalising the uncertainty
-in the control-as-inference's \acrshort{elbo}.
+In contrast, the \cai method automatically balances the behaviours by marginalising the uncertainty
+in it's \acrshort{elbo}.
 
-From the experiments in this chapter, it can be concluded that both the direct optimal control
-and the control-as-inference methods are competitive approaches for finding mode remaining trajectories.
+From the experiments in this chapter, it can be concluded that both the direct optimal control via Riemannian energy
+\dre and the control-as-inference \cai methods are competitive approaches for finding mode remaining trajectories.
 They find trajectories that navigate to the target state, satisfy the dynamics constraints and attempt to remain in the
 desired dynamics mode.
 Further to this, it is easy to verify that they are $\delta-\text{mode remaining}$ by evaluating
