@@ -1247,7 +1247,7 @@ $\pykGivenxNegF$ contains a GP conditional with complexity
 
 ** Inference
 
-* Tools
+* Tools :noexport:
 ** word count
 #+begin_src shell
 ps2ascii thesis.pdf | wc -w
@@ -2373,20 +2373,1031 @@ a quadratic integral control cost term regularised the controls to encode the no
 # #+END_EXPORT
 
 * Background and Related Work
+** intro :ignore:
 # This chapter reviews learning-based control and details the relevant background information
 # for the remainder of the dissertation.
 
-To the best of our knowledge, the mode remaining navigation problem detailed in cref:problem-statement-main
-has not previously been tackled in the literature.
-The goal of this chapter is to introduce the relevant literature for learning to control dynamical systems.
-It first considers learning, control and exploration in dynamical systems before
-focusing on methods for multimodal dynamical systems.
+The primary goal of this dissertation is to navigate to a target state in stochastic, nonlinear,
+multimodal dynamical systems, whilst remaining in a desired dynamics mode.
+This is a \acrfull{soc} problem which can be summarised as follows:
+#+BEGIN_EXPORT latex
+\begin{displayquote}
+\textit{For a given multimodal dynamical system with control inputs, determine a controller, such that
+it can navigate to a target state, whilst remaining in a desired dynamics mode.}
+\end{displayquote}
+#+END_EXPORT
+This chapter now reviews the relevant literature for learning to control dynamical systems.
+# Due to incomplete knowledge of the system or corruption by noise,
+
+# To the best of our knowledge, the mode remaining navigation problem detailed in cref:problem-statement-main
+# has not previously been tackled in the literature.
+# It first considers learning, control and exploration in dynamical systems before
+# focusing on methods for multimodal dynamical systems.
+
 # Nevertheless, this chapter reviews relevant work.
 # learning-based control and details the relevant background information
 
 # learning-based control and details the relevant background information
 # for the remainder of the dissertation.
-** Dynamical Systems
+** Problem Statement label:problem-statement-main
+# The overall goal is to navigate from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
+# -- to the target state $\targetState$, whilst guaranteeing that the controlled
+# system remains in the desired dynamics mode.
+This section formally defines the mode remaining navigation problem.
+
+*Dynamical systems*
+Dynamical systems describe the behaviour of a system over time, $t$, and
+are a key component of both control theory and reinforcement learning.
+At any given time, $t$, a dynamical system has a state, which is
+represented as a vector of real numbers $\state_t \in \stateDomain \subseteq \R^{\StateDim}$.
+For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
+and an orientation would be represented as $\state_t = [x_t, y_t, \theta_t]^{T}$.
+The system can be controlled by applying control actions $\mathbf{u}_t \in \controlDomain \subseteq \R^{\ControlDim}$
+at any given time, $t$.
+
+This dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
+#+begin_export latex
+\begin{subequations} \label{eq-dynamics-main}
+\begin{align}
+\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
+&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \nonumber \\
+\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
+\end{align}
+\end{subequations}
+#+end_export
+where the discrete mode indicator function
+$\alpha : \stateDomain \rightarrow \modeDomain$
+indicates which of the $\ModeInd$ underlying dynamics modes
+$\{\mode{\latentFunc} : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
+and associated noise models
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$,
+governs the system at a given time step $\timeInd$.
+Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
+observation noise.
+This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+in the reinforcement learning literature.
+In this case, the $\mode{\bm\epsilon}$ term solely represents the process noise,
+which accounts for unwanted (and, in general, unknown) disturbances of the system.
+For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
+for in the process noise term.
+
+This dissertation considers systems where the underlying dynamics modes are defined by disjoint state domains.
+That is, each dynamics mode is defined by its state domain
+$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
+$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for distinct $i, j \in \{1, \ldots \ModeInd\}$.
+The output of the mode indicator function is referred to as the mode indicator variable and is given by
+$\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\} = \mathbb{Z} \cap [1, \ModeInd]$.
+Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
+and enter another mode.
+Ideally, this work seeks to enforce the controlled system to remain in a given mode.
+Formally, a mode remaining controlled system is defined as follows.
+#+begin_export latex
+\begin{definition}[Mode Remaining] \label{def-mode-remaining-main}
+Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
+Given an initial state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy \in \Pi$,
+the controlled system is said to be mode-remaining iff:
+\begin{align} \label{eq-mode-remaining-def-main}
+\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+&\in \mode{\stateDomain} \quad \forall \timeInd
+\end{align}
+\end{definition}
+#+end_export
+Notice that  the controller
+$\policy : \stateDomain \times \mathbb{Z} \rightarrow \controlDomain$ is defined
+generally. That is, it may take the form of a deterministic feedback controller or an
+open-loop set of controls without state feedback.
+It is assumed that $\Pi$ is the set of deterministic controllers.
+
+*Mode remaining navigation problem*
+Given this definition of a mode remaining controlled system, this dissertation seeks to solve,
+#+begin_export latex
+\begin{subequations} \label{eq-main-problem}
+\begin{align}
+\min_{\policy \in \Pi} \quad &J(\dynamicsFunc, \policy) \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\bm\epsilon},
+\quad \modeVar(\state_{\timeInd}) = \modeInd \\
+%&\text{\cref{eq-mode-remaining-def-explore}} \\
+&\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+\in \desiredStateDomain \\
+%\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+%&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\state_{0} = \state_0 \\
+&\state_\TimeInd = \targetState,
+\end{align}
+\end{subequations}
+#+end_export
+where $J : \Pi \rightarrow \R$ denotes the objective function.
+Note that the objective function is not of primary importance in this work.
+The novelty of this problem arises from remaining in the desired dynamics mode $\desiredMode$, when
+the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
+and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
+
+
+*Stochastic optimal control*
+This is a constrained \acrfull{soc} problem with a terminal boundary condition.
+Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
+over a time period $t \in [t_0, t_f]$ that optimises an objective function $J_{\pi}(\x)$.
+The objective function might be formulated to solve a particular task or to make the dynamical
+system behave in a certain way.
+Typically th objective function is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-objective}
+J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \gamma^{\timeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\mid \state_0=\state \right]
+\end{align}
+#+END_EXPORT
+where $\gamma \in [0, 1)$ is a discount factor, ensuring infinite sums remain finite and well-defined.
+
+# *Controller space*
+# The controller space, $\policySpace$, defines the set of controllers which optimisation is performed over,
+# i.e. it is the optimisation domain.
+# In this dissertation, a controller, $\policy $, shall be a conditional distribution over $\controlDomain$.
+# In (deterministic) optimal control the policy space is usually given by open loop policies, i.e.
+# only conditioned on time $\policy(\control \mid t)$.
+# In contrast, SOC (and RL) are mainly interested in feedback policies, where the controls are conditioned on both time and
+# state, i.e. $\policy(\control(t) \mid t, \state(t))$
+# \footnote{for notational conciseness dependency on time is assumed from here on, i.e.
+# $\policy(\control(t) \mid t, \state(t) = \policy(\control(t) \mid \state(t))$}.
+# A special case are deterministic policies, given by $\policy(\control \mid \state) = \delta_{\control=f(\state)}$,
+# where $\delta$ is the dirac delta distribution and $f$ is a function.
+
+To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
+to solve the problem in \cref{eq-main-problem}.
+
+*Bellman optimality equations*
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-bellman}
+V_*(\state) = \max_{\control} &\E \left[ \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
++ \gamma V_*(f(\state_{t}, \pi(\state_{t}, t))
+\mid \state_0=\state \right] \\
+&\text{s.t.} \quad \state_{\timeInd+1} = f(\state_{\timeInd}, \pi(\state_{\timeInd+1}, \timeInd), \omega_{\timeInd}),
+\end{align}
+#+END_EXPORT
+This recursion requires the solution for all successor states to be found first.
+
+# However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
+** Model-Based Reinforcement Learning
+A central assumption in this formulation is that the system dynamics and objective are /known a priori/.
+This dissertation considers problems where the system dynamics are /not known a priori/.
+
+Reinforcement learning provides the most general framework
+There are several methods formulations
+*** Dynamics Learning
+*** Motivation label:to_motivation :ignore:
+**** figs :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/scenario_7_svgp_baseline_both_modes.pdf}
+\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
+\label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
+\end{minipage}
+\begin{minipage}{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/scenario_7_svgp_baseline_desired_mode.pdf}
+\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
+\label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
+\end{minipage}
+\caption{Trajectory optimisation results obtained using a SVGP dynamics model trained on different data sets.
+The optimised control trajectories are rolled out in the SVGP dynamics model (magenta) and in the environment (cyan).
+The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
+White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
+The hashed box indicates a subset of the environment that has not been observed.}
+\label{fig-traj-opt-over-gating-mask-svgp-baseline}
+\end{figure}
+#+END_EXPORT
+
+**** intro :ignore:
+This dissertation is motivated by learning representations of multimodal dynamical systems
+that can be exploited by model-based control algorithms.
+Probabilistic models provide the capability of constructing mathematical
+models that can represent and manipulate uncertainty in data, models, decisions and
+predictions.
+\marginpar{probabilistic models}
+Learning representations of dynamical systems for control using probabilistic models has shown much promise.
+For example, see
+cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
+
+# As this work is interested in learning and control in multimodal dynamical systems,
+# a primary interest is correctly /identifying/ the underlying dynamics modes.
+# That is, ensuring that the learned dynamics modes accurately model the true underlying dynamics modes.
+# \marginpar{identifiability}
+# Incorrectly identifying the underlying dynamics modes will have a detrimental impact on performance
+# and may even lead to system failure.
+
+Given a historical data set of state transitions from the environment,
+a common approach is to first learn a single-step dynamics model using a Gaussian process
+citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
+This learned dynamics model can then be leveraged for model-based control.
+cref:fig-traj-opt-over-gating-mask-svgp-all-baseline
+demonstrates the shortcomings of learning a GP dynamics model for the quadcopter navigation problem in the
+illustrative example from cref:illustrative_example.
+It shows the results of performing trajectory
+optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
+The GP has not been able to learn a representation of the dynamics which is true to the underlying system,
+due to the discontinuities associated with the multimodal transition dynamics (changing lengthscales/noise variances etc).
+The optimised controls successfully drive the GP dynamics from the start state $\state_0$,
+to the target state $\targetState$.
+However, as the GP does not represent the true underlying dynamics accurately,
+the optimised controls do not successfully navigate to the target state $\targetState$ in the environment.
+This example motivates the need to correctly identify the underlying modes when learning dynamics models for
+model-based control.
+# Further to this, it demonstrates the more general shortcomings of model-based control when leveraging learned
+# dynamics models that cannot represent the true underlying dynamics.
+# This motivates cref:chap-dynamics that looks at learning representations of multimodal dynamical systems.
+# This example demonstrates the issues associated with learning a dynamics model that cannot correctly identify
+# the underlying dynamics modes.
+# without deploying a technique that can infer both the underlying dynamics modes
+# and how the system switches between them.
+# The optimised controls are rolled out in the SVGP dynamics model (magenta)
+# and in the environment (cyan) to highlight the issues with both approaches.
+
+In contrast,
+cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline shows results after training on state transitions from
+only the desired (operable) dynamics mode.
+It is able to accurately predict state transitions in the desired dynamics mode.
+However, as this approach only considers the dynamics of the desired mode,
+trajectories in the environment deviate from those planned in the learned dynamics model when they pass through the
+turbulent mode.
+This approach is problematic because the trajectory passes through the turbulent dynamics mode,
+which may lead to catastrophic failure.
+Further to this, the trajectory does not reach the target state $\targetState$.
+Without inferring information regarding how the system switches between its underlying dynamics modes, it is not
+obvious how mode remaining/avoiding behaviour can be encoded into control algorithms.
+#+BEGIN_EXPORT latex
+\begin{remark}
+As the underlying dynamics modes and how the system switches between them,
+are \textit{not fully known a priori}, partitioning the data set and learning the dynamics model in
+\cref{fig-traj-opt-over-gating-mask-svgp-desired-baseline} is not possible in realistic scenarios.
+\end{remark}
+#+END_EXPORT
+# This example motivates the need for dynamics models that can automatically infer the underlying dynamics modes, whilst
+# also learning how the system switches between its underlying dynamics modes.
+
+# This approach is problematic because the trajectory does not reach the target state $\targetState$,
+# nor does it avoid the turbulent dynamics mode, which may lead to catastrophic failure.
+
+
+# It is also worth noting here that the underlying dynamics modes and how the system switches between them,
+# are /not fully known a priori/.
+# As such, partitioning the data set and learning the dynamics model in
+# cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline is not possible in realistic scenarios.
+
+#+BEGIN_EXPORT latex
+\begin{myquote}
+Following standard methodologies, these trajectories were found by minimising the expected cost
+under the state distribution, resulting from cascading single-step predictions through the GP dynamics model.
+A terminal state cost term ensured trajectories ended at the target state and
+a quadratic integral control cost term regularised the controls to encode the notion of
+"minimal effort" control.
+\end{myquote}
+#+END_EXPORT
+
+The introduction of /latent variables/ into probabilistic models is a key component providing them with interesting
+and powerful capabilities for synergising model learning and control.
+For example, cite:hafnerLearning2019,rybkinModelBased2021
+\todo{add more latent space dynamics refs}
+learn /latent spaces/ which provide convenient spaces for planning.
+\marginpar{latent spaces for control}
+cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline highlights the need for learning
+informative latent variables representing how the system switches between the underlying dynamics modes.
+Without such information, it is not possible to encode the notion of mode remaining/avoiding behaviour.
+As such, this work is interested in learning /latent spaces/
+that are rich with information regarding how a system switches between its underlying dynamics modes.
+
+# With this in mind, the main goals of this chapter are to construct a model which,
+# 1. can accurately /identify/ the true underlying dynamics modes,
+# 2. has convenient /latent spaces/ for planning/control,
+#    - rich with information regarding the mode switching behaviour.
+   # - this could be achieved by providing handles for encoding informative domain knowledge, in turn, constraining the set of admissible functions,
+
+Methods for learning probabilistic multimodal transition dynamics have been proposed.
+cite:moerlandLearning2017 use deep generative models, namely a conditional \acrfull{vae},
+to learn multimodal transition dynamics for \acrfull{mbrl}.
+However, encoding expert domain knowledge into \acrshort{vae}s is difficult, which makes
+it hard to ensure that the correct underlying dynamics modes are learned.
+
+Early work combining Hidden Markov Models and linear dynamical systems, known as
+switching state-space models citep:ghahramaniVariational2000,ghahramaniSwitching1996,
+offer a dynamical generalisation of Mixture of Experts.
+These models have been extended to nonlinear dynamics modes but are limited in
+the switching behaviour that they can model.
+In particular, they do not provide mechanisms for placing informative spatial priors on the switching behaviour.
+\todo{is this right about HMM? Can they incorporate GP priors}
+
+# cite:kaiserBayesian2020 use a Bayesian model that learns independent
+# dynamics modes whilst maintaining a
+# probabilistic belief over which mode is responsible for predicting at a given input location.
+# The methods differs as it does not assign observations to modes.
+cite:mckinnonLearning2017 use a \acrshort{mogpe} method to learn switching
+robot dynamics online.
+Their model uses a gating network based on a Dirichlet process to model how the system switches between the underlying
+dynamics modes. The Dirichlet process models the switching behaviour via clustering.
+As such, it cannot model complex nonlinear dependencies between the switching behaviour
+and the state-control inputs.
+For example, if a dynamical system oscillates between two dynamics modes over its state-control input space,
+their method would assign new dynamics modes at each oscillation.
+In contrast, we seek to learn only the two true dynamics modes and turn them
+"on" and "off" in different regions of the input space.
+
+*** Aleatoric vs Epistemic Uncertainty
+*** Gaussian Processes
+This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
+Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
+Introducing multivariate Gaussians is a natural place to start.
+
+# In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
+# of the inference in this thesis.
+
+**** Multivariate Gaussian Identities
+Gaussian distributions are very popular in machine learning and control theory. This is not only due to their
+natural emergence in statistical scenarios (central limit theorem) but also their intuitiveness and
+mathematical properties that render their manipulation tractable and easy.
+
+Consider a multivariate Gaussian whose random variables are partitioned into two vectors $\f$ and $\u$.
+The joint distribution takes the following form,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-joint-gaussian}
+\left[\begin{array}{c}
+      \f \\
+      \u
+\end{array}\right]
+\sim\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \bm\mu_{\f} \\
+      \bm\mu_{\u}
+ \end{array}\right]
+\left[\begin{array}{cc}
+      \bm\Sigma_{\f\f} & \bm\Sigma_{\f\u} \\
+      \bm\Sigma_{\u\f} & \bm\Sigma_{\u\u}
+ \end{array}\right]\right),
+\end{align*}
+#+END_EXPORT
+where $\bm\mu_{\f}$ and $\bm\mu_{\u}$ represent the mean vectors, $\bm\Sigma_{\f\f}$ and $\bm\Sigma_{\u\u}$
+represent the covariance matrices,
+and $\bm\Sigma_{\u\f}$ and $\bm\Sigma_{\f\u}$ represent the cross-covariance matrices.
+The marginalisation property of Gaussian distributions states that for two jointly Gaussian random variables,
+the marginals are also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-marginal}
+p(\f) &= \int p(\f, \u) \text{d}\u = \mathcal{N} \left(\f \mid \bm\mu_{\f}, \bm\Sigma_{\f\f} \right), \\
+p(\u) &= \int p(\f, \u) \text{d}\f = \mathcal{N} \left(\u \mid \bm\mu_{\u}, \bm\Sigma_{\u\u} \right).
+\end{align}
+#+END_EXPORT
+Conveniently, the conditional densities are also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-conditional}
+\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\u - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}\bm\Sigma_{\u\u}^{-1}\bm\Sigma_{\u\f} \right), \\
+\u \mid \f &\sim \mathcal{N} \left(\bm\mu_{\u} + \bm\Sigma_{\u\f} \bm\Sigma_{\f\f}^{-1}(\f - \bm\mu_{\f}), \bm\Sigma_{\u\u} - \bm\Sigma_{\u\f}\bm\Sigma_{\f\f}^{-1}\bm\Sigma_{\f\u} \right).
+\end{align}
+#+END_EXPORT
+Consider the case where $\u$ represents some observations and $\f$ represents a new test location.
+cref:eq-gaussian-conditional can be used to make
+inferences in the location $\f$ given the observations $\u$, i.e. make
+sophisticated interpolations on the measurements, based on their closeness.
+In real-world scenarios, it is desirable to consider the entire input domain, instead of simply
+pre-selecting a discrete set of locations.
+Gaussian processes provide this mathematical machinery.
+
+**** Gaussian Processes
+***** intro :ignore:
+Informally, GPs are a generalisation of the multivariate Gaussian distribution, indexed by an
+input domain as opposed to an index set.
+Similar to how a sample from an $N-\text{dimensional}$ multivariate Gaussian is an $N-\text{dimensional}$ vector,
+a sample from a GP is a random function over its domain.
+Formally, a GP is defined as follows,
+#+BEGIN_EXPORT latex
+\begin{definition}[Gaussian process]
+A Gaussian process (GP) is a collection of random variables, any finite number of which
+have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
+\end{definition}
+#+END_EXPORT
+
+# More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
+More intuitively, a Gaussian process  is a distribution over functions $f(\cdot): \gpDomain \rightarrow \R$
+defined over an input domain $\gpDomain \in \R^{D_f}$.
+Whilst Gaussian distributions represent distributions over finite-dimensional vectors, GPs represent
+distributions over infinite-dimensional functions.
+\marginpar{mean and covariance functions}
+A GP is fully defined by a mean function $\mu(\cdot) : \gpDomain \rightarrow \R$ and a covariance
+function $k(\cdot, \cdot) : \gpDomain \times \gpDomain \rightarrow \R$ (also known as a kernel),
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-mean-cov}
+f(\cdot) &\sim \mathcal{GP}\left(\mu(\cdot), k(\cdot,\cdot) \right), \\
+\mu(\cdot) &= \E[f(\cdot)], \\
+k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))],
+\end{align}
+#+END_EXPORT
+Importantly, for a given set of training inputs from the
+\marginpar{Gaussian process prior}
+functions domain $~{\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}}$, the associated function values
+$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$,
+are jointly Gaussian.
+This results in an $N-\text{dimensional}$ multivariate Gaussian random variable $\mathbf{f}$, given by,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-marginal}
+\mathbf{f} \sim \mathcal{N}(\mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+\end{equation}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{myquote}
+A common kernel that is used throughout this dissertation is the Squared Exponential
+kernel with Automatic Relevance Determination (ARD), given by,
+\begin{equation} \label{eq-se-kernel}
+k(x, x') = \sigma_f^2 \exp\left(-\frac{1}{2} \sum_{d=1}^{D_f} \left( \frac{x_{d}- x'_{i}}{l_d} \right) \right),
+\end{equation}
+where $\sigma_f^2$ represent the signal variance and $l_d$ is a lengthscale parameter associated with
+input dimension $d$.
+The lengthscale parameter determines the length of the "wiggles" in the function and
+the signal variance $\sigma_f^2$ determines the average deviation of the function from its mean.
+\end{myquote}
+#+END_EXPORT
+Given mean and kernel functions with parameters $\bm\theta$, the marginal distribution is given by,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+\end{equation}
+#+END_EXPORT
+where the dependency on the parameters $\bm\theta$ has been dropped, i.e.
+$p(\f \mid \mathbf{X}) = p(\f \mid \mathbf{X}, \bm\theta)$.
+This simplification will be used throughout this dissertation for notational conciseness.
+By definition, these observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
+\marginpar{jointly Gaussian}
+$f_* = f(\mathbf{x}_*)$ at a new test input,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-gp-joint}
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      f^{*}
+\end{array}\right]
+\sim\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \mu(\mathbf{X}) \\
+      \mu(\mathbf{x}_{*})
+ \end{array}\right]
+\left[\begin{array}{cc}
+      k(\mathbf{X}, \mathbf{X}) & k(\mathbf{X},\mathbf{x}_{*}) \\
+      k(\mathbf{x}_{*},\mathbf{X}) & k(\mathbf{x}_{*},\mathbf{x}_{*})
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+Given the multivariate Gaussian conditionals in cref:eq-gaussian-conditional, it is easy to see how
+the distribution over the test function value $f_*$,
+\marginpar{noise-free predictions}
+can be obtained by conditioning on the observations,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-prediction}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
+\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} (\mathbf{f} - \mu(\mathbf{X})) \nonumber\\
+\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) - k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} k(\mathbf{X}, \mathbf{x}_*). \nonumber
+\end{align}
+#+END_EXPORT
+
+It is typical in real-world modelling scenarios that observations of the true function values $\f$
+are not directly accessible.
+\marginpar{predictions with noise}
+Instead, observations are usually corrupted by noise,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-noisy}
+\mathbf{y} = f(\mathbf{x}) + \epsilon, \quad \epsilon \sim \mathcal{N}\left( \mathbf{0}, \sigma^2_{n} \mathbf{I} \right).
+\end{align}
+#+END_EXPORT
+where $\sigma^2_n$ is the noise variance.
+In this scenario, the function values $\f$ become latent variables and a Gaussian likelihood
+is introduced,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-likelihood}
+p(\mathbf{y} \mid \f) = \mathcal{N}\left( \mathbf{y} \mid \f, \sigma^2_{n} \mathbf{I} \right),
+\end{align}
+#+END_EXPORT
+to relate the observations to the latent function values $\f$.
+The predictive distribution for a test input $\mathbf{x}_*$ follows from cref:eq-gaussian-conditional,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-prediction-noisy}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{y}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
+\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X})
+\left(k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right)^{-1} (\mathbf{y} - \mu(\mathbf{X})) \nonumber\\
+\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) -
+k(\mathbf{x}_*, \mathbf{X})
+\left( k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right))^{-1}
+k(\mathbf{X}, \mathbf{x}_*). \nonumber
+\end{align}
+#+END_EXPORT
+This predictive distribution is the GP posterior.
+
+***** Sparse Gaussian Processes for Regression label:sec-sparse-gps
+The nonparametric nature of Gaussian process methods is responsible for their flexibility but also
+their shortcomings, namely their memory and computational limitations.
+In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
+due to the inversion of the $N \times N$ covariance matrix $k(\mathbf{X},\mathbf{X})$.
+This makes its application to data sets with more than a few thousand data points prohibitive.
+The main direction in the literature attempting to overcome this limitation is sparse approximations
+citep:titsiasVariational2009,snelsonSparse2005a,quinonero-candelaUnifying2005,leibfriedTutorial2021.
+Many approximation schemes have been proposed to reduce the computational complexity, see
+cite:quinonero-candelaUnifying2005 for a review.
+This section provides a short overview of sparse approximations.
+
+Consider a second Gaussian density $q(\u)$ over the vector $\u$, as well as $p(\u)$, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-marginal-q}
+q(\u) &= \mathcal{N} \left(\u \mid \mathbf{m}_{\u}, \mathbf{S}_{\u\u} \right)
+\end{align}
+#+END_EXPORT
+with mean $\mathbf{m}_{\u}$ and covariance $\mathbf{S}_{\u\u}$.
+The marginal distribution over $\f$ can be obtained by conditioning on $\u$ and marginalising w.r.t. this
+new distribution $q(\f) = \int p(\f \mid \u) q(\u) \text{d} \u$.
+This marginal distribution is also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-conditional-q}
+\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\mathbf{m}_{\u} - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}
+\bm\Sigma_{\u\u}^{-1}
+\left(\bm\Sigma_{\u\u} - \mathbf{S}_{\u\u} \right)
+\bm\Sigma_{\u\u}^{-1}
+\bm\Sigma_{\u\f} \right).
+\end{align}
+#+END_EXPORT
+Replacing $q(\u)$ with $p(\u)$ would recover the original marginal distribution $p(\f)$ with
+mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from cref:eq-gaussian-marginal.
+
+Inducing point methods citep:snelsonSparse2005a augment the latent variables
+with inducing input-output pairs known as inducing "inputs" $\Z \in \inputDomain$ and inducing
+"variables" $\u = f(\Z)$.
+Introducing a set of $M$ inducing points from the same GP prior
+$p(\u \mid \Z) &= \mathcal{N}(\u \mid \mu(\Z), k(\Z, \Z))$
+can reduce the computational cost
+if $M \leqq N$.
+Note that these inducing variables $\u$ are jointly gaussian with the latent function values $\mathbf{f}$,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-spare-gp-joint}
+p(\mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) =\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      \u
+\end{array}\right]
+      \mid \bm{0} ,
+\left[\begin{array}{cc}
+      \mathbf{K}_{nn} & \mathbf{K}_{nm} \\
+      \mathbf{K}_{nm}^{T} & \mathbf{K}_{mm}
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+where $\K_{mm}$ is the covariance function evaluated between all inducing inputs $\Z$, and
+$\K_{nm}$ is the covariance function evaluated between the data inputs $\mathbf{X}$ and the inducing inputs $\Z$.
+This joint distribution can be re-written using the properties of multivariate normal distributions as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-joint-cond}
+p(\mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) &= p(\mathbf{f} \mid \u) p(\u \mid \mathbf{Z}) \\
+&= \mathcal{N}(\mathbf{f} \mid \mathbf{K}_{nm} \mathbf{K}_{mm}^{-1} \u, \mathbf{K}_{nn} - \mathbf{Q}_{nn})
+\mathcal{N}(\u \mid \mathbf{0}, \mathbf{K}_{mm})
+\end{align}
+#+END_EXPORT
+where $\mathbf{Q}_{nn} = \mathbf{K}_{nm}\mathbf{K}_{mm}^{-1}\mathbf{K}_{nm}^{T}$.
+The full joint distribution is then given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-full-joint}
+p(\mathbf{y}, \mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \u, \mathbf{X}) p(\u \mid \mathbf{Z})
+\end{align}
+#+END_EXPORT
+Computationally efficient inference is obtained by approximating the integration over $\mathbf{f}$.
+The popular Fully Independent Training Conditional (FITC) method (in the case of a Gaussian likelihood)
+is obtained via the factorisation: $p(\mathbf{y} \mid \u) \approx \prod^{N}_{n=1} p(y_{n} \mid \u)$.
+To obtain a variational approximation Jensen's inequality is first used to bound this conditional,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-bound-cond}
+\text{log}p(\mathbf{y}\mid\u) \geq \E_{p(\F \mid \u)} \left[ \text{log} p(\mathbf{y} \mid \F) \right] := \mathcal{L}_{1}.
+\end{align}
+#+END_EXPORT
+This is the standard bound shown in cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
+In cite:titsiasVariational2009 this bound is then substituted into the marginal likelihood
+to obtain a tractable lower bound,
+# \marginpar{Titsias' bound}
+#+BEGIN_EXPORT latex
+\begin{align}
+\text{log} p(\mathbf{y} \mid \mathbf{X})
+&= \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ p(\mathbf{y} \mid \u) \right] \\
+&\geq \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ \text{exp}(\mathcal{L}_{1}) \right] := \mathcal{L}_{\text{titsias}} \label{eq-titsias-bound-2} \\
+&= \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
+- \frac{1}{2\sigma^2}\text{tr}(\K_{nn} - \mathbf{Q}_{nn}) \label{eq-titsias-bound},
+\end{align}
+#+END_EXPORT
+where $\sigma^2$ is the noise variance associated with the Gaussian likelihood.
+The bound in cref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
+when the inducing inputs $\Z$ equal the
+data inputs $\mathbf{X}$ as $\K_{nm}=\K_{mm}=\K_{nn}$ so $\mathbf{Q}_{nn}=\K_{nn}$.
+
+cite:hensmanGaussian2013 noted that this bound has complexity $O(NM^{2})$ so
+introduced additional variational parameters to achieve a more computationally scalable bound
+with complexity $O(M^{3})$.
+Instead of collapsing the inducing points in cref:eq-titsias-bound
+they explicitly represent them as a variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq--inducing-dist}
+q(\u) = \mathcal{N}\left(\u \mid \mathbf{m}, \mathbf{S} \right),
+\end{align}
+#+END_EXPORT
+which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf{X})$ by
+further bounding $\mathcal{L}_{\text{titsias}}$,
+# \marginpar{Hensman's bound}
+#+BEGIN_EXPORT latex
+\begin{align}
+\mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
+&\geq \E_{q(\u)} \left[ \mathcal{L}_{1} \right]
+- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z})\right] \\
+&\geq \E_{q(\F)} \left[ p(\mathbf{y} \mid \mathbf{f}) \right]
+- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z})\right] := \mathcal{L}_{\text{hensman}}, \label{eq-hensman-bound}
+\end{align}
+#+END_EXPORT
+where $q(\mathbf{f}) = \int p(\mathbf{f} \mid \u) q(\u) \text{d} \u$.
+This is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
+If the likelihood factorizes across data $p(\mathbf{y} \mid \mathbf{f}) = \prod_{n=1}^{N} p(y_{n} \mid f_{n})$
+only the marginals of $q(\mathbf{f})$ are needed to calculate cref:eq-hensman-bound,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-3-fact}
+\mathcal{L}_{\text{hensman}}
+= \sum_{n=1}^{N}\E_{q(f_{n})} \left[ \text{log} p(y_{n} \mid f_{n}) \right]
+- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z}) \right].
+\end{align}
+#+END_EXPORT
+Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
+to preform stochastic gradient methods on $q(\u)$.
+
+**** Bayesian Model Selection label:sec-bayesian-model-selection :noexport:
+#+BEGIN_EXPORT latex
+\newcommand{\weights}{\ensuremath{\mathbf{w}}}
+\newcommand{\hyperparameters}{\ensuremath{\bm\theta}}
+\newcommand{\modelStructures}{\ensuremath{\mathcal{H}_i}}
+\newcommand{\weightPrior}{\ensuremath{p(\weights \mid \hyperparameters, \modelStructures)}}
+\newcommand{\weightLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \weights, \modelStructures)}}
+\newcommand{\weightMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \hyperparameters, \modelStructures)}}
+\newcommand{\weightPosterior}{\ensuremath{p(\weights \mid \mathbf{y}, \mathbf{X}, \hyperparameters, \modelStructures)}}
+
+\newcommand{\hyperPrior}{\ensuremath{p(\hyperparameters \mid \modelStructures)}}
+\newcommand{\hyperLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \hyperparameters, \modelStructures)}}
+\newcommand{\hyperMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \modelStructures)}}
+\newcommand{\hyperPosterior}{\ensuremath{p(\hyperparameters \mid \mathbf{y}, \mathbf{X}, \modelStructures)}}
+
+\newcommand{\modelPrior}{\ensuremath{p(\modelStructures)}}
+\newcommand{\modelLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \modelStructures)}}
+\newcommand{\modelMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X})}}
+\newcommand{\modelPosterior}{\ensuremath{p(\modelStructures \mid \mathbf{y}, \mathbf{X})}}
+#+END_EXPORT
+The /posterior/ distribution in cref:eq-gp-prediction-noisy considers a fixed covariance function.
+In most practical applications it is hard to specify all components of the covariance function /a priori/.
+Although some properties of the underlying function may be known, such as stationarity,
+it may not be easy to specify the hyperparameters, e.g. lengthscales.
+The parameters of the /likelihood/ may also be hard to specify /a priori/, e.g. noise variance.
+In order to deploy Gaussian process models in practical applications it is important to address
+this model selection problem.
+
+
+
+Bayesian model selection provides a principled framework for performing learning in probabilistic models.
+This section gives a brief overview of the main ideas in Bayesian model selection.
+The overview is general but highlights the difficulties that arise when working with Gaussian
+process models.
+
+In machine learning it is common to use hierarchical models.
+At the lowest level are model parameters $\weights$, such as the weights of a neural network,
+or the weights in linear regression.
+\marginpar{hierarchical models}
+At the next level are hyperparameters $\hyperparameters$, which serve as parameters in the distributions
+over the model parameters at the lowest level.
+For example, kernel hyperparameters in Gaussian process regression or the weight decay term in
+neural networks.
+At the highest level is the underlying model structure,
+that is, there may be a set of (discrete) model structures $\modelStructures$ to be considered.
+For example, the functional form of the covariance function.
+
+*Maximum Likelihood*
+Let us quickly introduce a simple (non Bayesian) approach to finding the best
+values for the parameters.
+This approach finds the best parameter settings by maximising the likelihood $\weightLikelihood$
+with respect to the parameters $\weights$.
+\marginpar{maximum likelihood}
+This approach is known as maximum likelihood and is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-maximum-likelihood}
+\weights = \text{arg}\max_{\weights} \weightLikelihood,
+\end{align}
+#+END_EXPORT
+This obtains a point estimate for the "best" parameter values $\weights$.
+Unfortunately, as the likelihood function is higher for more complex model structures,
+this approach leads to overfitting.
+
+# This can be overcome by noticing that integrating out the parameters (instead of optimising them),
+# automatically protects from overfitting.
+A more principled approach -- that overcomes overfitting -- is to treat the parameters as random variables
+(i.e. place priors over them), and integrate them out (instead of optimising them).
+This is advantageous as it considers all possible settings of the parameters,
+penalising complex models and preventing overfitting.
+This is known as /Bayesian Occam's razor/ citep:mackayProbable1995,rasmussenOccam2001,murrayNote2005
+named after the principle of /Occam's razor/ (William of Occam 1285-1349).
+The principle says that "one should pick the simplest model that adequately explains the data".
+# This provides automatic Occam's razor, penalising complex models and preventing overfitting.
+# and returns the
+# posterior distribution $p(\mathbf{\Theta} | \mathbf{Y})$ over the unknown variables,
+# in contrast to the point estimate in maximum likelihood.
+
+Model selection takes place one step at a time, by repeatedly applying the rules of probability theory,
+see cite:mackayBayesian1992 for more details on this framework.
+At the lowest level, the /posterior/ distribution over the model parameters $\weightPosterior$
+\marginpar{level 1 inference}
+is obtained via Bayes' rule,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-bayes-rule-1}
+\weightPosterior = \frac{\weightLikelihood \weightPrior}{\weightMarginalLikelihood}
+\end{align}
+#+END_EXPORT
+where $\weightLikelihood$ is the /likelihood/, a statistical model relating the data to the model
+parameters and $\weightPrior$ is the /prior/ over the parameters.
+The /prior/ distribution encodes our initial belief in the parameters.
+It may take a particular form to reflect the underlying structure of the problem, or
+it may be broad to reflect having little prior knowledge.
+The /posterior/ is the object of interest because it
+combines information from the /prior/ distribution, with information from the data,
+via the /likelihood/.
+The denominator $\weightMarginalLikelihood$ is a normalising constant and is independent of the model
+parameters $\weights$. It is known as the /marginal likelihood/  (or evidence) and is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-marginal-likelihood-1}
+\weightMarginalLikelihood = \int \weightLikelihood \weightPrior \text{d} \weights,
+\end{align}
+#+END_EXPORT
+where the variables of interest (the model parameters $\weights$) have been integrated out of the
+joint distribution.
+So far so good, however, how should the hyperparameters $\hyperparameters$ be set?
+The same process can be repeated to obtain the /posterior/ distribution over the
+\marginpar{level 2 inference}
+hyperparameters,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-bayes-rule-2}
+\hyperPosterior = \frac{\hyperLikelihood \hyperPrior}{\hyperMarginalLikelihood}
+\end{align}
+#+END_EXPORT
+where $\hyperPrior$ is the /hyper-prior/, a prior over the hyperparameters.
+Notice that the /marginal likelihood/ from the lowest level $\weightMarginalLikelihood$
+now takes the role of the /likelihood/. Similarly to before, the normalisation constant
+is given by integrating out the object of interest (the hyperparameters $\hyperparameters$),
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-marginal-likelihood-2}
+\hyperMarginalLikelihood = \int \hyperLikelihood \hyperPrior \text{d} \hyperparameters.
+\end{align}
+#+END_EXPORT
+Finally, at the top level, the /posterior/ distribution over the model structure $\modelPosterior$
+\marginpar{level 3 inference}
+is computed,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-bayes-rule-3}
+\modelPosterior = \frac{\modelLikelihood \modelPrior}{\modelMarginalLikelihood},
+\end{align}
+#+END_EXPORT
+where $\modelMarginalLikelihood = \sum_{i} \modelLikelihood \modelPrior$.
+It is important to note how performing Bayesian inference requires the computation of
+integrals in the denominator of Bayes' rule.
+These integrals are often not analytically tractable, due to details of the model.
+As such, approximate inference techniques are often required.
+These approximations may be analytical or based on Markov Chain Monte Carlo (MCMC) methods.
+
+*Type II Maximum Likelihood*
+In Gaussian process methods, the marginalisation of the hyperparameters in cref:eq-marginal-likelihood-2
+is often difficult.
+\marginpar{type II maximum likelihood}
+When it is not possible to marginalise all of the variables, the next best thing to a full Bayesian
+treatment -- without resorting to Maximum Likelihood --
+is to marginalise as many variables as possible, and optimise the remaining variables subject to maximising
+the /marginal likelihood/.
+This optimisation is known as Type II Maximum Likelihood and is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-type-2-maximum-likelihood}
+\weights &= \text{arg}\max_{\weights} \weightMarginalLikelihood \\
+&= \text{arg}\max_{\weights} \int \weightLikelihood \weightPrior \text{d} \weights,
+\end{align}
+#+END_EXPORT
+
+**** Model Selection for GP Regression :noexport:
+Bayesian principles are an appealing framework for inference.
+However, for most interesting models arising in machine learning, the required computations
+(integrals over the latent variables) are analytically intractable.
+Gaussian process regression with Gaussian noise is a rare exception, where the posterior
+is analytically tractable cref:eq-gp-prediction-noisy.
+
+The power of Gaussian process regression arises from the tractability of the marginal likelihood of the
+observed outputs given the observed inputs.
+The marginal likelihood is the product of the Gaussian likelihood and the GP prior, with the latent
+variables integrated out,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-marginal-likelihood}
+p(\mathbf{y} \mid \mathbf{X}, \bm\theta) &= \int
+\underbrace{p(\mathbf{y} \mid \f)}_{\text{likelihood}}
+\underbrace{p(\f \mid \mathbf{X}, \bm\theta)}_{\text{GP prior}}
+\text{d}\f.
+%&= \mathcal{N} \left( \mathbf{y} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right).
+\end{align}
+#+END_EXPORT
+This marginalisation implies that a whole family of functions are simultaneously considered.
+The covariance function determines the properties of the functions (such as smoothness)
+and defines a nonparametric form of $f$.
+In this setting, the Gaussian process is used as the /prior/ over the latent function $f$
+and the Gaussian likelihood is used to relate the data to the model.
+Conditioning the /prior/ on the observed data obtains the /posterior/ distribution, which
+fits the data.
+
+Although GPs are nonparametric, the mean and kernel functions may contain hyperparameters $\bm\theta$.
+In practical settings, it is desirable to find the best hyperparameter settings given the observations.
+Unfortunately, specifying (hyper-)priors over the hyperparameters and marginalising them
+(cref:eq-marginal-likelihood-2), is often difficult for GP models.
+As such, it is common to resort to Type II Maximum Likelihood and maximise the log marginal likelihood
+with respect to the kernel hyperparameters $\bm\theta$ and noise variance $\sigma^2_n$.
+The log marginal likelihood is given by,
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-gp-log-marginal-likelihood}
+\text{log} p(\mathbf{y} \mid \mathbf{X}, \bm\theta) =
+- \underbrace{\frac{1}{2} \mathbf{y}^T (k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I})^{-1} \mathbf{y}}_{\text{data fit}}
+- \underbrace{\frac{1}{2} \log \left| k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right|}_{\text{complexity penalty}}
+- \underbrace{\frac{n}{2} \log 2 \pi}_{\text{constant}}
+\end{align}
+\normalsize
+#+END_EXPORT
+The three terms in the log marginal likelihood have interpretable roles:
+1. Data fit term,
+   - $\frac{1}{2} \mathbf{y}^T (k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I})^{-1} \mathbf{y}$,
+2. Complexity penalty depending only on the covariance function and the inputs,
+   - $\frac{1}{2} \log | k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} |$,
+3. Normalisation constant,
+   - $\frac{n}{2} \log 2 \pi$.
+Importantly, as discussed in Section ref:sec-bayesian-model-selection,
+maximising the log marginal likelihood automatically balances the trade-off
+between model complexity and data fit, i.e. it provides automatic Occam's razor.
+The resulting optimisation is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-type-2-maximum-likelihood}
+\bm\theta = \text{arg}\max_{\bm\theta} \log p(\mathbf{y} \mid \mathbf{X}, \bm\theta)
+= \text{arg}\max_{\bm\theta} \log \int p(\mathbf{y} \mid \f) p(\f \mid \mathbf{X}, \bm\theta) \text{d} \f.
+\end{align}
+#+END_EXPORT
+
+# Making predictions in cref:eq-gp-prediction-noisy is computationally expensive due to conditioning
+
+**** Variational Inference :noexport:
+\todo{seek to convert inference into an optimisation}
+
+Variational approaches seek to lower bound the marginal likelihood (or evidence) $p(\mathbf{Y})$ using a functional that depends on variational parameters $q(\mathbf{\Theta})$.
+
+#+BEGIN_EXPORT latex
+\begin{align}
+	\text{log}\ p(\mathbf{Y}) &= \text{log} \int p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta} = \text{log} \int p(\mathbf{Y} | \mathbf{\Theta}) p(\mathbf{\Theta}) \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \int \frac{q(\mathbf{\Theta})}{q(\mathbf{\Theta})} p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \int q(\mathbf{\Theta}) \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \text{d}\mathbf{\Theta}
+	\\
+	&= \text{log} \E_{q(\mathbf{\Theta})} \bigg[ \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \bigg]
+	\\
+	&\geq \E_{q(\mathbf{\Theta})} \bigg[ \text{log} \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \bigg]
+\end{align}
+#+END_EXPORT
+
+The bound becomes exact if $q(\mathbf{\Theta}) = p(\mathbf{\Theta} | \mathbf{Y})$. The true posterior is intractable but the variational posterior $q(\mathbf{\Theta})$ must be constrained (so that it is tractable). It is common to factorise $q(\mathbf{\Theta})$ with respect to groups of elements belonging to parameter set $\mathbf{\Theta}$, this is known as mean field approximation.
+
+**** Sparse Gaussian Processes :noexport:
+A GP cite:edwardrasmussenGaussian2010 is a distribution over functions $f : \R^{D_f} \rightarrow \R$
+fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$.
+For a given set of inputs  from the
+functions domain $\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}$ the associated function values
+$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$
+are jointly Gaussian,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \bm\mu_{\mathbf{X}}, \mathbf{K}_{\mathbf{X}, \mathbf{X}})
+\end{equation}
+#+END_EXPORT
+where $\bm\mu_{\mathbf{X}}= \mu(\mathbf{X})$ is the mean vector, and
+$\mathbf{K}_{\mathbf{X},\mathbf{X}} = k(\mathbf{X}, \mathbf{X})$ is the covariance function evaluated
+between the inputs $\mathbf{X}$.
+In this work, the squared exponential covariance function with Automatic Relevance Determination
+is used for all GPs.
+The distribution over the function value $f_*$ at a new input $\mathbf{x}_*$ (i.e. to make a prediction)
+is given by the conditional,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-gp-prediction}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2) \numberthis \\
+\mu &= \mu_{\mathbf{x}_*} + \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} (\mathbf{f} - \bm\mu_{\mathbf{X}}) \\
+\sigma^2 &= k_{\mathbf{x}_*, \mathbf{x}_*} - \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} \mathbf{k}_{\mathbf{X}, \mathbf{x}_*}.
+\end{align*}
+#+END_EXPORT
+The conditional in cref:eq-gp-prediction is computationally expensive due to conditioning
+on all of the training data $\mathbf{X}, \mathbf{f}$.
+Introducing a set of $M$ inducing points from the same GP prior can reduce the computational cost
+if $M < N$.
+The inducing inputs are denoted $\bm\xi$ and outputs as
+$\hat{\mathbf{f}} = f(\bm\xi)$.
+The inducing variables
+$\hat{\mathbf{f}}$ are jointly Gaussian with the latent function values $\mathbf{f}$.
+The GP predictive distribution can be approximated by conditioning on this
+smaller set of inducing variables,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-prediction}
+p({f}_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &\approx
+p({f}_* \mid \mathbf{x}_*, \hat{\mathbf{f}}, \bm\xi) \\
+p(\hat{\mathbf{f}}) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mathbf{m}, \mathbf{S}).
+\end{align}
+#+END_EXPORT
+The approximation becomes exact when the
+inducing variables $\hat{\mathbf{f}}$ are a sufficient statistic
+for the latent function values $\mathbf{f}$ cite:Titsias2009.
+# The predicted latent function values are then mutually independent given the inducing variables.
+# A central assumption is that given enough well
+# placed inducing variables $\hat{\mathbf{f}}$ they are a
+# sufficient statistic for the latent function values $\mathbf{f}$.
+
+*** Bellman's Minimum Principle
+*** Uncertainty-based Exploration Strategies
+*Thompson sampling*
+An alternative and theoretically grounded strategy is Thompson sampling.
+This approach samples a single model  $f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i})$ at every iteration $i$
+and uses the sampled model to optimise the controller.
+This is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-thompson-exploration}
+\pi_i^{\text{thompson}} = \arg \max_{\pi \in \Pi} J(f_i, \pi) \quad \text{s.t.} \quad f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i}).
+\end{align}
+#+END_EXPORT
+# This contrasts the greedy approach that averages over the
+In general it is intractable to sample from $\dynamicsModel(f \mid \mathcal{D}_{0:i})$, although methods do exist
+for both \acrshort{gp} models and ensembles.
+Note that after the sampling step this problem is equivalent to greedy exploitation.
+
+*Active Learning in Dynamical Systems*
+cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively2020
+
+*Information Theoretic Active Learning with Gaussian Processes*
+cite:krauseNonmyopic2007,houlsbyBayesian2011
+
+** Dynamical Systems :ignore:noexport:
+*Dynamical systems*
+Dynamical systems describe the behaviour of a system over time, $t$, and
+are a key component of both control theory and reinforcement learning.
+At any given time, $t$, a dynamical system has a state, which is
+represented as a vector of real numbers $\state_t \in \stateDomain \subseteq \R^{\stateDim}$.
+For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
+and an orientation would be represented as $\state_t = [x_t, y_t, \theta_t]^{T}$.
+The system can be controlled by applying control actions $\mathbf{u}_t \in \controlDomain \subseteq \R^{\controlDim}$
+at any given time, $t$.
+This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-unimodal-dynamics-cont}
+\state_{t+1} &= \dynamicsFunc(\state_t, \control_t) + \epsilon_t,
+\end{align}
+#+END_EXPORT
+where $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ represents the transition dynamics function and $\epsilon_t$
+is an i.i.d process noise term with $\E[\epsilon_t] = 0$.
+The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
+For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
+for in the process noise term.
+Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
+observation noise.
+This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+in the reinforcement learning literature.
+# \todo[inline]{Slightly weird referring to MDP literature on continuous time setting}
+
+# \todo[inline]{Should I make a bigger point out of the observation noise assumption}
+
+# The system is controlled via a policy $\control(t) = \pi(\state(t), t)$, which given the state $\state(t)$
+# and time step $t$ decides which control action $\control(t)$ to apply to the system.
+# The policy can be time-dependent and can also depend on all past information up to time step $t$.
+# In the time-independent case the policy is denoted $\pi(\state(t))$ and
+# the resulting closed-loop system is denoted $f_{\pi}(\state) = \dynamicsFunc(\state,\pi(\state))$.
+
+** Optimal Control :ignore:
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
+\newcommand{\integralCostFunc}{\ensuremath{C}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+
+\newcommand{\policySpace}{\ensuremath{\Pi}}
+\newcommand{\policy}{\ensuremath{\pi}}
+#+END_EXPORT
+*** intro :ignore:
+#+begin_export latex
+\epigraph{Optimal control theory is the science of maximising returns from and minimising the costs of the operation
+of physical, social, and economic processes.}{\textit{Donald E. Kirk}}
+#+end_export
+*Optimal control*
+Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
+over a time period $t \in [t_0, t_f]$ that optimises an objective function $J_{\pi}(\x)$.
+The objective function might be formulated to solve a particular task or to make the dynamical
+system behave in a certain way.
+** Dynamical Systems :noexport:
 Dynamical systems describe the behaviour of a system over time, $t$, and
 are a key component of both control theory and reinforcement learning.
 At any given time, $t$, a dynamical system has a state, which is
@@ -2408,8 +3419,8 @@ For example, it is extremely hard to model aerodynamic effects on aircraft so th
 for in the process noise term.
 Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
 observation noise.
-# This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
-# in the reinforcement learning literature.
+This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+in the reinforcement learning literature.
 # \todo[inline]{Slightly weird referring to MDP literature on continuous time setting}
 
 # \todo[inline]{Should I make a bigger point out of the observation noise assumption}
@@ -2448,6 +3459,20 @@ Optimal control theory is the science of maximising returns from and minimising 
 of physical, social, and economic processes.
 \end{displayquote}
 #+END_EXPORT
+
+The controller space, $\policySpace$, defines the set of controllers over which optimisation is performed over,
+i.e. it is the optimisation domain.
+
+In this dissertation, a policy, $\policy$, shall be a conditional distribution over $\controlDomain$.
+In (deterministic) optimal control the policy space is usually given by open loop policies, i.e.
+only conditioned on time $\policy(\control \mid t)$.
+In contrast, SOC (and RL) are mainly interested in feedback policies, where the controls are conditioned on both time and
+state, i.e. $\policy(\control(t) \mid t, \state(t))$
+\footnote{for notational conciseness dependency on time is assumed from here on, i.e.
+$\policy(\control(t) \mid t, \state(t) = \policy(\control(t) \mid \state(t))$}.
+A special case are deterministic policies, given by $\policy(\control \mid \state) = \delta_{\control=f(\state)}$,
+where $\delta$ is the dirac delta distribution and $f$ is a function.
+
 *Optimal control*
 Formally, the problem of optimal control is summarised as follows.
 Given a dynamical system (Eq. \ref{eq-unimodal-dynamics-cont}) with
@@ -2472,7 +3497,6 @@ As such, the definition above must be adapted for stochastic systems.
 In stochastic systems, a control sequence is not associated with a specific
 trajectory, but rather a distribution over trajectories.
 The resulting problem is known as stochastic optimal control (SOC).
-
 
 *** Stochastic Optimal Control
 This section reviews the relevant background on SOC,
@@ -2522,21 +3546,6 @@ uses a linear approximation of the dynamics --- trading in accuracy for a comput
 Guided policy search cite:levineGuided2013
 
 \todo{Add details on LQG etc here}
-*** Open-loop control
-An alternative method to for solving the optimal control problem in cref: is to optimise over the controls
-inputs $\control_{\timeInd}$ directly over a horizon $\TimeInd$.
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-objective-mpc}
-\min_{\control} &\E \left[ \gamma^{\TimeInd} J_{\pi_*}(\state_{\TimeInd}) +
-\sum_{\timeInd=0}^{\TimeInd-1} \gamma^{\timeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
-\mid \state_0=\state \right] \\
-&\text{s.t.} \quad \state_{\timeInd+1} = f(\state_{\timeInd}, \pi(\state_{\timeInd+1}, \timeInd), \omega_{\timeInd}),
-\end{align}
-#+END_EXPORT
-
-*** Model-based Control
-- robust optimal control
-- stochastic optimal control
 *** Trajectory Optimisation
 **** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -2927,24 +3936,6 @@ Introducing the variational distribution,
 #+END_EXPORT
 
 ** Model-Based Control
-*** Optimal Control :ignore:
-Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
-over a time period $t \in [t_0, t_f]$ that optimises an objective function $\mathbf{J}_{\pi}(\x)$.
-The objective function might be formulated to solve a particular task or to make the dynamical
-system behave in a certain way.
-
-Typically this objective function is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-objective}
-\mathbf{J} \defeq \phi(\x(t_{f}), t_{f}) + \int^{t_{f}}_{t_{0}} L(\mathbf{x}(t), \mathbf{u}(t), t) \text{d}t,
-\end{align}
-#+END_EXPORT
-which consists of two terms:
-1. a terminal cost term $\phi : \R^{D} \times \R \rightarrow \R$,
-2. an integral cost term (or Lagrangian) $L : \R^{D} \times \R^{F} \times \R \rightarrow \R$.
-
-Model-based control ...
-
 *** Trajectory Optimisation
 **** intro :ignore:
 Formally, trajectory optimisation seeks to find the state and
@@ -2964,7 +3955,6 @@ The trajectory optimisation problem is given by,
 &\state(t_0) = \state_0  \quad \state(t_f) = \state_f
 \end{align}
 #+END_EXPORT
-**** Collocation
 **** Trajectory Optimisation as Probabilistic Inference
 ***** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -3295,617 +4285,6 @@ sampling of trajectories cite:theodorouGeneralized2010.
 This work was originally limited to control affine systems cite:williamsModel2017
 but has since been extended to general nonlinear
 dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
-
-** Gaussian Processes
-This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
-Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
-Introducing multivariate Gaussians is a natural place to start.
-
-# In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
-# of the inference in this thesis.
-
-*** Multivariate Gaussian Identities
-Gaussian distributions are very popular in machine learning and control theory. This is not only due to their
-natural emergence in statistical scenarios (central limit theorem) but also their intuitiveness and
-mathematical properties that render their manipulation tractable and easy.
-
-Consider a multivariate Gaussian whose random variables are partitioned into two vectors $\f$ and $\u$.
-The joint distribution takes the following form,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-joint-gaussian}
-\left[\begin{array}{c}
-      \f \\
-      \u
-\end{array}\right]
-\sim\ &\mathcal{N}\left(
-\left[\begin{array}{c}
-      \bm\mu_{\f} \\
-      \bm\mu_{\u}
- \end{array}\right]
-\left[\begin{array}{cc}
-      \bm\Sigma_{\f\f} & \bm\Sigma_{\f\u} \\
-      \bm\Sigma_{\u\f} & \bm\Sigma_{\u\u}
- \end{array}\right]\right),
-\end{align*}
-#+END_EXPORT
-where $\bm\mu_{\f}$ and $\bm\mu_{\u}$ represent the mean vectors, $\bm\Sigma_{\f\f}$ and $\bm\Sigma_{\u\u}$
-represent the covariance matrices,
-and $\bm\Sigma_{\u\f}$ and $\bm\Sigma_{\f\u}$ represent the cross-covariance matrices.
-The marginalisation property of Gaussian distributions states that for two jointly Gaussian random variables,
-the marginals are also Gaussian,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gaussian-marginal}
-p(\f) &= \int p(\f, \u) \text{d}\u = \mathcal{N} \left(\f \mid \bm\mu_{\f}, \bm\Sigma_{\f\f} \right), \\
-p(\u) &= \int p(\f, \u) \text{d}\f = \mathcal{N} \left(\u \mid \bm\mu_{\u}, \bm\Sigma_{\u\u} \right).
-\end{align}
-#+END_EXPORT
-Conveniently, the conditional densities are also Gaussian,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gaussian-conditional}
-\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\u - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}\bm\Sigma_{\u\u}^{-1}\bm\Sigma_{\u\f} \right), \\
-\u \mid \f &\sim \mathcal{N} \left(\bm\mu_{\u} + \bm\Sigma_{\u\f} \bm\Sigma_{\f\f}^{-1}(\f - \bm\mu_{\f}), \bm\Sigma_{\u\u} - \bm\Sigma_{\u\f}\bm\Sigma_{\f\f}^{-1}\bm\Sigma_{\f\u} \right).
-\end{align}
-#+END_EXPORT
-Consider the case where $\u$ represents some observations and $\f$ represents a new test location.
-cref:eq-gaussian-conditional can be used to make
-inferences in the location $\f$ given the observations $\u$, i.e. make
-sophisticated interpolations on the measurements, based on their closeness.
-In real-world scenarios, it is desirable to consider the entire input domain, instead of simply
-pre-selecting a discrete set of locations.
-Gaussian processes provide this mathematical machinery.
-
-*** Gaussian Processes
-**** intro :ignore:
-Informally, GPs are a generalisation of the multivariate Gaussian distribution, indexed by an
-input domain as opposed to an index set.
-Similar to how a sample from an $N-\text{dimensional}$ multivariate Gaussian is an $N-\text{dimensional}$ vector,
-a sample from a GP is a random function over its domain.
-Formally, a GP is defined as follows,
-#+BEGIN_EXPORT latex
-\begin{definition}[Gaussian process]
-A Gaussian process (GP) is a collection of random variables, any finite number of which
-have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
-\end{definition}
-#+END_EXPORT
-
-# More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
-More intuitively, a Gaussian process  is a distribution over functions $f(\cdot): \gpDomain \rightarrow \R$
-defined over an input domain $\gpDomain \in \R^{D_f}$.
-Whilst Gaussian distributions represent distributions over finite-dimensional vectors, GPs represent
-distributions over infinite-dimensional functions.
-\marginpar{mean and covariance functions}
-A GP is fully defined by a mean function $\mu(\cdot) : \gpDomain \rightarrow \R$ and a covariance
-function $k(\cdot, \cdot) : \gpDomain \times \gpDomain \rightarrow \R$ (also known as a kernel),
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-mean-cov}
-f(\cdot) &\sim \mathcal{GP}\left(\mu(\cdot), k(\cdot,\cdot) \right), \\
-\mu(\cdot) &= \E[f(\cdot)], \\
-k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))],
-\end{align}
-#+END_EXPORT
-Importantly, for a given set of training inputs from the
-\marginpar{Gaussian process prior}
-functions domain $~{\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}}$, the associated function values
-$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$,
-are jointly Gaussian.
-This results in an $N-\text{dimensional}$ multivariate Gaussian random variable $\mathbf{f}$, given by,
-#+BEGIN_EXPORT latex
-\begin{equation} \label{eq-gp-marginal}
-\mathbf{f} \sim \mathcal{N}(\mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
-\end{equation}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\begin{myquote}
-A common kernel that is used throughout this dissertation is the Squared Exponential
-kernel with Automatic Relevance Determination (ARD), given by,
-\begin{equation} \label{eq-se-kernel}
-k(x, x') = \sigma_f^2 \exp\left(-\frac{1}{2} \sum_{d=1}^{D_f} \left( \frac{x_{d}- x'_{i}}{l_d} \right) \right),
-\end{equation}
-where $\sigma_f^2$ represent the signal variance and $l_d$ is a lengthscale parameter associated with
-input dimension $d$.
-The lengthscale parameter determines the length of the "wiggles" in the function and
-the signal variance $\sigma_f^2$ determines the average deviation of the function from its mean.
-\end{myquote}
-#+END_EXPORT
-Given mean and kernel functions with parameters $\bm\theta$, the marginal distribution is given by,
-#+BEGIN_EXPORT latex
-\begin{equation} \label{eq-gp-prior}
-p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
-\end{equation}
-#+END_EXPORT
-where the dependency on the parameters $\bm\theta$ has been dropped, i.e.
-$p(\f \mid \mathbf{X}) = p(\f \mid \mathbf{X}, \bm\theta)$.
-This simplification will be used throughout this dissertation for notational conciseness.
-By definition, these observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
-\marginpar{jointly Gaussian}
-$f_* = f(\mathbf{x}_*)$ at a new test input,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-gp-joint}
-\left[\begin{array}{c}
-      \mathbf{f} \\
-      f^{*}
-\end{array}\right]
-\sim\ &\mathcal{N}\left(
-\left[\begin{array}{c}
-      \mu(\mathbf{X}) \\
-      \mu(\mathbf{x}_{*})
- \end{array}\right]
-\left[\begin{array}{cc}
-      k(\mathbf{X}, \mathbf{X}) & k(\mathbf{X},\mathbf{x}_{*}) \\
-      k(\mathbf{x}_{*},\mathbf{X}) & k(\mathbf{x}_{*},\mathbf{x}_{*})
- \end{array}\right]\right).
-\end{align*}
-#+END_EXPORT
-Given the multivariate Gaussian conditionals in cref:eq-gaussian-conditional, it is easy to see how
-the distribution over the test function value $f_*$,
-\marginpar{noise-free predictions}
-can be obtained by conditioning on the observations,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-prediction}
-p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
-\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} (\mathbf{f} - \mu(\mathbf{X})) \nonumber\\
-\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) - k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} k(\mathbf{X}, \mathbf{x}_*). \nonumber
-\end{align}
-#+END_EXPORT
-
-It is typical in real-world modelling scenarios that observations of the true function values $\f$
-are not directly accessible.
-\marginpar{predictions with noise}
-Instead, observations are usually corrupted by noise,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-noisy}
-\mathbf{y} = f(\mathbf{x}) + \epsilon, \quad \epsilon \sim \mathcal{N}\left( \mathbf{0}, \sigma^2_{n} \mathbf{I} \right).
-\end{align}
-#+END_EXPORT
-where $\sigma^2_n$ is the noise variance.
-In this scenario, the function values $\f$ become latent variables and a Gaussian likelihood
-is introduced,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-likelihood}
-p(\mathbf{y} \mid \f) = \mathcal{N}\left( \mathbf{y} \mid \f, \sigma^2_{n} \mathbf{I} \right),
-\end{align}
-#+END_EXPORT
-to relate the observations to the latent function values $\f$.
-The predictive distribution for a test input $\mathbf{x}_*$ follows from cref:eq-gaussian-conditional,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-prediction-noisy}
-p(f_{*} \mid \mathbf{x}_*, \mathbf{y}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
-\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X})
-\left(k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right)^{-1} (\mathbf{y} - \mu(\mathbf{X})) \nonumber\\
-\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) -
-k(\mathbf{x}_*, \mathbf{X})
-\left( k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right))^{-1}
-k(\mathbf{X}, \mathbf{x}_*). \nonumber
-\end{align}
-#+END_EXPORT
-This predictive distribution is the GP posterior.
-
-**** Sparse Gaussian Processes for Regression label:sec-sparse-gps
-The nonparametric nature of Gaussian process methods is responsible for their flexibility but also
-their shortcomings, namely their memory and computational limitations.
-In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
-due to the inversion of the $N \times N$ covariance matrix $k(\mathbf{X},\mathbf{X})$.
-This makes its application to data sets with more than a few thousand data points prohibitive.
-The main direction in the literature attempting to overcome this limitation is sparse approximations
-citep:titsiasVariational2009,snelsonSparse2005a,quinonero-candelaUnifying2005,leibfriedTutorial2021.
-Many approximation schemes have been proposed to reduce the computational complexity, see
-cite:quinonero-candelaUnifying2005 for a review.
-This section provides a short overview of sparse approximations.
-
-Consider a second Gaussian density $q(\u)$ over the vector $\u$, as well as $p(\u)$, given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gaussian-marginal-q}
-q(\u) &= \mathcal{N} \left(\u \mid \mathbf{m}_{\u}, \mathbf{S}_{\u\u} \right)
-\end{align}
-#+END_EXPORT
-with mean $\mathbf{m}_{\u}$ and covariance $\mathbf{S}_{\u\u}$.
-The marginal distribution over $\f$ can be obtained by conditioning on $\u$ and marginalising w.r.t. this
-new distribution $q(\f) = \int p(\f \mid \u) q(\u) \text{d} \u$.
-This marginal distribution is also Gaussian,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gaussian-conditional-q}
-\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\mathbf{m}_{\u} - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}
-\bm\Sigma_{\u\u}^{-1}
-\left(\bm\Sigma_{\u\u} - \mathbf{S}_{\u\u} \right)
-\bm\Sigma_{\u\u}^{-1}
-\bm\Sigma_{\u\f} \right).
-\end{align}
-#+END_EXPORT
-Replacing $q(\u)$ with $p(\u)$ would recover the original marginal distribution $p(\f)$ with
-mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from cref:eq-gaussian-marginal.
-
-Inducing point methods citep:snelsonSparse2005a augment the latent variables
-with inducing input-output pairs known as inducing "inputs" $\Z \in \inputDomain$ and inducing
-"variables" $\u = f(\Z)$.
-Introducing a set of $M$ inducing points from the same GP prior
-$p(\u \mid \Z) &= \mathcal{N}(\u \mid \mu(\Z), k(\Z, \Z))$
-can reduce the computational cost
-if $M \leqq N$.
-Note that these inducing variables $\u$ are jointly gaussian with the latent function values $\mathbf{f}$,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-spare-gp-joint}
-p(\mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) =\ &\mathcal{N}\left(
-\left[\begin{array}{c}
-      \mathbf{f} \\
-      \u
-\end{array}\right]
-      \mid \bm{0} ,
-\left[\begin{array}{cc}
-      \mathbf{K}_{nn} & \mathbf{K}_{nm} \\
-      \mathbf{K}_{nm}^{T} & \mathbf{K}_{mm}
- \end{array}\right]\right).
-\end{align*}
-#+END_EXPORT
-where $\K_{mm}$ is the covariance function evaluated between all inducing inputs $\Z$, and
-$\K_{nm}$ is the covariance function evaluated between the data inputs $\mathbf{X}$ and the inducing inputs $\Z$.
-This joint distribution can be re-written using the properties of multivariate normal distributions as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-sparse-gp-joint-cond}
-p(\mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) &= p(\mathbf{f} \mid \u) p(\u \mid \mathbf{Z}) \\
-&= \mathcal{N}(\mathbf{f} \mid \mathbf{K}_{nm} \mathbf{K}_{mm}^{-1} \u, \mathbf{K}_{nn} - \mathbf{Q}_{nn})
-\mathcal{N}(\u \mid \mathbf{0}, \mathbf{K}_{mm})
-\end{align}
-#+END_EXPORT
-where $\mathbf{Q}_{nn} = \mathbf{K}_{nm}\mathbf{K}_{mm}^{-1}\mathbf{K}_{nm}^{T}$.
-The full joint distribution is then given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-sparse-gp-full-joint}
-p(\mathbf{y}, \mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \u, \mathbf{X}) p(\u \mid \mathbf{Z})
-\end{align}
-#+END_EXPORT
-Computationally efficient inference is obtained by approximating the integration over $\mathbf{f}$.
-The popular Fully Independent Training Conditional (FITC) method (in the case of a Gaussian likelihood)
-is obtained via the factorisation: $p(\mathbf{y} \mid \u) \approx \prod^{N}_{n=1} p(y_{n} \mid \u)$.
-To obtain a variational approximation Jensen's inequality is first used to bound this conditional,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-sparse-gp-bound-cond}
-\text{log}p(\mathbf{y}\mid\u) \geq \E_{p(\F \mid \u)} \left[ \text{log} p(\mathbf{y} \mid \F) \right] := \mathcal{L}_{1}.
-\end{align}
-#+END_EXPORT
-This is the standard bound shown in cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
-In cite:titsiasVariational2009 this bound is then substituted into the marginal likelihood
-to obtain a tractable lower bound,
-# \marginpar{Titsias' bound}
-#+BEGIN_EXPORT latex
-\begin{align}
-\text{log} p(\mathbf{y} \mid \mathbf{X})
-&= \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ p(\mathbf{y} \mid \u) \right] \\
-&\geq \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ \text{exp}(\mathcal{L}_{1}) \right] := \mathcal{L}_{\text{titsias}} \label{eq-titsias-bound-2} \\
-&= \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
-- \frac{1}{2\sigma^2}\text{tr}(\K_{nn} - \mathbf{Q}_{nn}) \label{eq-titsias-bound},
-\end{align}
-#+END_EXPORT
-where $\sigma^2$ is the noise variance associated with the Gaussian likelihood.
-The bound in cref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
-when the inducing inputs $\Z$ equal the
-data inputs $\mathbf{X}$ as $\K_{nm}=\K_{mm}=\K_{nn}$ so $\mathbf{Q}_{nn}=\K_{nn}$.
-
-cite:hensmanGaussian2013 noted that this bound has complexity $O(NM^{2})$ so
-introduced additional variational parameters to achieve a more computationally scalable bound
-with complexity $O(M^{3})$.
-Instead of collapsing the inducing points in cref:eq-titsias-bound
-they explicitly represent them as a variational distribution,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq--inducing-dist}
-q(\u) = \mathcal{N}\left(\u \mid \mathbf{m}, \mathbf{S} \right),
-\end{align}
-#+END_EXPORT
-which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf{X})$ by
-further bounding $\mathcal{L}_{\text{titsias}}$,
-# \marginpar{Hensman's bound}
-#+BEGIN_EXPORT latex
-\begin{align}
-\mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
-&\geq \E_{q(\u)} \left[ \mathcal{L}_{1} \right]
-- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z})\right] \\
-&\geq \E_{q(\F)} \left[ p(\mathbf{y} \mid \mathbf{f}) \right]
-- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z})\right] := \mathcal{L}_{\text{hensman}}, \label{eq-hensman-bound}
-\end{align}
-#+END_EXPORT
-where $q(\mathbf{f}) = \int p(\mathbf{f} \mid \u) q(\u) \text{d} \u$.
-This is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
-If the likelihood factorizes across data $p(\mathbf{y} \mid \mathbf{f}) = \prod_{n=1}^{N} p(y_{n} \mid f_{n})$
-only the marginals of $q(\mathbf{f})$ are needed to calculate cref:eq-hensman-bound,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-expert-bound-3-fact}
-\mathcal{L}_{\text{hensman}}
-= \sum_{n=1}^{N}\E_{q(f_{n})} \left[ \text{log} p(y_{n} \mid f_{n}) \right]
-- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z}) \right].
-\end{align}
-#+END_EXPORT
-Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
-to preform stochastic gradient methods on $q(\u)$.
-
-*** Bayesian Model Selection label:sec-bayesian-model-selection :noexport:
-#+BEGIN_EXPORT latex
-\newcommand{\weights}{\ensuremath{\mathbf{w}}}
-\newcommand{\hyperparameters}{\ensuremath{\bm\theta}}
-\newcommand{\modelStructures}{\ensuremath{\mathcal{H}_i}}
-\newcommand{\weightPrior}{\ensuremath{p(\weights \mid \hyperparameters, \modelStructures)}}
-\newcommand{\weightLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \weights, \modelStructures)}}
-\newcommand{\weightMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \hyperparameters, \modelStructures)}}
-\newcommand{\weightPosterior}{\ensuremath{p(\weights \mid \mathbf{y}, \mathbf{X}, \hyperparameters, \modelStructures)}}
-
-\newcommand{\hyperPrior}{\ensuremath{p(\hyperparameters \mid \modelStructures)}}
-\newcommand{\hyperLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \hyperparameters, \modelStructures)}}
-\newcommand{\hyperMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \modelStructures)}}
-\newcommand{\hyperPosterior}{\ensuremath{p(\hyperparameters \mid \mathbf{y}, \mathbf{X}, \modelStructures)}}
-
-\newcommand{\modelPrior}{\ensuremath{p(\modelStructures)}}
-\newcommand{\modelLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X}, \modelStructures)}}
-\newcommand{\modelMarginalLikelihood}{\ensuremath{p(\mathbf{y} \mid \mathbf{X})}}
-\newcommand{\modelPosterior}{\ensuremath{p(\modelStructures \mid \mathbf{y}, \mathbf{X})}}
-#+END_EXPORT
-The /posterior/ distribution in cref:eq-gp-prediction-noisy considers a fixed covariance function.
-In most practical applications it is hard to specify all components of the covariance function /a priori/.
-Although some properties of the underlying function may be known, such as stationarity,
-it may not be easy to specify the hyperparameters, e.g. lengthscales.
-The parameters of the /likelihood/ may also be hard to specify /a priori/, e.g. noise variance.
-In order to deploy Gaussian process models in practical applications it is important to address
-this model selection problem.
-
-
-
-Bayesian model selection provides a principled framework for performing learning in probabilistic models.
-This section gives a brief overview of the main ideas in Bayesian model selection.
-The overview is general but highlights the difficulties that arise when working with Gaussian
-process models.
-
-In machine learning it is common to use hierarchical models.
-At the lowest level are model parameters $\weights$, such as the weights of a neural network,
-or the weights in linear regression.
-\marginpar{hierarchical models}
-At the next level are hyperparameters $\hyperparameters$, which serve as parameters in the distributions
-over the model parameters at the lowest level.
-For example, kernel hyperparameters in Gaussian process regression or the weight decay term in
-neural networks.
-At the highest level is the underlying model structure,
-that is, there may be a set of (discrete) model structures $\modelStructures$ to be considered.
-For example, the functional form of the covariance function.
-
-*Maximum Likelihood*
-Let us quickly introduce a simple (non Bayesian) approach to finding the best
-values for the parameters.
-This approach finds the best parameter settings by maximising the likelihood $\weightLikelihood$
-with respect to the parameters $\weights$.
-\marginpar{maximum likelihood}
-This approach is known as maximum likelihood and is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-maximum-likelihood}
-\weights = \text{arg}\max_{\weights} \weightLikelihood,
-\end{align}
-#+END_EXPORT
-This obtains a point estimate for the "best" parameter values $\weights$.
-Unfortunately, as the likelihood function is higher for more complex model structures,
-this approach leads to overfitting.
-
-# This can be overcome by noticing that integrating out the parameters (instead of optimising them),
-# automatically protects from overfitting.
-A more principled approach -- that overcomes overfitting -- is to treat the parameters as random variables
-(i.e. place priors over them), and integrate them out (instead of optimising them).
-This is advantageous as it considers all possible settings of the parameters,
-penalising complex models and preventing overfitting.
-This is known as /Bayesian Occam's razor/ citep:mackayProbable1995,rasmussenOccam2001,murrayNote2005
-named after the principle of /Occam's razor/ (William of Occam 1285-1349).
-The principle says that "one should pick the simplest model that adequately explains the data".
-# This provides automatic Occam's razor, penalising complex models and preventing overfitting.
-# and returns the
-# posterior distribution $p(\mathbf{\Theta} | \mathbf{Y})$ over the unknown variables,
-# in contrast to the point estimate in maximum likelihood.
-
-Model selection takes place one step at a time, by repeatedly applying the rules of probability theory,
-see cite:mackayBayesian1992 for more details on this framework.
-At the lowest level, the /posterior/ distribution over the model parameters $\weightPosterior$
-\marginpar{level 1 inference}
-is obtained via Bayes' rule,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-bayes-rule-1}
-\weightPosterior = \frac{\weightLikelihood \weightPrior}{\weightMarginalLikelihood}
-\end{align}
-#+END_EXPORT
-where $\weightLikelihood$ is the /likelihood/, a statistical model relating the data to the model
-parameters and $\weightPrior$ is the /prior/ over the parameters.
-The /prior/ distribution encodes our initial belief in the parameters.
-It may take a particular form to reflect the underlying structure of the problem, or
-it may be broad to reflect having little prior knowledge.
-The /posterior/ is the object of interest because it
-combines information from the /prior/ distribution, with information from the data,
-via the /likelihood/.
-The denominator $\weightMarginalLikelihood$ is a normalising constant and is independent of the model
-parameters $\weights$. It is known as the /marginal likelihood/  (or evidence) and is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-marginal-likelihood-1}
-\weightMarginalLikelihood = \int \weightLikelihood \weightPrior \text{d} \weights,
-\end{align}
-#+END_EXPORT
-where the variables of interest (the model parameters $\weights$) have been integrated out of the
-joint distribution.
-So far so good, however, how should the hyperparameters $\hyperparameters$ be set?
-The same process can be repeated to obtain the /posterior/ distribution over the
-\marginpar{level 2 inference}
-hyperparameters,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-bayes-rule-2}
-\hyperPosterior = \frac{\hyperLikelihood \hyperPrior}{\hyperMarginalLikelihood}
-\end{align}
-#+END_EXPORT
-where $\hyperPrior$ is the /hyper-prior/, a prior over the hyperparameters.
-Notice that the /marginal likelihood/ from the lowest level $\weightMarginalLikelihood$
-now takes the role of the /likelihood/. Similarly to before, the normalisation constant
-is given by integrating out the object of interest (the hyperparameters $\hyperparameters$),
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-marginal-likelihood-2}
-\hyperMarginalLikelihood = \int \hyperLikelihood \hyperPrior \text{d} \hyperparameters.
-\end{align}
-#+END_EXPORT
-Finally, at the top level, the /posterior/ distribution over the model structure $\modelPosterior$
-\marginpar{level 3 inference}
-is computed,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-bayes-rule-3}
-\modelPosterior = \frac{\modelLikelihood \modelPrior}{\modelMarginalLikelihood},
-\end{align}
-#+END_EXPORT
-where $\modelMarginalLikelihood = \sum_{i} \modelLikelihood \modelPrior$.
-It is important to note how performing Bayesian inference requires the computation of
-integrals in the denominator of Bayes' rule.
-These integrals are often not analytically tractable, due to details of the model.
-As such, approximate inference techniques are often required.
-These approximations may be analytical or based on Markov Chain Monte Carlo (MCMC) methods.
-
-*Type II Maximum Likelihood*
-In Gaussian process methods, the marginalisation of the hyperparameters in cref:eq-marginal-likelihood-2
-is often difficult.
-\marginpar{type II maximum likelihood}
-When it is not possible to marginalise all of the variables, the next best thing to a full Bayesian
-treatment -- without resorting to Maximum Likelihood --
-is to marginalise as many variables as possible, and optimise the remaining variables subject to maximising
-the /marginal likelihood/.
-This optimisation is known as Type II Maximum Likelihood and is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-type-2-maximum-likelihood}
-\weights &= \text{arg}\max_{\weights} \weightMarginalLikelihood \\
-&= \text{arg}\max_{\weights} \int \weightLikelihood \weightPrior \text{d} \weights,
-\end{align}
-#+END_EXPORT
-
-*** Model Selection for GP Regression :noexport:
-Bayesian principles are an appealing framework for inference.
-However, for most interesting models arising in machine learning, the required computations
-(integrals over the latent variables) are analytically intractable.
-Gaussian process regression with Gaussian noise is a rare exception, where the posterior
-is analytically tractable cref:eq-gp-prediction-noisy.
-
-The power of Gaussian process regression arises from the tractability of the marginal likelihood of the
-observed outputs given the observed inputs.
-The marginal likelihood is the product of the Gaussian likelihood and the GP prior, with the latent
-variables integrated out,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-marginal-likelihood}
-p(\mathbf{y} \mid \mathbf{X}, \bm\theta) &= \int
-\underbrace{p(\mathbf{y} \mid \f)}_{\text{likelihood}}
-\underbrace{p(\f \mid \mathbf{X}, \bm\theta)}_{\text{GP prior}}
-\text{d}\f.
-%&= \mathcal{N} \left( \mathbf{y} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right).
-\end{align}
-#+END_EXPORT
-This marginalisation implies that a whole family of functions are simultaneously considered.
-The covariance function determines the properties of the functions (such as smoothness)
-and defines a nonparametric form of $f$.
-In this setting, the Gaussian process is used as the /prior/ over the latent function $f$
-and the Gaussian likelihood is used to relate the data to the model.
-Conditioning the /prior/ on the observed data obtains the /posterior/ distribution, which
-fits the data.
-
-Although GPs are nonparametric, the mean and kernel functions may contain hyperparameters $\bm\theta$.
-In practical settings, it is desirable to find the best hyperparameter settings given the observations.
-Unfortunately, specifying (hyper-)priors over the hyperparameters and marginalising them
-(cref:eq-marginal-likelihood-2), is often difficult for GP models.
-As such, it is common to resort to Type II Maximum Likelihood and maximise the log marginal likelihood
-with respect to the kernel hyperparameters $\bm\theta$ and noise variance $\sigma^2_n$.
-The log marginal likelihood is given by,
-#+BEGIN_EXPORT latex
-\small
-\begin{align} \label{eq-gp-log-marginal-likelihood}
-\text{log} p(\mathbf{y} \mid \mathbf{X}, \bm\theta) =
-- \underbrace{\frac{1}{2} \mathbf{y}^T (k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I})^{-1} \mathbf{y}}_{\text{data fit}}
-- \underbrace{\frac{1}{2} \log \left| k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right|}_{\text{complexity penalty}}
-- \underbrace{\frac{n}{2} \log 2 \pi}_{\text{constant}}
-\end{align}
-\normalsize
-#+END_EXPORT
-The three terms in the log marginal likelihood have interpretable roles:
-1. Data fit term,
-   - $\frac{1}{2} \mathbf{y}^T (k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I})^{-1} \mathbf{y}$,
-2. Complexity penalty depending only on the covariance function and the inputs,
-   - $\frac{1}{2} \log | k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} |$,
-3. Normalisation constant,
-   - $\frac{n}{2} \log 2 \pi$.
-Importantly, as discussed in Section ref:sec-bayesian-model-selection,
-maximising the log marginal likelihood automatically balances the trade-off
-between model complexity and data fit, i.e. it provides automatic Occam's razor.
-The resulting optimisation is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gp-type-2-maximum-likelihood}
-\bm\theta = \text{arg}\max_{\bm\theta} \log p(\mathbf{y} \mid \mathbf{X}, \bm\theta)
-= \text{arg}\max_{\bm\theta} \log \int p(\mathbf{y} \mid \f) p(\f \mid \mathbf{X}, \bm\theta) \text{d} \f.
-\end{align}
-#+END_EXPORT
-
-# Making predictions in cref:eq-gp-prediction-noisy is computationally expensive due to conditioning
-
-*** Variational Inference :noexport:
-\todo{seek to convert inference into an optimisation}
-
-Variational approaches seek to lower bound the marginal likelihood (or evidence) $p(\mathbf{Y})$ using a functional that depends on variational parameters $q(\mathbf{\Theta})$.
-
-#+BEGIN_EXPORT latex
-\begin{align}
-	\text{log}\ p(\mathbf{Y}) &= \text{log} \int p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta} = \text{log} \int p(\mathbf{Y} | \mathbf{\Theta}) p(\mathbf{\Theta}) \text{d}\mathbf{\Theta}
-	\\
-	&= \text{log} \int \frac{q(\mathbf{\Theta})}{q(\mathbf{\Theta})} p(\mathbf{Y}, \mathbf{\Theta}) \text{d}\mathbf{\Theta}
-	\\
-	&= \text{log} \int q(\mathbf{\Theta}) \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \text{d}\mathbf{\Theta}
-	\\
-	&= \text{log} \E_{q(\mathbf{\Theta})} \bigg[ \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \bigg]
-	\\
-	&\geq \E_{q(\mathbf{\Theta})} \bigg[ \text{log} \frac{p(\mathbf{Y}, \mathbf{\Theta})}{q(\mathbf{\Theta})} \bigg]
-\end{align}
-#+END_EXPORT
-
-The bound becomes exact if $q(\mathbf{\Theta}) = p(\mathbf{\Theta} | \mathbf{Y})$. The true posterior is intractable but the variational posterior $q(\mathbf{\Theta})$ must be constrained (so that it is tractable). It is common to factorise $q(\mathbf{\Theta})$ with respect to groups of elements belonging to parameter set $\mathbf{\Theta}$, this is known as mean field approximation.
-
-
-*** Sparse Gaussian Processes :noexport:
-A GP cite:edwardrasmussenGaussian2010 is a distribution over functions $f : \R^{D_f} \rightarrow \R$
-fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$.
-For a given set of inputs  from the
-functions domain $\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}$ the associated function values
-$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$
-are jointly Gaussian,
-#+BEGIN_EXPORT latex
-\begin{equation} \label{eq-gp-prior}
-p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \bm\mu_{\mathbf{X}}, \mathbf{K}_{\mathbf{X}, \mathbf{X}})
-\end{equation}
-#+END_EXPORT
-where $\bm\mu_{\mathbf{X}}= \mu(\mathbf{X})$ is the mean vector, and
-$\mathbf{K}_{\mathbf{X},\mathbf{X}} = k(\mathbf{X}, \mathbf{X})$ is the covariance function evaluated
-between the inputs $\mathbf{X}$.
-In this work, the squared exponential covariance function with Automatic Relevance Determination
-is used for all GPs.
-The distribution over the function value $f_*$ at a new input $\mathbf{x}_*$ (i.e. to make a prediction)
-is given by the conditional,
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-gp-prediction}
-p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2) \numberthis \\
-\mu &= \mu_{\mathbf{x}_*} + \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} (\mathbf{f} - \bm\mu_{\mathbf{X}}) \\
-\sigma^2 &= k_{\mathbf{x}_*, \mathbf{x}_*} - \mathbf{k}_{\mathbf{x}_*, \mathbf{X}} \mathbf{K}_{\mathbf{X}, \mathbf{X}}^{-1} \mathbf{k}_{\mathbf{X}, \mathbf{x}_*}.
-\end{align*}
-#+END_EXPORT
-The conditional in cref:eq-gp-prediction is computationally expensive due to conditioning
-on all of the training data $\mathbf{X}, \mathbf{f}$.
-Introducing a set of $M$ inducing points from the same GP prior can reduce the computational cost
-if $M < N$.
-The inducing inputs are denoted $\bm\xi$ and outputs as
-$\hat{\mathbf{f}} = f(\bm\xi)$.
-The inducing variables
-$\hat{\mathbf{f}}$ are jointly Gaussian with the latent function values $\mathbf{f}$.
-The GP predictive distribution can be approximated by conditioning on this
-smaller set of inducing variables,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-sparse-gp-prediction}
-p({f}_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &\approx
-p({f}_* \mid \mathbf{x}_*, \hat{\mathbf{f}}, \bm\xi) \\
-p(\hat{\mathbf{f}}) &= \mathcal{N}(\hat{\mathbf{f}} \mid \mathbf{m}, \mathbf{S}).
-\end{align}
-#+END_EXPORT
-The approximation becomes exact when the
-inducing variables $\hat{\mathbf{f}}$ are a sufficient statistic
-for the latent function values $\mathbf{f}$ cite:Titsias2009.
-# The predicted latent function values are then mutually independent given the inducing variables.
-# A central assumption is that given enough well
-# placed inducing variables $\hat{\mathbf{f}}$ they are a
-# sufficient statistic for the latent function values $\mathbf{f}$.
 
 ** Learning in Multimodal Dynamical Systems
 *** maths :ignore:
@@ -4889,27 +5268,6 @@ This work formulates a gating network aimed at,
 # in this work.
 # The gating network is of particular importance in this work as it models how the dynamics switch
 # between modes over the input space.
-
-** Exploration in Dynamical Systems
-*Thompson sampling*
-An alternative and theoretically grounded strategy is Thompson sampling.
-This approach samples a single model  $f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i})$ at every iteration $i$
-and uses the sampled model to optimise the controller.
-This is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-thompson-exploration}
-\pi_i^{\text{thompson}} = \arg \max_{\pi \in \Pi} J(f_i, \pi) \quad \text{s.t.} \quad f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i}).
-\end{align}
-#+END_EXPORT
-# This contrasts the greedy approach that averages over the
-In general it is intractable to sample from $\dynamicsModel(f \mid \mathcal{D}_{0:i})$, although methods do exist
-for both \acrshort{gp} models and ensembles.
-Note that after the sampling step this problem is equivalent to greedy exploitation.
-*** Bandits and Bayesian Optimisation
-*** Information Theoretic Active Learning with Gaussian Processe
-cite:krauseNonmyopic2007,houlsbyBayesian2011
-*** Active Learning in Dynamical Systems
-cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively2020
 
 * Probabilistic Inference for Learning Multimodal Dynamical Systems label:chap-dynamics
 #+begin_export latex
