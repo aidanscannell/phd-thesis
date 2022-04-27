@@ -5,9 +5,10 @@ This repository contains the =org= and =LaTeX= source for my PhD thesis.
 # TODO add shield with link to pdf and counter
 
 # Citation
-
-    @phdthesis{scannell22,
-        author = {Aidan Scannell},
-        school = {University of Bristol},
-        title = {Probabilistic Inference for Learning and Control in Multimodal Dynamical Systems}
-        year = {2022}}
+#+begin_src LaTeX
+@phdthesis{scannell22,
+    author = {Aidan Scannell},
+    school = {University of Bristol},
+    title = {Probabilistic Inference for Learning and Control in Multimodal Dynamical Systems}
+    year = {2022}}
+#+end_src
