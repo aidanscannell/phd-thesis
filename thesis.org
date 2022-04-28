@@ -654,12 +654,16 @@ Use with
 {{{acronym(sde,SDE,Stochastic Differential Equation)}}}
 {{{acronym(elbo,ELBO,Evidence Lower Bound)}}}
 {{{acronym(vae,VAE,Variational Auto-Encoder)}}}
+{{{acronym(rl,RL,Reinforcement Learning)}}}
 {{{acronym(mbrl,MBRL,Model-Based Reinforcement Learning)}}}
 {{{acronym(mfrl,MFRL,Model-Free Reinforcement Learning)}}}
 {{{acronym(hmm,HMM,Hidden Markov Model)}}}
 {{{acronym(svi,SVI,Stochastic Variational Inference)}}}
 {{{acronym(soc,SOC,Stochastic Optimal Control)}}}
 {{{acronym(mpc,MPC,Model Predictive Control)}}}
+{{{acronym(lqr,LQR,Linear Quadratic Regulator)}}}
+{{{acronym(lqg,LQG,Linear Quadratic Gaussian)}}}
+{{{acronym(ilqr,iLQR,iterative Linear Quadratic Regulator)}}}
 
 {{{acronym(pets,PETS,Probabilistic Ensembles with Trajectory Sampling)}}}
 {{{acronym(pipps,PIPPS,Probabilistic Inference for Particle-based Policy Search)}}}
@@ -825,7 +829,7 @@ It shows how the well known exploration-exploitation trade-off can be
 sidestepped with a simple method for selecting one of two controllers:
 one for mode remaining navigation (exploitation) and one for exploring the desired dynamics mode (exploration).
 It introduces an explorative trajecotry optimisation algorithm that explicitly reasons about the
-uncertainty in the dynamcis model to guide exploration.
+uncertainty in the dynamics model to guide exploration.
 The algorithm restricts exploration to the region of the state space which it believes governs the
 desired dynamics mode.
 The resulting algorithm is evalutated in a simulated quadcopter environment which shows that it can
@@ -2377,8 +2381,8 @@ a quadratic integral control cost term regularised the controls to encode the no
 # This chapter reviews learning-based control and details the relevant background information
 # for the remainder of the dissertation.
 
-The primary goal of this dissertation is to navigate to a target state in stochastic, nonlinear,
-multimodal dynamical systems, whilst remaining in a desired dynamics mode.
+The primary goal of this dissertation is to control stochastic, nonlinear,
+multimodal dynamical systems to a target state, whilst remaining in a desired dynamics mode.
 This is a \acrfull{soc} problem which can be summarised as follows:
 #+BEGIN_EXPORT latex
 \begin{displayquote}
@@ -2387,6 +2391,10 @@ it can navigate to a target state, whilst remaining in a desired dynamics mode.}
 \end{displayquote}
 #+END_EXPORT
 This chapter now reviews the relevant literature for learning to control dynamical systems.
+
+This section introduces the necessary concepts needed to formally define the mode remaining navigation problem.
+It then formally defines the mode remaining navigation problem and highlights its novelty.
+
 # Due to incomplete knowledge of the system or corruption by noise,
 
 # To the best of our knowledge, the mode remaining navigation problem detailed in cref:problem-statement-main
@@ -2399,22 +2407,19 @@ This chapter now reviews the relevant literature for learning to control dynamic
 
 # learning-based control and details the relevant background information
 # for the remainder of the dissertation.
-** Problem Statement label:problem-statement-main
 # The overall goal is to navigate from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
 # -- to the target state $\targetState$, whilst guaranteeing that the controlled
 # system remains in the desired dynamics mode.
-This section formally defines the mode remaining navigation problem.
 
-*Dynamical systems*
+** Dynamical systems
 Dynamical systems describe the behaviour of a system over time, $t$, and
 are a key component of both control theory and reinforcement learning.
 At any given time, $t$, a dynamical system has a state, which is
 represented as a vector of real numbers $\state_t \in \stateDomain \subseteq \R^{\StateDim}$.
-For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
-and an orientation would be represented as $\state_t = [x_t, y_t, \theta_t]^{T}$.
+For example, the state of a 2-dimensional robotic system can be represented using it's 2D Cartesian coordinates
+and it's orientation as $\state_t = [x_t, y_t, \theta_t]^{T}$.
 The system can be controlled by applying control actions $\mathbf{u}_t \in \controlDomain \subseteq \R^{\ControlDim}$
 at any given time, $t$.
-
 This dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
 #+begin_export latex
 \begin{subequations} \label{eq-dynamics-main}
@@ -2439,8 +2444,14 @@ This is a standard assumption in the \acrfull{mdp} framework which is commonly a
 in the reinforcement learning literature.
 In this case, the $\mode{\bm\epsilon}$ term solely represents the process noise,
 which accounts for unwanted (and, in general, unknown) disturbances of the system.
-For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
+For example, it is hard to model aerodynamic effects on aircraft so these could be accounted
 for in the process noise term.
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# The environment is full-observable and the observation process is not subject to noise.
+# \end{assumption}
+# #+END_EXPORT
+
 
 This dissertation considers systems where the underlying dynamics modes are defined by disjoint state domains.
 That is, each dynamics mode is defined by its state domain
@@ -2448,11 +2459,82 @@ $\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeI
 $\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for distinct $i, j \in \{1, \ldots \ModeInd\}$.
 The output of the mode indicator function is referred to as the mode indicator variable and is given by
 $\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\} = \mathbb{Z} \cap [1, \ModeInd]$.
-Notice that each mode's transition dynamics are free to leave their state space $\mode{\stateDomain}$
+Notice that each mode's dynamics are free to leave their state space $\mode{\stateDomain}$
 and enter another mode.
 Ideally, this work seeks to enforce the controlled system to remain in a given mode.
-Formally, a mode remaining controlled system is defined as follows.
+
+** Optimal Control
+*** intro :ignore:
+Optimal control is a branch of mathematical optimisation that seeks to find a controller $\pi$ that
+optimises an objective function $J_{\pi}(\x)$.
+The objective function might be formulated to solve a particular task or to make the dynamical
+system behave in a certain way.
+Typically the goal is to minimise a cost function $\costFunc : \stateDomain \times \controlDomain \rightarrow \R$.
+This dissertation considers the /finite horizon problem/, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-objective}
+J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\mid \state_0=\state \right]
+\end{align}
+#+END_EXPORT
+where $\TimeInd$ is known as the horizon.
+The objective $J_{\pi}(\state)$ quantifies the cost associated with deploying the controller $\pi$ from
+an initial state $\state$.
+The cost function typically consists of a terminal cost and a term which is integrated over the horizon (integral cost).
+In a navigation task the terminal cost may consist of the distance to the target, whilst the integral cost
+may encode the notion of minimum effort control, e.g. energy consumption.
+# For notational conciseness, this dissertation uses $\costFunc$ to denote both the terminal and integral terms.
+
+*Controller space $\Pi$*
+This defines the set of controllers over which optimisation is performed.
+Controllers can have state feedback such that they are given by $\control_t = \policy(\state_t)$.
+These are closed-loop controllers and  in the reinforcement learning literature are referred to as policies.
+Alternatively, controllers can only depend on time $\control_t = \policy(t)$, in which case they are known
+as an open-loop controllers.
+This dissertation considers the general case, given by $\control_t = \policy(\state_t, t)$,
+which encompasses both open-loop and closed-loop controllers.
+
+*** MDP fig :ignore:
+\newline
+
+#+BEGIN_EXPORT latex
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+squarednode/.style={rectangle, fill=teal!5, width=2cm},
+blanknode/.style={rectangle, width=2cm}
+]
+
+\node[squarednode, align=center] (agent)                             {Controller / Agent\\$\pi(\state_t, t)$};
+\node[blanknode, align=center] (control)    [below right=of agent]  {Control / Action $\control_t$};
+\node[blanknode, align=left] (cost)      [below left=of agent]   {Cost / negative reward $\costFunc(\state_t, \control_t)$\\Next state $\state_{t+1}$};
+\node[squarednode, align=center] (env)       [below left=of control] {System / Environment\\$f(\state_t, \control_t)$};
+
+\draw[--] (agent) -| (control);
+\draw[->] (control) |- (env);
+\draw[--] (env) -| (cost);
+\draw[->] (cost) |- (agent);
+\end{tikzpicture}
+\caption{Illustration of a \acrfull{mdp} through the lens of optimal control. The controller (agent) uses all past knowledge, absorbed into the previous state $\state_t$ (Markov property), to decide which control (action) $\control_t$ to execute. It then observes the next state $\state_{t+1}$ and the cost (negative reward) associated with the state transtion. The cost (reward) function is assumed to be known. The agent's goal is to minimise the cumulative cost, or to maximise the cumulative reward.}
+\label{fig-mdp}
+\end{figure}
+#+END_EXPORT
+This discrete time setting can be modelled as a \acrfull{mdp}, as seen in cref:fig-mdp.
+In the \acrshort{mdp} framework a controller is referred to as an agent, the control is referred to as an action,
+and the dynamical system is referred to as the environment.
+Further to this, the goal is to maximise the cumulative reward, as opposed to minimising the cumulative cost.
+Slight manipulation of the objective enables cost and reward functions to be interchanged.
+The key idea is that all past information is represented by the current state $\state_t$,
+which is known as the Markov property.
+In this dissertation most work is formulated through the lens of optimal control.
+However, the controller is sometimes referred to as the agent and the system is often referred to
+as the environment.
+
+** Problem Statement label:problem-statement-main
+The objective function in cref:eq-objective is not of primary interest in this work.
+The novelty of this work arises from remaining in a desired dynamics mode $\desiredMode$.
 #+begin_export latex
+Formally, a mode remaining controlled system is defined as follows.
 \begin{definition}[Mode Remaining] \label{def-mode-remaining-main}
 Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
 Given an initial state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy \in \Pi$,
@@ -2463,18 +2545,13 @@ the controlled system is said to be mode-remaining iff:
 \end{align}
 \end{definition}
 #+end_export
-Notice that  the controller
-$\policy : \stateDomain \times \mathbb{Z} \rightarrow \controlDomain$ is defined
-generally. That is, it may take the form of a deterministic feedback controller or an
-open-loop set of controls without state feedback.
-It is assumed that $\Pi$ is the set of deterministic controllers.
-
-*Mode remaining navigation problem*
-Given this definition of a mode remaining controlled system, this dissertation seeks to solve,
 #+begin_export latex
+\begin{myquote}
+\textbf{Mode remaining navigation problem}
+Given this definition of a mode remaining controlled system, this dissertation seeks to solve,
 \begin{subequations} \label{eq-main-problem}
 \begin{align}
-\min_{\policy \in \Pi} \quad &J(\dynamicsFunc, \policy) \\
+\min_{\policy \in \Pi} \quad &J_{\pi}(\state_0) \\
 \text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\bm\epsilon},
 \quad \modeVar(\state_{\timeInd}) = \modeInd \\
 %&\text{\cref{eq-mode-remaining-def-explore}} \\
@@ -2486,63 +2563,198 @@ Given this definition of a mode remaining controlled system, this dissertation s
 &\state_\TimeInd = \targetState,
 \end{align}
 \end{subequations}
-#+end_export
-where $J : \Pi \rightarrow \R$ denotes the objective function.
-Note that the objective function is not of primary importance in this work.
-The novelty of this problem arises from remaining in the desired dynamics mode $\desiredMode$, when
-the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
-and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
-
-
-*Stochastic optimal control*
+where $\targetState$ denotes the target state and $J_{\pi}(\state_0)$ is the objective from \cref{eq-objective}.
+\end{myquote}
 This is a constrained \acrfull{soc} problem with a terminal boundary condition.
-Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
-over a time period $t \in [t_0, t_f]$ that optimises an objective function $J_{\pi}(\x)$.
+#+end_export
+
+** Optimal Control label:sec-optimal-control
+*** intro :ignore:
+Optimal control is a branch of mathematical optimisation that seeks to find a controller $\pi$ that
+optimises an objective function $J_{\pi}(\x)$.
 The objective function might be formulated to solve a particular task or to make the dynamical
 system behave in a certain way.
-Typically th objective function is given by,
+Typically the goal is to minimise a cost function $\costFunc : \stateDomain \times \controlDomain \rightarrow \R$.
+This dissertation considers the /finite horizon problem/, given by,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-objective}
-J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \gamma^{\timeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\begin{align} \label{eq-optimal-control-objective}
+J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
 \mid \state_0=\state \right]
 \end{align}
 #+END_EXPORT
-where $\gamma \in [0, 1)$ is a discount factor, ensuring infinite sums remain finite and well-defined.
+where $\TimeInd$ is known as the horizon.
+The objective $J_{\pi}(\state)$ quantifies the cost associated with deploying the controller $\pi$ from
+an initial state $\state$.
+The cost function typically consists of a terminal cost and a term which is integrated over the horizon (integral cost).
+In a navigation task the terminal cost may consist of the distance to the target, whilst the integral cost
+may encode the notion of minimum effort control, e.g. energy consumption.
+# For notational conciseness, this dissertation uses $\costFunc$ to denote both the terminal and integral terms.
 
-# *Controller space*
-# The controller space, $\policySpace$, defines the set of controllers which optimisation is performed over,
-# i.e. it is the optimisation domain.
-# In this dissertation, a controller, $\policy $, shall be a conditional distribution over $\controlDomain$.
-# In (deterministic) optimal control the policy space is usually given by open loop policies, i.e.
-# only conditioned on time $\policy(\control \mid t)$.
-# In contrast, SOC (and RL) are mainly interested in feedback policies, where the controls are conditioned on both time and
-# state, i.e. $\policy(\control(t) \mid t, \state(t))$
-# \footnote{for notational conciseness dependency on time is assumed from here on, i.e.
-# $\policy(\control(t) \mid t, \state(t) = \policy(\control(t) \mid \state(t))$}.
-# A special case are deterministic policies, given by $\policy(\control \mid \state) = \delta_{\control=f(\state)}$,
-# where $\delta$ is the dirac delta distribution and $f$ is a function.
+*Controller space $\Pi$*
+This defines the set of controllers over which optimisation is performed.
+Controllers can have state feedback such that they are given by $\control_t = \policy(\state_t)$.
+These are closed-loop controllers and  in the reinforcement learning literature are referred to as policies.
+Alternatively, controllers can only depend on time $\control_t = \policy(t)$, in which case they are known
+as an open-loop controllers.
+This dissertation considers the general case, given by $\control_t = \policy(\state_t, t)$,
+which encompasses both open-loop and closed-loop controllers.
 
-To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
-to solve the problem in \cref{eq-main-problem}.
 
-*Bellman optimality equations*
+There are multiple approaches to finding controllers $\pi$ that minimise the expected cost
+in cref:eq-objective subject to the stochastic dynamics in cref:eq-dynamics-main.
+
+# There are several methods formulations
+
+*** Dynamic Programming
+
+Dynamic programming citep:bellmanDynamic1956 encompasses a large class of algorithms that can be
+used to find optimal controllers given an accurate model of the environment as an \acrshort{mdp}.
+However, classical dynamic programming algorithms are of limited use in \acrshort{rl} as they rely on
+accurate dynamics models and have significant computational expense.
+Nevertheless, they are still important theoretically.
+The main idea of dynamic programming (and \acrshort{rl} in general) is to structure the search for good controllers using
+value functions $V$.
+Optimal controllers can easily be found from optimal value functions $V_*$, which satisfy the Bellman
+optimality equations,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-bellman}
-V_*(\state) = \max_{\control} &\E \left[ \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
-+ \gamma V_*(f(\state_{t}, \pi(\state_{t}, t))
-\mid \state_0=\state \right] \\
-&\text{s.t.} \quad \state_{\timeInd+1} = f(\state_{\timeInd}, \pi(\state_{\timeInd+1}, \timeInd), \omega_{\timeInd}),
+V_*(\state) = \min_{\control} &\E \left[ \underbrace{\costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))}_{\text{first step}}
++ \underbrace{V_*(f(\state_{t}, \pi(\state_{t}, t)))}_{\text{future}}
+\mid \state_0=\state \right]
 \end{align}
 #+END_EXPORT
-This recursion requires the solution for all successor states to be found first.
+Computing the value function is known as /policy evaluation/.
+The value function can then be used for /policy improvement/ where a controller with superior performance is computed.
+In the finite horizon setting, directly solving the Bellman equations backwards in time in referred to
+as dynamic programming.
 
-# However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
-** Model-Based Reinforcement Learning
-A central assumption in this formulation is that the system dynamics and objective are /known a priori/.
-This dissertation considers problems where the system dynamics are /not known a priori/.
+Approximate dynamic programming encompasses a large class of methods that given a controller $\pi$,
+approximate the value function $J_{\pi}(\state)$ for each state $\state$ with a parameterised function
+(/policy evaluation/).
+The approximate value function can then be used for /policy improvement/.
+In general, approximate dynamic programming is a large collection of algorithms that encompasses methods from
+\acrshort{rl} as well.
+However, these methods are out of the scope of this dissertation.
+# It is worth noting, for general \acrshort{soc}, analytic tractability is not always possible.
+# One such case where it is possible, is the \acrfull{lqr}, which
+# assumes linear dynamics and a quadratic cost function.
 
-Reinforcement learning provides the most general framework
-There are several methods formulations
+
+**** Approximate Dynamic Programming :noexport:
+Approximate dynamic programming encompasses a large class of methods that given a controller $\pi$,
+approximate the value function $J_{\pi}(\state)$ for each state $\state$ with a parameterised function
+(/policy evaluation/).
+The approximate value function can then be used for /policy improvement/.
+In general, approximate dynamic programming is a large collection of algorithms that encompasses methods from
+\acrshort{rl} as well.
+There are two main methods for approximation in dynamic programming.
+The first involves approximations in the value space, where the value function is approximated
+$\hat{V}(f(\state_t, \pi(\state_t, t)))$.
+The second is approximation in policy space by optimising over a suitable class of policies.
+
+Model-based vs model-free
+These methods are out of the scope of this dissertation.
+
+*** Model Predictive Control
+Instead of approximating the value function or policy, it is possible to directly optimise the controls $\control_t$
+over a horizon $T$.
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-trajectory-optimisation}
+\min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\mid \state_0=\state \right] \\
+&\text{s.t. } \quad \state{t+1} = f(\state_t, \control_t)
+\end{align}
+#+END_EXPORT
+which finds an optimal sequence of controls $\controlTraj$ for a given start state $\state_0$.
+This is known as trajectory optimisation
+Iteratively applying the first control $\control_0$ and resolving this nonlinear program is known as
+\acrfull{mpc} cite:eduardof.Model2007.
+This resulting controller is close-loop, however, in practice, it is often too computationally expensive to obtain
+real-time control.
+Many approximate solutions have been introduced in the literature, that seek to balance the computational complexity
+and accuracy trade-off differently cite:bettsSurvey1998.
+
+For example, \acrfull{ilqr} can be used to generate trajectories for non-linear systems by
+iteratively approximating the dynamics to be linear around a nominal trajectory and optimising for the controls.
+\acrshort{ilqr} works well for quadratic cost functions but can be used with any cost function by approximating the cost
+function with a second order Taylor expansion.
+However, in this case iLQR is susceptible to converging
+to terrible (local) optima if the true cost function is highly non-convex.
+cite:boedeckerApproximate2014 present a real-time iLQR controller based on sparse GPs.
+cite:rohrProbabilistic2021 propose a novel LQR controller synthesis for
+linearised GP dynamics that yields robust controllers with respect to a probabilistic stability margin.
+In cite:marcoAutomatic2016 they parameterise the weight matrices
+$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
+and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
+
+*Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
+iLQR to a stochastic setting, where the process
+noise is assumed to be Guassian.
+cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
+
+*Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
+the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
+cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
+over the entire control sequence.
+Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
+and the quadratic model is inaccurate.
+\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
+DDP solutions provides greater accuracy than iLQG/iLQR but
+at the cost
+of increased computational time cite:tassaSynthesis2012.
+The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
+DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
+
+cite:panProbabilistic2014 present a probabilistic trajectory optimisation
+framework for systems with unknown dynamics called probabilistic
+differential dynamic programming (PDDP).
+It extends DDP to explicitly account
+for uncertainty in dynamics modelled using gaussian processes.
+In contrast to typical gradient based policy search methods, PDDP does not
+require a policy parameterisation as it learns a locally optimal,
+time-varying control policy.
+Based on the second-order local approximation of the value function,
+PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
+
+*Path Integral*  control is a method for developing optimal controls based on stochastic
+sampling of trajectories cite:theodorouGeneralized2010.
+This work was originally limited to control affine systems cite:williamsModel2017
+but has since been extended to general nonlinear
+dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
+
+** Reinforcement Learning
+A central assumption of the methods in the cref:sec-optimal-control is that both the
+system dynamics and cost function are /known a priori/.
+This dissertation considers problems where
+the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
+and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
+\acrfull{rl} provides the most general framework extending optimal
+control to problems with incomplete knowledge of the system dynamics.
+The classic text by cite:sutton2018reinforcement gives a general introduction to \acrshort{rl}.
+The main goal is to learn good behaviours from interactions with an environment.
+Typically this is in the form of a state feedback controller, known as a policy, which makes an agent's interaction
+with the environment closed-loop.
+
+Model-free methods leverage the face that the optimal control problem in cref:eq-optimal-control-objective
+can be solved without a known dynamics model.
+Instead, these methods leverage trajectories sampled from the system to calculate the expectation
+using Monte Carlo simulation.
+
+However, in
+
+# To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
+# to solve the problem in \cref{eq-main-problem}.
+
+
+*** Model-Based Reinforcement Learning
+An alternative approach is to solving the optimal control problem in cref:eq-optimal-control-objective
+is to first learn a dynamics and then use the learned model with model-based control techniques
+This approach is known as \acrfull{mbrl}.
+This shares similarities with the system identification and control process except that the dynamics learning
+and control are updated simultaneously.
+
+This has the added benefit
+*** Aleatoric vs Epistemic Uncertainty
 *** Dynamics Learning
 *** Motivation label:to_motivation :ignore:
 **** figs :ignore:
@@ -2703,7 +2915,6 @@ their method would assign new dynamics modes at each oscillation.
 In contrast, we seek to learn only the two true dynamics modes and turn them
 "on" and "off" in different regions of the input space.
 
-*** Aleatoric vs Epistemic Uncertainty
 *** Gaussian Processes
 This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
 Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
@@ -3337,100 +3548,6 @@ cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively202
 *Information Theoretic Active Learning with Gaussian Processes*
 cite:krauseNonmyopic2007,houlsbyBayesian2011
 
-** Dynamical Systems :ignore:noexport:
-*Dynamical systems*
-Dynamical systems describe the behaviour of a system over time, $t$, and
-are a key component of both control theory and reinforcement learning.
-At any given time, $t$, a dynamical system has a state, which is
-represented as a vector of real numbers $\state_t \in \stateDomain \subseteq \R^{\stateDim}$.
-For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
-and an orientation would be represented as $\state_t = [x_t, y_t, \theta_t]^{T}$.
-The system can be controlled by applying control actions $\mathbf{u}_t \in \controlDomain \subseteq \R^{\controlDim}$
-at any given time, $t$.
-This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-unimodal-dynamics-cont}
-\state_{t+1} &= \dynamicsFunc(\state_t, \control_t) + \epsilon_t,
-\end{align}
-#+END_EXPORT
-where $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ represents the transition dynamics function and $\epsilon_t$
-is an i.i.d process noise term with $\E[\epsilon_t] = 0$.
-The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
-For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
-for in the process noise term.
-Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
-observation noise.
-This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
-in the reinforcement learning literature.
-# \todo[inline]{Slightly weird referring to MDP literature on continuous time setting}
-
-# \todo[inline]{Should I make a bigger point out of the observation noise assumption}
-
-# The system is controlled via a policy $\control(t) = \pi(\state(t), t)$, which given the state $\state(t)$
-# and time step $t$ decides which control action $\control(t)$ to apply to the system.
-# The policy can be time-dependent and can also depend on all past information up to time step $t$.
-# In the time-independent case the policy is denoted $\pi(\state(t))$ and
-# the resulting closed-loop system is denoted $f_{\pi}(\state) = \dynamicsFunc(\state,\pi(\state))$.
-
-** Optimal Control :ignore:
-*** maths :ignore:
-#+BEGIN_EXPORT latex
-\newcommand{\costFunc}{\ensuremath{c}}
-\newcommand{\constraintsFunc}{\ensuremath{g}}
-
-\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
-\newcommand{\integralCostFunc}{\ensuremath{C}}
-
-\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
-\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
-
-\newcommand{\policySpace}{\ensuremath{\Pi}}
-\newcommand{\policy}{\ensuremath{\pi}}
-#+END_EXPORT
-*** intro :ignore:
-#+begin_export latex
-\epigraph{Optimal control theory is the science of maximising returns from and minimising the costs of the operation
-of physical, social, and economic processes.}{\textit{Donald E. Kirk}}
-#+end_export
-*Optimal control*
-Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
-over a time period $t \in [t_0, t_f]$ that optimises an objective function $J_{\pi}(\x)$.
-The objective function might be formulated to solve a particular task or to make the dynamical
-system behave in a certain way.
-** Dynamical Systems :noexport:
-Dynamical systems describe the behaviour of a system over time, $t$, and
-are a key component of both control theory and reinforcement learning.
-At any given time, $t$, a dynamical system has a state, which is
-represented as a vector of real numbers $\state_t \in \stateDomain \subseteq \R^{\stateDim}$.
-For example, the state of a 2-dimensional robotic system with state comprising of 2D Cartesian coordinates
-and an orientation would be represented as $\state_t = [x_t, y_t, \theta_t]^{T}$.
-The system can be controlled by applying control actions $\mathbf{u}_t \in \controlDomain \subseteq \R^{\controlDim}$
-at any given time, $t$.
-This work considers continuous-time, continuous-state, nonlinear stochastic dynamics,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-unimodal-dynamics-cont}
-\Delta \state_t &= \dynamicsFunc(\state_t, \control_t) + \epsilon_t,
-\end{align}
-#+END_EXPORT
-where $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$ represents the transition dynamics function and $\epsilon_t$
-is an i.i.d process noise term with $\E[\epsilon_t] = 0$.
-The process noise term accounts for unwanted (and, in general, unknown) disturbances of the system.
-For example, it is extremely hard to model aerodynamic effects on aircraft so these could be accounted
-for in the process noise term.
-Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
-observation noise.
-This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
-in the reinforcement learning literature.
-# \todo[inline]{Slightly weird referring to MDP literature on continuous time setting}
-
-# \todo[inline]{Should I make a bigger point out of the observation noise assumption}
-
-# The system is controlled via a policy $\control(t) = \pi(\state(t), t)$, which given the state $\state(t)$
-# and time step $t$ decides which control action $\control(t)$ to apply to the system.
-# The policy can be time-dependent and can also depend on all past information up to time step $t$.
-# In the time-independent case the policy is denoted $\pi(\state(t))$ and
-# the resulting closed-loop system is denoted $f_{\pi}(\state) = \dynamicsFunc(\state,\pi(\state))$.
-
 ** Optimal Control
 *** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -3644,7 +3761,6 @@ This work was originally limited to control affine systems cite:williamsModel201
 but has since been extended to general nonlinear
 dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
 
-**** Collocation
 **** Trajectory Optimisation as Probabilistic Inference :noexport:
 ***** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -4234,9 +4350,6 @@ Introducing the variational distribution,
 \end{align}
 #+END_EXPORT
 
-*** Model-Based Control in Uncertain Systems
-- robust optimal control
-- stochastic optimal control
 *** Literature Review (iLQR/iLQG/DDP/MPPI for Trajectory Generation)
 *Iterative LQR/LQG* can be used to generate trajectories for non-linear systems by iteratively approximating
 the dynamics to be linear around a nominal trajectory and optimising for the controls.
