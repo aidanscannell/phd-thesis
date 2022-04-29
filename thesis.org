@@ -2596,7 +2596,7 @@ readily generalise to the stochastic case (although see cite:yongStochastic1999)
 For this reason, we restrict our discussion to Bellman's principle and the solution arising from it, known as
 dynamic programming.
 
-*Dynamic Programming*
+*** Dynamic Programming
 Dynamic programming citep:bellmanDynamic1956 encompasses a large class of algorithms that can be
 used to find optimal controllers given an accurate model of the environment as an \acrshort{mdp}.
 However, classical dynamic programming algorithms are of limited use as they rely on
@@ -2647,16 +2647,8 @@ The second is approximation in policy space by optimising over a suitable class 
 Model-based vs model-free
 These methods are out of the scope of this dissertation.
 
-** Model-based Reinforcement Learning
-*** intro :ignore:
-
-# An alternative approach to solving the optimal control problem in cref:eq-optimal-control-objective
-# is to first learn a dynamics model and then use this learned model with model-based control techniques.
-# This approach is known as \acrfull{mbrl}.
-# As both \acrshort{mfrl} and \acrshort{mbrl} methods learn models,
-# the model in the name is referring to the dynamics model $f$, as  \acrshort{mfrl} approaches do not learn
-# representations of the dynamics $f$.
-
+*** Reinforcement Learning
+**** intro :ignore:
 There are multiple approaches to finding controllers $\pi$ that minimise the expected cost
 in cref:eq-optimal-control-objective subject to the stochastic dynamics in cref:eq-dynamics-main.
 However, a central assumption of many methods is that both the system dynamics and cost function are /known a priori/.
@@ -2667,13 +2659,6 @@ Further to this, the problem statement in cref:eq-main-problem contains a mode r
 which requires explicit knowledge of the desired dynamics mode and its state domain.
 # To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
 # to solve the problem in \cref{eq-main-problem}.
-
-To apply control and planning techniques in systems with unknown dynamics,
-system identification emerged as a set of techniques for computing unknown parameters (e.g. mass of a component)
-citep:ljungSystem1999.
-This is a two-staged approach which first learns about the environment and then uses this
-learned model to find the optimal controller.
-However, this approach learns about the environment globally and often incurs high costs during system identification.
 
 \acrfull{rl} provides the most general framework extending optimal
 control to problems with incomplete knowledge of the system dynamics.
@@ -2687,6 +2672,21 @@ Further to this, \acrshort{rl} only needs to learn about the states which are re
 the optimal control problem.
 # This is achieved by simultaneously learning about the environment whilst optimising the controller to obtain
 # low cumulative costs.
+
+**** Model-based Reinforcement Learning
+An alternative approach to solving the optimal control problem in cref:eq-optimal-control-objective
+is to first learn a dynamics model and then use this learned model with model-based control techniques.
+This approach is known as \acrfull{mbrl}.
+As both \acrshort{mfrl} and \acrshort{mbrl} methods learn models,
+the model in the name is referring to the dynamics model $f$, as  \acrshort{mfrl} approaches do not learn
+representations of the dynamics $f$.
+
+To apply control and planning techniques in systems with unknown dynamics,
+system identification emerged as a set of techniques for computing unknown parameters (e.g. mass of a component)
+citep:ljungSystem1999.
+This is a two-staged approach which first learns about the environment and then uses this
+learned model to find the optimal controller.
+However, this approach learns about the environment globally and often incurs high costs during system identification.
 
 As more systems are becoming data-driven, learning dynamics models for model-based control has shifted to
 needing task centric methods that simultaneously learn about the environment, whilst optimising a controller
@@ -2706,7 +2706,7 @@ This section first reviews methods for learning dynamics models and then discuss
 such a learned dynamics model for control.
 \todo{exploration?}
 
-*** MBRL Alg :ignore:
+**** MBRL Alg :ignore:
 #+BEGIN_EXPORT latex
 \begin{algorithm}[!t]
 \caption{Model-based reinforcement learning}\label{alg-mbrl-background}
@@ -2720,8 +2720,48 @@ such a learned dynamics model for control.
 \end{algorithmic}
 \end{algorithm}
 #+END_EXPORT
-** Aleatoric vs Epistemic Uncertainty
+** Learning Dynamical Systems for Control
 *** intro :ignore:
+/Mathematical models/ are compact representations (sets of assumptions) that attempt to capture key features of the
+phenomenon of interest, in a precise mathematical form.
+Probabilistic modelling provides the capability of constructing /mathematical models/
+that can represent and manipulate uncertainty in data, models, decisions and predictions.
+As such, linking observed data to underlying phenomena through probabilistic models,
+is an interesting direction for modelling, analysing and controlling dynamical systems.
+
+# It is worth considering the implications of all these types of uncertainty.
+# If a predictive dynamics model is learned from observations, then the model
+# can only be confident predicting near the training observations.
+# As one extrapolates away from the training observations, one can no longer be certain in the prediction;
+# this is known as epistemic uncertainty and can be reduced by collecting more data and retraining the model.
+
+# The structure of models can also be uncertain and there may be unobserved (aka latent) variables present.
+# The introduction of latent variables in probabilistic models is one of the key components providing
+# them with interesting and powerful capabilities.
+# A further form of uncertainty in models arises from unknown model parameters, $\theta$.
+# It is worth considering the implications of all these types of uncertainty.
+# If a predictive dynamics model is learned from observations, then the model
+# can only be confident predicting near the training observations.
+# As one extrapolates away from the training observations, one can no longer be certain in the prediction;
+# this is known as epistemic uncertainty and can be reduced by collecting more data and retraining the model.
+
+*Probabilistic models*
+Probability theory enables this uncertainty to be represented and manipulated;
+it provides a systematic way to combine observations with existing knowledge,
+via a /mathematical model/.
+Learning representations of dynamical systems for control using probabilistic models has shown much promise.
+For example, see
+cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
+Given a historical data set of state transitions from the environment,
+a common approach is to first learn a single-step dynamics model using a Gaussian process
+citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
+Alternative approaches quantify uncertainty using ensembles
+of neural networks citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018
+or Bayesian neural networks with parametric uncertainty citep:mcallisterImproving2016,depewegLearning2017.
+Learning single-step dynamics models that quantify uncertainty has been central to recent successes in \acrshort{mbrl}.
+
+*** Aleatoric vs Epistemic Uncertainty
+**** intro :ignore:
 This section characterises the uncertainty that arises in \acrshort{rl}.
 The main idea is that it is important to /know what we do not know/ because
 if we /know what we do not know/ then we can use this information to guide exploration.
@@ -2759,12 +2799,12 @@ Further to this, it some systems, it may actually be desirable to avoid entering
 high /aleatoric uncertainty/.
 This is because it may result in poor performance or even catastrophic failure.
 
-** Gaussian Processes
-*** maths :ignore:
+*** Gaussian Processes
+**** maths :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\gpDomain}{\ensuremath{\mathcal{X}}}
 #+END_EXPORT
-*** intro :ignore:
+**** intro :ignore:
 Modelling a Bayesian belief over the dynamics function $f$ provides a principled method for modelling
 /epistemic uncertainty/ arising from learning from data, through the posterior distribution.
 Gaussian processes (GP) are the state-of-the-art approach for Bayesian nonparametric regression and
@@ -2782,7 +2822,7 @@ The mathematical machinery underpinning \acrshort{gp}s is detailed in this secti
 # In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
 # of the inference in this thesis.
 
-*** Multivariate Gaussian Identities
+**** Multivariate Gaussian Identities
 Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
 As such, introducing the multivariate Gaussian identities is a natural place to start.
 
@@ -2835,8 +2875,8 @@ In real-world scenarios, it is desirable to consider the entire input domain, in
 pre-selecting a discrete set of locations.
 Gaussian processes provide this mathematical machinery.
 
-*** Gaussian Processes for Regression
-**** intro :ignore:
+**** Gaussian Processes for Regression
+***** intro :ignore:
 Informally, GPs are a generalisation of the multivariate Gaussian distribution, indexed by an
 input domain as opposed to an index set.
 Similar to how a sample from an $N-\text{dimensional}$ multivariate Gaussian is an $N-\text{dimensional}$ vector,
@@ -2966,7 +3006,7 @@ $\sigma_n^2$ quantifies the /aleatoric uncertainty/.
 This structured handling of uncertainty makes \acrshort{gp}s extremely powerful for learning representations
 of dynamical systems.
 
-**** Sparse Gaussian Processes for Regression label:sec-sparse-gps :noexport:
+***** Sparse Gaussian Processes for Regression label:sec-sparse-gps :noexport:
 The nonparametric nature of Gaussian process methods is responsible for their flexibility but also
 their shortcomings, namely their memory and computational limitations.
 In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
@@ -3102,69 +3142,6 @@ only the marginals of $q(\mathbf{f})$ are needed to calculate cref:eq-hensman-bo
 Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
 to preform stochastic gradient methods on $q(\u)$.
 
-** Learning Dynamical Systems
-*** intro :ignore:
-
-/Mathematical models/ are compact representations (sets of assumptions) that attempt to capture key features of the
-phenomenon of interest, in a precise mathematical form.
-Probabilistic modelling provides the capability of constructing /mathematical models/
-that can represent and manipulate uncertainty in data, models, decisions and predictions.
-As such, linking observed data to underlying phenomena through probabilistic models,
-is an interesting direction for modelling, analysing and controlling dynamical systems.
-
-
-
-# It is worth considering the implications of all these types of uncertainty.
-# If a predictive dynamics model is learned from observations, then the model
-# can only be confident predicting near the training observations.
-# As one extrapolates away from the training observations, one can no longer be certain in the prediction;
-# this is known as epistemic uncertainty and can be reduced by collecting more data and retraining the model.
-
-# The structure of models can also be uncertain and there may be unobserved (aka latent) variables present.
-# The introduction of latent variables in probabilistic models is one of the key components providing
-# them with interesting and powerful capabilities.
-# A further form of uncertainty in models arises from unknown model parameters, $\theta$.
-# It is worth considering the implications of all these types of uncertainty.
-# If a predictive dynamics model is learned from observations, then the model
-# can only be confident predicting near the training observations.
-# As one extrapolates away from the training observations, one can no longer be certain in the prediction;
-# this is known as epistemic uncertainty and can be reduced by collecting more data and retraining the model.
-
-*Probabilistic models*
-Probability theory enables this uncertainty to be represented and manipulated;
-it provides a systematic way to combine observations with existing knowledge,
-via a /mathematical model/.
-Learning representations of dynamical systems for control using probabilistic models has shown much promise.
-For example, see
-cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
-Given a historical data set of state transitions from the environment,
-a common approach is to first learn a single-step dynamics model using a Gaussian process
-citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
-Alternative approaches quantify uncertainty using ensembles
-of neural networks citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018
-or Bayesian neural networks with parametric uncertainty citep:mcallisterImproving2016,depewegLearning2017.
-Learning single-step dynamics models that quantify uncertainty has been central to recent successes in \acrshort{mbrl}.
-
-
-
-# In control theory it is typical to combine system identification citep:ljungSystem1999
-# and model-based control to find an optimal controller.
-# This is a two-staged approach which first learns about the environment and then uses this
-# learned model to find the optimal controller.
-# However, this approach learns about the environment globally and often incurs high costs during system identification.
-
-
-# *\acrfull{mfrl}*
-# A key insight in \acrshort{rl} is that the optimal control problem in cref:eq-optimal-control-objective
-# can be solved without a known dynamics model.
-# They achieve this by using trajectories sampled from the system to calculate the expectation
-# using Monte Carlo simulation.
-# This is known as \acrshort{mfrl} as they do not learn an explicit model of the dynamics $f$.
-# These approaches are out of the scope of this dissertation.
-
-# approaches but they are out of the scope of this dissertation.
-# There are many \acrshort{mfrl} approaches but they are out of the scope of this dissertation.
-
 *** Learning Multimodal Dynamical Systems
 **** figs :ignore:
 #+BEGIN_EXPORT latex
@@ -3296,7 +3273,28 @@ Alternatively, cite:mckinnonLearning2017 use a \acrshort{mogpe} method to learn 
 # The methods differs as it does not assign observations to modes.
 # An alternative approach is to learn multimodal dynamical systems using \acrshort{mogpe} method to learn switching
 
-** Model-based Control
+*** Alternative Approaches :noexport:
+**** intro :ignore:
+
+# In control theory it is typical to combine system identification citep:ljungSystem1999
+# and model-based control to find an optimal controller.
+# This is a two-staged approach which first learns about the environment and then uses this
+# learned model to find the optimal controller.
+# However, this approach learns about the environment globally and often incurs high costs during system identification.
+
+
+# *\acrfull{mfrl}*
+# A key insight in \acrshort{rl} is that the optimal control problem in cref:eq-optimal-control-objective
+# can be solved without a known dynamics model.
+# They achieve this by using trajectories sampled from the system to calculate the expectation
+# using Monte Carlo simulation.
+# This is known as \acrshort{mfrl} as they do not learn an explicit model of the dynamics $f$.
+# These approaches are out of the scope of this dissertation.
+
+# approaches but they are out of the scope of this dissertation.
+# There are many \acrshort{mfrl} approaches but they are out of the scope of this dissertation.
+
+** Model-based Control and Planning
 They have then been used for online \acrfull{mpc}
 cite:chuaDeep2018,kamtheDataEfficient2018,nagabandiDeep2020,lambertLowLevel2019,
 *** Trajectory Optimisation
@@ -3389,6 +3387,79 @@ cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively202
 *Information Theoretic Active Learning with Gaussian Processes*
 cite:krauseNonmyopic2007,houlsbyBayesian2011
 
+** Model-based Reinforcement Learning :noexport:
+*** intro :ignore:
+
+# An alternative approach to solving the optimal control problem in cref:eq-optimal-control-objective
+# is to first learn a dynamics model and then use this learned model with model-based control techniques.
+# This approach is known as \acrfull{mbrl}.
+# As both \acrshort{mfrl} and \acrshort{mbrl} methods learn models,
+# the model in the name is referring to the dynamics model $f$, as  \acrshort{mfrl} approaches do not learn
+# representations of the dynamics $f$.
+
+There are multiple approaches to finding controllers $\pi$ that minimise the expected cost
+in cref:eq-optimal-control-objective subject to the stochastic dynamics in cref:eq-dynamics-main.
+However, a central assumption of many methods is that both the system dynamics and cost function are /known a priori/.
+In contrast, this dissertation considers problems where
+the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
+and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
+Further to this, the problem statement in cref:eq-main-problem contains a mode remaining constraint,
+which requires explicit knowledge of the desired dynamics mode and its state domain.
+# To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
+# to solve the problem in \cref{eq-main-problem}.
+
+To apply control and planning techniques in systems with unknown dynamics,
+system identification emerged as a set of techniques for computing unknown parameters (e.g. mass of a component)
+citep:ljungSystem1999.
+This is a two-staged approach which first learns about the environment and then uses this
+learned model to find the optimal controller.
+However, this approach learns about the environment globally and often incurs high costs during system identification.
+
+\acrfull{rl} provides the most general framework extending optimal
+control to problems with incomplete knowledge of the system dynamics.
+The classic text by cite:sutton2018reinforcement gives a general introduction to \acrshort{rl}.
+The main goal is to learn good behaviours from interactions with an environment.
+Typically this is in the form of a state feedback controller, known as a policy, which makes an agent's interaction
+with the environment closed-loop.
+In contrast to the system identification approach,
+the goal of \acrfull{rl} is to minimise costs (maximise rewards) during the learning process.
+Further to this, \acrshort{rl} only needs to learn about the states which are relevant to solving
+the optimal control problem.
+# This is achieved by simultaneously learning about the environment whilst optimising the controller to obtain
+# low cumulative costs.
+
+As more systems are becoming data-driven, learning dynamics models for model-based control has shifted to
+needing task centric methods that simultaneously learn about the environment, whilst optimising a controller
+to obtain low cumulative costs.
+The field of \acrfull{mbrl} seeks to solve many optimal control problems by incrementally learning a dynamics model
+in this way citep:deisenrothPILCO2011,chuaDeep2018.
+\acrshort{mbrl} shares similarities with the system identification and control process except that the dynamics learning
+and control are updated simultaneously.
+cref:alg-mbrl-background illustrates a common \acrshort{mbrl} loop where the agent incrementally explores
+its environment, collects data and updates its dynamics model.
+There are two main components to a \acrshort{mbrl} algorithm:
+1. a method for learning a dynamics model,
+2. a controller (or policy) that utilises the learned model,
+   - it may be learning-based (e.g. any \acrshort{mfrl} algorithm) or a model-based control or planning algorithm such as \acrfull{mpc}.
+   # a. a control method that utilises the learned model to explore the environment whilst simultaneously trying to achieve an objective.
+This section first reviews methods for learning dynamics models and then discusses model-based approaches that leverage
+such a learned dynamics model for control.
+\todo{exploration?}
+
+*** MBRL Alg :ignore:
+#+BEGIN_EXPORT latex
+\begin{algorithm}[!t]
+\caption{Model-based reinforcement learning}\label{alg-mbrl-background}
+\begin{algorithmic}[1]
+\Require{Policy/controller $\policy_0$, dynamics model $\dynamicsModel}$, start state $\state_0$}
+\For{$i = 0, 1,  \ldots $}
+    \State Select $\pi_i$ using exploration strategy, e.g. \cref{eq-greedy-exploration}
+    \State Collect environment data set $\dataset_i$ using $\pi_i$; add to dataset $\dataset_{0:i} = \{\dataset_{i} \cup \dataset_{0:i-1}\}$
+    \State Update dynamics model $\dynamicsModel}$ using $\dataset_{0:i}$.
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+#+END_EXPORT
 ** Model-Based Reinforcement Learning :noexport:
 An alternative approach to solving the optimal control problem in cref:eq-optimal-control-objective
 is to first learn a dynamics model and then use this learned model with model-based control techniques.
