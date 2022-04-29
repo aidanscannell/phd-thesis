@@ -2550,163 +2550,6 @@ The novelty of this work arises from remaining in a desired dynamics mode $\desi
 # In a navigation task the terminal cost may consist of the distance to the target, whilst the integral cost
 # may encode the notion of minimum effort control, e.g. energy consumption.
 
-** Dynamical systems :noexport:
-Dynamical systems describe the behaviour of a system over time, $t$, and
-are a key component of both control theory and reinforcement learning.
-At any given time, $t$, a dynamical system has a state, which is
-represented as a vector of real numbers $\state_t \in \stateDomain \subseteq \R^{\StateDim}$.
-For example, the state of a 2-dimensional robotic system can be represented using it's 2D Cartesian coordinates
-and it's orientation as $\state_t = [x_t, y_t, \theta_t]^{T}$.
-The system can be controlled by applying control actions $\mathbf{u}_t \in \controlDomain \subseteq \R^{\ControlDim}$
-at any given time, $t$.
-This dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
-#+begin_export latex
-\begin{subequations} \label{eq-dynamics-main}
-\begin{align}
-\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
-&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
-\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \nonumber \\
-\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
-\end{align}
-\end{subequations}
-#+end_export
-where the discrete mode indicator function
-$\alpha : \stateDomain \rightarrow \modeDomain$
-indicates which of the $\ModeInd$ underlying dynamics modes
-$\{\mode{\latentFunc} : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
-and associated noise models
-$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$,
-governs the system at a given time step $\timeInd$.
-Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
-observation noise.
-This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
-in the reinforcement learning literature.
-In this case, the $\mode{\bm\epsilon}$ term solely represents the process noise,
-which accounts for unwanted (and, in general, unknown) disturbances of the system.
-For example, it is hard to model aerodynamic effects on aircraft so these could be accounted
-for in the process noise term.
-# #+BEGIN_EXPORT latex
-# \begin{assumption} \label{}
-# The environment is full-observable and the observation process is not subject to noise.
-# \end{assumption}
-# #+END_EXPORT
-
-
-This dissertation considers systems where the underlying dynamics modes are defined by disjoint state domains.
-That is, each dynamics mode is defined by its state domain
-$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
-$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for distinct $i, j \in \{1, \ldots \ModeInd\}$.
-The output of the mode indicator function is referred to as the mode indicator variable and is given by
-$\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\} = \mathbb{Z} \cap [1, \ModeInd]$.
-Notice that each mode's dynamics are free to leave their state space $\mode{\stateDomain}$
-and enter another mode.
-Ideally, this work seeks to enforce the controlled system to remain in a given mode.
-
-** Optimal Control :noexport:
-*** intro :ignore:
-Optimal control is a branch of mathematical optimisation that seeks to find a controller $\pi$ that
-optimises an objective function $J_{\pi}(\x)$.
-The objective function might be formulated to solve a particular task or to make the dynamical
-system behave in a certain way.
-Typically the goal is to minimise a cost function $\costFunc : \stateDomain \times \controlDomain \rightarrow \R$.
-This dissertation considers the /finite horizon problem/, given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-objective}
-J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
-\mid \state_0=\state \right]
-\end{align}
-#+END_EXPORT
-where $\TimeInd$ is known as the horizon.
-The objective $J_{\pi}(\state)$ quantifies the cost associated with deploying the controller $\pi$ from
-an initial state $\state$.
-The cost function typically consists of a terminal cost and a term which is integrated over the horizon (integral cost).
-In a navigation task the terminal cost may consist of the distance to the target, whilst the integral cost
-may encode the notion of minimum effort control, e.g. energy consumption.
-# For notational conciseness, this dissertation uses $\costFunc$ to denote both the terminal and integral terms.
-
-*Controller space $\Pi$*
-This defines the set of controllers over which optimisation is performed.
-Controllers can have state feedback such that they are given by $\control_t = \policy(\state_t)$.
-These are closed-loop controllers and  in the reinforcement learning literature are referred to as policies.
-Alternatively, controllers can only depend on time $\control_t = \policy(t)$, in which case they are known
-as an open-loop controllers.
-This dissertation considers the general case, given by $\control_t = \policy(\state_t, t)$,
-which encompasses both open-loop and closed-loop controllers.
-
-*** MDP fig :ignore:
-\newline
-
-#+BEGIN_EXPORT latex
-\begin{figure}[!t]
-\centering
-\begin{tikzpicture}[
-squarednode/.style={rectangle, fill=teal!5, width=2cm},
-blanknode/.style={rectangle, width=2cm}
-]
-
-\node[squarednode, align=center] (agent)                             {Controller / Agent\\$\pi(\state_t, t)$};
-\node[blanknode, align=center] (control)    [below right=of agent]  {Control / Action $\control_t$};
-\node[blanknode, align=left] (cost)      [below left=of agent]   {Cost / negative reward $\costFunc(\state_t, \control_t)$\\Next state $\state_{t+1}$};
-\node[squarednode, align=center] (env)       [below left=of control] {System / Environment\\$f(\state_t, \control_t)$};
-
-\draw[--] (agent) -| (control);
-\draw[->] (control) |- (env);
-\draw[--] (env) -| (cost);
-\draw[->] (cost) |- (agent);
-\end{tikzpicture}
-\caption{Illustration of a \acrfull{mdp} through the lens of optimal control. The controller (agent) uses all past knowledge, absorbed into the previous state $\state_t$ (Markov property), to decide which control (action) $\control_t$ to execute. It then observes the next state $\state_{t+1}$ and the cost (negative reward) associated with the state transtion. The cost (reward) function is assumed to be known. The agent's goal is to minimise the cumulative cost, or to maximise the cumulative reward.}
-\label{fig-mdp}
-\end{figure}
-#+END_EXPORT
-This discrete time setting can be modelled as a \acrfull{mdp}, as seen in cref:fig-mdp.
-In the \acrshort{mdp} framework a controller is referred to as an agent, the control is referred to as an action,
-and the dynamical system is referred to as the environment.
-Further to this, the goal is to maximise the cumulative reward, as opposed to minimising the cumulative cost.
-Slight manipulation of the objective enables cost and reward functions to be interchanged.
-The key idea is that all past information is represented by the current state $\state_t$,
-which is known as the Markov property.
-In this dissertation most work is formulated through the lens of optimal control.
-However, the controller is sometimes referred to as the agent and the system is often referred to
-as the environment.
-
-** Problem Statement label:problem-statement-main :noexport:
-The objective function in cref:eq-objective is not of primary interest in this work.
-The novelty of this work arises from remaining in a desired dynamics mode $\desiredMode$.
-#+begin_export latex
-Formally, a mode remaining controlled system is defined as follows.
-\begin{definition}[Mode Remaining] \label{def-mode-remaining-main}
-Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
-Given an initial state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy \in \Pi$,
-the controlled system is said to be mode-remaining iff:
-\begin{align} \label{eq-mode-remaining-def-main}
-\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
-&\in \mode{\stateDomain} \quad \forall \timeInd
-\end{align}
-\end{definition}
-#+end_export
-#+begin_export latex
-\begin{myquote}
-\textbf{Mode remaining navigation problem}
-Given this definition of a mode remaining controlled system, this dissertation seeks to solve,
-\begin{subequations} \label{eq-main-problem}
-\begin{align}
-\min_{\policy \in \Pi} \quad &J_{\pi}(\state_0) \\
-\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\bm\epsilon},
-\quad \modeVar(\state_{\timeInd}) = \modeInd \\
-%&\text{\cref{eq-mode-remaining-def-explore}} \\
-&\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
-\in \desiredStateDomain \\
-%\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-%&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
-&\state_{0} = \state_0 \\
-&\state_\TimeInd = \targetState,
-\end{align}
-\end{subequations}
-where $\targetState$ denotes the target state and $J_{\pi}(\state_0)$ is the objective from \cref{eq-objective}.
-\end{myquote}
-This is a constrained \acrfull{soc} problem with a terminal boundary condition.
-#+end_export
-
 ** Optimal Control label:sec-optimal-control
 *** MDP fig :ignore:
 #+BEGIN_EXPORT latex
@@ -2745,13 +2588,18 @@ In this dissertation most work is formulated through the lens of optimal control
 However, the controller is sometimes referred to as the agent and the system is often referred to
 as the environment.
 
-There are multiple approaches to finding controllers $\pi$ that minimise the expected cost
-in cref:eq-optimal-control-objective subject to the stochastic dynamics in cref:eq-dynamics-main.
+In general, solutions to optimal control problems can be characterised by two different approaches,
+Pontryagin's Minimum Principe citep:pontryagin1987mathematical (based on the calculus of variations)
+and Bellman's Minimum Principle citep:bellmanDynamic1956.
+Although Pontryagin's Minimum Principle offers computational benefits over Bellman's principle, it does not
+readily generalise to the stochastic case (although see cite:yongStochastic1999).
+For this reason, we restrict our discussion to Bellman's principle and the solution arising from it, known as
+dynamic programming.
 
-*** Dynamic Programming
+*Dynamic Programming*
 Dynamic programming citep:bellmanDynamic1956 encompasses a large class of algorithms that can be
 used to find optimal controllers given an accurate model of the environment as an \acrshort{mdp}.
-However, classical dynamic programming algorithms are of limited use in \acrshort{rl} as they rely on
+However, classical dynamic programming algorithms are of limited use as they rely on
 accurate dynamics models and have significant computational expense.
 Nevertheless, they are still important theoretically.
 The main idea of dynamic programming (and \acrshort{rl} in general) is to structure the search for good controllers using
@@ -2762,21 +2610,23 @@ optimality equations,
 \begin{align} \label{eq-bellman}
 V_*(\state) = \min_{\control} &\E \left[ \underbrace{\costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))}_{\text{first step}}
 + \underbrace{V_*(f(\state_{t}, \pi(\state_{t}, t)))}_{\text{future}}
-\mid \state_0=\state \right]
+\mid \state_0=\state \right].
 \end{align}
 #+END_EXPORT
-Computing the value function is known as /policy evaluation/.
-The value function can then be used for /policy improvement/ where a controller with superior performance is computed.
 In the finite horizon setting, directly solving the Bellman equations backwards in time in referred to
 as dynamic programming.
+# Computing the value function is known as /policy evaluation/.
+# The value function can then be used for /policy improvement/ where a controller with superior performance is computed.
 
 Approximate dynamic programming encompasses a large class of methods that given a controller $\pi$,
-approximate the value function $J_{\pi}(\state)$ for each state $\state$ with a parameterised function
-(/policy evaluation/).
-The approximate value function can then be used for /policy improvement/.
+approximate the value function $V_{\pi}(\state)$ for each state $\state$ with a parameterised function.
+The approximate value function can then be used for /policy improvement/ where a controller
+with superior performance is computed.
 In general, approximate dynamic programming is a large collection of algorithms that encompasses methods from
 \acrshort{rl} as well.
 However, these methods are out of the scope of this dissertation.
+
+# (/policy evaluation/).
 # It is worth noting, for general \acrshort{soc}, analytic tractability is not always possible.
 # One such case where it is possible, is the \acrfull{lqr}, which
 # assumes linear dynamics and a quadratic cost function.
@@ -2797,275 +2647,145 @@ The second is approximation in policy space by optimising over a suitable class 
 Model-based vs model-free
 These methods are out of the scope of this dissertation.
 
-*** Model Predictive Control
-Instead of approximating the value function or policy, it is possible to directly optimise the controls $\control_t$
-over a horizon $T$.
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-trajectory-optimisation}
-\min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
-\mid \state_0=\state \right] \\
-&\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t)
-\end{align}
-#+END_EXPORT
-which finds an optimal sequence of controls $\controlTraj$ for a given start state $\state_0$.
-This is known as trajectory optimisation
-Iteratively applying the first control $\control_0$ and resolving this nonlinear program is known as
-\acrfull{mpc} cite:eduardof.Model2007.
-This resulting controller is close-loop, however, in practice, it is often too computationally expensive to obtain
-real-time control.
-Many approximate solutions have been introduced in the literature, that seek to balance the computational complexity
-and accuracy trade-off differently cite:bettsSurvey1998.
+** Model-based Reinforcement Learning
+*** intro :ignore:
 
-For example, \acrfull{ilqr} can be used to generate trajectories for non-linear systems by
-iteratively approximating the dynamics to be linear around a nominal trajectory and optimising for the controls.
-\acrshort{ilqr} works well for quadratic cost functions but can be used with any cost function by approximating the cost
-function with a second order Taylor expansion.
-However, in this case iLQR is susceptible to converging
-to terrible (local) optima if the true cost function is highly non-convex.
-cite:boedeckerApproximate2014 present a real-time iLQR controller based on sparse GPs.
-cite:rohrProbabilistic2021 propose a novel LQR controller synthesis for
-linearised GP dynamics that yields robust controllers with respect to a probabilistic stability margin.
-In cite:marcoAutomatic2016 they parameterise the weight matrices
-$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
-and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
+# An alternative approach to solving the optimal control problem in cref:eq-optimal-control-objective
+# is to first learn a dynamics model and then use this learned model with model-based control techniques.
+# This approach is known as \acrfull{mbrl}.
+# As both \acrshort{mfrl} and \acrshort{mbrl} methods learn models,
+# the model in the name is referring to the dynamics model $f$, as  \acrshort{mfrl} approaches do not learn
+# representations of the dynamics $f$.
 
-*Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
-iLQR to a stochastic setting, where the process
-noise is assumed to be Guassian.
-cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
-
-*Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
-the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
-cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
-over the entire control sequence.
-Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
-and the quadratic model is inaccurate.
-\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
-DDP solutions provides greater accuracy than iLQG/iLQR but
-at the cost
-of increased computational time cite:tassaSynthesis2012.
-The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
-DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
-
-cite:panProbabilistic2014 present a probabilistic trajectory optimisation
-framework for systems with unknown dynamics called probabilistic
-differential dynamic programming (PDDP).
-It extends DDP to explicitly account
-for uncertainty in dynamics modelled using gaussian processes.
-In contrast to typical gradient based policy search methods, PDDP does not
-require a policy parameterisation as it learns a locally optimal,
-time-varying control policy.
-Based on the second-order local approximation of the value function,
-PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
-
-*Path Integral*  control is a method for developing optimal controls based on stochastic
-sampling of trajectories cite:theodorouGeneralized2010.
-This work was originally limited to control affine systems cite:williamsModel2017
-but has since been extended to general nonlinear
-dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
-
-*** Reinforcement Learning
-A central assumption of the methods in the cref:sec-optimal-control is that both the
-system dynamics and cost function are /known a priori/.
-This dissertation considers problems where
+There are multiple approaches to finding controllers $\pi$ that minimise the expected cost
+in cref:eq-optimal-control-objective subject to the stochastic dynamics in cref:eq-dynamics-main.
+However, a central assumption of many methods is that both the system dynamics and cost function are /known a priori/.
+In contrast, this dissertation considers problems where
 the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
 and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
+Further to this, the problem statement in cref:eq-main-problem contains a mode remaining constraint,
+which requires explicit knowledge of the desired dynamics mode and its state domain.
+# To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
+# to solve the problem in \cref{eq-main-problem}.
+
+To apply control and planning techniques in systems with unknown dynamics,
+system identification emerged as a set of techniques for computing unknown parameters (e.g. mass of a component)
+citep:ljungSystem1999.
+This is a two-staged approach which first learns about the environment and then uses this
+learned model to find the optimal controller.
+However, this approach learns about the environment globally and often incurs high costs during system identification.
+
 \acrfull{rl} provides the most general framework extending optimal
 control to problems with incomplete knowledge of the system dynamics.
 The classic text by cite:sutton2018reinforcement gives a general introduction to \acrshort{rl}.
 The main goal is to learn good behaviours from interactions with an environment.
 Typically this is in the form of a state feedback controller, known as a policy, which makes an agent's interaction
 with the environment closed-loop.
+In contrast to the system identification approach,
+the goal of \acrfull{rl} is to minimise costs (maximise rewards) during the learning process.
+Further to this, \acrshort{rl} only needs to learn about the states which are relevant to solving
+the optimal control problem.
+# This is achieved by simultaneously learning about the environment whilst optimising the controller to obtain
+# low cumulative costs.
 
-Model-free methods leverage the face that the optimal control problem in cref:eq-optimal-control-objective
-can be solved without a known dynamics model.
-Instead, these methods leverage trajectories sampled from the system to calculate the expectation
-using Monte Carlo simulation.
-
-However, in
-
-# To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
-# to solve the problem in \cref{eq-main-problem}.
-
-
-**** Model-Based Reinforcement Learning
-An alternative approach is to solving the optimal control problem in cref:eq-optimal-control-objective
-is to first learn a dynamics and then use the learned model with model-based control techniques
-This approach is known as \acrfull{mbrl}.
-This shares similarities with the system identification and control process except that the dynamics learning
+As more systems are becoming data-driven, learning dynamics models for model-based control has shifted to
+needing task centric methods that simultaneously learn about the environment, whilst optimising a controller
+to obtain low cumulative costs.
+The field of \acrfull{mbrl} seeks to solve many optimal control problems by incrementally learning a dynamics model
+in this way citep:deisenrothPILCO2011,chuaDeep2018.
+\acrshort{mbrl} shares similarities with the system identification and control process except that the dynamics learning
 and control are updated simultaneously.
+cref:alg-mbrl-background illustrates a common \acrshort{mbrl} loop where the agent incrementally explores
+its environment, collects data and updates its dynamics model.
+There are two main components to a \acrshort{mbrl} algorithm:
+1. a method for learning a dynamics model,
+2. a controller (or policy) that utilises the learned model,
+   - it may be learning-based (e.g. any \acrshort{mfrl} algorithm) or a model-based control or planning algorithm such as \acrfull{mpc}.
+   # a. a control method that utilises the learned model to explore the environment whilst simultaneously trying to achieve an objective.
+This section first reviews methods for learning dynamics models and then discusses model-based approaches that leverage
+such a learned dynamics model for control.
+\todo{exploration?}
 
-This has the added benefit
-**** Aleatoric vs Epistemic Uncertainty
-**** Dynamics Learning
-**** Motivation label:to_motivation :ignore:
-***** figs :ignore:
+*** MBRL Alg :ignore:
 #+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}{0.49\textwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/scenario_7_svgp_baseline_both_modes.pdf}
-\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
-\label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
-\end{minipage}
-\begin{minipage}{0.49\textwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/scenario_7_svgp_baseline_desired_mode.pdf}
-\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
-\label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
-\end{minipage}
-\caption{Trajectory optimisation results obtained using a SVGP dynamics model trained on different data sets.
-The optimised control trajectories are rolled out in the SVGP dynamics model (magenta) and in the environment (cyan).
-The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
-White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
-The hashed box indicates a subset of the environment that has not been observed.}
-\label{fig-traj-opt-over-gating-mask-svgp-baseline}
-\end{figure}
+\begin{algorithm}[!t]
+\caption{Model-based reinforcement learning}\label{alg-mbrl-background}
+\begin{algorithmic}[1]
+\Require{Policy/controller $\policy_0$, dynamics model $\dynamicsModel}$, start state $\state_0$}
+\For{$i = 0, 1,  \ldots $}
+    \State Select $\pi_i$ using exploration strategy, e.g. \cref{eq-greedy-exploration}
+    \State Collect environment data set $\dataset_i$ using $\pi_i$; add to dataset $\dataset_{0:i} = \{\dataset_{i} \cup \dataset_{0:i-1}\}$
+    \State Update dynamics model $\dynamicsModel}$ using $\dataset_{0:i}$.
+\EndFor
+\end{algorithmic}
+\end{algorithm}
 #+END_EXPORT
+** Aleatoric vs Epistemic Uncertainty
+*** intro :ignore:
+This section characterises the uncertainty that arises in \acrshort{rl}.
+The main idea is that it is important to /know what we do not know/ because
+if we /know what we do not know/ then we can use this information to guide exploration.
+cref:sec-unc-exploration discusses exploration strategies that leverage well-calibrated uncertainty estimates.
 
-***** intro :ignore:
-This dissertation is motivated by learning representations of multimodal dynamical systems
-that can be exploited by model-based control algorithms.
-Probabilistic models provide the capability of constructing mathematical
-models that can represent and manipulate uncertainty in data, models, decisions and
-predictions.
-\marginpar{probabilistic models}
-Learning representations of dynamical systems for control using probabilistic models has shown much promise.
-For example, see
-cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
+*Aleatoric uncertainty*
+Dynamical systems give rise to temporal observations arriving as a sequence
+$\state_{1:\TimeInd} = \{\state_1, \ldots, \state_\TimeInd\}$.
+These measurements are often corrupted by (observation) noise due to imperfections in the measurement process.
+Even when it is known that there is uncertainty in the measurement process, there still remains uncertainty about its
+form.
+Given our current understanding of the real-world, many dynamical systems also appear to be inherently stochastic.
+This is due to our inability to accurately model certain phenomena (e.g. turbulence).
+Stochasticity arising from state transitions in this way is known as process noise.
+Observation and process noise are the constituent sources of /aleatoric uncertainty/;
+uncertainties that are inherent in a system and cannot be reduced.
 
-# As this work is interested in learning and control in multimodal dynamical systems,
-# a primary interest is correctly /identifying/ the underlying dynamics modes.
-# That is, ensuring that the learned dynamics modes accurately model the true underlying dynamics modes.
-# \marginpar{identifiability}
-# Incorrectly identifying the underlying dynamics modes will have a detrimental impact on performance
-# and may even lead to system failure.
+*Epistemic uncertainty*
+The uncertainty arising from learning the dynamics $f$ from observations is known as /epistemic uncertainty/.
+For example, we may be uncertain about the structure of the model or about the value of specific
+model parameters $\theta$.
+This type of uncertainty accounts for those that we could know, but that we do /not know a priori/.
+As such, /epistemic uncertainty/ can be reduced by exploring, collecting data and updating the model with
+this new experience.
 
-Given a historical data set of state transitions from the environment,
-a common approach is to first learn a single-step dynamics model using a Gaussian process
-citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
-This learned dynamics model can then be leveraged for model-based control.
-cref:fig-traj-opt-over-gating-mask-svgp-all-baseline
-demonstrates the shortcomings of learning a GP dynamics model for the quadcopter navigation problem in the
-illustrative example from cref:illustrative_example.
-It shows the results of performing trajectory
-optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
-The GP has not been able to learn a representation of the dynamics which is true to the underlying system,
-due to the discontinuities associated with the multimodal transition dynamics (changing lengthscales/noise variances etc).
-The optimised controls successfully drive the GP dynamics from the start state $\state_0$,
-to the target state $\targetState$.
-However, as the GP does not represent the true underlying dynamics accurately,
-the optimised controls do not successfully navigate to the target state $\targetState$ in the environment.
-This example motivates the need to correctly identify the underlying modes when learning dynamics models for
-model-based control.
-# Further to this, it demonstrates the more general shortcomings of model-based control when leveraging learned
-# dynamics models that cannot represent the true underlying dynamics.
-# This motivates cref:chap-dynamics that looks at learning representations of multimodal dynamical systems.
-# This example demonstrates the issues associated with learning a dynamics model that cannot correctly identify
-# the underlying dynamics modes.
-# without deploying a technique that can infer both the underlying dynamics modes
-# and how the system switches between them.
-# The optimised controls are rolled out in the SVGP dynamics model (magenta)
-# and in the environment (cyan) to highlight the issues with both approaches.
+Distinguishing these two sources of uncertainty is important in reinforcement learning.
+For example, the /epistemic uncertainty/ is useful for guiding exploration into regions
+of the system that have not been observed.
+In turn, this data can be used to reduce the model's /epistemic uncertainty/ by updating the model.
+In contrast, driving the system into regions of the model with high /aleatoric uncertainty/ is not desirable.
+Consider the case where the model is confident that the system is subject to high process noise in a particular region.
+Guiding the system into this region will not reduce the model's /epistemic uncertainty/ because the model
+has already been trained on data from this region.
+Further to this, it some systems, it may actually be desirable to avoid entering regions of
+high /aleatoric uncertainty/.
+This is because it may result in poor performance or even catastrophic failure.
 
-In contrast,
-cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline shows results after training on state transitions from
-only the desired (operable) dynamics mode.
-It is able to accurately predict state transitions in the desired dynamics mode.
-However, as this approach only considers the dynamics of the desired mode,
-trajectories in the environment deviate from those planned in the learned dynamics model when they pass through the
-turbulent mode.
-This approach is problematic because the trajectory passes through the turbulent dynamics mode,
-which may lead to catastrophic failure.
-Further to this, the trajectory does not reach the target state $\targetState$.
-Without inferring information regarding how the system switches between its underlying dynamics modes, it is not
-obvious how mode remaining/avoiding behaviour can be encoded into control algorithms.
+** Gaussian Processes
+*** maths :ignore:
 #+BEGIN_EXPORT latex
-\begin{remark}
-As the underlying dynamics modes and how the system switches between them,
-are \textit{not fully known a priori}, partitioning the data set and learning the dynamics model in
-\cref{fig-traj-opt-over-gating-mask-svgp-desired-baseline} is not possible in realistic scenarios.
-\end{remark}
+\newcommand{\gpDomain}{\ensuremath{\mathcal{X}}}
 #+END_EXPORT
-# This example motivates the need for dynamics models that can automatically infer the underlying dynamics modes, whilst
-# also learning how the system switches between its underlying dynamics modes.
+*** intro :ignore:
+Modelling a Bayesian belief over the dynamics function $f$ provides a principled method for modelling
+/epistemic uncertainty/ arising from learning from data, through the posterior distribution.
+Gaussian processes (GP) are the state-of-the-art approach for Bayesian nonparametric regression and
+are a building block for the methods presented in this dissertation.
+The mathematical machinery underpinning \acrshort{gp}s is detailed in this section.
 
-# This approach is problematic because the trajectory does not reach the target state $\targetState$,
-# nor does it avoid the turbulent dynamics mode, which may lead to catastrophic failure.
+# Although \acrfull{gp} do not scale as well as deep learning in high-dimensional tasks,
+# they are powerful because of their structured handling of uncertainty.
+# This work adopts \acrshort{gp} methods and leverages sparse approximations to improve scalability to larger data sets.
+# This section introduces \acrshort{gp}s and the sparse approximations that this work builds upon.
+# Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
+# As such, introducing the multivariate Gaussian identities is a natural place to start.
 
-
-# It is also worth noting here that the underlying dynamics modes and how the system switches between them,
-# are /not fully known a priori/.
-# As such, partitioning the data set and learning the dynamics model in
-# cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline is not possible in realistic scenarios.
-
-#+BEGIN_EXPORT latex
-\begin{myquote}
-Following standard methodologies, these trajectories were found by minimising the expected cost
-under the state distribution, resulting from cascading single-step predictions through the GP dynamics model.
-A terminal state cost term ensured trajectories ended at the target state and
-a quadratic integral control cost term regularised the controls to encode the notion of
-"minimal effort" control.
-\end{myquote}
-#+END_EXPORT
-
-The introduction of /latent variables/ into probabilistic models is a key component providing them with interesting
-and powerful capabilities for synergising model learning and control.
-For example, cite:hafnerLearning2019,rybkinModelBased2021
-\todo{add more latent space dynamics refs}
-learn /latent spaces/ which provide convenient spaces for planning.
-\marginpar{latent spaces for control}
-cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline highlights the need for learning
-informative latent variables representing how the system switches between the underlying dynamics modes.
-Without such information, it is not possible to encode the notion of mode remaining/avoiding behaviour.
-As such, this work is interested in learning /latent spaces/
-that are rich with information regarding how a system switches between its underlying dynamics modes.
-
-# With this in mind, the main goals of this chapter are to construct a model which,
-# 1. can accurately /identify/ the true underlying dynamics modes,
-# 2. has convenient /latent spaces/ for planning/control,
-#    - rich with information regarding the mode switching behaviour.
-   # - this could be achieved by providing handles for encoding informative domain knowledge, in turn, constraining the set of admissible functions,
-
-Methods for learning probabilistic multimodal transition dynamics have been proposed.
-cite:moerlandLearning2017 use deep generative models, namely a conditional \acrfull{vae},
-to learn multimodal transition dynamics for \acrfull{mbrl}.
-However, encoding expert domain knowledge into \acrshort{vae}s is difficult, which makes
-it hard to ensure that the correct underlying dynamics modes are learned.
-
-Early work combining Hidden Markov Models and linear dynamical systems, known as
-switching state-space models citep:ghahramaniVariational2000,ghahramaniSwitching1996,
-offer a dynamical generalisation of Mixture of Experts.
-These models have been extended to nonlinear dynamics modes but are limited in
-the switching behaviour that they can model.
-In particular, they do not provide mechanisms for placing informative spatial priors on the switching behaviour.
-\todo{is this right about HMM? Can they incorporate GP priors}
-
-# cite:kaiserBayesian2020 use a Bayesian model that learns independent
-# dynamics modes whilst maintaining a
-# probabilistic belief over which mode is responsible for predicting at a given input location.
-# The methods differs as it does not assign observations to modes.
-cite:mckinnonLearning2017 use a \acrshort{mogpe} method to learn switching
-robot dynamics online.
-Their model uses a gating network based on a Dirichlet process to model how the system switches between the underlying
-dynamics modes. The Dirichlet process models the switching behaviour via clustering.
-As such, it cannot model complex nonlinear dependencies between the switching behaviour
-and the state-control inputs.
-For example, if a dynamical system oscillates between two dynamics modes over its state-control input space,
-their method would assign new dynamics modes at each oscillation.
-In contrast, we seek to learn only the two true dynamics modes and turn them
-"on" and "off" in different regions of the input space.
-
-**** Gaussian Processes
-This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
-Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
-Introducing multivariate Gaussians is a natural place to start.
 
 # In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
 # of the inference in this thesis.
 
-***** Multivariate Gaussian Identities
+*** Multivariate Gaussian Identities
+Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
+As such, introducing the multivariate Gaussian identities is a natural place to start.
+
 Gaussian distributions are very popular in machine learning and control theory. This is not only due to their
 natural emergence in statistical scenarios (central limit theorem) but also their intuitiveness and
 mathematical properties that render their manipulation tractable and easy.
@@ -3115,8 +2835,8 @@ In real-world scenarios, it is desirable to consider the entire input domain, in
 pre-selecting a discrete set of locations.
 Gaussian processes provide this mathematical machinery.
 
-***** Gaussian Processes
-****** intro :ignore:
+*** Gaussian Processes for Regression
+**** intro :ignore:
 Informally, GPs are a generalisation of the multivariate Gaussian distribution, indexed by an
 input domain as opposed to an index set.
 Similar to how a sample from an $N-\text{dimensional}$ multivariate Gaussian is an $N-\text{dimensional}$ vector,
@@ -3125,7 +2845,7 @@ Formally, a GP is defined as follows,
 #+BEGIN_EXPORT latex
 \begin{definition}[Gaussian process]
 A Gaussian process (GP) is a collection of random variables, any finite number of which
-have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
+have a joint Gaussian distribution \citep{rasmussenGaussian2006}.
 \end{definition}
 #+END_EXPORT
 
@@ -3240,8 +2960,13 @@ k(\mathbf{X}, \mathbf{x}_*). \nonumber
 \end{align}
 #+END_EXPORT
 This predictive distribution is the GP posterior.
+Importantly, the predictive variance $\sigma^2$ in cref:eq-gp-prediction-noisy quantifies the /epistemic uncertainty/
+associated with making a prediction at the test input $\mathbf{x}_*$, whilst the value of the noise variance
+$\sigma_n^2$ quantifies the /aleatoric uncertainty/.
+This structured handling of uncertainty makes \acrshort{gp}s extremely powerful for learning representations
+of dynamical systems.
 
-****** Sparse Gaussian Processes for Regression label:sec-sparse-gps
+**** Sparse Gaussian Processes for Regression label:sec-sparse-gps :noexport:
 The nonparametric nature of Gaussian process methods is responsible for their flexibility but also
 their shortcomings, namely their memory and computational limitations.
 In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
@@ -3377,7 +3102,736 @@ only the marginals of $q(\mathbf{f})$ are needed to calculate cref:eq-hensman-bo
 Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
 to preform stochastic gradient methods on $q(\u)$.
 
-***** Bayesian Model Selection label:sec-bayesian-model-selection :noexport:
+** Learning Dynamical Systems
+*** intro :ignore:
+
+/Mathematical models/ are compact representations (sets of assumptions) that attempt to capture key features of the
+phenomenon of interest, in a precise mathematical form.
+Probabilistic modelling provides the capability of constructing /mathematical models/
+that can represent and manipulate uncertainty in data, models, decisions and predictions.
+As such, linking observed data to underlying phenomena through probabilistic models,
+is an interesting direction for modelling, analysing and controlling dynamical systems.
+
+
+
+# It is worth considering the implications of all these types of uncertainty.
+# If a predictive dynamics model is learned from observations, then the model
+# can only be confident predicting near the training observations.
+# As one extrapolates away from the training observations, one can no longer be certain in the prediction;
+# this is known as epistemic uncertainty and can be reduced by collecting more data and retraining the model.
+
+# The structure of models can also be uncertain and there may be unobserved (aka latent) variables present.
+# The introduction of latent variables in probabilistic models is one of the key components providing
+# them with interesting and powerful capabilities.
+# A further form of uncertainty in models arises from unknown model parameters, $\theta$.
+# It is worth considering the implications of all these types of uncertainty.
+# If a predictive dynamics model is learned from observations, then the model
+# can only be confident predicting near the training observations.
+# As one extrapolates away from the training observations, one can no longer be certain in the prediction;
+# this is known as epistemic uncertainty and can be reduced by collecting more data and retraining the model.
+
+*Probabilistic models*
+Probability theory enables this uncertainty to be represented and manipulated;
+it provides a systematic way to combine observations with existing knowledge,
+via a /mathematical model/.
+Learning representations of dynamical systems for control using probabilistic models has shown much promise.
+For example, see
+cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
+Given a historical data set of state transitions from the environment,
+a common approach is to first learn a single-step dynamics model using a Gaussian process
+citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
+Alternative approaches quantify uncertainty using ensembles
+of neural networks citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018
+or Bayesian neural networks with parametric uncertainty citep:mcallisterImproving2016,depewegLearning2017.
+Learning single-step dynamics models that quantify uncertainty has been central to recent successes in \acrshort{mbrl}.
+
+
+
+# In control theory it is typical to combine system identification citep:ljungSystem1999
+# and model-based control to find an optimal controller.
+# This is a two-staged approach which first learns about the environment and then uses this
+# learned model to find the optimal controller.
+# However, this approach learns about the environment globally and often incurs high costs during system identification.
+
+
+# *\acrfull{mfrl}*
+# A key insight in \acrshort{rl} is that the optimal control problem in cref:eq-optimal-control-objective
+# can be solved without a known dynamics model.
+# They achieve this by using trajectories sampled from the system to calculate the expectation
+# using Monte Carlo simulation.
+# This is known as \acrshort{mfrl} as they do not learn an explicit model of the dynamics $f$.
+# These approaches are out of the scope of this dissertation.
+
+# approaches but they are out of the scope of this dissertation.
+# There are many \acrshort{mfrl} approaches but they are out of the scope of this dissertation.
+
+*** Learning Multimodal Dynamical Systems
+**** figs :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t!]
+\centering
+\begin{minipage}{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/scenario_7_svgp_baseline_both_modes.pdf}
+\subcaption{GP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
+\label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
+\end{minipage}
+\begin{minipage}{0.49\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/scenario_7_svgp_baseline_desired_mode.pdf}
+\subcaption{GP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
+\label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
+\end{minipage}
+\caption{Trajectory optimisation results obtained using a GP dynamics model trained on different data sets.
+The optimised control trajectories are rolled out in the GP dynamics model (magenta) and in the environment (cyan).
+The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
+White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
+The hashed box indicates a subset of the environment that has not been observed.}
+\label{fig-traj-opt-over-gating-mask-svgp-baseline}
+\end{figure}
+#+END_EXPORT
+
+**** intro :ignore:
+# ***** Motivation label:to_motivation :ignore:
+In contrast, to these approaches, this work is interested in learning representations of multimodal dynamical systems.
+cref:fig-traj-opt-over-gating-mask-svgp-all-baseline
+demonstrates the shortcomings of learning a GP dynamics model for the quadcopter navigation problem in the
+illustrative example from cref:illustrative_example.
+It shows the results of performing trajectory
+optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
+The GP has not been able to learn a representation of the dynamics which is true to the underlying system,
+due to the discontinuities associated with the multimodal transition dynamics (changing lengthscales/noise variances etc).
+The optimised controls successfully drive the GP dynamics (magenta) from the start state $\state_0$,
+to the target state $\targetState$.
+However, as the GP does not represent the true underlying dynamics accurately,
+the optimised controls do not successfully navigate to the target state $\targetState$ in the environment (cyan).
+This example motivates the need to correctly identify the underlying modes when learning representations of
+multimodal dynamical systems for control.
+
+cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline shows results after training on state transitions from
+only the desired (operable) dynamics mode (red).
+The learned dynamics model is able to accurately predict state transitions in the desired dynamics mode (red).
+However, as this approach only considers the dynamics of the desired mode,
+trajectories in the environment (cyan) deviate from those planned in the
+learned dynamics model (magenta) when they pass through the turbulent mode.
+This is problematic because the trajectory passes through the turbulent dynamics mode
+(which may lead to catastrophic failure) and does not reach the target state $\targetState$.
+Without inferring information regarding how the system switches between its underlying dynamics modes, it is not
+possible to encode mode remaining behaviour into control algorithms.
+#+BEGIN_EXPORT latex
+\begin{remark}
+As the underlying dynamics modes and how the system switches between them,
+are \textit{not fully known a priori}, partitioning the data set and learning the dynamics model in
+\cref{fig-traj-opt-over-gating-mask-svgp-desired-baseline} is not possible in realistic scenarios.
+\end{remark}
+#+END_EXPORT
+# This example motivates the need for dynamics models that can automatically infer the underlying dynamics modes, whilst
+# also learning how the system switches between its underlying dynamics modes.
+
+# This approach is problematic because the trajectory does not reach the target state $\targetState$,
+# nor does it avoid the turbulent dynamics mode, which may lead to catastrophic failure.
+
+
+# It is also worth noting here that the underlying dynamics modes and how the system switches between them,
+# are /not fully known a priori/.
+# As such, partitioning the data set and learning the dynamics model in
+# cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline is not possible in realistic scenarios.
+
+#+BEGIN_EXPORT latex
+\begin{myquote}
+Following standard methodologies, the trajectories in \cref{fig-traj-opt-over-gating-mask-svgp-baseline}
+were found by minimising the expected cost
+under the state distribution, resulting from cascading single-step predictions through the GP dynamics model.
+A terminal state cost term ensured trajectories ended at the target state and
+a quadratic integral control cost term regularised the controls to encode the notion of
+"minimal effort" control.
+\end{myquote}
+#+END_EXPORT
+
+The introduction of /latent variables/ into probabilistic models is a key component providing them with interesting
+and powerful capabilities for synergising model learning and control.
+For example, cite:hafnerLearning2019,rybkinModelBased2021
+\todo{add more latent space dynamics refs}
+learn /latent spaces/ which provide convenient spaces for planning.
+\marginpar{latent spaces for control}
+cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline highlights the need for learning
+informative latent variables representing how the system switches between the underlying dynamics modes.
+Without such information, it is not possible to encode the notion of mode remaining/avoiding behaviour.
+As such, this work is interested in learning /latent spaces/
+that are rich with information regarding how a system switches between its underlying dynamics modes.
+
+# With this in mind, the main goals of this chapter are to construct a model which,
+# 1. can accurately /identify/ the true underlying dynamics modes,
+# 2. has convenient /latent spaces/ for planning/control,
+#    - rich with information regarding the mode switching behaviour.
+   # - this could be achieved by providing handles for encoding informative domain knowledge, in turn, constraining the set of admissible functions,
+
+Methods for learning probabilistic multimodal transition dynamics have been proposed.
+cite:moerlandLearning2017 use deep generative models, namely a conditional \acrfull{vae},
+to learn multimodal transition dynamics for \acrfull{mbrl}.
+However, encoding expert domain knowledge into \acrshort{vae}s is difficult, which makes
+it hard to ensure that the correct underlying dynamics modes are learned.
+Alternatively, cite:mckinnonLearning2017 use a \acrshort{mogpe} method to learn switching
+# robot dynamics online.
+# Their model uses a gating network based on a Dirichlet process to model how the system switches between the underlying
+# dynamics modes. The Dirichlet process models the switching behaviour via clustering.
+# As such, it cannot model complex nonlinear dependencies between the switching behaviour
+# and the state-control inputs.
+# For example, if a dynamical system oscillates between two dynamics modes over its state-control input space,
+# their method would assign new dynamics modes at each oscillation.
+# In contrast, we seek to learn only the two true dynamics modes and turn them
+# "on" and "off" in different regions of the input space.
+
+# Early work combining Hidden Markov Models and linear dynamical systems, known as
+# switching state-space models citep:ghahramaniVariational2000,ghahramaniSwitching1996,
+# offer a dynamical generalisation of Mixture of Experts.
+# These models have been extended to nonlinear dynamics modes but are limited in
+# the switching behaviour that they can model.
+# In particular, they do not provide mechanisms for placing informative spatial priors on the switching behaviour.
+# \todo{is this right about HMM? Can they incorporate GP priors}
+
+# cite:kaiserBayesian2020 use a Bayesian model that learns independent
+# dynamics modes whilst maintaining a
+# probabilistic belief over which mode is responsible for predicting at a given input location.
+# The methods differs as it does not assign observations to modes.
+# An alternative approach is to learn multimodal dynamical systems using \acrshort{mogpe} method to learn switching
+
+** Model-based Control
+They have then been used for online \acrfull{mpc}
+cite:chuaDeep2018,kamtheDataEfficient2018,nagabandiDeep2020,lambertLowLevel2019,
+*** Trajectory Optimisation
+*** Model Predictive Control
+Instead of approximating the value function or policy, it is possible to directly optimise the controls $\control_t$
+over a horizon $T$.
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-trajectory-optimisation}
+\min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\mid \state_0=\state \right] \\
+&\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t)
+\end{align}
+#+END_EXPORT
+which finds an optimal sequence of controls $\controlTraj$ for a given start state $\state_0$.
+This is known as trajectory optimisation
+Iteratively applying the first control $\control_0$ and resolving this nonlinear program is known as
+\acrfull{mpc} cite:eduardof.Model2007.
+This resulting controller is close-loop, however, in practice, it is often too computationally expensive to obtain
+real-time control.
+Many approximate solutions have been introduced in the literature, that seek to balance the computational complexity
+and accuracy trade-off differently cite:bettsSurvey1998.
+
+For example, \acrfull{ilqr} can be used to generate trajectories for non-linear systems by
+iteratively approximating the dynamics to be linear around a nominal trajectory and optimising for the controls.
+\acrshort{ilqr} works well for quadratic cost functions but can be used with any cost function by approximating the cost
+function with a second order Taylor expansion.
+However, in this case iLQR is susceptible to converging
+to terrible (local) optima if the true cost function is highly non-convex.
+cite:boedeckerApproximate2014 present a real-time iLQR controller based on sparse GPs.
+cite:rohrProbabilistic2021 propose a novel LQR controller synthesis for
+linearised GP dynamics that yields robust controllers with respect to a probabilistic stability margin.
+In cite:marcoAutomatic2016 they parameterise the weight matrices
+$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
+and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
+
+# *Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
+# iLQR to a stochastic setting, where the process
+# noise is assumed to be Gaussian.
+# cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
+
+# *Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
+# the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
+# cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
+# over the entire control sequence.
+# Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
+# and the quadratic model is inaccurate.
+# \todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
+# DDP solutions provides greater accuracy than iLQG/iLQR but
+# at the cost
+# of increased computational time cite:tassaSynthesis2012.
+# The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
+# DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
+
+# cite:panProbabilistic2014 present a probabilistic trajectory optimisation
+# framework for systems with unknown dynamics called probabilistic
+# differential dynamic programming (PDDP).
+# It extends DDP to explicitly account
+# for uncertainty in dynamics modelled using gaussian processes.
+# In contrast to typical gradient based policy search methods, PDDP does not
+# require a policy parameterisation as it learns a locally optimal,
+# time-varying control policy.
+# Based on the second-order local approximation of the value function,
+# PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
+
+# *Path Integral*  control is a method for developing optimal controls based on stochastic
+# sampling of trajectories cite:theodorouGeneralized2010.
+# This work was originally limited to control affine systems cite:williamsModel2017
+# but has since been extended to general nonlinear
+# dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
+
+** Uncertainty-based Exploration Strategies label:sec-unc-exploration
+*Thompson sampling*
+An alternative and theoretically grounded strategy is Thompson sampling.
+This approach samples a single model  $f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i})$ at every iteration $i$
+and uses the sampled model to optimise the controller.
+This is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-thompson-exploration}
+\pi_i^{\text{thompson}} = \arg \max_{\pi \in \Pi} J(f_i, \pi) \quad \text{s.t.} \quad f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i}).
+\end{align}
+#+END_EXPORT
+# This contrasts the greedy approach that averages over the
+In general it is intractable to sample from $\dynamicsModel(f \mid \mathcal{D}_{0:i})$, although methods do exist
+for both \acrshort{gp} models and ensembles.
+Note that after the sampling step this problem is equivalent to greedy exploitation.
+
+*Active Learning in Dynamical Systems*
+cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively2020
+
+*Information Theoretic Active Learning with Gaussian Processes*
+cite:krauseNonmyopic2007,houlsbyBayesian2011
+
+** Model-Based Reinforcement Learning :noexport:
+An alternative approach to solving the optimal control problem in cref:eq-optimal-control-objective
+is to first learn a dynamics model and then use this learned model with model-based control techniques.
+This approach is known as \acrfull{mbrl}.
+As both \acrshort{mfrl} and \acrshort{mbrl} methods learn models,
+the model in the name is referring to the dynamics model $f$, as  \acrshort{mfrl} approaches do not learn
+representations of the dynamics $f$.
+\acrfull{mbrl} shares similarities with the system identification and control process except that the dynamics learning
+and control are updated simultaneously.
+see cref:alg-mbrl-background
+
+*** MBRL Alg :ignore:
+#+BEGIN_EXPORT latex
+\begin{algorithm}[!t]
+\caption{Model-based reinforcement learning}\label{alg-mbrl-background}
+\begin{algorithmic}[1]
+\Require{Policy/controller $\policy_0$, dynamics model $\dynamicsModel}$, start state $\state_0$}
+\For{$i = 0, 1,  \ldots $}
+    \State Select $\pi_i$ using exploration strategy, e.g. \cref{eq-greedy-exploration}
+    \State Collect environment data set $\dataset_i$ using $\pi_i$; add to dataset $\dataset_{0:i} = \{\dataset_{i} \cup \dataset_{0:i-1}\}$
+    \State Update dynamics model $\dynamicsModel}$ using $\dataset_{0:i}$.
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+#+END_EXPORT
+** Dynamics Learning :noexport:
+This dissertation is motivated by learning representations of multimodal dynamical systems
+that can be exploited by model-based control algorithms.
+*** Sources of Uncertainty :noexport:
+\parmarginnote{epistemic uncertainty}
+If we have used observations of a system to train a predictive model then we can only be confident in predictions near our observations.
+As we extrapolate away from the observations we can no longer be certain and this is known as
+epistemic uncertainty.
+It can be reduced by collecting more data and retraining a model.
+This is shown in Figure [[ref:epistemic]].
+#+NAME: epistemic
+#+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
+#+caption: Plot demonstrating the concept of epistemic uncertainty. We can be confident in the learnt function close to our observations but as we exptrapolate away from them we become uncertain what the function should look like. If we have a notion of epistemic uncertainty in a MBRL algorithm we can use it to encourage the agent to visit these areas and collect data, which in turn will reduce the epistemic uncertainty.
+[[file:images/limited_data.pdf]]
+
+
+\parmarginnote{aleatoric uncertainty}
+As mentioned previously, aleatoric uncertainty consists of process noise and observation noise; uncertainties that are inherent in a system and cannot be reduced.
+#+NAME: bimodal-dataset
+#+ATTR_LATEX: :width 1.\textwidth :placement [h] :center nil
+#+caption: An artificial 1D dataset with two levels of process noise.
+[[file:images/dataset.pdf]]
+Figure [[ref:bimodal-dataset]] shows an artificial 1D dataset that demonstrates the concept of aleatoric uncertainty.
+In our work we generally assume that there is no observation noise and therefore the aleatoric uncertainty only consists of process noise.
+
+*** Probabilistic Modelling :ignore:noexport:
+
+/Mathematical models/ are compact representations (sets of assumptions) that attempt to capture key features of the
+phenomenon of interest, in a precise mathematical form.
+Probabilistic modelling provides the capability of constructing /mathematical models/
+that can represent and manipulate uncertainty in data, models, decisions and predictions.
+As such, linking observed data to underlying phenomena through probabilistic models,
+is an interesting direction for modelling, analysing and controlling dynamical systems.
+
+*Process noise*
+Dynamical systems give rise to temporal observations arriving as a sequence
+$\state_{1:\TimeInd} = \{\state_1, \ldots, \state_\TimeInd\}$.
+These measurements are often corrupted by (observation) noise due to imperfections in the measurement process.
+Even when it is known that there is uncertainty in the measurement process, there still remains uncertainty about its
+form.
+
+*Observation noise*
+Given our current understanding of the real-world, many dynamical systems also appear to be
+inherently stochastic.
+This is due to our inability to accurately model certain phenomena (e.g. turbulence).
+Stochasticity arising from state transitions within a system is known as process noise.
+Observation and process noise are the constituent sources of /aleatoric uncertainty/;
+uncertainties that are inherent in a system and cannot be reduced.
+
+*Epistemic uncertainty*
+The structure of models can also be uncertain and there may be unobserved (aka latent) variables present.
+The introduction of latent variables in probabilistic models is one of the key components providing
+them with interesting and powerful capabilities.
+A further form of uncertainty in models arises from unknown model parameters, $\theta$.
+It is worth considering the implications of all these types of uncertainty.
+If a predictive dynamics model is learned from observations, then the model
+can only be confident predicting near the training observations.
+As one extrapolates away from the training observations, one can no longer be certain in the prediction;
+this is known as epistemic uncertainty and can be reduced by collecting more data and retraining the model.
+
+*Probabilistic models*
+Probability theory enables this uncertainty to be represented and manipulated;
+it provides a systematic way to combine observations with existing knowledge,
+via a /mathematical model/.
+Learning representations of dynamical systems for control using probabilistic models has shown much promise.
+For example, see
+cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
+Given a historical data set of state transitions from the environment,
+a common approach is to first learn a single-step dynamics model using a Gaussian process
+citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
+Alternative approaches include using ensembles
+of neural networks citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018
+or Bayesian neural networks with parametric uncertainty citep:mcallisterImproving2016,depewegLearning2017.
+Quantifying uncertainty in dynamics models has been shown to be  important for \acrshort{mbrl}
+# These learned dynamics model can then be leveraged for model-based control.
+
+
+
+
+
+cref:fig-traj-opt-over-gating-mask-svgp-all-baseline
+demonstrates the shortcomings of learning a GP dynamics model for the quadcopter navigation problem in the
+illustrative example from cref:illustrative_example.
+It shows the results of performing trajectory
+optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
+The GP has not been able to learn a representation of the dynamics which is true to the underlying system,
+due to the discontinuities associated with the multimodal transition dynamics (changing lengthscales/noise variances etc).
+The optimised controls successfully drive the GP dynamics from the start state $\state_0$,
+to the target state $\targetState$.
+However, as the GP does not represent the true underlying dynamics accurately,
+the optimised controls do not successfully navigate to the target state $\targetState$ in the environment.
+This example motivates the need to correctly identify the underlying modes when learning dynamics models for
+model-based control.
+
+** Gaussian Processes :noexport:
+This section introduces Gaussian processes and the sparse approximations that are used throughout this work.
+Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
+Introducing multivariate Gaussians is a natural place to start.
+
+# In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
+# of the inference in this thesis.
+
+*** Multivariate Gaussian Identities
+Gaussian distributions are very popular in machine learning and control theory. This is not only due to their
+natural emergence in statistical scenarios (central limit theorem) but also their intuitiveness and
+mathematical properties that render their manipulation tractable and easy.
+
+Consider a multivariate Gaussian whose random variables are partitioned into two vectors $\f$ and $\u$.
+The joint distribution takes the following form,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-joint-gaussian}
+\left[\begin{array}{c}
+      \f \\
+      \u
+\end{array}\right]
+\sim\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \bm\mu_{\f} \\
+      \bm\mu_{\u}
+ \end{array}\right]
+\left[\begin{array}{cc}
+      \bm\Sigma_{\f\f} & \bm\Sigma_{\f\u} \\
+      \bm\Sigma_{\u\f} & \bm\Sigma_{\u\u}
+ \end{array}\right]\right),
+\end{align*}
+#+END_EXPORT
+where $\bm\mu_{\f}$ and $\bm\mu_{\u}$ represent the mean vectors, $\bm\Sigma_{\f\f}$ and $\bm\Sigma_{\u\u}$
+represent the covariance matrices,
+and $\bm\Sigma_{\u\f}$ and $\bm\Sigma_{\f\u}$ represent the cross-covariance matrices.
+The marginalisation property of Gaussian distributions states that for two jointly Gaussian random variables,
+the marginals are also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-marginal}
+p(\f) &= \int p(\f, \u) \text{d}\u = \mathcal{N} \left(\f \mid \bm\mu_{\f}, \bm\Sigma_{\f\f} \right), \\
+p(\u) &= \int p(\f, \u) \text{d}\f = \mathcal{N} \left(\u \mid \bm\mu_{\u}, \bm\Sigma_{\u\u} \right).
+\end{align}
+#+END_EXPORT
+Conveniently, the conditional densities are also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-conditional}
+\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\u - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}\bm\Sigma_{\u\u}^{-1}\bm\Sigma_{\u\f} \right), \\
+\u \mid \f &\sim \mathcal{N} \left(\bm\mu_{\u} + \bm\Sigma_{\u\f} \bm\Sigma_{\f\f}^{-1}(\f - \bm\mu_{\f}), \bm\Sigma_{\u\u} - \bm\Sigma_{\u\f}\bm\Sigma_{\f\f}^{-1}\bm\Sigma_{\f\u} \right).
+\end{align}
+#+END_EXPORT
+Consider the case where $\u$ represents some observations and $\f$ represents a new test location.
+cref:eq-gaussian-conditional can be used to make
+inferences in the location $\f$ given the observations $\u$, i.e. make
+sophisticated interpolations on the measurements, based on their closeness.
+In real-world scenarios, it is desirable to consider the entire input domain, instead of simply
+pre-selecting a discrete set of locations.
+Gaussian processes provide this mathematical machinery.
+
+*** Gaussian Processes
+**** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\gpDomain}{\ensuremath{\mathcal{X}}}
+#+END_EXPORT
+**** intro :ignore:
+Informally, GPs are a generalisation of the multivariate Gaussian distribution, indexed by an
+input domain as opposed to an index set.
+Similar to how a sample from an $N-\text{dimensional}$ multivariate Gaussian is an $N-\text{dimensional}$ vector,
+a sample from a GP is a random function over its domain.
+Formally, a GP is defined as follows,
+#+BEGIN_EXPORT latex
+\begin{definition}[Gaussian process]
+A Gaussian process (GP) is a collection of random variables, any finite number of which
+have a joint Gaussian distribution \cite{rasmussenGaussian2006}.
+\end{definition}
+#+END_EXPORT
+
+# More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
+More intuitively, a Gaussian process  is a distribution over functions $f(\cdot): \gpDomain \rightarrow \R$
+defined over an input domain $\gpDomain \in \R^{D_f}$.
+Whilst Gaussian distributions represent distributions over finite-dimensional vectors, GPs represent
+distributions over infinite-dimensional functions.
+\marginpar{mean and covariance functions}
+A GP is fully defined by a mean function $\mu(\cdot) : \gpDomain \rightarrow \R$ and a covariance
+function $k(\cdot, \cdot) : \gpDomain \times \gpDomain \rightarrow \R$ (also known as a kernel),
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-mean-cov}
+f(\cdot) &\sim \mathcal{GP}\left(\mu(\cdot), k(\cdot,\cdot) \right), \\
+\mu(\cdot) &= \E[f(\cdot)], \\
+k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))].
+\end{align}
+#+END_EXPORT
+Importantly, for a given set of training inputs from the
+\marginpar{Gaussian process prior}
+functions domain $~{\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}}$, the associated function values
+$\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$,
+are jointly Gaussian.
+This results in an $N-\text{dimensional}$ multivariate Gaussian random variable $\mathbf{f}$, given by,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-marginal}
+\mathbf{f} \sim \mathcal{N}(\mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+\end{equation}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{myquote}
+A common kernel that is used throughout this dissertation is the Squared Exponential
+kernel with Automatic Relevance Determination (ARD), given by,
+\begin{equation} \label{eq-se-kernel}
+k(x, x') = \sigma_f^2 \exp\left(-\frac{1}{2} \sum_{d=1}^{D_f} \left( \frac{x_{d}- x'_{i}}{l_d} \right) \right),
+\end{equation}
+where $\sigma_f^2$ represent the signal variance and $l_d$ is a lengthscale parameter associated with
+input dimension $d$.
+The lengthscale parameter determines the length of the "wiggles" in the function and
+the signal variance $\sigma_f^2$ determines the average deviation of the function from its mean.
+\end{myquote}
+#+END_EXPORT
+Given mean and kernel functions with parameters $\bm\theta$, the marginal distribution is given by,
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-gp-prior}
+p(\mathbf{f} \mid \mathbf{X}) = \mathcal{N}(\mathbf{f} \mid \mu(\mathbf{X}), k(\mathbf{X}, \mathbf{X})).
+\end{equation}
+#+END_EXPORT
+where the dependency on the parameters $\bm\theta$ has been dropped, i.e.
+$p(\f \mid \mathbf{X}) = p(\f \mid \mathbf{X}, \bm\theta)$.
+This simplification will be used throughout this dissertation for notational conciseness.
+By definition, these observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
+\marginpar{jointly Gaussian}
+$f_* = f(\mathbf{x}_*)$ at a new test input,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-gp-joint}
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      f^{*}
+\end{array}\right]
+\sim\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \mu(\mathbf{X}) \\
+      \mu(\mathbf{x}_{*})
+ \end{array}\right]
+\left[\begin{array}{cc}
+      k(\mathbf{X}, \mathbf{X}) & k(\mathbf{X},\mathbf{x}_{*}) \\
+      k(\mathbf{x}_{*},\mathbf{X}) & k(\mathbf{x}_{*},\mathbf{x}_{*})
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+Given the multivariate Gaussian conditionals in cref:eq-gaussian-conditional, it is easy to see how
+the distribution over the test function value $f_*$,
+\marginpar{noise-free predictions}
+can be obtained by conditioning on the observations,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-prediction}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
+\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} (\mathbf{f} - \mu(\mathbf{X})) \nonumber\\
+\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) - k(\mathbf{x}_*, \mathbf{X}) k(\mathbf{X}, \mathbf{X})^{-1} k(\mathbf{X}, \mathbf{x}_*). \nonumber
+\end{align}
+#+END_EXPORT
+
+It is typical in real-world modelling scenarios that observations of the true function values $\f$
+are not directly accessible.
+\marginpar{predictions with noise}
+Instead, observations are usually corrupted by noise,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-noisy}
+\mathbf{y} = f(\mathbf{x}) + \epsilon, \quad \epsilon \sim \mathcal{N}\left( \mathbf{0}, \sigma^2_{n} \mathbf{I} \right).
+\end{align}
+#+END_EXPORT
+where $\sigma^2_n$ is the noise variance.
+In this scenario, the function values $\f$ become latent variables and a Gaussian likelihood
+is introduced,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-likelihood}
+p(\mathbf{y} \mid \f) = \mathcal{N}\left( \mathbf{y} \mid \f, \sigma^2_{n} \mathbf{I} \right),
+\end{align}
+#+END_EXPORT
+to relate the observations to the latent function values $\f$.
+The predictive distribution for a test input $\mathbf{x}_*$ follows from cref:eq-gaussian-conditional,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gp-prediction-noisy}
+p(f_{*} \mid \mathbf{x}_*, \mathbf{y}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, \sigma^2)  \\
+\mu &= \mu(\mathbf{x}_*) + k(\mathbf{x}_*, \mathbf{X})
+\left(k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right)^{-1} (\mathbf{y} - \mu(\mathbf{X})) \nonumber\\
+\sigma^2 &= k(\mathbf{x}_*, \mathbf{x}_*) -
+k(\mathbf{x}_*, \mathbf{X})
+\left( k(\mathbf{X}, \mathbf{X}) + \sigma^2_n \mathbf{I} \right))^{-1}
+k(\mathbf{X}, \mathbf{x}_*). \nonumber
+\end{align}
+#+END_EXPORT
+This predictive distribution is the GP posterior.
+
+*** Sparse Gaussian Processes for Regression label:sec-sparse-gps
+The nonparametric nature of Gaussian process methods is responsible for their flexibility but also
+their shortcomings, namely their memory and computational limitations.
+In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
+due to the inversion of the $N \times N$ covariance matrix $k(\mathbf{X},\mathbf{X})$.
+This makes its application to data sets with more than a few thousand data points prohibitive.
+The main direction in the literature attempting to overcome this limitation is sparse approximations
+citep:titsiasVariational2009,snelsonSparse2005a,quinonero-candelaUnifying2005,leibfriedTutorial2021.
+Many approximation schemes have been proposed to reduce the computational complexity, see
+cite:quinonero-candelaUnifying2005 for a review.
+This section provides a short overview of sparse approximations.
+
+Consider a second Gaussian density $q(\u)$ over the vector $\u$, as well as $p(\u)$, given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-marginal-q}
+q(\u) &= \mathcal{N} \left(\u \mid \mathbf{m}_{\u}, \mathbf{S}_{\u\u} \right)
+\end{align}
+#+END_EXPORT
+with mean $\mathbf{m}_{\u}$ and covariance $\mathbf{S}_{\u\u}$.
+The marginal distribution over $\f$ can be obtained by conditioning on $\u$ and marginalising w.r.t. this
+new distribution $q(\f) = \int p(\f \mid \u) q(\u) \text{d} \u$.
+This marginal distribution is also Gaussian,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-gaussian-conditional-q}
+\f \mid \u &\sim \mathcal{N} \left(\bm\mu_{\f} + \bm\Sigma_{\f\u} \bm\Sigma_{\u\u}^{-1}(\mathbf{m}_{\u} - \bm\mu_{\u}), \bm\Sigma_{\f\f} - \bm\Sigma_{\f\u}
+\bm\Sigma_{\u\u}^{-1}
+\left(\bm\Sigma_{\u\u} - \mathbf{S}_{\u\u} \right)
+\bm\Sigma_{\u\u}^{-1}
+\bm\Sigma_{\u\f} \right).
+\end{align}
+#+END_EXPORT
+Replacing $q(\u)$ with $p(\u)$ would recover the original marginal distribution $p(\f)$ with
+mean $\bm\mu_{\f}$ and covariance $\bm\Sigma_{\f}$, as expected from cref:eq-gaussian-marginal.
+
+Inducing point methods citep:snelsonSparse2005a augment the latent variables
+with inducing input-output pairs known as inducing "inputs" $\Z \in \inputDomain$ and inducing
+"variables" $\u = f(\Z)$.
+Introducing a set of $M$ inducing points from the same GP prior
+$p(\u \mid \Z) &= \mathcal{N}(\u \mid \mu(\Z), k(\Z, \Z))$
+can reduce the computational cost if $M << N$.
+Note that these inducing variables $\u$ are jointly gaussian with the latent function values $\mathbf{f}$,
+#+BEGIN_EXPORT latex
+\begin{align*} \label{eq-spare-gp-joint}
+p(\mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) =\ &\mathcal{N}\left(
+\left[\begin{array}{c}
+      \mathbf{f} \\
+      \u
+\end{array}\right]
+      \mid \bm{0} ,
+\left[\begin{array}{cc}
+      \mathbf{K}_{nn} & \mathbf{K}_{nm} \\
+      \mathbf{K}_{nm}^{T} & \mathbf{K}_{mm}
+ \end{array}\right]\right).
+\end{align*}
+#+END_EXPORT
+where $\K_{mm}$ is the covariance function evaluated between all inducing inputs $\Z$, and
+$\K_{nm}$ is the covariance function evaluated between the data inputs $\mathbf{X}$ and the inducing inputs $\Z$.
+This joint distribution can be re-written using the properties of multivariate normal distributions as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-joint-cond}
+p(\mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) &= p(\mathbf{f} \mid \u) p(\u \mid \mathbf{Z}) \\
+&= \mathcal{N}(\mathbf{f} \mid \mathbf{K}_{nm} \mathbf{K}_{mm}^{-1} \u, \mathbf{K}_{nn} - \mathbf{Q}_{nn})
+\mathcal{N}(\u \mid \mathbf{0}, \mathbf{K}_{mm})
+\end{align}
+#+END_EXPORT
+where $\mathbf{Q}_{nn} = \mathbf{K}_{nm}\mathbf{K}_{mm}^{-1}\mathbf{K}_{nm}^{T}$.
+The full joint distribution is then given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-full-joint}
+p(\mathbf{y}, \mathbf{f}, \u \mid \mathbf{X}, \mathbf{Z}) &=  p(\mathbf{y} \mid \mathbf{f}) p(\mathbf{f} \mid \u, \mathbf{X}) p(\u \mid \mathbf{Z})
+\end{align}
+#+END_EXPORT
+Computationally efficient inference is obtained by approximating the integration over $\mathbf{f}$.
+The popular Fully Independent Training Conditional (FITC) method (in the case of a Gaussian likelihood)
+is obtained via the factorisation: $p(\mathbf{y} \mid \u) \approx \prod^{N}_{n=1} p(y_{n} \mid \u)$.
+To obtain a variational approximation Jensen's inequality is first used to bound this conditional,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-sparse-gp-bound-cond}
+\text{log}p(\mathbf{y}\mid\u) \geq \E_{p(\F \mid \u)} \left[ \text{log} p(\mathbf{y} \mid \F) \right] := \mathcal{L}_{1}.
+\end{align}
+#+END_EXPORT
+This is the standard bound shown in cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
+In cite:titsiasVariational2009 this bound is then substituted into the marginal likelihood
+to obtain a tractable lower bound,
+# \marginpar{Titsias' bound}
+#+BEGIN_EXPORT latex
+\begin{align}
+\text{log} p(\mathbf{y} \mid \mathbf{X})
+&= \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ p(\mathbf{y} \mid \u) \right] \\
+&\geq \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ \text{exp}(\mathcal{L}_{1}) \right] := \mathcal{L}_{\text{titsias}} \label{eq-titsias-bound-2} \\
+&= \text{log}\mathcal{N}(\mathbf{y} \mid \mathbf{0}, \mathbf{Q}_{nn} + \sigma^{2} \mathbf{I})
+- \frac{1}{2\sigma^2}\text{tr}(\K_{nn} - \mathbf{Q}_{nn}) \label{eq-titsias-bound},
+\end{align}
+#+END_EXPORT
+where $\sigma^2$ is the noise variance associated with the Gaussian likelihood.
+The bound in cref:eq-titsias-bound becomes exact (i.e. recovers the true log marginal likelihood)
+when the inducing inputs $\Z$ equal the
+data inputs $\mathbf{X}$ as $\K_{nm}=\K_{mm}=\K_{nn}$ so $\mathbf{Q}_{nn}=\K_{nn}$.
+
+cite:hensmanGaussian2013 noted that this bound has complexity $O(NM^{2})$ so
+introduced additional variational parameters to achieve a more computationally scalable bound
+with complexity $O(M^{3})$.
+Instead of collapsing the inducing points in cref:eq-titsias-bound
+they explicitly represent them as a variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq--inducing-dist}
+q(\u) = \mathcal{N}\left(\u \mid \mathbf{m}, \mathbf{S} \right),
+\end{align}
+#+END_EXPORT
+which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf{X})$ by
+further bounding $\mathcal{L}_{\text{titsias}}$,
+# \marginpar{Hensman's bound}
+#+BEGIN_EXPORT latex
+\begin{align}
+\mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
+&\geq \E_{q(\u)} \left[ \mathcal{L}_{1} \right]
+- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z})\right] \\
+&\geq \E_{q(\F)} \left[ p(\mathbf{y} \mid \mathbf{f}) \right]
+- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z})\right] := \mathcal{L}_{\text{hensman}}, \label{eq-hensman-bound}
+\end{align}
+#+END_EXPORT
+where $q(\mathbf{f}) = \int p(\mathbf{f} \mid \u) q(\u) \text{d} \u$.
+This is equivalent to $\mathcal{L}_{3}$ defined in Eq. 4 cite:hensmanGaussian2013.
+If the likelihood factorizes across data $p(\mathbf{y} \mid \mathbf{f}) = \prod_{n=1}^{N} p(y_{n} \mid f_{n})$
+only the marginals of $q(\mathbf{f})$ are needed to calculate cref:eq-hensman-bound,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-expert-bound-3-fact}
+\mathcal{L}_{\text{hensman}}
+= \sum_{n=1}^{N}\E_{q(f_{n})} \left[ \text{log} p(y_{n} \mid f_{n}) \right]
+- \text{KL}\left[q(\u) \mid\mid p(\u \mid \mathbf{Z}) \right].
+\end{align}
+#+END_EXPORT
+Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
+to preform stochastic gradient methods on $q(\u)$.
+
+*** Bayesian Model Selection label:sec-bayesian-model-selection :noexport:
 #+BEGIN_EXPORT latex
 \newcommand{\weights}{\ensuremath{\mathbf{w}}}
 \newcommand{\hyperparameters}{\ensuremath{\bm\theta}}
@@ -3530,7 +3984,7 @@ This optimisation is known as Type II Maximum Likelihood and is given by,
 \end{align}
 #+END_EXPORT
 
-***** Model Selection for GP Regression :noexport:
+*** Model Selection for GP Regression :noexport:
 Bayesian principles are an appealing framework for inference.
 However, for most interesting models arising in machine learning, the required computations
 (integrals over the latent variables) are analytically intractable.
@@ -3595,7 +4049,7 @@ The resulting optimisation is given by,
 
 # Making predictions in cref:eq-gp-prediction-noisy is computationally expensive due to conditioning
 
-***** Variational Inference :noexport:
+*** Variational Inference :noexport:
 \todo{seek to convert inference into an optimisation}
 
 Variational approaches seek to lower bound the marginal likelihood (or evidence) $p(\mathbf{Y})$ using a functional that depends on variational parameters $q(\mathbf{\Theta})$.
@@ -3616,7 +4070,7 @@ Variational approaches seek to lower bound the marginal likelihood (or evidence)
 
 The bound becomes exact if $q(\mathbf{\Theta}) = p(\mathbf{\Theta} | \mathbf{Y})$. The true posterior is intractable but the variational posterior $q(\mathbf{\Theta})$ must be constrained (so that it is tractable). It is common to factorise $q(\mathbf{\Theta})$ with respect to groups of elements belonging to parameter set $\mathbf{\Theta}$, this is known as mean field approximation.
 
-***** Sparse Gaussian Processes :noexport:
+*** Sparse Gaussian Processes :noexport:
 A GP cite:edwardrasmussenGaussian2010 is a distribution over functions $f : \R^{D_f} \rightarrow \R$
 fully defined by a mean function $\mu(\cdot)$ and a covariance function $k(\cdot, \cdot)$.
 For a given set of inputs  from the
@@ -3667,882 +4121,434 @@ for the latent function values $\mathbf{f}$ cite:Titsias2009.
 # placed inducing variables $\hat{\mathbf{f}}$ they are a
 # sufficient statistic for the latent function values $\mathbf{f}$.
 
-**** Bellman's Minimum Principle
-**** Uncertainty-based Exploration Strategies
-*Thompson sampling*
-An alternative and theoretically grounded strategy is Thompson sampling.
-This approach samples a single model  $f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i})$ at every iteration $i$
-and uses the sampled model to optimise the controller.
-This is given by,
+** Old :noexport:
+*** Constraint Satisfaction :noexport:
+Alongside stability, it is common to require constraints on the states $\state$ and controls $\control$
+of a controlled system.
+For example, an autonomous system may wish to remain in a subset of it's state space where it knows its dynamics model
+is valid.
+The system may also be subject to constraints on the controls due to physical limitations, e.g.
+how quickly a quadcopter can accelerate and turn.
+Constraints on this type of safety can be encoded via inequality constraints on the states $\state$
+and controls $\control$,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-thompson-exploration}
-\pi_i^{\text{thompson}} = \arg \max_{\pi \in \Pi} J(f_i, \pi) \quad \text{s.t.} \quad f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i}).
+\begin{align} \label{eq-}
+&\constraintFunc_\state(\state_\timeInd) \geq 0, \quad \forall \timeInd \geq 0, \\
+&\constraintFunc_\control(\control_\timeInd) \geq 0, \quad \forall \timeInd \geq 0.
 \end{align}
 #+END_EXPORT
-# This contrasts the greedy approach that averages over the
-In general it is intractable to sample from $\dynamicsModel(f \mid \mathcal{D}_{0:i})$, although methods do exist
-for both \acrshort{gp} models and ensembles.
-Note that after the sampling step this problem is equivalent to greedy exploitation.
-
-*Active Learning in Dynamical Systems*
-cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively2020
-
-*Information Theoretic Active Learning with Gaussian Processes*
-cite:krauseNonmyopic2007,houlsbyBayesian2011
-
-** Optimal Control
-*** maths :ignore:
+The feasible regions of these constraints can be written as sets,
 #+BEGIN_EXPORT latex
-\newcommand{\costFunc}{\ensuremath{c}}
-\newcommand{\constraintsFunc}{\ensuremath{g}}
-
-\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
-\newcommand{\integralCostFunc}{\ensuremath{C}}
-
-\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
-\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
-
-\newcommand{\policySpace}{\ensuremath{\Pi}}
-\newcommand{\policy}{\ensuremath{\pi}}
+\begin{align} \label{eq-}
+\StateDomain =&\{ \state \in \R^\StateDim \mid \constraintFunc_\state(\state) \geq 0 \}, \\
+\ControlDomain =&\{ \control \in \R^\ControlDim \mid \constraintFunc_\control(\control) \geq 0 \},
+\end{align}
 #+END_EXPORT
-*** intro :ignore:
+so the constraints can alternatively be written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\state_\timeInd \in \StateDomain, \control_\timeInd \in \ControlDomain, \quad \forall t \geq 0.
+\end{align}
+#+END_EXPORT
+For a parametric policy $\policy$, the control constraints can be encoded directly into the policy by
+parameterising the policy so that its range is restricted to $\ControlDomain$,
+i.e. $\policy(\state_\timeInd) \in \ControlDomain$, for all $\state \in \R^\StateDomain$.
+The state constraints can be enforced by ensuring that the set $\StateDomain$ is forward invariant.
+#+BEGIN_EXPORT latex
+\begin{definition}
+Given a dynamical system $\dot{\state}(t) = f(\state(t))$ with states $\state(t) \in \StateDomain, \forall t$, then
+a set $\safeSet$ is \textbf{forward invariant}, iff, for every possible initial state in the set $\state(0) \in \safeSet$,
+all future states remain in the set, i.e. $\state(t) \in \safeSet, \forall t$.
+The system is safe with respect to the set $\safeSet$ if the set is \textbf{forward invariant}.
+\end{definition}
+#+END_EXPORT
+There are multiple approaches to enforcing state constraints via invariant sets.
+Namely, Lyapanov functions \todo{cite lyapunov}
+and control barrier functions cite:amesControl2019.
+Lyapanov functions are more restrictive than control barrier functions as they provide stability guarantees
+which are not a necessary condition to render $\StateDomain$ forward invariant.
 
-Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
-over a time period $t \in [t_0, t_f]$ that optimises an objective function $J_{\pi}(\x)$.
+**** Unknown Constraints
+The gating network contains important information regarding our constraints.
+In particular, when aiming to remain in a single desired dynamics mode the corresponding gating function
+should remain high.
+Equivalence of the gating functions in the deterministic setting implies a uniform distribution over
+the mode indicator variable.
+Given a threshold $\gatingThreshold \geq 0$ the safe set associated with the gating function safety constraints
+can be written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \gatingFunc(\state) \geq \gatingThreshold \}.
+\end{align}
+#+END_EXPORT
+Given that the gating function is modelled as a Gaussian process
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\Pr(\gatingFunc(\state, \control) \geq \gatingThreshold \mid \state, \control) =
+1 - \Phi\left( \frac{\gatingThreshold - \E\left[\gatingFunc(\state, \control) \right]}{\sqrt{\V\left[\gatingFunc(\state, \control) \right]}} \right)
+\geq p_\state
+\end{align}
+#+END_EXPORT
+
+
+This has the added benefit
+*** Safety :noexport:
+**** math :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\controlCost}{\ensuremath{\mathbf{R}}}
+\newcommand{\stateCost}{\ensuremath{\mathbf{Q}}}
+
+\newcommand{\stateDynamics}{\ensuremath{\mathbf{A}}}
+\newcommand{\controlDynamics}{\ensuremath{\mathbf{B}}}
+
+\newcommand{\stateTrajDist}{\ensuremath{p(\stateTraj)}}
+\newcommand{\stateDist}{\ensuremath{p(\state_{\timeInd})}}
+\newcommand{\stateMean}{\ensuremath{\bm\mu}}
+\newcommand{\stateCov}{\ensuremath{\bm\Sigma}}
+\newcommand{\stateDiff}{\ensuremath{\Delta \state}}
+\newcommand{\stateDiffMean}{\ensuremath{\bm\mu_{\stateDiff_\timeInd}}}
+\newcommand{\stateDiffCov}{\ensuremath{\bm\Sigma_{\stateDiff_\timeInd}}}
+
+\newcommand{\metricTensor}{\ensuremath{\mathbf{G}}}
+\newcommand{\jac}{\ensuremath{\mathbf{J}}}
+\newcommand{\jacGivenInput}{\ensuremath{p(\jac(\state_\timeInd) \mid \state_\timeInd)}}
+\newcommand{\jacDist}{\ensuremath{p(\jac(\state_\timeInd))}}
+\newcommand{\jacMean}{\ensuremath{\bm\mu_\jac}}
+\newcommand{\jacCov}{\ensuremath{\bm\Sigma_\jac}}
+
+\newcommand{\safeSet}{\ensuremath{\mathcal{C}}}
+\newcommand{\StateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\ControlDomain}{\ensuremath{\mathcal{U}}}
+
+\newcommand{\constraintFunc}{\ensuremath{c}}
+\newcommand{\barrierFunc}{\ensuremath{h}}
+
+\newcommand{\gatingThreshold}{\ensuremath{\delta_\gatingFunc}}
+#+END_EXPORT
+Intuitively, the notion of safety in dynamical systems implies that /bad/ things do not happen.
+However, what exactly are /bad/ things, i.e. what is safety?
+
+**** Constraint Satisfaction
+Alongside stability, it is common to require constraints on the states $\state$ and controls $\control$
+of a controlled system.
+For example, an autonomous system may wish to remain in a subset of it's state space where it knows its dynamics model
+is valid.
+The system may also be subject to constraints on the controls due to physical limitations, e.g.
+how quickly a quadcopter can accelerate and turn.
+Constraints on this type of safety can be encoded via inequality constraints on the states $\state$
+and controls $\control$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+&\constraintFunc_\state(\state_\timeInd) \geq 0, \quad \forall \timeInd \geq 0, \\
+&\constraintFunc_\control(\control_\timeInd) \geq 0, \quad \forall \timeInd \geq 0.
+\end{align}
+#+END_EXPORT
+The feasible regions of these constraints can be written as sets,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\StateDomain =&\{ \state \in \R^\StateDim \mid \constraintFunc_\state(\state) \geq 0 \}, \\
+\ControlDomain =&\{ \control \in \R^\ControlDim \mid \constraintFunc_\control(\control) \geq 0 \},
+\end{align}
+#+END_EXPORT
+so the constraints can alternatively be written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\state_\timeInd \in \StateDomain, \control_\timeInd \in \ControlDomain, \quad \forall t \geq 0.
+\end{align}
+#+END_EXPORT
+For a parametric policy $\policy$, the control constraints can be encoded directly into the policy by
+parameterising the policy so that its range is restricted to $\ControlDomain$,
+i.e. $\policy(\state_\timeInd) \in \ControlDomain$, for all $\state \in \R^\StateDomain$.
+The state constraints can be enforced by ensuring that the set $\StateDomain$ is forward invariant.
+#+BEGIN_EXPORT latex
+\begin{definition}
+Given a dynamical system $\dot{\state}(t) = f(\state(t))$ with states $\state(t) \in \StateDomain, \forall t$, then
+a set $\safeSet$ is \textbf{forward invariant}, iff, for every possible initial state in the set $\state(0) \in \safeSet$,
+all future states remain in the set, i.e. $\state(t) \in \safeSet, \forall t$.
+The system is safe with respect to the set $\safeSet$ if the set is \textbf{forward invariant}.
+\end{definition}
+#+END_EXPORT
+There are multiple approaches to enforcing state constraints via invariant sets.
+Namely, Lyapanov functions \todo{cite lyapunov}
+and control barrier functions cite:amesControl2019.
+Lyapanov functions are more restrictive than control barrier functions as they provide stability guarantees
+which are not a necessary condition to render $\StateDomain$ forward invariant.
+
+**** Stochastic Safety
+*Chance Constraints* The stochastic MPC formulation provides a principled approach to handling chance constraints
+by imposing a maximum probability of violation.
+The chance constrained, stochastic optimal control problem is then given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-stochastic-mpc}
+\min_{\policies} &\E \left[ l_\TimeInd(\state_\TimeInd, \control_\TimeInd) + \sum_{\timeInd=1}^{\TimeInd-1} l_\timeInd(\state_\timeInd, \control_\timeInd) \right] \\
+\text{s.t.} \quad &\state_{\timeInd+1} = f(\state_\timeInd, \control_\timeInd) \\
+&\control_\timeInd = \pi_\timeInd (\state_\timeInd) \\
+&\Pr \{ \state_\timeInd \in \StateDomain_{\timeInd+1} \} \geq p_{\state} \\
+&\Pr \{ \control_\timeInd \in \ControlDomain_{\timeInd+1} \} \geq p_{\control}
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{definition}[Probabilistic i-step Reachable Set] \label{def-prs}
+A set $\mathcal{R}_\timeInd$ is said to be a probabilistic reachable set ($i$-step PRS) of probability level $p$ if,
+\begin{equation}
+\Pr(e_\timeInd \in \mathcal{R}_\timeInd \mid e_0=0) \geq p.
+\end{equation}
+\end{definition}
+#+END_EXPORT
+
+$\StateDomain_{\timeInd} = \{ \state_\timeInd \in \StateDomain \mid \gatingFunc(\state_t, \control_t) > 0 \}$
+
+linear state feedback controllers,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-policy}
+\pi_\timeInd = \FeedbackGain_\timeInd (\mu^x_i - \state_\timeInd) + \mu^x_i
+\end{align}
+#+END_EXPORT
+
+**** stab :ignore:noexport:
+*Stability* of an equilibrium point has been considered a property of a safety cite:berkenkampSafe2019.
+Stability is a property of infinitely long trajectories.
+A closed-loop system is said to be stable, if the state remains within some norm-ball around its equilibrium point for
+all time steps, and is asymptotically stable if it eventually converges.
+# For examples, stability can be considered  safety can be  Lyapunov functions
+
+*Invariance* can also be see as a safety property.
+
+**** Control Barrier Functions :noexport:
+In cite:nagumoUber1942 the authors derived the necessary and sufficient conditions for
+set invariance in dynamical systems.
+See cite:abrahamManifolds1988 for a modern proof.
+
+*Barrier Certificates* were introduced in cite:prajnaBarrier2006,prajnaSafety2004 to formally guarantee safety
+in nonlinear and hybrid systems.
+The term /barrier/ is motivated by the optimisation literature where cost functions are augmented with
+barrier functions to avoid undesirable regions.
+#+BEGIN_EXPORT latex
+\begin{theorem}[Nagumo's Theorem]
+Given a dynamical system $\dot{\state} = f(\state)$ with $\state \in \R^\StateDim$ and a safe set $\safeSet$, that is the
+superlevel set of a smooth function $\barrierFunc : \R^\StateDim \rightarrow \R$,
+i.e. $\safeSet = \{ \state \in \R^\StateDim \mid \barrierFunc(\state) \geq 0 \}$ and
+$\frac{\partial \barrierFunc}{\partial \state}(\state) \neq 0, \forall \state \in \R^D$
+then Nagumo's Theorem gives the necessary and sufficient conditions for set invariance,
+\begin{equation} \label{eq-}
+\dot{\barrierFunc}(\state) \geq 0 \quad \forall \state \in \partial \safeSet \quad \implies \safeSet \quad \text{is invariant}
+\end{equation}
+where $\partial\safeSet$ denotes the boundary of the safe set, i.e. $\partial\safeSet = \{\state \in \R^\StateDim \mid \barrierFunc(\state)=  0 \}$.
+\end{theorem}
+#+END_EXPORT
+These conditions have been rediscovered multiple times, in particular
+cite:brezisCharacterization1970 and cite:bonyPrincipe1969.
+
+
+*Control Barrier Certificates*
+Safe sets based on control Lyapunov functions (CLF) can be overly restrictive as they render every
+sub-level set
+
+Compared with Lyapunov sublevel set based safe regions, control barrier certificates offer a more permissive
+notion of safety.
+
+In cite:wangSafe2018 they formulate safety through control barrier certificates.
+#+BEGIN_EXPORT latex
+\begin{equation} \label{eq-}
+\exists \control \quad \text{s.t.} \quad \dot{\barrierFunc}(\state, \control) \geq - \alpha(\barrierFunc(\state))
+\implies \safeSet \quad \text{is invariant}
+\end{equation}
+#+END_EXPORT
+where $\alpha$ is an (extended) class $\kappa$ function.
+
+**** old :noexport:
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \gatingFunc(\state) > 0 \} \\
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \E\left[ \gatingFunc(\state) > 0 \right] \} \\
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \Pr\left[ \modeVar = k \right] \} \\
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \V\left[ \gatingFunc(\state) < 0.1 \right] \}
+\end{align}
+#+END_EXPORT
+Use RKHS to get something like -
+#+BEGIN_EXPORT latex
+\begin{lemma}
+Assume that $h$ has bounded RKHS norm $|| h' ||_k \leq B$ and that measurements are corrupted by
+$\sigma$-sub-Gaussian noise. If $\beta_n^{1/2} = B + 4 \sigma \sqrt{I(y_n ; h) + 1 + \text{ln}(1/\delta)}$, then for all
+$a \in \mathcal{A}$ and $n>0$ it holds jointly with probability at least $1-\delta$ that
+$|h'(a) - \mu_n(a)| \leq \beta_n^{1/2} \simga_n(a)$.
+\end{lemma}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\begin{theorem}
+For any $\delta \in (0,1)$, we have with probability at least $1 - \delta$ that $\gatingFunc(\state) > 0$.
+\end{theorem}
+#+END_EXPORT
+
+
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\mathcal{X} &= \{ \state \in \R^\StateDim \mid \gatingFunc(\state) > 0 \}
+\end{align}
+#+END_EXPORT
+
+\newpage
+*** Dynamical systems :noexport:
+Dynamical systems describe the behaviour of a system over time, $t$, and
+are a key component of both control theory and reinforcement learning.
+At any given time, $t$, a dynamical system has a state, which is
+represented as a vector of real numbers $\state_t \in \stateDomain \subseteq \R^{\StateDim}$.
+For example, the state of a 2-dimensional robotic system can be represented using it's 2D Cartesian coordinates
+and it's orientation as $\state_t = [x_t, y_t, \theta_t]^{T}$.
+The system can be controlled by applying control actions $\mathbf{u}_t \in \controlDomain \subseteq \R^{\ControlDim}$
+at any given time, $t$.
+This dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
+#+begin_export latex
+\begin{subequations} \label{eq-dynamics-main}
+\begin{align}
+\state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
+&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \nonumber \\
+\mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
+\end{align}
+\end{subequations}
+#+end_export
+where the discrete mode indicator function
+$\alpha : \stateDomain \rightarrow \modeDomain$
+indicates which of the $\ModeInd$ underlying dynamics modes
+$\{\mode{\latentFunc} : \mode{\stateDomain} \times \controlDomain \rightarrow \stateDomain \}_{\modeInd=1}^\ModeInd$,
+and associated noise models
+$\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$,
+governs the system at a given time step $\timeInd$.
+Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
+observation noise.
+This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+in the reinforcement learning literature.
+In this case, the $\mode{\bm\epsilon}$ term solely represents the process noise,
+which accounts for unwanted (and, in general, unknown) disturbances of the system.
+For example, it is hard to model aerodynamic effects on aircraft so these could be accounted
+for in the process noise term.
+# #+BEGIN_EXPORT latex
+# \begin{assumption} \label{}
+# The environment is full-observable and the observation process is not subject to noise.
+# \end{assumption}
+# #+END_EXPORT
+
+
+This dissertation considers systems where the underlying dynamics modes are defined by disjoint state domains.
+That is, each dynamics mode is defined by its state domain
+$\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}$, with
+$\stateDomain_{i} \cap \stateDomain_{j} = \emptyset$ for distinct $i, j \in \{1, \ldots \ModeInd\}$.
+The output of the mode indicator function is referred to as the mode indicator variable and is given by
+$\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\} = \mathbb{Z} \cap [1, \ModeInd]$.
+Notice that each mode's dynamics are free to leave their state space $\mode{\stateDomain}$
+and enter another mode.
+Ideally, this work seeks to enforce the controlled system to remain in a given mode.
+
+*** Optimal Control :noexport:
+**** intro :ignore:
+Optimal control is a branch of mathematical optimisation that seeks to find a controller $\pi$ that
+optimises an objective function $J_{\pi}(\x)$.
 The objective function might be formulated to solve a particular task or to make the dynamical
 system behave in a certain way.
-From Donald E. Kirk,
-#+BEGIN_EXPORT latex
-\begin{displayquote}
-Optimal control theory is the science of maximising returns from and minimising the costs of the operation
-of physical, social, and economic processes.
-\end{displayquote}
-#+END_EXPORT
-
-The controller space, $\policySpace$, defines the set of controllers over which optimisation is performed over,
-i.e. it is the optimisation domain.
-
-In this dissertation, a policy, $\policy$, shall be a conditional distribution over $\controlDomain$.
-In (deterministic) optimal control the policy space is usually given by open loop policies, i.e.
-only conditioned on time $\policy(\control \mid t)$.
-In contrast, SOC (and RL) are mainly interested in feedback policies, where the controls are conditioned on both time and
-state, i.e. $\policy(\control(t) \mid t, \state(t))$
-\footnote{for notational conciseness dependency on time is assumed from here on, i.e.
-$\policy(\control(t) \mid t, \state(t) = \policy(\control(t) \mid \state(t))$}.
-A special case are deterministic policies, given by $\policy(\control \mid \state) = \delta_{\control=f(\state)}$,
-where $\delta$ is the dirac delta distribution and $f$ is a function.
-
-*Optimal control*
-Formally, the problem of optimal control is summarised as follows.
-Given a dynamical system (Eq. \ref{eq-unimodal-dynamics-cont}) with
-states, $\state (t) \in \stateDomain \subseteq \R^{\StateDim}$, and
-controls, $\control(t) \in \controlDomain \subseteq \R^{\ControlDim}$,
-find a set of controls, $\controlTraj$,
-over a time period, $t \in [t_0, t_f]$, that optimises an objective function $J$.
-Typically, $\costFunc : \stateDomain \times \controlDomain \rightarrow \R$
-Typically this objective function is given by,
+Typically the goal is to minimise a cost function $\costFunc : \stateDomain \times \controlDomain \rightarrow \R$.
+This dissertation considers the /finite horizon problem/, given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-objective}
-J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \gamma^{\timeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
-\mid \state_0=\state \right] \\
-&\text{s.t.} \quad \state_{\timeInd+1} = f(\state_{\timeInd}, \pi(\state_{\timeInd+1}, \timeInd), \omega_{\timeInd}),
+J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\mid \state_0=\state \right]
 \end{align}
 #+END_EXPORT
-where $\gamma \in [0, 1)$ is a discount factor, ensuring infinite sums remain finite and well-defined.
+where $\TimeInd$ is known as the horizon.
+The objective $J_{\pi}(\state)$ quantifies the cost associated with deploying the controller $\pi$ from
+an initial state $\state$.
+The cost function typically consists of a terminal cost and a term which is integrated over the horizon (integral cost).
+In a navigation task the terminal cost may consist of the distance to the target, whilst the integral cost
+may encode the notion of minimum effort control, e.g. energy consumption.
+# For notational conciseness, this dissertation uses $\costFunc$ to denote both the terminal and integral terms.
 
-In practice, systems are often corrupted by process noise, or are not completely known, so the resulting
-dynamical system is actually stochastic.
-As such, the definition above must be adapted for stochastic systems.
-In stochastic systems, a control sequence is not associated with a specific
-trajectory, but rather a distribution over trajectories.
-The resulting problem is known as stochastic optimal control (SOC).
+*Controller space $\Pi$*
+This defines the set of controllers over which optimisation is performed.
+Controllers can have state feedback such that they are given by $\control_t = \policy(\state_t)$.
+These are closed-loop controllers and  in the reinforcement learning literature are referred to as policies.
+Alternatively, controllers can only depend on time $\control_t = \policy(t)$, in which case they are known
+as an open-loop controllers.
+This dissertation considers the general case, given by $\control_t = \policy(\state_t, t)$,
+which encompasses both open-loop and closed-loop controllers.
 
-*** Stochastic Optimal Control
-This section reviews the relevant background on SOC,
-in particular, trajectory optimisation algorithms for controlling
-stochastic systems that have been learned from observations.
+**** MDP fig :ignore:
+\newline
 
-Let us formalise the stochastic optimal control problem here.
-Given a stochastic, fully-observed, nonlinear system,
-with transition dynamics,
-${\dynamicsFunc: \stateDomain \times \controlDomain \rightarrow \stateDomain}$,
-SOC seeks to find the control sequence (trajectory), $\controlTraj$, over a horizon,
-$\TimeInd$, that minimises a cost
-function, ${\integralCostFunc: \stateDomain \times \controlDomain \rightarrow \R}$,
-in expectation over the stochastic dynamics,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-soc-problem-statement}
-\min_{\controlTraj} &\E_{\state(\cdot), \control(\cdot) \mid \state(0), \policy}\left[ \terminalCostFunc(\state(T))
-+ \int_{t_0}^{T} \integralCostFunc(\state(t), \control(t), t) \right] \\
-\text{s.t.} \quad &\state(t) = \dynamicsFunc(\state(t), \control(t)) \text{d}t + \epsilon_\modeInd,
-\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon})
-\end{align}
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+squarednode/.style={rectangle, fill=teal!5, width=2cm},
+blanknode/.style={rectangle, width=2cm}
+]
+
+\node[squarednode, align=center] (agent)                             {Controller / Agent\\$\pi(\state_t, t)$};
+\node[blanknode, align=center] (control)    [below right=of agent]  {Control / Action $\control_t$};
+\node[blanknode, align=left] (cost)      [below left=of agent]   {Cost / negative reward $\costFunc(\state_t, \control_t)$\\Next state $\state_{t+1}$};
+\node[squarednode, align=center] (env)       [below left=of control] {System / Environment\\$f(\state_t, \control_t)$};
+
+\draw[--] (agent) -| (control);
+\draw[->] (control) |- (env);
+\draw[--] (env) -| (cost);
+\draw[->] (cost) |- (agent);
+\end{tikzpicture}
+\caption{Illustration of a \acrfull{mdp} through the lens of optimal control. The controller (agent) uses all past knowledge, absorbed into the previous state $\state_t$ (Markov property), to decide which control (action) $\control_t$ to execute. It then observes the next state $\state_{t+1}$ and the cost (negative reward) associated with the state transtion. The cost (reward) function is assumed to be known. The agent's goal is to minimise the cumulative cost, or to maximise the cumulative reward.}
+\label{fig-mdp}
+\end{figure}
 #+END_EXPORT
-*Policy Space* The policy space, $\policySpace$, defines the set of policies which optimisation is performed over,
-i.e. it is the optimisation domain.
-In this dissertation, a policy, $\policy$, shall be a conditional distribution over $\controlDomain$.
-In (deterministic) optimal control the policy space is usually given by open loop policies, i.e.
-only conditioned on time $\policy(\control \mid t)$.
-In contrast, SOC (and RL) are mainly interested in feedback policies, where the controls are conditioned on both time and
-state, i.e. $\policy(\control(t) \mid t, \state(t))$
-\footnote{for notational conciseness dependency on time is assumed from here on, i.e.
-$\policy(\control(t) \mid t, \state(t) = \policy(\control(t) \mid \state(t))$}.
-A special case are deterministic policies, given by $\policy(\control \mid \state) = \delta_{\control=f(\state)}$,
-where $\delta$ is the dirac delta distribution and $f$ is a function.
+This discrete time setting can be modelled as a \acrfull{mdp}, as seen in cref:fig-mdp.
+In the \acrshort{mdp} framework a controller is referred to as an agent, the control is referred to as an action,
+and the dynamical system is referred to as the environment.
+Further to this, the goal is to maximise the cumulative reward, as opposed to minimising the cumulative cost.
+Slight manipulation of the objective enables cost and reward functions to be interchanged.
+The key idea is that all past information is represented by the current state $\state_t$,
+which is known as the Markov property.
+In this dissertation most work is formulated through the lens of optimal control.
+However, the controller is sometimes referred to as the agent and the system is often referred to
+as the environment.
 
-*** Dynamic Programming
-Approximate dynamic programming encompasses a large class of methods that given a controller $\pi$,
-approximate the value function $J_{\pi}(\state)$ for each state $\state$ with a parameterised function.
+*** Problem Statement label:problem-statement-main :noexport:
+The objective function in cref:eq-objective is not of primary interest in this work.
+The novelty of this work arises from remaining in a desired dynamics mode $\desiredMode$.
+#+begin_export latex
+Formally, a mode remaining controlled system is defined as follows.
+\begin{definition}[Mode Remaining] \label{def-mode-remaining-main}
+Let $\modeInd$ denote a dynamics mode, defined by its state domain $\mode{\stateDomain} \subseteq \stateDomain$.
+Given an initial state $\state_0 \in \mode{\stateDomain}$, and a controller $\policy \in \Pi$,
+the controlled system is said to be mode-remaining iff:
+\begin{align} \label{eq-mode-remaining-def-main}
+\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+&\in \mode{\stateDomain} \quad \forall \timeInd
+\end{align}
+\end{definition}
+#+end_export
+#+begin_export latex
+\begin{myquote}
+\textbf{Mode remaining navigation problem}
+Given this definition of a mode remaining controlled system, this dissertation seeks to solve,
+\begin{subequations} \label{eq-main-problem}
+\begin{align}
+\min_{\policy \in \Pi} \quad &J_{\pi}(\state_0) \\
+\text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\bm\epsilon},
+\quad \modeVar(\state_{\timeInd}) = \modeInd \\
+%&\text{\cref{eq-mode-remaining-def-explore}} \\
+&\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
+\in \desiredStateDomain \\
+%\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+%&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+&\state_{0} = \state_0 \\
+&\state_\TimeInd = \targetState,
+\end{align}
+\end{subequations}
+where $\targetState$ denotes the target state and $J_{\pi}(\state_0)$ is the objective from \cref{eq-objective}.
+\end{myquote}
+This is a constrained \acrfull{soc} problem with a terminal boundary condition.
+#+end_export
 
-Differential dynamic programming (DDP) citep:jacobsonDifferential1970, iteratively constructs
-local Taylor series approximations of the dynamics and cost to locally approximate the
-value function. As such, it exploits the temporal structure to obtain a closed-loop controller.
-The extension of DDP to stochastic dynamics (SDDP) citep:theodorouStochastic2010, considers
-expected costs under Gaussian disturbances.
-Iterative linear quadratic Gaussian (iLQG) control citep:todorovGeneralized2005 deploys
-a similar approach to DDP but instead
-uses a linear approximation of the dynamics --- trading in accuracy for a computational speed-up.
-Guided policy search cite:levineGuided2013
-
-\todo{Add details on LQG etc here}
-*** Trajectory Optimisation
+*** Learning in Multimodal Dynamical Systems :noexport:
 **** maths :ignore:
-#+BEGIN_EXPORT latex
-\newcommand{\timeInd}{\ensuremath{t}}
-\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
-
-\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
-\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
-
-\newcommand{\dynamicsFunc}{\ensuremath{f}}
-\newcommand{\costFunc}{\ensuremath{c}}
-\newcommand{\constraintsFunc}{\ensuremath{g}}
-
-\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
-\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
-#+END_EXPORT
-
-**** intro :ignore:
-Formally, trajectory optimisation seeks to find the state and
-control trajectories,
-$\stateTraj = \{\state(\timeInd) \in \stateDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
-and
-$\controlTraj = \{\control(\timeInd) \in \controlDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
-respectively,
-that minimise some cost function $\costFunc$, whilst satisfying constraints $\constraintsFunc$,
-and boundary conditions.
-The trajectory optimisation problem is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-traj-opt}
-\min_{\state(t), \control(t)} &\int_{t_0}^{t_f} \costFunc(\state(t), \control(t)) \text{d}t \quad \forall t \\
-\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}}  \\
-&\constraintsFunc(\mathbf{x}(t)) \leq 0 \quad \forall t \\
-&\state(t_0) = \state_0  \quad \state(t_f) = \state_f
-\end{align}
-#+END_EXPORT
-Solving this problem is often computationally expensive and
-is an active area of research.
-Many (approximate) solutions have been introduced in the literature,
-that seek to balance the computational complexity
-(for real-time control) and accuracy trade-off differently
-cite:bettsSurvey1998.
-This section briefly reviews several approaches to trajectory
-optimisation that can be used with learned dynamics models.
-It then provides an in-depth review of the control-as-inference
-framework, which is used in Chapter ref:chap-traj-opt.
-
-*Iterative Linear Quadratic Regulator (iLQR)*
-can be used to generate trajectories for non-linear systems by
-iteratively approximating
-the dynamics to be linear around a nominal trajectory and optimising for the controls.
-iLQR works well for quadratic cost functions but can be used with any cost function by approximating the cost
-function with a second order Taylor expansion. However, in this case iLQR is susceptible to converging
-to terrible (local) optima if the true cost function is highly non-convex.
-cite:boedeckerApproximate2014 present a real-time iLQR controller
-based on sparse GPs.
-cite:rohrProbabilistic2021 propose a novel LQR
-controller synthesis for
-linearised GP dynamics that yields robust controllers with
-respect to a probabilistic stability margin.
-In cite:marcoAutomatic2016 they parameterise the weight matrices
-$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
-and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
-
-*Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
-iLQR to a stochastic setting, where the process
-noise is assumed to be Guassian.
-cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
-
-*Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
-the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
-cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
-over the entire control sequence.
-Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
-and the quadratic model is inaccurate.
-\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
-DDP solutions provides greater accuracy than iLQG/iLQR but
-at the cost
-of increased computational time cite:tassaSynthesis2012.
-The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
-DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
-
-cite:panProbabilistic2014 present a probabilistic trajectory optimisation
-framework for systems with unknown dynamics called probabilistic
-differential dynamic programming (PDDP).
-It extends DDP to explicitly account
-for uncertainty in dynamics modelled using gaussian processes.
-In contrast to typical gradient based policy search methods, PDDP does not
-require a policy parameterisation as it learns a locally optimal,
-time-varying control policy.
-Based on the second-order local approximation of the value function,
-PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
-
-*Path Integral*  control is a method for developing optimal controls based on stochastic
-sampling of trajectories cite:theodorouGeneralized2010.
-This work was originally limited to control affine systems cite:williamsModel2017
-but has since been extended to general nonlinear
-dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
-
-**** Trajectory Optimisation as Probabilistic Inference :noexport:
-***** maths :ignore:
-#+BEGIN_EXPORT latex
-\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
-\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
-\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
-\newcommand{\controlDist}{\ensuremath{p(\control_\timeInd \mid \state_\timeInd)}}
-
-\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
-\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
-\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
-
-\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
-\newcommand{\monotonicFunc}{\ensuremath{f_{\text{mon}}}}
-
-\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
-\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
-
-\newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
-
-\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
-\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
-
-\newcommand{\temperature}{\ensuremath{\gamma}}
-#+END_EXPORT
-***** intro :ignore:
-The second trajectory algorithm optimisation in Chapter ref:chap-traj-opt
-builds on top of the control-as-inference framework
-citep:toussaintProbabilistic2006,kappenOptimal2013,
-which frames optimal control as probabilistic inference.
-Translating optimal control to inference can be viewed as a subset of probabilistic numerics
-citep:hennigProbabilistic2015, where statistical methods are used to solve numerical problems,
-providing uncertainty quantification, regularisation and faster convergence.
-
-Control-as-inference has been considered since the beginning of modern optimal control due to
-the concurrent development of LQR, Kalman filtering and LQG citep:kalmanNew1960,hoBayesian1964.
-Recent work on control-as-inference stems from path integral cite:kappenOptimal2013,williamsModel2017
-
-cite:rawlikStochastic2013
-
-cite:toussaintRobot2009 formulate trajectory optimisation as
-approximate inference and derive a local approximation
-where the maximum likelihood solution returns the deterministic optimal trajectory, and the local Gaussian belief
-approximation is equivalent to the LQG perturbation model around the optimal trajectory.
-cite:levineReinforcement2018 followed a similar approach formulating RL as probabilistic inference
-and showing how different approximate inference algorithms instantiated different popular RL algorithms.
-
-
-Recent work by cite:watsonStochastic2021 has formulated
-stochastic optimal control as input estimation
-
-***** Cost Functions as Likelihoods
-\newline
-To formulate optimal control as probabilistic inference
-it is first embedded into a graphical model (see Figure ref:fig-basic-control-graphical-model).
-The joint probability model (over a trajectory) is augmented with an
-additional variable to encode the notion of cost (or reward)
-over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
-The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
-time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
-The likelihood distribution can then be formulated
-by mapping the negative
-cost through a monotonically increasing function $\monotonicFunc$,
-giving the likelihood,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-monotonicOptimalityLikelihood}
-\optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
-\end{align}
-#+END_EXPORT
-A common (and convenient) approach is to formulate
-the likelihood using an exponential transform of
-the cost. This results in a Boltzmann distribution where the
-inverse temperature, $\temperature$, is used to scale the cost,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-exponentialOptimalityLikelihood}
-\optimalProb &\propto \exp ( -\temperature\costFunc(\state_\timeInd, \control_\timeInd)).
-\end{align}
-#+END_EXPORT
-The resulting negative log-likelihood is an affine transformation of the cost, which preserves convexity.
-#+BEGIN_EXPORT latex
-\todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
-\begin{myquote}
-As shown in \cite{okadaVariational2020}, the choice of monotonic function,
-$\monotonicFunc$,
-leads to the inference algorithm resembling different well-known algorithms.
-For example, selecting $\monotonicFunc$ to be the exponential function,
-\begin{align} \label{eq-}
-\optimalProb &\propto \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
-\end{align}
-leads to the algorithm resembling Model Predictive Path Integral (MPPI)
-\cite{williamsModel2017,williamsInformation2017}, whilst
-selecting $\monotonicFunc$ to as,
-\begin{align} \label{eq-}
-\optimalProb &\propto \mathbb{I}\left[( \costFunc(\state_\timeInd, \control_\timeInd)) \leq \costFunc_{\text{thd}} \right]
-\end{align}
-recovers an algorithm resembling the Cross Entropy Method (CEM).
-\end{myquote}
-#+END_EXPORT
-
-***** Joint Probability Model
-\newline
-Given the "cost" likelihood
-(cref:eq-monotonicOptimalityLikelihood)
-the joint probability for an optimal trajectory (i.e.
-for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$), is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-traj-opt-joint-dist}
-\jointDist =
-& \startStateDist \underbrace{\terminalCostDist}_{\text{Terminal Cost}}  \\
-&\prod_{\timeInd=1}^{\TimeInd-1}
-\underbrace{\optimalProb}_{\text{Cost}}
-\underbrace{\transitionDist}_{\text{Dynamics}}
-\underbrace{\controlDist}_{\text{Controller}} \nonumber
-\end{align}
-#+END_EXPORT
-where $\controlDist$ denotes the controller or policy.
-In the case of RL the policy is parameterised with parameters, $\theta$,
-whereas the control setting is usually interested in
-optimising the states and controls directly.
-The object of interest in this model is the distribution over the control, $\control_\timeInd$,
-conditioned on the state, $\state_\timeInd$, and all future time steps being optimal,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1) =
-\frac{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)
-\controlDist p(\state_\timeInd)}{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)
-p(\state_\timeInd)}.
-\end{align}
-#+END_EXPORT
-The distributions $p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)$
-and
-$p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)$,
-can be obtained via recursive message passing,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)
-&= p(\state_\timeInd)
-\prod_{\timeInd}^{\TimeInd-1}
-\int \int
-\optimalProb p(\state_{\timeInd+1} \mid \state_{\timeInd}, \control_{\timeInd}) \controlDist
-\text{d}\state_{\timeInd+1} \text{d}\control_{\timeInd+1} \nonumber \\
-p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd)
-&=
-\int p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)
-p(\control_\timeInd \mid \state_\timeInd)
-\text{d}\control_{\timeInd}.
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\todo[inline]{Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
-\begin{align} \label{eq-}
-p(\optimalVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})
-= \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \optimalDist
-p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\state_\timeInd) \mid \state_\timeInd, \control_\timeInd)
-\controlDist
-\end{align}
-\begin{align} \label{eq-}
-\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \dynamicsFunc(\state_{\timeInd-1}), \control_\timeInd)) \\
-\end{align}
-}
-#+END_EXPORT
-
-***** graphical model :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}[t]
-  \centering
-  \begin{subfigure}{.45\textwidth}
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[obs] (x1) {$\state_1$};
-      \node[latent, right=of x1] (x2) {$\state_2$};
-      \node[latent, right=of x2] (x3) {$\state_3$};
-      \node[latent, right=of x3] (x4) {$\state_4$};
-
-      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
-      \node[latent, right=of u1] (u2) {$\control_2$};
-      \node[latent, right=of u2] (u3) {$\control_3$};
-
-      \draw[post] (x1)--(x2);
-      \draw[post] (x2)--(x3);
-      \draw[post] (x3)--(x4);
-
-      \draw[post] (x1)--(u1);
-      \draw[post] (x2)--(u2);
-      \draw[post] (x3)--(u3);
-
-      \draw[post] (u1)--(x2);
-      \draw[post] (u2)--(x3);
-      \draw[post] (u3)--(x4);
-    \end{tikzpicture}
-    %}
-  \caption{Graphical model with states and controls.}
-\label{fig-basic-control-graphical-model}
-\end{subfigure}
-\begin{subfigure}{.45\textwidth}
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[obs] (x1) {$\state_1$};
-      \node[latent, right=of x1] (x2) {$\state_2$};
-      \node[latent, right=of x2] (x3) {$\state_3$};
-      \node[latent, right=of x3] (x4) {$\state_4$};
-
-      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
-      \node[latent, right=of u1] (u2) {$\control_2$};
-      \node[latent, right=of u2] (u3) {$\control_3$};
-
-      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
-      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
-      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
-
-      \draw[post] (x1)--(x2);
-      \draw[post] (x2)--(x3);
-      \draw[post] (x3)--(x4);
-
-      \draw[post] (x1)--(u1);
-      \draw[post] (x2)--(u2);
-      \draw[post] (x3)--(u3);
-
-      \draw[post] (u1)--(x2);
-      \draw[post] (u2)--(x3);
-      \draw[post] (u3)--(x4);
-
-      \draw[->] (u1)--(o1);
-      \draw[->] (x1) to [out=100,in=240] (o1);
-      \draw[->] (u2)--(o2);
-      \draw[->] (x2) to [out=100,in=240] (o2);
-      \draw[->] (u3)--(o3);
-      \draw[->] (x3) to [out=100,in=240] (o3);
-    \end{tikzpicture}
-    %}
-  \caption{Graphical model with optimality variable.}
-\label{fig-augmented-control-graphical-model}
-\end{subfigure}
-\caption{Graphical models of control formulated as inference.}
-\label{fig-control-graphical-model}
-\end{figure}
-#+END_EXPORT
-
-***** Variational Inference
-In variational inference the distribution over the latent variables
-$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
-is approximated with another, potentially simpler
-(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
-In this case, the aim is to approximate the distribution over the optimal policy,
-$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd}=1)$.
-Introducing the variational distribution,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood
-&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
-&= \text{log} \E_\trajectoryVarDist \left[
-\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
-\right] \\
-&\geq \E_\trajectoryVarDist \left[
-\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
-\frac{\controlVarDist}{\controlDist} \right] \\
-&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
-- \text{log}\controlVarDist\right]
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood &\geq
- \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
-- \text{log}\controlVarDist\right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
-- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
-\end{align}
-#+END_EXPORT
-
-** Model-Based Control
-*** Trajectory Optimisation
-**** intro :ignore:
-Formally, trajectory optimisation seeks to find the state and
-control trajectories,
-$\stateTraj = \{\state(\timeInd) \in \stateDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
-and
-$\controlTraj = \{\control(\timeInd) \in \controlDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
-respectively,
-that minimise some cost function $\costFunc$, whilst satisfying constraints $\constraintsFunc$,
-and boundary conditions.
-The trajectory optimisation problem is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-traj-opt}
-\min_{\state(t), \control(t)} &\int_{t_0}^{t_f} \costFunc(\state(t), \control(t)) \text{d}t \quad \forall t \\
-\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}}  \\
-&\constraintsFunc(\mathbf{x}(t)) \leq 0 \quad \forall t \\
-&\state(t_0) = \state_0  \quad \state(t_f) = \state_f
-\end{align}
-#+END_EXPORT
-**** Trajectory Optimisation as Probabilistic Inference
-***** maths :ignore:
-#+BEGIN_EXPORT latex
-\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
-\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
-\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
-\newcommand{\controlDist}{\ensuremath{p(\control_\timeInd \mid \state_\timeInd)}}
-
-\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
-\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
-\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
-
-\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
-\newcommand{\monotonicFunc}{\ensuremath{f_{\text{mon}}}}
-
-\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
-\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
-
-\newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
-
-\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
-\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
-
-\newcommand{\temperature}{\ensuremath{\gamma}}
-#+END_EXPORT
-***** intro :ignore:
-The second trajectory algorithm optimisation in Chapter ref:chap-traj-opt
-builds on top of the control-as-inference framework
-citep:toussaintProbabilistic2006,kappenOptimal2013,
-which frames optimal control as probabilistic inference.
-Translating optimal control to inference can be viewed as a subset of probabilistic numerics
-citep:hennigProbabilistic2015, where statistical methods are used to solve numerical problems,
-providing uncertainty quantification, regularisation and faster convergence.
-
-Control-as-inference has been considered since the beginning of modern optimal control due to
-the concurrent development of LQR, Kalman filtering and LQG cite:kalmanNew1960,hoBayesian1964.
-Recent work on control-as-inference stems from path integral cite:kappenOptimal2013,williamsModel2017
-
-cite:rawlikStochastic2013
-
-cite:toussaintRobot2009 formulate trajectory optimisation as
-approximate inference and derive a local approximation
-where the maximum likelihood solution returns the deterministic optimal trajectory, and the local Gaussian belief
-approximation is equivalent to the LQG perturbation model around the optimal trajectory.
-cite:levineReinforcement2018 followed a similar approach formulating RL as probabilistic inference
-and showing how different approximate inference algorithms instantiated different popular RL algorithms.
-
-
-Recent work by cite:watsonStochastic2021 has formulated
-stochastic optimal control as input estimation
-
-***** Cost Functions as Likelihoods
-To formulate optimal control as probabilistic inference
-it is first embedded into a graphical model (see Figure ref:fig-basic-control-graphical-model).
-The joint probability model (over a trajectory) is augmented with an
-additional variable to encode the notion of cost (or reward)
-over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
-The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
-time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
-The likelihood distribution can then be formulated
-by mapping the negative
-cost through a monotonically increasing function $\monotonicFunc$,
-giving the likelihood,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-monotonicOptimalityLikelihood}
-\optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
-\end{align}
-#+END_EXPORT
-A common (and convenient) approach is to formulate
-the likelihood using an exponential transform of
-the cost. This results in a Boltzmann distribution where the
-inverse temperature, $\temperature$, is used to scale the cost,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-exponentialOptimalityLikelihood}
-\optimalProb &\propto \exp ( -\temperature\costFunc(\state_\timeInd, \control_\timeInd)).
-\end{align}
-#+END_EXPORT
-The resulting negative log-likelihood is an affine transformation of the cost, which preserves convexity.
-#+BEGIN_EXPORT latex
-\todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
-\begin{myquote}
-As shown in \cite{okadaVariational2020}, the choice of monotonic function,
-$\monotonicFunc$,
-leads to the inference algorithm resembling different well-known algorithms.
-For example, selecting $\monotonicFunc$ to be the exponential function,
-\begin{align} \label{eq-}
-\optimalProb &\propto \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
-\end{align}
-leads to the algorithm resembling Model Predictive Path Integral (MPPI)
-\cite{williamsModel2017,williamsInformation2017}, whilst
-selecting $\monotonicFunc$ to as,
-\begin{align} \label{eq-}
-\optimalProb &\propto \mathbb{I}\left[( \costFunc(\state_\timeInd, \control_\timeInd)) \leq \costFunc_{\text{thd}} \right]
-\end{align}
-recovers an algorithm resembling the Cross Entropy Method (CEM).
-\end{myquote}
-#+END_EXPORT
-
-***** Joint Probability Model
-Given the "cost" likelihood
-(cref:eq-monotonicOptimalityLikelihood)
-the joint probability for an optimal trajectory (i.e.
-for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$), is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-traj-opt-joint-dist}
-\jointDist =
-& \startStateDist \underbrace{\terminalCostDist}_{\text{Terminal Cost}} \\
-&\prod_{\timeInd=1}^{\TimeInd-1}
-\underbrace{\optimalProb}_{\text{Cost}}
-\underbrace{\transitionDist}_{\text{Dynamics}}
-\underbrace{\controlDist}_{\text{Controller}}
-\end{align}
-#+END_EXPORT
-where $\controlDist$ denotes the policy.
-In the case of RL the policy is parameterised with parameters, $\theta$, but in control we are usually interested in
-optimising the states and controls directly.
-The object of interest in this model is the distribution over the control, $\control_\timeInd$,
-conditioned on the state, $\state_\timeInd$, and all future time steps being optimal,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1) =
-\frac{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)
-\controlDist p(\state_\timeInd)}{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)
-p(\state_\timeInd)}.
-\end{align}
-#+END_EXPORT
-The distributions $p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)$,
-$p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd)$,
-$p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd, \control_\timeInd)$ and
-$p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd)$
-can be obtained via recursive message passing,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd) =
-\prod_{\timeInd+1}^{\TimeInd-1}
-\int \int \optimalProb p(\state_\timeInd \mid \state_{\timeInd-1}, \control_{\timeInd-1}) \controlDist \text{d}\state_{\timeInd} \text{d}\control_{\timeInd}.
-\end{align}
-#+END_EXPORT
-#+BEGIN_EXPORT latex
-\todo[inline]{Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
-\begin{align} \label{eq-}
-p(\optimalVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})
-= \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \optimalDist
-p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\state_\timeInd) \mid \state_\timeInd, \control_\timeInd)
-\controlDist
-\end{align}
-\begin{align} \label{eq-}
-\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \dynamicsFunc(\state_{\timeInd-1}), \control_\timeInd)) \\
-\end{align}
-}
-#+END_EXPORT
-
-***** graphical model :ignore:
-#+BEGIN_EXPORT latex
-\begin{figure}[t]
-  \centering
-  \begin{subfigure}{.45\textwidth}
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[obs] (x1) {$\state_1$};
-      \node[latent, right=of x1] (x2) {$\state_2$};
-      \node[latent, right=of x2] (x3) {$\state_3$};
-      \node[latent, right=of x3] (x4) {$\state_4$};
-
-      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
-      \node[latent, right=of u1] (u2) {$\control_2$};
-      \node[latent, right=of u2] (u3) {$\control_3$};
-
-      \draw[post] (x1)--(x2);
-      \draw[post] (x2)--(x3);
-      \draw[post] (x3)--(x4);
-
-      \draw[post] (x1)--(u1);
-      \draw[post] (x2)--(u2);
-      \draw[post] (x3)--(u3);
-
-      \draw[post] (u1)--(x2);
-      \draw[post] (u2)--(x3);
-      \draw[post] (u3)--(x4);
-    \end{tikzpicture}
-    %}
-  \caption{Graphical model with states and controls.}
-\label{fig-basic-control-graphical-model}
-\end{subfigure}
-\begin{subfigure}{.45\textwidth}
-  \centering
-%   \resizebox{0.8\columnwidth}{!}{
-    \begin{tikzpicture}[
-      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
-      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
-      ]
-      \node[obs] (x1) {$\state_1$};
-      \node[latent, right=of x1] (x2) {$\state_2$};
-      \node[latent, right=of x2] (x3) {$\state_3$};
-      \node[latent, right=of x3] (x4) {$\state_4$};
-
-      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
-      \node[latent, right=of u1] (u2) {$\control_2$};
-      \node[latent, right=of u2] (u3) {$\control_3$};
-
-      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
-      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
-      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
-
-      \draw[post] (x1)--(x2);
-      \draw[post] (x2)--(x3);
-      \draw[post] (x3)--(x4);
-
-      \draw[post] (x1)--(u1);
-      \draw[post] (x2)--(u2);
-      \draw[post] (x3)--(u3);
-
-      \draw[post] (u1)--(x2);
-      \draw[post] (u2)--(x3);
-      \draw[post] (u3)--(x4);
-
-      \draw[->] (u1)--(o1);
-      \draw[->] (x1) to [out=100,in=240] (o1);
-      \draw[->] (u2)--(o2);
-      \draw[->] (x2) to [out=100,in=240] (o2);
-      \draw[->] (u3)--(o3);
-      \draw[->] (x3) to [out=100,in=240] (o3);
-    \end{tikzpicture}
-    %}
-  \caption{Graphical model with optimality variable.}
-\label{fig-augmented-control-graphical-model}
-\end{subfigure}
-\caption{Graphical models of control formulated as inference.}
-\label{fig-control-graphical-model}
-\end{figure}
-#+END_EXPORT
-
-***** Variational Inference
-In variational inference the distribution over the latent variables
-$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
-is approximated with another, potentially simpler
-(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
-In this case, the aim is to approximate the distribution over the optimal policy,
-$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd}=1)$.
-Introducing the variational distribution,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood
-&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
-&= \text{log} \E_\trajectoryVarDist \left[
-\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
-\right] \\
-&\geq \E_\trajectoryVarDist \left[
-\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
-\frac{\controlVarDist}{\controlDist} \right] \\
-&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
-- \text{log}\controlVarDist\right]
-\end{align}
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-}
-\text{log} \marginalLikelihood &\geq
- \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
-- \text{log}\controlVarDist\right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
-- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
-&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
-+ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
-\end{align}
-#+END_EXPORT
-
-*** Literature Review (iLQR/iLQG/DDP/MPPI for Trajectory Generation)
-*Iterative LQR/LQG* can be used to generate trajectories for non-linear systems by iteratively approximating
-the dynamics to be linear around a nominal trajectory and optimising for the controls.
-iLQR works well for quadratic cost functions and can be used with any cost function by approximating the cost
-function with a second order Taylor expansion. However, in this case iLQR is susceptible to converging
-to terrible (local) optima if the true cost function is highly non-convex.
-
-cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
-
-cite:boedeckerApproximate2014 present a real-time iLQR based on sparse GPs.
-
-cite:rohrProbabilistic2021 propose a novel controller synthesis for
-linearised GP dynamics that yields robust controllers with
-respect to a probabilistic stability margin.
-
-In cite:marcoAutomatic2016 they parameterise the weight matrices
-$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
-and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification
-by adapting the parameters.
-
-*Differential Dynamic Programming* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
-the main difference being that only a /first-order/ approximation of the dynamics is used, instead of /second-order/.
-cite:liaoAdvantages1992 show that DDP is comparable to a full Newton step for the entire control
-sequence. Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
-and the quadratic model is inaccurate.
-\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
-
-The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
-
-DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
-
-
-cite:panProbabilistic2014 present a probabilistic trajectory optimisation
-framework for systems with unknown dynamics called probabilistic
-differential dynamic programming (PDDP).
-It extends differential dynamic programming to explicitly account
-for uncertainty in the learned dynamics modelled using gaussian processes.
-In contrast to typical gradient based policy search methods, PDDP does not
-require a policy parameterisation as it learns a locally optimal,
-time-varying control policy.
-Based on the second-order local approximation of the value function,
-PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
-
-*Path Integral*  control is a method for developing optimal controls based on stochastic
-sampling of trajectories cite:theodorouGeneralized2010.
-This work was originally limited to control affine systems cite:williamsModel2017
-but has since been extended to general nonlinear
-dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
-
-** Learning in Multimodal Dynamical Systems
-*** maths :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\timeInd}{\ensuremath{t}}
 \newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
@@ -4558,8 +4564,8 @@ dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
 \renewcommand{\allOutput}{\ensuremath{{\Delta\state}_{1:\TimeInd}}}
 #+END_EXPORT
 
-*** Motivation label:to_motivation :ignore:
-*** intro :ignore:
+**** Motivation label:to_motivation :ignore:
+**** intro :ignore:
 # As this work is interested in learning and control in multimodal dynamical systems,
 # a primary interest is correctly /identifying/ the underlying dynamics modes.
 # That is, ensuring that the learned dynamics modes accurately model the true underlying dynamics modes.
@@ -4592,7 +4598,7 @@ The hashed box indicates a subset of the environment that has not been observed.
 \end{figure}
 #+END_EXPORT
 
-*** intro :ignore:
+**** intro :ignore:
 This dissertation is motivated by learning representations of multimodal dynamical systems
 that can be exploited by model-based control algorithms.
 Probabilistic models provide the capability of constructing mathematical
@@ -4690,7 +4696,7 @@ a quadratic integral control cost term regularised the controls to encode the no
 # #+END_EXPORT
 \todo{update fig-traj-opt-baseline with trajectories which don't use nominal mean function so that they deviate in the region with high epistemic uncertainty.}
 
-**** latent spaces :ignore:
+***** latent spaces :ignore:
 \newline
 
 The introduction of /latent variables/ into probabilistic models is a key component providing them with interesting
@@ -4711,7 +4717,7 @@ that are rich with information regarding how a system switches between its under
 #    - rich with information regarding the mode switching behaviour.
    # - this could be achieved by providing handles for encoding informative domain knowledge, in turn, constraining the set of admissible functions,
 
-*** Intro :ignore:
+**** Intro :ignore:
 Methods for learning probabilistic multimodal transition dynamics have been proposed.
 cite:moerlandLearning2017 use deep generative models, namely a conditional \acrfull{vae},
 to learn multimodal transition dynamics for \acrfull{mbrl}.
@@ -4741,7 +4747,7 @@ their method would assign new dynamics modes at each oscillation.
 In contrast, we seek to learn only the two true dynamics modes and turn them
 "on" and "off" in different regions of the input space.
 
-*** Citations to include :ignore:
+**** Citations to include :ignore:
 From deep structured mixture of expets
 
 products of experts
@@ -4759,7 +4765,7 @@ Gaussian process state-space models
 state-space models
 cite:doerrProbabilistic2018,schonSystem2011
 cite:eleftheriadisIdentification2017
-*** Mixtures of Gaussian Process Experts :noexport:
+**** Mixtures of Gaussian Process Experts :noexport:
 Gaussian processes (GPs) are the state-of-the art approach for Bayesian nonparametric regression.
 However, they suffer from two important limitations.
 Firstly, the covariance function is commonly assumed to be stationary
@@ -5003,7 +5009,7 @@ We then test our model on the motorcycle data set and compare it to a sparse var
 # We then test our model on the motorcycle data set and compare its performance
 # to a sparse variational GP.
 
-*** On Mixtures of Gaussian Process Experts and their Identifiability :noexport:
+**** On Mixtures of Gaussian Process Experts and their Identifiability :noexport:
 Gaussian processes are the state-of-the art approach for Bayesian nonparametric regression
 and they provide a powerful mechanism for encoding expert domain knowledge.
 As such, \acrshort{mogpe} methods are a promising direction for modelling multimodal systems.
@@ -5049,7 +5055,7 @@ The probability mass function over the expert indicator variable is referred to 
 indicates which expert governs the model at a given input location.
 See cite:yukselTwenty2012 for a survey of \acrshort{moe} methods.
 
-**** Nonparametric Mixtures of Experts :ignore:
+***** Nonparametric Mixtures of Experts :ignore:
 
 \newline
 *Nonparametric Mixtures of Experts*
@@ -5140,7 +5146,7 @@ cref:fig-graphical-model-npmoe shows the graphical model representation of this 
 # Note that the expectation over each experts' latent function in cref:eq-np-moe-marginal-likelihood
 # is inside the marginalisation of the expert indicator variable $\modeVar$.
 
-**** npmoe graphical model :ignore:noexport:
+***** npmoe graphical model :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{figure}[t]
   \centering
@@ -5253,7 +5259,7 @@ governed by these probabilities.}
 #+END_EXPORT
 
 
-**** Gating Networks and Identifiability
+***** Gating Networks and Identifiability
 # *** Gating Networks :ignore:
 # \newline
 # *Gating Networks*
@@ -5424,7 +5430,7 @@ more accurately model the data distribution.
 # The gating network is of particular importance in this work as it models how the dynamics switch
 # between modes over the input space.
 
-**** Gating Networks and Identifiability
+***** Gating Networks and Identifiability
 # *** Gating Networks :ignore:
 # \newline
 # *Gating Networks*
@@ -5523,6 +5529,857 @@ This work formulates a gating network aimed at,
 # in this work.
 # The gating network is of particular importance in this work as it models how the dynamics switch
 # between modes over the input space.
+
+*** Optimal Control :noexport:
+**** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
+\newcommand{\integralCostFunc}{\ensuremath{C}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+
+\newcommand{\policySpace}{\ensuremath{\Pi}}
+\newcommand{\policy}{\ensuremath{\pi}}
+#+END_EXPORT
+**** intro :ignore:
+
+Optimal control is a branch of mathematical optimisation that seeks to find a set of controls
+over a time period $t \in [t_0, t_f]$ that optimises an objective function $J_{\pi}(\x)$.
+The objective function might be formulated to solve a particular task or to make the dynamical
+system behave in a certain way.
+From Donald E. Kirk,
+#+BEGIN_EXPORT latex
+\begin{displayquote}
+Optimal control theory is the science of maximising returns from and minimising the costs of the operation
+of physical, social, and economic processes.
+\end{displayquote}
+#+END_EXPORT
+
+The controller space, $\policySpace$, defines the set of controllers over which optimisation is performed over,
+i.e. it is the optimisation domain.
+
+In this dissertation, a policy, $\policy$, shall be a conditional distribution over $\controlDomain$.
+In (deterministic) optimal control the policy space is usually given by open loop policies, i.e.
+only conditioned on time $\policy(\control \mid t)$.
+In contrast, SOC (and RL) are mainly interested in feedback policies, where the controls are conditioned on both time and
+state, i.e. $\policy(\control(t) \mid t, \state(t))$
+\footnote{for notational conciseness dependency on time is assumed from here on, i.e.
+$\policy(\control(t) \mid t, \state(t) = \policy(\control(t) \mid \state(t))$}.
+A special case are deterministic policies, given by $\policy(\control \mid \state) = \delta_{\control=f(\state)}$,
+where $\delta$ is the dirac delta distribution and $f$ is a function.
+
+*Optimal control*
+Formally, the problem of optimal control is summarised as follows.
+Given a dynamical system (Eq. \ref{eq-unimodal-dynamics-cont}) with
+states, $\state (t) \in \stateDomain \subseteq \R^{\StateDim}$, and
+controls, $\control(t) \in \controlDomain \subseteq \R^{\ControlDim}$,
+find a set of controls, $\controlTraj$,
+over a time period, $t \in [t_0, t_f]$, that optimises an objective function $J$.
+Typically, $\costFunc : \stateDomain \times \controlDomain \rightarrow \R$
+Typically this objective function is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-objective}
+J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \gamma^{\timeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\mid \state_0=\state \right] \\
+&\text{s.t.} \quad \state_{\timeInd+1} = f(\state_{\timeInd}, \pi(\state_{\timeInd+1}, \timeInd), \omega_{\timeInd}),
+\end{align}
+#+END_EXPORT
+where $\gamma \in [0, 1)$ is a discount factor, ensuring infinite sums remain finite and well-defined.
+
+In practice, systems are often corrupted by process noise, or are not completely known, so the resulting
+dynamical system is actually stochastic.
+As such, the definition above must be adapted for stochastic systems.
+In stochastic systems, a control sequence is not associated with a specific
+trajectory, but rather a distribution over trajectories.
+The resulting problem is known as stochastic optimal control (SOC).
+
+**** Stochastic Optimal Control
+This section reviews the relevant background on SOC,
+in particular, trajectory optimisation algorithms for controlling
+stochastic systems that have been learned from observations.
+
+Let us formalise the stochastic optimal control problem here.
+Given a stochastic, fully-observed, nonlinear system,
+with transition dynamics,
+${\dynamicsFunc: \stateDomain \times \controlDomain \rightarrow \stateDomain}$,
+SOC seeks to find the control sequence (trajectory), $\controlTraj$, over a horizon,
+$\TimeInd$, that minimises a cost
+function, ${\integralCostFunc: \stateDomain \times \controlDomain \rightarrow \R}$,
+in expectation over the stochastic dynamics,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-soc-problem-statement}
+\min_{\controlTraj} &\E_{\state(\cdot), \control(\cdot) \mid \state(0), \policy}\left[ \terminalCostFunc(\state(T))
++ \int_{t_0}^{T} \integralCostFunc(\state(t), \control(t), t) \right] \\
+\text{s.t.} \quad &\state(t) = \dynamicsFunc(\state(t), \control(t)) \text{d}t + \epsilon_\modeInd,
+\quad \epsilon \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon})
+\end{align}
+#+END_EXPORT
+*Policy Space* The policy space, $\policySpace$, defines the set of policies which optimisation is performed over,
+i.e. it is the optimisation domain.
+In this dissertation, a policy, $\policy$, shall be a conditional distribution over $\controlDomain$.
+In (deterministic) optimal control the policy space is usually given by open loop policies, i.e.
+only conditioned on time $\policy(\control \mid t)$.
+In contrast, SOC (and RL) are mainly interested in feedback policies, where the controls are conditioned on both time and
+state, i.e. $\policy(\control(t) \mid t, \state(t))$
+\footnote{for notational conciseness dependency on time is assumed from here on, i.e.
+$\policy(\control(t) \mid t, \state(t) = \policy(\control(t) \mid \state(t))$}.
+A special case are deterministic policies, given by $\policy(\control \mid \state) = \delta_{\control=f(\state)}$,
+where $\delta$ is the dirac delta distribution and $f$ is a function.
+
+**** Dynamic Programming
+Approximate dynamic programming encompasses a large class of methods that given a controller $\pi$,
+approximate the value function $J_{\pi}(\state)$ for each state $\state$ with a parameterised function.
+
+Differential dynamic programming (DDP) citep:jacobsonDifferential1970, iteratively constructs
+local Taylor series approximations of the dynamics and cost to locally approximate the
+value function. As such, it exploits the temporal structure to obtain a closed-loop controller.
+The extension of DDP to stochastic dynamics (SDDP) citep:theodorouStochastic2010, considers
+expected costs under Gaussian disturbances.
+Iterative linear quadratic Gaussian (iLQG) control citep:todorovGeneralized2005 deploys
+a similar approach to DDP but instead
+uses a linear approximation of the dynamics --- trading in accuracy for a computational speed-up.
+Guided policy search cite:levineGuided2013
+
+\todo{Add details on LQG etc here}
+**** Trajectory Optimisation
+***** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
+
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+
+\newcommand{\dynamicsFunc}{\ensuremath{f}}
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+#+END_EXPORT
+
+***** intro :ignore:
+Formally, trajectory optimisation seeks to find the state and
+control trajectories,
+$\stateTraj = \{\state(\timeInd) \in \stateDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
+and
+$\controlTraj = \{\control(\timeInd) \in \controlDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
+respectively,
+that minimise some cost function $\costFunc$, whilst satisfying constraints $\constraintsFunc$,
+and boundary conditions.
+The trajectory optimisation problem is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt}
+\min_{\state(t), \control(t)} &\int_{t_0}^{t_f} \costFunc(\state(t), \control(t)) \text{d}t \quad \forall t \\
+\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}}  \\
+&\constraintsFunc(\mathbf{x}(t)) \leq 0 \quad \forall t \\
+&\state(t_0) = \state_0  \quad \state(t_f) = \state_f
+\end{align}
+#+END_EXPORT
+Solving this problem is often computationally expensive and
+is an active area of research.
+Many (approximate) solutions have been introduced in the literature,
+that seek to balance the computational complexity
+(for real-time control) and accuracy trade-off differently
+cite:bettsSurvey1998.
+This section briefly reviews several approaches to trajectory
+optimisation that can be used with learned dynamics models.
+It then provides an in-depth review of the control-as-inference
+framework, which is used in Chapter ref:chap-traj-opt.
+
+*Iterative Linear Quadratic Regulator (iLQR)*
+can be used to generate trajectories for non-linear systems by
+iteratively approximating
+the dynamics to be linear around a nominal trajectory and optimising for the controls.
+iLQR works well for quadratic cost functions but can be used with any cost function by approximating the cost
+function with a second order Taylor expansion. However, in this case iLQR is susceptible to converging
+to terrible (local) optima if the true cost function is highly non-convex.
+cite:boedeckerApproximate2014 present a real-time iLQR controller
+based on sparse GPs.
+cite:rohrProbabilistic2021 propose a novel LQR
+controller synthesis for
+linearised GP dynamics that yields robust controllers with
+respect to a probabilistic stability margin.
+In cite:marcoAutomatic2016 they parameterise the weight matrices
+$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
+and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
+
+*Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
+iLQR to a stochastic setting, where the process
+noise is assumed to be Guassian.
+cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
+
+*Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
+the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
+cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
+over the entire control sequence.
+Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
+and the quadratic model is inaccurate.
+\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
+DDP solutions provides greater accuracy than iLQG/iLQR but
+at the cost
+of increased computational time cite:tassaSynthesis2012.
+The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
+DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
+
+cite:panProbabilistic2014 present a probabilistic trajectory optimisation
+framework for systems with unknown dynamics called probabilistic
+differential dynamic programming (PDDP).
+It extends DDP to explicitly account
+for uncertainty in dynamics modelled using gaussian processes.
+In contrast to typical gradient based policy search methods, PDDP does not
+require a policy parameterisation as it learns a locally optimal,
+time-varying control policy.
+Based on the second-order local approximation of the value function,
+PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
+
+*Path Integral*  control is a method for developing optimal controls based on stochastic
+sampling of trajectories cite:theodorouGeneralized2010.
+This work was originally limited to control affine systems cite:williamsModel2017
+but has since been extended to general nonlinear
+dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
+
+***** Trajectory Optimisation as Probabilistic Inference :noexport:
+****** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
+\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
+\newcommand{\controlDist}{\ensuremath{p(\control_\timeInd \mid \state_\timeInd)}}
+
+\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
+\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
+
+\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
+\newcommand{\monotonicFunc}{\ensuremath{f_{\text{mon}}}}
+
+\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
+
+\newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
+
+\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
+\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+
+\newcommand{\temperature}{\ensuremath{\gamma}}
+#+END_EXPORT
+****** intro :ignore:
+The second trajectory algorithm optimisation in Chapter ref:chap-traj-opt
+builds on top of the control-as-inference framework
+citep:toussaintProbabilistic2006,kappenOptimal2013,
+which frames optimal control as probabilistic inference.
+Translating optimal control to inference can be viewed as a subset of probabilistic numerics
+citep:hennigProbabilistic2015, where statistical methods are used to solve numerical problems,
+providing uncertainty quantification, regularisation and faster convergence.
+
+Control-as-inference has been considered since the beginning of modern optimal control due to
+the concurrent development of LQR, Kalman filtering and LQG citep:kalmanNew1960,hoBayesian1964.
+Recent work on control-as-inference stems from path integral cite:kappenOptimal2013,williamsModel2017
+
+cite:rawlikStochastic2013
+
+cite:toussaintRobot2009 formulate trajectory optimisation as
+approximate inference and derive a local approximation
+where the maximum likelihood solution returns the deterministic optimal trajectory, and the local Gaussian belief
+approximation is equivalent to the LQG perturbation model around the optimal trajectory.
+cite:levineReinforcement2018 followed a similar approach formulating RL as probabilistic inference
+and showing how different approximate inference algorithms instantiated different popular RL algorithms.
+
+
+Recent work by cite:watsonStochastic2021 has formulated
+stochastic optimal control as input estimation
+
+****** Cost Functions as Likelihoods
+\newline
+To formulate optimal control as probabilistic inference
+it is first embedded into a graphical model (see Figure ref:fig-basic-control-graphical-model).
+The joint probability model (over a trajectory) is augmented with an
+additional variable to encode the notion of cost (or reward)
+over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
+The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
+time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
+The likelihood distribution can then be formulated
+by mapping the negative
+cost through a monotonically increasing function $\monotonicFunc$,
+giving the likelihood,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-monotonicOptimalityLikelihood}
+\optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+A common (and convenient) approach is to formulate
+the likelihood using an exponential transform of
+the cost. This results in a Boltzmann distribution where the
+inverse temperature, $\temperature$, is used to scale the cost,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-exponentialOptimalityLikelihood}
+\optimalProb &\propto \exp ( -\temperature\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+The resulting negative log-likelihood is an affine transformation of the cost, which preserves convexity.
+#+BEGIN_EXPORT latex
+\todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
+\begin{myquote}
+As shown in \cite{okadaVariational2020}, the choice of monotonic function,
+$\monotonicFunc$,
+leads to the inference algorithm resembling different well-known algorithms.
+For example, selecting $\monotonicFunc$ to be the exponential function,
+\begin{align} \label{eq-}
+\optimalProb &\propto \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
+\end{align}
+leads to the algorithm resembling Model Predictive Path Integral (MPPI)
+\cite{williamsModel2017,williamsInformation2017}, whilst
+selecting $\monotonicFunc$ to as,
+\begin{align} \label{eq-}
+\optimalProb &\propto \mathbb{I}\left[( \costFunc(\state_\timeInd, \control_\timeInd)) \leq \costFunc_{\text{thd}} \right]
+\end{align}
+recovers an algorithm resembling the Cross Entropy Method (CEM).
+\end{myquote}
+#+END_EXPORT
+
+****** Joint Probability Model
+\newline
+Given the "cost" likelihood
+(cref:eq-monotonicOptimalityLikelihood)
+the joint probability for an optimal trajectory (i.e.
+for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$), is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt-joint-dist}
+\jointDist =
+& \startStateDist \underbrace{\terminalCostDist}_{\text{Terminal Cost}}  \\
+&\prod_{\timeInd=1}^{\TimeInd-1}
+\underbrace{\optimalProb}_{\text{Cost}}
+\underbrace{\transitionDist}_{\text{Dynamics}}
+\underbrace{\controlDist}_{\text{Controller}} \nonumber
+\end{align}
+#+END_EXPORT
+where $\controlDist$ denotes the controller or policy.
+In the case of RL the policy is parameterised with parameters, $\theta$,
+whereas the control setting is usually interested in
+optimising the states and controls directly.
+The object of interest in this model is the distribution over the control, $\control_\timeInd$,
+conditioned on the state, $\state_\timeInd$, and all future time steps being optimal,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1) =
+\frac{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)
+\controlDist p(\state_\timeInd)}{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)
+p(\state_\timeInd)}.
+\end{align}
+#+END_EXPORT
+The distributions $p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)$
+and
+$p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)$,
+can be obtained via recursive message passing,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)
+&= p(\state_\timeInd)
+\prod_{\timeInd}^{\TimeInd-1}
+\int \int
+\optimalProb p(\state_{\timeInd+1} \mid \state_{\timeInd}, \control_{\timeInd}) \controlDist
+\text{d}\state_{\timeInd+1} \text{d}\control_{\timeInd+1} \nonumber \\
+p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd)
+&=
+\int p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)
+p(\control_\timeInd \mid \state_\timeInd)
+\text{d}\control_{\timeInd}.
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\todo[inline]{Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
+\begin{align} \label{eq-}
+p(\optimalVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})
+= \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \optimalDist
+p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\state_\timeInd) \mid \state_\timeInd, \control_\timeInd)
+\controlDist
+\end{align}
+\begin{align} \label{eq-}
+\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \dynamicsFunc(\state_{\timeInd-1}), \control_\timeInd)) \\
+\end{align}
+}
+#+END_EXPORT
+
+****** graphical model :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{.45\textwidth}
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model with states and controls.}
+\label{fig-basic-control-graphical-model}
+\end{subfigure}
+\begin{subfigure}{.45\textwidth}
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
+      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
+      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+
+      \draw[->] (u1)--(o1);
+      \draw[->] (x1) to [out=100,in=240] (o1);
+      \draw[->] (u2)--(o2);
+      \draw[->] (x2) to [out=100,in=240] (o2);
+      \draw[->] (u3)--(o3);
+      \draw[->] (x3) to [out=100,in=240] (o3);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model with optimality variable.}
+\label{fig-augmented-control-graphical-model}
+\end{subfigure}
+\caption{Graphical models of control formulated as inference.}
+\label{fig-control-graphical-model}
+\end{figure}
+#+END_EXPORT
+
+****** Variational Inference
+In variational inference the distribution over the latent variables
+$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
+is approximated with another, potentially simpler
+(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
+In this case, the aim is to approximate the distribution over the optimal policy,
+$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd}=1)$.
+Introducing the variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood
+&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
+&= \text{log} \E_\trajectoryVarDist \left[
+\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
+\right] \\
+&\geq \E_\trajectoryVarDist \left[
+\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
+\frac{\controlVarDist}{\controlDist} \right] \\
+&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
+- \text{log}\controlVarDist\right]
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood &\geq
+ \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
+- \text{log}\controlVarDist\right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
+- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\end{align}
+#+END_EXPORT
+
+*** Model-Based Control :noexport:
+**** Trajectory Optimisation
+***** intro :ignore:
+Formally, trajectory optimisation seeks to find the state and
+control trajectories,
+$\stateTraj = \{\state(\timeInd) \in \stateDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
+and
+$\controlTraj = \{\control(\timeInd) \in \controlDomain \mid \forall \timeInd \in [\timeInd_0, \timeInd_f] \}$,
+respectively,
+that minimise some cost function $\costFunc$, whilst satisfying constraints $\constraintsFunc$,
+and boundary conditions.
+The trajectory optimisation problem is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt}
+\min_{\state(t), \control(t)} &\int_{t_0}^{t_f} \costFunc(\state(t), \control(t)) \text{d}t \quad \forall t \\
+\text{s.t. }&\text{Eq. \ref{eq-unimodal-dynamics-cont}}  \\
+&\constraintsFunc(\mathbf{x}(t)) \leq 0 \quad \forall t \\
+&\state(t_0) = \state_0  \quad \state(t_f) = \state_f
+\end{align}
+#+END_EXPORT
+***** Trajectory Optimisation as Probabilistic Inference :noexport:
+****** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
+\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
+\newcommand{\controlDist}{\ensuremath{p(\control_\timeInd \mid \state_\timeInd)}}
+
+\newcommand{\trajectoryVarDist}{\ensuremath{q(\state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{1:\TimeInd} \mid \state_{1:\TimeInd})}}
+\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
+
+\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
+\newcommand{\monotonicFunc}{\ensuremath{f_{\text{mon}}}}
+
+\newcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
+
+\newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
+
+\newcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{1:\TimeInd} = 1)}}
+\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+
+\newcommand{\temperature}{\ensuremath{\gamma}}
+#+END_EXPORT
+****** intro :ignore:
+The second trajectory algorithm optimisation in Chapter ref:chap-traj-opt
+builds on top of the control-as-inference framework
+citep:toussaintProbabilistic2006,kappenOptimal2013,
+which frames optimal control as probabilistic inference.
+Translating optimal control to inference can be viewed as a subset of probabilistic numerics
+citep:hennigProbabilistic2015, where statistical methods are used to solve numerical problems,
+providing uncertainty quantification, regularisation and faster convergence.
+
+Control-as-inference has been considered since the beginning of modern optimal control due to
+the concurrent development of LQR, Kalman filtering and LQG cite:kalmanNew1960,hoBayesian1964.
+Recent work on control-as-inference stems from path integral cite:kappenOptimal2013,williamsModel2017
+
+cite:rawlikStochastic2013
+
+cite:toussaintRobot2009 formulate trajectory optimisation as
+approximate inference and derive a local approximation
+where the maximum likelihood solution returns the deterministic optimal trajectory, and the local Gaussian belief
+approximation is equivalent to the LQG perturbation model around the optimal trajectory.
+cite:levineReinforcement2018 followed a similar approach formulating RL as probabilistic inference
+and showing how different approximate inference algorithms instantiated different popular RL algorithms.
+
+
+Recent work by cite:watsonStochastic2021 has formulated
+stochastic optimal control as input estimation
+
+****** Cost Functions as Likelihoods
+To formulate optimal control as probabilistic inference
+it is first embedded into a graphical model (see Figure ref:fig-basic-control-graphical-model).
+The joint probability model (over a trajectory) is augmented with an
+additional variable to encode the notion of cost (or reward)
+over the trajectory (see Figure ref:fig-augmented-control-graphical-model).
+The new variable is a Bernoulli random variable $\optimalVar_\timeInd \in \{0, 1\}$, that indicates if
+time step $\timeInd$ is /optimal/ $\optimalVar_\timeInd=1$, or not /optimal/ $\optimalVar_\timeInd=0$.
+The likelihood distribution can then be formulated
+by mapping the negative
+cost through a monotonically increasing function $\monotonicFunc$,
+giving the likelihood,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-monotonicOptimalityLikelihood}
+\optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+A common (and convenient) approach is to formulate
+the likelihood using an exponential transform of
+the cost. This results in a Boltzmann distribution where the
+inverse temperature, $\temperature$, is used to scale the cost,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-exponentialOptimalityLikelihood}
+\optimalProb &\propto \exp ( -\temperature\costFunc(\state_\timeInd, \control_\timeInd)).
+\end{align}
+#+END_EXPORT
+The resulting negative log-likelihood is an affine transformation of the cost, which preserves convexity.
+#+BEGIN_EXPORT latex
+\todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
+\begin{myquote}
+As shown in \cite{okadaVariational2020}, the choice of monotonic function,
+$\monotonicFunc$,
+leads to the inference algorithm resembling different well-known algorithms.
+For example, selecting $\monotonicFunc$ to be the exponential function,
+\begin{align} \label{eq-}
+\optimalProb &\propto \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
+\end{align}
+leads to the algorithm resembling Model Predictive Path Integral (MPPI)
+\cite{williamsModel2017,williamsInformation2017}, whilst
+selecting $\monotonicFunc$ to as,
+\begin{align} \label{eq-}
+\optimalProb &\propto \mathbb{I}\left[( \costFunc(\state_\timeInd, \control_\timeInd)) \leq \costFunc_{\text{thd}} \right]
+\end{align}
+recovers an algorithm resembling the Cross Entropy Method (CEM).
+\end{myquote}
+#+END_EXPORT
+
+****** Joint Probability Model
+Given the "cost" likelihood
+(cref:eq-monotonicOptimalityLikelihood)
+the joint probability for an optimal trajectory (i.e.
+for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{1,\ldots,\TimeInd\}$), is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-traj-opt-joint-dist}
+\jointDist =
+& \startStateDist \underbrace{\terminalCostDist}_{\text{Terminal Cost}} \\
+&\prod_{\timeInd=1}^{\TimeInd-1}
+\underbrace{\optimalProb}_{\text{Cost}}
+\underbrace{\transitionDist}_{\text{Dynamics}}
+\underbrace{\controlDist}_{\text{Controller}}
+\end{align}
+#+END_EXPORT
+where $\controlDist$ denotes the policy.
+In the case of RL the policy is parameterised with parameters, $\theta$, but in control we are usually interested in
+optimising the states and controls directly.
+The object of interest in this model is the distribution over the control, $\control_\timeInd$,
+conditioned on the state, $\state_\timeInd$, and all future time steps being optimal,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\control_{\timeInd} \mid \state_{\timeInd}, \optimalVar_{\timeInd:\TimeInd}=1) =
+\frac{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd, \control_\timeInd)
+\controlDist p(\state_\timeInd)}{p(\optimalVar_{\timeInd:\TimeInd}=1 \mid \state_\timeInd)
+p(\state_\timeInd)}.
+\end{align}
+#+END_EXPORT
+The distributions $p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd)$,
+$p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd)$,
+$p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd, \control_\timeInd)$ and
+$p(\modeVar_{\timeInd:\TimeInd}=\modeInd \mid \state_\timeInd)$
+can be obtained via recursive message passing,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+p(\optimalVar_{\timeInd:\TimeInd} \mid \state_\timeInd, \control_\timeInd) =
+\prod_{\timeInd+1}^{\TimeInd-1}
+\int \int \optimalProb p(\state_\timeInd \mid \state_{\timeInd-1}, \control_{\timeInd-1}) \controlDist \text{d}\state_{\timeInd} \text{d}\control_{\timeInd}.
+\end{align}
+#+END_EXPORT
+#+BEGIN_EXPORT latex
+\todo[inline]{Considering process noise in the dynamics separately from the epistemic (parametric) uncertainty,
+\begin{align} \label{eq-}
+p(\optimalVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})
+= \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \optimalDist
+p(\state_{\timeInd+1} \mid \dynamicsFunc(\state_\timeInd)) p(\dynamicsFunc(\state_\timeInd) \mid \state_\timeInd, \control_\timeInd)
+\controlDist
+\end{align}
+\begin{align} \label{eq-}
+\optimalProb &= \monotonicFunc( -\costFunc(\state_\timeInd, \dynamicsFunc(\state_{\timeInd-1}), \control_\timeInd)) \\
+\end{align}
+}
+#+END_EXPORT
+
+****** graphical model :ignore:
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+  \begin{subfigure}{.45\textwidth}
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model with states and controls.}
+\label{fig-basic-control-graphical-model}
+\end{subfigure}
+\begin{subfigure}{.45\textwidth}
+  \centering
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[obs] (x1) {$\state_1$};
+      \node[latent, right=of x1] (x2) {$\state_2$};
+      \node[latent, right=of x2] (x3) {$\state_3$};
+      \node[latent, right=of x3] (x4) {$\state_4$};
+
+      \node[latent, above=of x1, xshift=0.6cm] (u1) {$\control_1$};
+      \node[latent, right=of u1] (u2) {$\control_2$};
+      \node[latent, right=of u2] (u3) {$\control_3$};
+
+      \node[obs, above=of u1] (o1) {$\optimalVar_1$};
+      \node[obs, right=of o1] (o2) {$\optimalVar_2$};
+      \node[obs, right=of o2] (o3) {$\optimalVar_3$};
+
+      \draw[post] (x1)--(x2);
+      \draw[post] (x2)--(x3);
+      \draw[post] (x3)--(x4);
+
+      \draw[post] (x1)--(u1);
+      \draw[post] (x2)--(u2);
+      \draw[post] (x3)--(u3);
+
+      \draw[post] (u1)--(x2);
+      \draw[post] (u2)--(x3);
+      \draw[post] (u3)--(x4);
+
+      \draw[->] (u1)--(o1);
+      \draw[->] (x1) to [out=100,in=240] (o1);
+      \draw[->] (u2)--(o2);
+      \draw[->] (x2) to [out=100,in=240] (o2);
+      \draw[->] (u3)--(o3);
+      \draw[->] (x3) to [out=100,in=240] (o3);
+    \end{tikzpicture}
+    %}
+  \caption{Graphical model with optimality variable.}
+\label{fig-augmented-control-graphical-model}
+\end{subfigure}
+\caption{Graphical models of control formulated as inference.}
+\label{fig-control-graphical-model}
+\end{figure}
+#+END_EXPORT
+
+****** Variational Inference
+In variational inference the distribution over the latent variables
+$p(\state_{1:\TimeInd}, \control_{1:\TimeInd})$
+is approximated with another, potentially simpler
+(e.g. factorised) distribution $q(\state_{1:\TimeInd}, \control_{1:\TimeInd})$.
+In this case, the aim is to approximate the distribution over the optimal policy,
+$p(\control_{1:\TimeInd} \mid \state_{1:\TimeInd}, \optimalVar_{1:\TimeInd}=1)$.
+Introducing the variational distribution,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\trajectoryVarDist = \startStateDist \prod_{\timeInd=1}^{\TimeInd-1} \transitionDist \controlVarDist
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood
+&= \text{log} \E_\trajectoryVarDist \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \\
+&= \text{log} \E_\trajectoryVarDist \left[
+\frac{\cancel{\startStateDist} \prod_{\timeInd=1}^{\TimeInd} \optimalProb \cancel{\transitionDist} \controlDist}{\cancel{\startStateDist} \prod_{\timeInd=1}^\TimeInd \cancel{\transitionDist} \controlVarDist}
+\right] \\
+&\geq \E_\trajectoryVarDist \left[
+\sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb - \sum_{\timeInd=1}^\TimeInd \text{log}
+\frac{\controlVarDist}{\controlDist} \right] \\
+&= \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \costFunc(\state_\timeInd, \control_\timeInd)
+- \text{log}\controlVarDist\right]
+\end{align}
+#+END_EXPORT
+
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\text{log} \marginalLikelihood &\geq
+ \E_\trajectoryVarDist \left[ \sum_{\timeInd=1}^{\TimeInd} \text{log} \optimalProb
+- \text{log}\controlVarDist\right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \text{log} \optimalProb \right]
+- \E_{\controlVarDist q(\state_{\timdInd})} \left[ \text{log}\controlVarDist \right] \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \underbrace{- \E_{\controlVarDist} \left[ \text{log} \controlVarDist \right]}_{\text{Entropy}} \\
+&= \sum_{\timeInd=1}^{\TimeInd} \E_{\controlVarDist q(\state_{\timeInd})} \left[ \costFunc(\state_\timeInd, \control_\timeInd) \right]
++ \sum_{\timeInd=1}^{\TimeInd} \mathcal{H}(\control_{\timeInd})
+\end{align}
+#+END_EXPORT
+
+**** Literature Review (iLQR/iLQG/DDP/MPPI for Trajectory Generation)
+*Iterative LQR/LQG* can be used to generate trajectories for non-linear systems by iteratively approximating
+the dynamics to be linear around a nominal trajectory and optimising for the controls.
+iLQR works well for quadratic cost functions and can be used with any cost function by approximating the cost
+function with a second order Taylor expansion. However, in this case iLQR is susceptible to converging
+to terrible (local) optima if the true cost function is highly non-convex.
+
+cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
+
+cite:boedeckerApproximate2014 present a real-time iLQR based on sparse GPs.
+
+cite:rohrProbabilistic2021 propose a novel controller synthesis for
+linearised GP dynamics that yields robust controllers with
+respect to a probabilistic stability margin.
+
+In cite:marcoAutomatic2016 they parameterise the weight matrices
+$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
+and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification
+by adapting the parameters.
+
+*Differential Dynamic Programming* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
+the main difference being that only a /first-order/ approximation of the dynamics is used, instead of /second-order/.
+cite:liaoAdvantages1992 show that DDP is comparable to a full Newton step for the entire control
+sequence. Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
+and the quadratic model is inaccurate.
+\todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
+
+The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
+
+DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
+
+
+cite:panProbabilistic2014 present a probabilistic trajectory optimisation
+framework for systems with unknown dynamics called probabilistic
+differential dynamic programming (PDDP).
+It extends differential dynamic programming to explicitly account
+for uncertainty in the learned dynamics modelled using gaussian processes.
+In contrast to typical gradient based policy search methods, PDDP does not
+require a policy parameterisation as it learns a locally optimal,
+time-varying control policy.
+Based on the second-order local approximation of the value function,
+PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
+
+*Path Integral*  control is a method for developing optimal controls based on stochastic
+sampling of trajectories cite:theodorouGeneralized2010.
+This work was originally limited to control affine systems cite:williamsModel2017
+but has since been extended to general nonlinear
+dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
 
 * Probabilistic Inference for Learning Multimodal Dynamical Systems label:chap-dynamics
 #+begin_export latex
