@@ -2377,6 +2377,11 @@ a quadratic integral control cost term regularised the controls to encode the no
 # #+END_EXPORT
 
 * Background and Related Work
+** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\gpDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\dynamicsModel}{\ensuremath{p_{\theta}}}
+#+END_EXPORT
 ** intro :ignore:
 # This chapter reviews learning-based control and details the relevant background information
 # for the remainder of the dissertation.
@@ -2673,13 +2678,29 @@ the optimal control problem.
 # This is achieved by simultaneously learning about the environment whilst optimising the controller to obtain
 # low cumulative costs.
 
+**** MBRL Alg :ignore:
+#+BEGIN_EXPORT latex
+\begin{algorithm}[!t]
+\caption{Model-based reinforcement learning}\label{alg-mbrl-background}
+\begin{algorithmic}[1]
+\Require{Policy/controller $\policy_0$, dynamics model $\dynamicsModel}$, start state $\state_0$}
+\For{$i = 0, 1,  \ldots $}
+    \State Select $\pi_i$ using exploration strategy, e.g. \cref{eq-greedy-exploration}
+    \State Collect environment data set $\dataset_i$ using $\pi_i$; add to dataset $\dataset_{0:i} = \{\dataset_{i} \cup \dataset_{0:i-1}\}$
+    \State Update dynamics model $\dynamicsModel}$ using $\dataset_{0:i}$.
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+#+END_EXPORT
 **** Model-based Reinforcement Learning
-An alternative approach to solving the optimal control problem in cref:eq-optimal-control-objective
-is to first learn a dynamics model and then use this learned model with model-based control techniques.
-This approach is known as \acrfull{mbrl}.
+This dissertation is interested in a subset of \acrshort{rl} known as \acrfull{mbrl}.
+It solves the optimal control problem in cref:eq-optimal-control-objective
+by first learning a dynamics model and then using this learned model with model-based control techniques.
 As both \acrshort{mfrl} and \acrshort{mbrl} methods learn models,
 the model in the name is referring to the dynamics model $f$, as  \acrshort{mfrl} approaches do not learn
 representations of the dynamics $f$.
+cref:alg-mbrl-background illustrates a common \acrshort{mbrl} procedure where an agent incrementally explores
+its environment, collecting data at each iteration $\mathcal{D}_{i}$ and updating its dynamics model $\dynamicsModel$.
 
 To apply control and planning techniques in systems with unknown dynamics,
 system identification emerged as a set of techniques for computing unknown parameters (e.g. mass of a component)
@@ -2695,39 +2716,149 @@ The field of \acrfull{mbrl} seeks to solve many optimal control problems by incr
 in this way citep:deisenrothPILCO2011,chuaDeep2018.
 \acrshort{mbrl} shares similarities with the system identification and control process except that the dynamics learning
 and control are updated simultaneously.
-cref:alg-mbrl-background illustrates a common \acrshort{mbrl} loop where the agent incrementally explores
-its environment, collects data and updates its dynamics model.
-There are two main components to a \acrshort{mbrl} algorithm:
-1. a method for learning a dynamics model,
-2. a controller (or policy) that utilises the learned model,
-   - it may be learning-based (e.g. any \acrshort{mfrl} algorithm) or a model-based control or planning algorithm such as \acrfull{mpc}.
+There are two main components to a \acrshort{mbrl} algorithm: 1) a method for learning a dynamics
+model $\dynamicsModel$ and 2) a controller (or policy) $\pi$ that leverages the learned dynamics model $\dynamicsModel$.
+The controller may be a parameterised state feedback controller (policy) $\pi$, which is trained using
+\acrshort{mfrl} algorithms and the learned dynamics model.
+Alternatively, the controller may take the form of a model-based control or planning algorithm such as \acrfull{mpc}.
    # a. a control method that utilises the learned model to explore the environment whilst simultaneously trying to achieve an objective.
-This section first reviews methods for learning dynamics models and then discusses model-based approaches that leverage
-such a learned dynamics model for control.
-\todo{exploration?}
 
-**** MBRL Alg :ignore:
+*** Model-based Control and Planning
+This section reviews model-based control (or planning) methods that leverage learned dynamics models.
+The work in this dissertation is primarily focused on model-based control techniques,
+in particular, trajectory optimisation algorithms.
+
+*Trajectory optimisation*
+Instead of approximating a value function or a policy, it is possible to directly optimise the controls
+$\controlTraj = \{\control_1, \ldots, \control_{T-1} \}$ over a horizon $T$.
+This is known as trajectory optimisation and is given by,
 #+BEGIN_EXPORT latex
-\begin{algorithm}[!t]
-\caption{Model-based reinforcement learning}\label{alg-mbrl-background}
-\begin{algorithmic}[1]
-\Require{Policy/controller $\policy_0$, dynamics model $\dynamicsModel}$, start state $\state_0$}
-\For{$i = 0, 1,  \ldots $}
-    \State Select $\pi_i$ using exploration strategy, e.g. \cref{eq-greedy-exploration}
-    \State Collect environment data set $\dataset_i$ using $\pi_i$; add to dataset $\dataset_{0:i} = \{\dataset_{i} \cup \dataset_{0:i-1}\}$
-    \State Update dynamics model $\dynamicsModel}$ using $\dataset_{0:i}$.
-\EndFor
-\end{algorithmic}
-\end{algorithm}
+\begin{align} \label{eq-trajectory-optimisation}
+\controlTraj =
+\arg \min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \contro_{\timeInd})
+\mid \state_0=\state \right] \\
+&\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t) + \epsilon,
+\end{align}
 #+END_EXPORT
+which finds an optimal sequence of controls $\controlTraj$ for a given start state $\state_0$.
+Many recent works have used trajectory optimisation with learned dynamics models.
+For example, cite:nakkaChanceConstrained2021 develop a chance-constrained trajectory optimisation
+algorithm that leverages a dynamics model learned using a robust regression model.
+cite:rybkinModelBased2021 utilise a latent space dynamics model -- learned
+with a convolutional neural network for the encoder and a recurrent neural network for the dynamics -- which scales to high-dimensional inputs such as images.
+In \acrshort{mbrl}, trajectory optimisers often exploit inaccuracies of the learned dynamics model.
+cite:boneyRegularizing2019 propose a trajectory optimisation approach that relives this exploitation by
+learning the dynamics using a denoising autoencoder.
+The resulting trajectory optimisation algorithm avoids regions of the learned dynamics model where not data
+has been observed.
+
+*Model predictive control*
+Instead of directly applying the control inputs found with trajectory optimisation in an open-loop fashion,
+it is possible to obtain a closed-loop controller.
+This is achieved by iteratively applying the first control $\control_0$ and resolving the nonlinear program in
+cref:eq-trajectory-optimisation,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-mpc-loop}
+\pi_{\text{MPC}} =
+\arg \min_{\control_0}
+\min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\mid \state_0=\state \right] \\
+&\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t) + \epsilon,
+\end{align}
+#+END_EXPORT
+This is known as \acrfull{mpc} cite:eduardof.Model2007.
+However, in practice, it is often too computationally expensive to obtain real-time control with \acrshort{mpc}.
+Many approximate solutions have been introduced in the literature, that seek to balance the computational complexity
+and accuracy trade-off differently cite:bettsSurvey1998.
+
+For example, \acrfull{ilqr} can be used to generate trajectories for non-linear systems by
+iteratively approximating the dynamics to be linear around a nominal trajectory and optimising for the controls.
+\acrshort{ilqr} works well for quadratic cost functions but can be used with any cost function by approximating the cost
+function with a second order Taylor expansion.
+However, in this case iLQR is susceptible to converging
+to terrible (local) optima if the true cost function is highly non-convex.
+cite:boedeckerApproximate2014 present a real-time iLQR controller based on sparse GPs.
+cite:rohrProbabilistic2021 propose a novel LQR controller synthesis for
+linearised GP dynamics that yields robust controllers with respect to a probabilistic stability margin.
+In cite:marcoAutomatic2016 they parameterise the weight matrices
+$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
+and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
+
+\acrshort{mpc} has directly been used with ensembles of probabilistic neural networks citep:chuaDeep2018,nagabandiDeep2020
+and with \acrshort{gp}s cite:kamtheDataEfficient2018.
+cite:lambertLowLevel2019 control a quadcopter using online \acrshort{mpc} and a dynamics model learned using
+probabilistic neural networks.
+
+*Offline trajectory optimisation*
+Instead of solving the trajectory optimisation problem in cref:eq-trajectory-optimisation online,
+it can be solved offline.
+For example, the state-control trajectory can be found offline and used as a reference trajectory
+for a tracking controller.
+Alternatively, the trajectory optimiser can be used to learn a state feedback controller (policy)
+using guided policy search citep:levineGuided2013.
+
+*Collocation*
+
+*Direct optimal control*
+
+*Indirect optimal control*
+
+# *Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
+# iLQR to a stochastic setting, where the process
+# noise is assumed to be Gaussian.
+# cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
+
+# *Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
+# the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
+# cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
+# over the entire control sequence.
+# Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
+# and the quadratic model is inaccurate.
+# \todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
+# DDP solutions provides greater accuracy than iLQG/iLQR but
+# at the cost
+# of increased computational time cite:tassaSynthesis2012.
+# The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
+# DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
+
+# cite:panProbabilistic2014 present a probabilistic trajectory optimisation
+# framework for systems with unknown dynamics called probabilistic
+# differential dynamic programming (PDDP).
+# It extends DDP to explicitly account
+# for uncertainty in dynamics modelled using gaussian processes.
+# In contrast to typical gradient based policy search methods, PDDP does not
+# require a policy parameterisation as it learns a locally optimal,
+# time-varying control policy.
+# Based on the second-order local approximation of the value function,
+# PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
+
+# *Path Integral*  control is a method for developing optimal controls based on stochastic
+# sampling of trajectories cite:theodorouGeneralized2010.
+# This work was originally limited to control affine systems cite:williamsModel2017
+# but has since been extended to general nonlinear
+# dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
+
 ** Learning Dynamical Systems for Control
 *** intro :ignore:
-/Mathematical models/ are compact representations (sets of assumptions) that attempt to capture key features of the
-phenomenon of interest, in a precise mathematical form.
-Probabilistic modelling provides the capability of constructing /mathematical models/
-that can represent and manipulate uncertainty in data, models, decisions and predictions.
-As such, linking observed data to underlying phenomena through probabilistic models,
-is an interesting direction for modelling, analysing and controlling dynamical systems.
+This section reviews methods for learning representations of dynamical systems for control.
+When learning representations of dynamical systems from observations it is important to consider the different
+forms of uncertainty.
+For example, when using a learned model for control it is important to /know what we do not know/.
+This knowledge can be used to encode /risk-sensitive/ control (avoid places your model cannot predict confidently)
+or to guide exploration.
+cref:sec-unc-exploration discusses exploration strategies that leverage well-calibrated uncertainty estimates.
+
+# *Learning single-step dynamics models*
+# Single-step dynamics models have been deployed in a large variety of learning-based control algorithms.
+# Early approaches include using single-step linear models citep:schneiderExploiting1996 and
+# single-step \acrfull{gp} models
+# citep:deisenrothPILCO2011,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018
+# for low-dimensional control problems.
+# More recently, single-step dynamics models have been learned using neural networks.
+# For example, citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018 use ensembles
+# of neural networks and citep:mcallisterImproving2016,depewegLearning2017 use Bayesian neural networks
+# with parametric uncertainty.
+
 
 # It is worth considering the implications of all these types of uncertainty.
 # If a predictive dynamics model is learned from observations, then the model
@@ -2745,27 +2876,8 @@ is an interesting direction for modelling, analysing and controlling dynamical s
 # As one extrapolates away from the training observations, one can no longer be certain in the prediction;
 # this is known as epistemic uncertainty and can be reduced by collecting more data and retraining the model.
 
-*Probabilistic models*
-Probability theory enables this uncertainty to be represented and manipulated;
-it provides a systematic way to combine observations with existing knowledge,
-via a /mathematical model/.
-Learning representations of dynamical systems for control using probabilistic models has shown much promise.
-For example, see
-cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
-Given a historical data set of state transitions from the environment,
-a common approach is to first learn a single-step dynamics model using a Gaussian process
-citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
-Alternative approaches quantify uncertainty using ensembles
-of neural networks citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018
-or Bayesian neural networks with parametric uncertainty citep:mcallisterImproving2016,depewegLearning2017.
-Learning single-step dynamics models that quantify uncertainty has been central to recent successes in \acrshort{mbrl}.
-
-*** Aleatoric vs Epistemic Uncertainty
-**** intro :ignore:
+*** Sources of Uncertainty
 This section characterises the uncertainty that arises in \acrshort{rl}.
-The main idea is that it is important to /know what we do not know/ because
-if we /know what we do not know/ then we can use this information to guide exploration.
-cref:sec-unc-exploration discusses exploration strategies that leverage well-calibrated uncertainty estimates.
 
 *Aleatoric uncertainty*
 Dynamical systems give rise to temporal observations arriving as a sequence
@@ -2796,20 +2908,58 @@ Consider the case where the model is confident that the system is subject to hig
 Guiding the system into this region will not reduce the model's /epistemic uncertainty/ because the model
 has already been trained on data from this region.
 Further to this, it some systems, it may actually be desirable to avoid entering regions of
-high /aleatoric uncertainty/.
-This is because it may result in poor performance or even catastrophic failure.
+high /aleatoric uncertainty/ because it may result in poor performance or even catastrophic failure.
 
-*** Gaussian Processes
-**** maths :ignore:
-#+BEGIN_EXPORT latex
-\newcommand{\gpDomain}{\ensuremath{\mathcal{X}}}
-#+END_EXPORT
-**** intro :ignore:
+*** Learning Single-Step Dynamics Models
+This work considers single-step dynamics models with the delta state formulation
+which regularises the predictive distribution, given by
+$\state_{\timeInd+1} &= \state_\timeInd + \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon$.
+Although multi-step dynamics models are an interesting direction for learning-based control, they are
+out of the scope of this dissertation.
+
+Single-step dynamics models have been deployed in a large variety of learning-based control algorithms.
+Early approaches include using single-step linear models citep:schneiderExploiting1996 and
+single-step \acrfull{gp} models
+citep:deisenrothPILCO2011,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018
+for low-dimensional control problems.
+More recently, single-step dynamics models have been learned using neural networks.
+For example, citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018 use ensembles
+of neural networks and citep:mcallisterImproving2016,depewegLearning2017 use Bayesian neural networks
+with parametric uncertainty.
+
+*Probabilistic models*
+/Mathematical models/ are compact representations (sets of assumptions) that attempt to capture key features of the
+phenomenon of interest, in a precise mathematical form.
+Probabilistic modelling provides the capability of constructing /mathematical models/
+that can represent and manipulate uncertainty in data, models, decisions and predictions.
+As such, linking observed data to underlying phenomena through probabilistic models,
+is an interesting direction for modelling, analysing and controlling dynamical systems.
+It enables the uncertainty to be represented and manipulated;
+it provides a systematic way to combine observations with existing knowledge, via a /mathematical model/.
+Learning representations of dynamical systems for control using probabilistic models has shown much promise.
+Moreover, learning single-step dynamics models that quantify uncertainty has been central to
+recent successes in \acrshort{mbrl} citep:chuaDeep2018,jannerWhen2019.
+
 Modelling a Bayesian belief over the dynamics function $f$ provides a principled method for modelling
 /epistemic uncertainty/ arising from learning from data, through the posterior distribution.
 Gaussian processes (GP) are the state-of-the-art approach for Bayesian nonparametric regression and
 are a building block for the methods presented in this dissertation.
-The mathematical machinery underpinning \acrshort{gp}s is detailed in this section.
+\acrshort{gp}s have become a popular choice for learning representations of dynamical systems
+citep:nguyen-tuongModel2009,buisson-fenetActively2020,wangSafe2018
+and have been used for both \acrshort{rl}
+citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaNumerical2020,polymenakosSafe2019
+and for \acrfull{mpc}
+citep:kollerLearningBased2018,hewingCautious2020,hewingLearningBased2020,kollerLearningBased2018,kamtheDataEfficient2018.
+
+# For example, see
+# cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
+# Given a historical data set of state transitions from the environment,
+# a common approach is to first learn a single-step dynamics model using a Gaussian process
+# citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
+# Alternative approaches quantify uncertainty using ensembles
+# of neural networks citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018
+# or Bayesian neural networks with parametric uncertainty citep:mcallisterImproving2016,depewegLearning2017.
+
 
 # Although \acrfull{gp} do not scale as well as deep learning in high-dimensional tasks,
 # they are powerful because of their structured handling of uncertainty.
@@ -2822,11 +2972,15 @@ The mathematical machinery underpinning \acrshort{gp}s is detailed in this secti
 # In particular, it walks through the lower bounds (used to perform variational inference) that are the building blocks
 # of the inference in this thesis.
 
-**** Multivariate Gaussian Identities
+*** Gaussian Processes
+**** intro :ignore:
+The mathematical machinery underpinning \acrshort{gp}s is now detailed.
+
+*Multivariate Gaussian identities*
 Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
 As such, introducing the multivariate Gaussian identities is a natural place to start.
 
-Gaussian distributions are very popular in machine learning and control theory. This is not only due to their
+Gaussian distributions are popular in machine learning and control theory. This is not only due to their
 natural emergence in statistical scenarios (central limit theorem) but also their intuitiveness and
 mathematical properties that render their manipulation tractable and easy.
 
@@ -2875,8 +3029,8 @@ In real-world scenarios, it is desirable to consider the entire input domain, in
 pre-selecting a discrete set of locations.
 Gaussian processes provide this mathematical machinery.
 
-**** Gaussian Processes for Regression
-***** intro :ignore:
+
+*Gaussian processes*
 Informally, GPs are a generalisation of the multivariate Gaussian distribution, indexed by an
 input domain as opposed to an index set.
 Similar to how a sample from an $N-\text{dimensional}$ multivariate Gaussian is an $N-\text{dimensional}$ vector,
@@ -3006,7 +3160,7 @@ $\sigma_n^2$ quantifies the /aleatoric uncertainty/.
 This structured handling of uncertainty makes \acrshort{gp}s extremely powerful for learning representations
 of dynamical systems.
 
-***** Sparse Gaussian Processes for Regression label:sec-sparse-gps :noexport:
+**** Sparse Gaussian Processes for Regression label:sec-sparse-gps :noexport:
 The nonparametric nature of Gaussian process methods is responsible for their flexibility but also
 their shortcomings, namely their memory and computational limitations.
 In general, the computational complexity of Gaussian process methods scale with $\mathcal{O}(N^{3})$,
@@ -3170,23 +3324,24 @@ The hashed box indicates a subset of the environment that has not been observed.
 
 **** intro :ignore:
 # ***** Motivation label:to_motivation :ignore:
-In contrast, to these approaches, this work is interested in learning representations of multimodal dynamical systems.
+In contrast, to the previously presented  approaches, we are interested in learning representations
+of multimodal dynamical systems.
 cref:fig-traj-opt-over-gating-mask-svgp-all-baseline
 demonstrates the shortcomings of learning a GP dynamics model for the quadcopter navigation problem in the
 illustrative example from cref:illustrative_example.
-It shows the results of performing trajectory
-optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
+It shows the results of performing trajectory optimisation in a GP dynamics model trained on state
+transitions sampled from *both* dynamics modes.
 The GP has not been able to learn a representation of the dynamics which is true to the underlying system,
 due to the discontinuities associated with the multimodal transition dynamics (changing lengthscales/noise variances etc).
-The optimised controls successfully drive the GP dynamics (magenta) from the start state $\state_0$,
-to the target state $\targetState$.
-However, as the GP does not represent the true underlying dynamics accurately,
+The trajectory optimiser was able to find a trajectory from the start state $\state_0$,
+to the target state $\targetState$ in the GP dynamics (magenta).
+However, as the GP dynamics do not represent the true underlying dynamics accurately,
 the optimised controls do not successfully navigate to the target state $\targetState$ in the environment (cyan).
 This example motivates the need to correctly identify the underlying modes when learning representations of
 multimodal dynamical systems for control.
 
 cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline shows results after training on state transitions from
-only the desired (operable) dynamics mode (red).
+only the desired, operable dynamics mode (red).
 The learned dynamics model is able to accurately predict state transitions in the desired dynamics mode (red).
 However, as this approach only considers the dynamics of the desired mode,
 trajectories in the environment (cyan) deviate from those planned in the
@@ -3218,19 +3373,28 @@ are \textit{not fully known a priori}, partitioning the data set and learning th
 \begin{myquote}
 Following standard methodologies, the trajectories in \cref{fig-traj-opt-over-gating-mask-svgp-baseline}
 were found by minimising the expected cost
-under the state distribution, resulting from cascading single-step predictions through the GP dynamics model.
+under the state distribution, resulting from cascading single-step predictions through the GP dynamics model
+using the moment matching approaximation \cite{kussGaussian2006}.
 A terminal state cost term ensured trajectories ended at the target state and
 a quadratic integral control cost term regularised the controls to encode the notion of
 "minimal effort" control.
 \end{myquote}
 #+END_EXPORT
 
-The introduction of /latent variables/ into probabilistic models is a key component providing them with interesting
-and powerful capabilities for synergising model learning and control.
-For example, cite:hafnerLearning2019,rybkinModelBased2021
-\todo{add more latent space dynamics refs}
-learn /latent spaces/ which provide convenient spaces for planning.
-\marginpar{latent spaces for control}
+Methods for learning probabilistic multimodal dynamics have been proposed.
+cite:moerlandLearning2017 use deep generative models, namely a conditional \acrfull{vae},
+to learn multimodal transition dynamics for \acrfull{mbrl}.
+cite:kaiserBayesian2020 use the data association with \acrshort{gp}s model;
+a Bayesian model that learns independent dynamics modes whilst maintaining a
+probabilistic belief over which mode is responsible for predicting at a given input location.
+cite:mckinnonLearning2017 also use an approach based on \acrshort{gp} except that they use a
+\acrfull{mogpe} method to learn the switching behaviour for robot dynamics online.
+
+*Latent spaces for control*
+It is worth noting that the introduction of /latent variables/ into probabilistic models
+is a key component providing them with interesting and powerful capabilities for synergising model learning and control.
+For example, cite:hafnerLearning2019,rybkinModelBased2021 learn /latent spaces/ which provide
+convenient spaces for control (or planning)
 cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline highlights the need for learning
 informative latent variables representing how the system switches between the underlying dynamics modes.
 Without such information, it is not possible to encode the notion of mode remaining/avoiding behaviour.
@@ -3243,12 +3407,6 @@ that are rich with information regarding how a system switches between its under
 #    - rich with information regarding the mode switching behaviour.
    # - this could be achieved by providing handles for encoding informative domain knowledge, in turn, constraining the set of admissible functions,
 
-Methods for learning probabilistic multimodal transition dynamics have been proposed.
-cite:moerlandLearning2017 use deep generative models, namely a conditional \acrfull{vae},
-to learn multimodal transition dynamics for \acrfull{mbrl}.
-However, encoding expert domain knowledge into \acrshort{vae}s is difficult, which makes
-it hard to ensure that the correct underlying dynamics modes are learned.
-Alternatively, cite:mckinnonLearning2017 use a \acrshort{mogpe} method to learn switching
 # robot dynamics online.
 # Their model uses a gating network based on a Dirichlet process to model how the system switches between the underlying
 # dynamics modes. The Dirichlet process models the switching behaviour via clustering.
@@ -3293,77 +3451,6 @@ Alternatively, cite:mckinnonLearning2017 use a \acrshort{mogpe} method to learn 
 
 # approaches but they are out of the scope of this dissertation.
 # There are many \acrshort{mfrl} approaches but they are out of the scope of this dissertation.
-
-** Model-based Control and Planning
-They have then been used for online \acrfull{mpc}
-cite:chuaDeep2018,kamtheDataEfficient2018,nagabandiDeep2020,lambertLowLevel2019,
-*** Trajectory Optimisation
-*** Model Predictive Control
-Instead of approximating the value function or policy, it is possible to directly optimise the controls $\control_t$
-over a horizon $T$.
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-trajectory-optimisation}
-\min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
-\mid \state_0=\state \right] \\
-&\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t)
-\end{align}
-#+END_EXPORT
-which finds an optimal sequence of controls $\controlTraj$ for a given start state $\state_0$.
-This is known as trajectory optimisation
-Iteratively applying the first control $\control_0$ and resolving this nonlinear program is known as
-\acrfull{mpc} cite:eduardof.Model2007.
-This resulting controller is close-loop, however, in practice, it is often too computationally expensive to obtain
-real-time control.
-Many approximate solutions have been introduced in the literature, that seek to balance the computational complexity
-and accuracy trade-off differently cite:bettsSurvey1998.
-
-For example, \acrfull{ilqr} can be used to generate trajectories for non-linear systems by
-iteratively approximating the dynamics to be linear around a nominal trajectory and optimising for the controls.
-\acrshort{ilqr} works well for quadratic cost functions but can be used with any cost function by approximating the cost
-function with a second order Taylor expansion.
-However, in this case iLQR is susceptible to converging
-to terrible (local) optima if the true cost function is highly non-convex.
-cite:boedeckerApproximate2014 present a real-time iLQR controller based on sparse GPs.
-cite:rohrProbabilistic2021 propose a novel LQR controller synthesis for
-linearised GP dynamics that yields robust controllers with respect to a probabilistic stability margin.
-In cite:marcoAutomatic2016 they parameterise the weight matrices
-$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
-and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
-
-# *Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
-# iLQR to a stochastic setting, where the process
-# noise is assumed to be Gaussian.
-# cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
-
-# *Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
-# the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
-# cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
-# over the entire control sequence.
-# Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
-# and the quadratic model is inaccurate.
-# \todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
-# DDP solutions provides greater accuracy than iLQG/iLQR but
-# at the cost
-# of increased computational time cite:tassaSynthesis2012.
-# The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
-# DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
-
-# cite:panProbabilistic2014 present a probabilistic trajectory optimisation
-# framework for systems with unknown dynamics called probabilistic
-# differential dynamic programming (PDDP).
-# It extends DDP to explicitly account
-# for uncertainty in dynamics modelled using gaussian processes.
-# In contrast to typical gradient based policy search methods, PDDP does not
-# require a policy parameterisation as it learns a locally optimal,
-# time-varying control policy.
-# Based on the second-order local approximation of the value function,
-# PDDP performs Dynamic Programming around a nominal trajectory in Gaussian belief spaces.
-
-# *Path Integral*  control is a method for developing optimal controls based on stochastic
-# sampling of trajectories cite:theodorouGeneralized2010.
-# This work was originally limited to control affine systems cite:williamsModel2017
-# but has since been extended to general nonlinear
-# dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
 
 ** Uncertainty-based Exploration Strategies label:sec-unc-exploration
 *Thompson sampling*
