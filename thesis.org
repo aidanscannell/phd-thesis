@@ -9974,15 +9974,19 @@ indicator variable $\modeVar$.
 # it is interesting to see their impact on the posteriors over the latent variables.
 
 The lengthscale of the gating network kernel governs how fast the model can shift responsibility from
-expert one to expert two.
+expert one (cyan) to expert two (magenta).
 For both lower bounds
 the distribution over the expert indicator variable tends to a uniform distribution (maximum entropy)
 at $x \geq 1.5$.
-Optimising with both bounds resulted in expert one learning a
+This can be seen by the cyan/magenta lines in
+cref:fig-mixing-probs-mcycle-two-experts-tight,fig-mixing-probs-mcycle-two-experts-further tending to $0.5$.
+Optimising with both bounds resulted in expert one (cyan) learning a
 long lengthscale to fit the horizontal line from $-2$ to $-1$ and
-expert two learning a shorter lengthscale function to fit the wiggly section from $-0.5$ to $1.2$.
+expert two (magenta) learning a shorter lengthscale function to fit the wiggly section from $-0.5$ to $1.2$.
 The noise variance inferred by expert one is larger for $\furtherBoundTwo$ than for $\furtherBound$.
 The uncertainty in the experts' latent functions is also higher for $\furtherBoundTwo$.
+This is shown by the $95%$ confidence intervals (shaded cyan/magenta) being wider in
+cref:fig-expert-gps-mcycle-two-experts-further than in cref:fig-expert-gps-mcycle-two-experts-tight.
 This is because $\furtherBoundTwo$ is attempting to fit both experts to the entire data set and only
 mixes their noise models.
 In contrast, $\furtherBound$ fits each expert only in the regions where the gating network has
@@ -10216,21 +10220,36 @@ From cref:tab-mcycle-metrics, it is clear that the predictive posterior associat
 is the most accurate as it obtained the highest NLPP score.
 As expected, the two lower bounds explain the data completely differently.
 Instantiating the model with three experts $\ModeInd=3$ and training with $\furtherBound$,
-leads to the extra expert fitting to the data at $x \geq 1.5$ and the gating network assigning responsibility to it
-in this region.
+leads to the extra expert (magenta) fitting to the data at $x \geq 1.5$ and the gating network
+assigning responsibility to it in this region.
 In contrast, instantiating the model with three experts $\ModeInd=3$ and training with
-$\furtherBoundTwo$, results in the gating network never using the extra expert.
+$\furtherBoundTwo$, results in the gating network never using the extra expert (cyan).
+This is indicated by the extra expert's probability (cyan) remaining low over the region with training data in
+cref:fig-mixing-probs-mcycle-three-experts-further.
 Similar to the two expert case, the distribution over the expert indicator variable at $x \geq 1.5$
 tends to a uniform distribution (maximum entropy).
 
 In cref:fig-expert-gps-mcycle-three-experts-tight the third expert's posterior returns to the prior at
 $x \geq 1.5$.
+This is indicated by the $95%$ confidence intervals associated with the third expert's \acrshort{gp} (shaded yellow)
+being wide in this region.
 This demonstrates that not only is the gating network turning the experts "on" and "off" in different regions
 but the model is also exhibiting data assignment behaviour.
 That is, each expert appears to only be fitting to the observations in the regions where the gating network
 has assigned it responsibility.
 In our case, this behaviour is achieved via the inducing variables capturing the joint distribution over the
 experts and the set of assignments, i.e. implicitly assigning data points to experts.
+
+**** Summary
+The tight lower bound $\tightBound$ and further lower bound $\furtherBound$ recovered similar results in
+all experiments.
+This indicates that $\furtherBound$ does not loosen the bound to a point where it loses valuable information.
+In contrast, $\furtherBoundTwo$ is not able to recover the same results.
+This was expected as $\furtherBoundTwo$ corresponds to a further likelihood approximation, where
+the experts' noise models are mixed instead of their full SVGPs.
+$\furtherBound$ offers a rich ELBO for optimising \acrshort{mosvgpe} that achieves similar results to $\tightBound$,
+whilst having lower computational complexity per evaluation.
+For this reason, the remainder of this dissertation uses $\furtherBound$ for all experiments.
 
 # This demonstrates the flexibility of \acrshort{mosvgpe} to assign data points "softly" via the inducing variables.
 
@@ -10290,7 +10309,7 @@ their associated mixing probabilities $\approxPredictiveProb$ in
 \clearpage
 #+END_EXPORT
 
-**** Batch Size vs Number of Inducing Points
+**** Batch Size vs Number of Inducing Points :noexport:
 # This section provides a brief evaluation on the effect of the number of inducing points and batch size.
 
 *Batch size*
@@ -10477,7 +10496,7 @@ a velocity controlled DJI Tello quadcopter and a Vicon tracking system.
 A high turbulence dynamics mode was induced by placing a desktop fan at the right side of a room.
 cref:fig-quadcopter-environment shows a diagram of the environment.
 The data set represents samples from a dynamical system with constant controls, i.e.
-$\Delta\state_{\timeInd} = \latentFunc(\state_{\timeInd-1};\control_{\timeInd-1}=\control_*)$.
+$\Delta\state_{\timeInd+1} = \latentFunc(\state_{\timeInd};\control_{\timeInd}=\control_*)$.
 # The resulting data set has two-dimensional inputs and two-dimensional outputs, making it easy to visualise
 # the different components of the model.
 #+BEGIN_EXPORT latex
@@ -10488,7 +10507,6 @@ $\Delta\state_{\timeInd} = \latentFunc(\state_{\timeInd-1};\control_{\timeInd-1}
 \includegraphics[width=\textwidth]{./images/brl-quadcopter-domain-figure.png}
 \subcaption{Diagram showing a top down view of the environment (a room in the Bristol Robotics Laboratory).}
 \label{fig-quadcopter-environment}
-\todo{add better diagram of environment}
 \end{minipage}
 \begin{minipage}[r]{0.44\columnwidth}
 %\includegraphics[width=\textwidth]{./images/quiver_step_20_direction_down.png}
@@ -10505,7 +10523,7 @@ $\Delta\state_{\timeInd} = \latentFunc(\state_{\timeInd-1};\control_{\timeInd-1}
 (the $x$ and $y$ coordinates), which is a realistic assumption,
 as altitude control can be achieved with a separate controller.
 The state space is then the 2D coordinates $\state = [x, y]$ and the control is simply the velocity
-$\control = [\dot{x}, \dot{y}]$.
+$\control = [v_x, v_y]$.
 
 *Data collection* The Vicon system provided access to the true position of the quadcopter at all times, which
 enabled pre-planned trajectories to be flown, using a simple PID controller on
@@ -10534,10 +10552,52 @@ Each trajectory was repeated 7 times to capture the variability (process noise) 
 *Data processing* The Vicon stream recorded data at 100Hz, which was then down sampled to
 give a time step of $\Delta t = 0.1s$.
 This reduced the size of the data set and left reasonable lengthscales.
-The data set consists of $\NumData=2081$ state transitions.
-\todo{update data set size}
+The data set consists of $\NumData=1816$ state transitions.
 cref:fig-quiver visualises the state transition data set as a quiver plot.
 # cref:fig-quiver is a quiver plot showing the resulting data set.
+
+**** parameter settings :ignore:
+#+begin_table
+#+LATEX: \caption{Initial parameter settings before training on the real-world velocity controlled quadcopter data set.}
+#+LATEX: \label{tab-params-quadcopter}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center nil
+|                 | Description                | Symbol                    | Value                                                                                         |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                 | Num data                   | $\NumData$                | $1816$                                                                                        |
+|                 | Batch size                 | $\NumData_b$              | $64$                                                                                          |
+| Optimiser       | Num epochs                 | N/A                       | $10000$                                                                                       |
+|                 | Num gating samples         | $\hat{S}$                 | $1$                                                                                           |
+|                 | Num expert samples         | $S$                       | $1$                                                                                           |
+|                 | Learning rate              | N/A                       | $0.01$                                                                                        |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                 | Constant mean function     | $c_1$                     | $[0,0]$                                                                                       |
+|                 | Kernel variance            | $\sigma_f$                | $0.1$                                                                                         |
+|                 | Kernel lengthscales        | $l$                       | $[2, 2]$                                                                                      |
+|                 | Likelihood variance        | $\Sigma_{\epsilon_1}$     | $\diag([0.0011, 0.0011])$                                                                     |
+| Expert 1        | Num inducing points        | $\NumInducing$            | $100$                                                                                         |
+|                 | Inducing inputs            | $\expertsInducingInput_1$ | $\expertsInducingInput_1 \subseteq \allInput$ with $\#\expertsInducingInput_1 = \NumInducing$ |
+|                 | Inducing variable mean     | $\hat{\mathbf{m}}_1$      | zeros plus Gaussian noise                                                                     |
+|                 | Inducing variable Cholesky | $\hat{\mathbf{S}}_1$      | ones plus Gaussian noise                                                                      |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                 | Constant mean function     | $c_2$                     | $[0,0]$                                                                                       |
+|                 | Kernel variance            | $\sigma_f$                | $20$                                                                                          |
+|                 | Kernel lengthscales        | $l$                       | $[0.5, 0.5]$                                                                                  |
+|                 | Likelihood variance        | $\Sigma_{\epsilon_2}$     | $\diag([1.9,1.9])$                                                                            |
+| Expert 2        | Num inducing points        | $\NumInducing$            | $100$                                                                                         |
+|                 | Inducing inputs            | $\expertsInducingInput_2$ | $\expertsInducingInput_2 \subseteq \allInput$ with $\#\expertsInducingInput_2 = \NumInducing$ |
+|                 | Inducing variable mean     | $\hat{\mathbf{m}}_2$      | zeros plus Gaussian noise                                                                     |
+|                 | Inducing variable Cholesky | $\hat{\mathbf{S}}_2$      | ones plus Gaussian noise                                                                      |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                 | Kernel variance            | $\sigma_f$                | $0.6$                                                                                         |
+|                 | Kernel lengthscales        | $l$                       | $[0.1, 0.1]$                                                                                  |
+| Gating function | Num inducing points        | $\NumInducing$            | $100$                                                                                         |
+|                 | Inducing inputs            | $\expertInducingInput$    | $\expertInducingInput \subseteq \allInput$ with $\#\expertInducingInput = \NumInducing$       |
+|                 | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                                     |
+|                 | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | $2 \times$ ones plus Gaussian noise                                                           |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+#+LATEX: }
+#+end_table
 
 **** Results
 The model was instantiated with two experts, with the goal of each expert learning a separate dynamics mode and the
@@ -10601,11 +10661,11 @@ higher.
 This result makes sense as the data set was assumed to be collected with constant controls.
 The region with high predictive mean in front of the fan, is modelling the drift arising from the fan blowing the quadcopter in the negative $x$ direction.
 The right hand plots of Figure ref:fig-y-mm-quadcopter-subset
-show the predictive variance. It is high where there are no training observations,
+show the predictive variance. It is high in the bottom left where there are no training observations,
 indicating that the method has successfully represented the model's /epistemic uncertainty/.
 It is also high in the region in front of the fan, showing that the model has successfully inferred
 the high process noise, associated with the turbulence induced by the fan.
-Let us now visualise the individual experts and the gating network separately.
+The individual experts and the gating network are now visualised separately.
 # As the data set was assumed to have constant controls, this result aligns with our knowledge of the environment.
 # That is, the dynamics should be constant
 # dynamics should be constant
@@ -10613,13 +10673,13 @@ Let us now visualise the individual experts and the gating network separately.
 *Gating network*
 Figure ref:fig-gating-network-quadcopter-subset shows the gating network after training on the
 data set.
-Figure ref:fig-gating-mixing-probs-quadcopter-subset indicates that the model has assigned responsibility
+Figure ref:fig-gating-mixing-probs-quadcopter-subset (right) indicates that the model has assigned responsibility
 to Expert 2 in front of the fan, as its mixing probability
-$\Pr(\singleTestModeVar=1 \mid \singleTestInput)$ is high in this region.
+$\Pr(\singleTestModeVar=1 \mid \singleTestInput)$ is high (red) in this region.
 This implies that Expert 2 represents the turbulent dynamics mode in front of the fan.
 Figure ref:fig-gating-gps-quadcopter-subset shows the GP posteriors associated with the gating functions.
 The mean of the gating function associated with Expert 1 $\E[h_{1}(\singleTestInput)]$ is
-high in the low-turbulence regions and low in the high-turbulence region in front of the fan.
+high (red) in the low-turbulence regions and low (white) in the high-turbulence region in front of the fan.
 The posterior variance associated with the gating function GPs is high in the region with no training
 observations. This is a desirable behaviour because it is modelling the /epistemic uncertainty/.
 These results demonstrate that the gating network infers important information regarding how the
@@ -10655,7 +10715,7 @@ Either the gating function(s) are all equal and their posterior variance(s) are 
 can predict confidently but is unsure which expert is responsible.
 This could mean that an extra expert is responsible for predicting at this location.
 Alternatively, the gating functions' posterior variance(s) could be high, implying
-that the model is not confident in predicting which expert is responsible at the given input location.
+that the model is not confident predicting which expert is responsible at the given input location.
 Importantly, the GP posteriors associated with our gating network, not only infer information regarding the
 mode switching, but also model the gating network's /epistemic uncertainty/.
 These GP posteriors provide convenient latent spaces for control and
@@ -10674,7 +10734,7 @@ in the two bottom left plots of Figure ref:fig-experts-f-quadcopter-subset.
 It has also learned the control response of the PID controller correcting for the deviation
 from the reference trajectory, indicated by the white region below $y=0$.
 The control response is an artifact of the data collection process.
-It is clear that Expert 2 has learned both the drift and process noise terms
+Expert 2 has therefore learned both the drift and process noise terms
 associated with the turbulent dynamics mode.
 
 Both experts were initialised with independent inducing inputs, $\expertInducingInput$, providing the model
@@ -10683,22 +10743,21 @@ That is, each expert has the freedom to set its inducing inputs, $\expertInducin
 to support only a subset of the data set.
 The posterior (co)variance associated with each expert represents their /epistemic uncertainty/.
 The top right plot in Figure ref:fig-experts-f-quadcopter-subset shows the posterior variance associated with
-the $x$ dimension of Expert 1.
+the $x$ output dimension of Expert 1.
 The posterior variance is high in front of the fan because the gating network has assigned responsibility to the
 other expert in this region.
-It is also high in the region where the model has had no training observations, as would be expected.
-However, the posterior variance associated with the $y$ dimension of Expert 1, is not high in this region.
-This is due to the lengthscale of the second output dimension allowing Expert 1 to confidently extrapolate.
-\todo{is this because of the lengthscale or is it due to gating network}
+However, the posterior variance associated with the $y$ output dimension of Expert 1, is not high in this region.
+This is due to the lengthscale of the $y$ output dimension allowing Expert 1 to confidently extrapolate.
+# It is also high in the region where the model has had no training observations, as would be expected.
 
 The bottom right two plots in Figure ref:fig-experts-f-quadcopter-subset show the posterior variance
-associated with the $x$ and $y$ dimensions of Expert 2.
+associated with the $x$ and $y$ output dimensions of Expert 2.
 The posterior variance is high everywhere except for the region in front of the fan.
 Again, this is due to the gating network assigning responsibility to the other expert outside of the region in
 front of the fan.
-It is clear from these results that the likelihood approximation in cref:eq-likelihood-approximation, combined with our gating network
-and variational inference scheme, are capable of modelling the assignment of observations to experts via
-the inducing points.
+These results demonstrate that the likelihood approximation in cref:eq-likelihood-approximation,
+combined with our gating network and variational inference scheme, are capable of modelling the
+assignment of observations to experts via the inducing points.
 
 
 
@@ -10982,13 +11041,13 @@ the angular (yaw) velocity $\dot{\yaw}$,
 
 
 \newpage
-** Remarks
+** Discussion and Future Work
 
 *Implicit data assignment*
 It is worth noting that in contrast to other MoGPE methods, this model does not directly assign observations to experts.
 However, after augmenting each expert with separate inducing points,
 the model has the flexibility to loosely /partition/ the data set.
-Just as sparse GP methods can be viewed as methods that parameterise a full nonparametric GP,
+Just as sparse GP methods can be viewed as methods that parameterise the full nonparametric GP,
 our approach can be viewed as parameterising the nonparametric Mixture of Gaussian Process Experts.
 Conveniently, our parameterisation, in particular the likelihood approximation in cref:eq-likelihood-approximation,
 deals with the issue of marginalising exponentially many sets of assignments of observations to experts.
@@ -11030,7 +11089,8 @@ Further to this, formulating the gating network GPs
 with differentiable mean and covariance functions, enables techniques from Riemannian geometry
 to be deployed on the gating functions citep:carmoRiemannian1992.
 The power of the \acrshort{gp}-based gating network will become apparent
-when its latent /geometry/ is leveraged for control in cref:chap-traj-opt-geometry.
+when its latent /geometry/ is leveraged for control in cref:chap-traj-opt-geometry and when
+its \acrshort{gp}s are used to develop an information-based exploration strategy in cref:chap-active-learning.
 # In particular, cref:chap-traj-opt-geometry is interested in finding length minimising trajectories on the
 # gating functions' GP posteriors, aka geodesic trajectories citep:tosiMetrics2014.
 
