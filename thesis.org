@@ -228,14 +228,6 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \usepackage{tikz}
 #+LATEX_HEADER: \usetikzlibrary{bayesnet}
 
-*** Notes in margins
-# #+LATEX_HEADER: \usepackage{geometry}
-#+LATEX_HEADER: \setlength{\marginparwidth}{3cm}
-# #+LATEX_HEADER: \xdef\marginnotetextwidth{\textwidth}
-#+LATEX_HEADER: \usepackage{marginnote}
-# #+LATEX_HEADER: \renewcommand*{\marginfont}{\footnotesize}
-# #+LATEX_HEADER: \newcommand{\parmarginnote}[1]{\hspace{\z@}\marginnote{#1}\ignorespaces}
-#+LATEX_HEADER: \newcommand{\parmarginnote}[1]{\marginnote{#1}}
 *** Captions
 # #+LATEX_HEADER: \usepackage{caption}
 # #+LATEX_HEADER: \usepackage{subcaption}
@@ -693,6 +685,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 {{{acronym(moe,MoE,Mixture of Experts)}}}
 {{{acronym(mosvgpe,MoSVGPE,Mixtures of Sparse Variational Gaussian Process Experts)}}}
 {{{acronym(gp,GP,Gaussian Process)}}}
+{{{acronym(fitc,FITC,Fully Independent Training Conditional)}}}
 {{{acronym(mdp,MDP,Markov Decision Process)}}}
 {{{acronym(ard,ARD,Automatic Relevance Determination)}}}
 {{{acronym(ode,ODE,Ordinary Differential Equation)}}}
@@ -767,9 +760,9 @@ Make the equation numbers follow the chapter, not the whole thesis.
     \begin{minipage}{10cm}
       A dissertation submitted to the University of Bristol and the University of the West of England in accordance with the requirements of the degree of \textsc{Doctor of Philosophy} in the Faculty of Engineering.
     \end{minipage}\\
-     \vspace{\baselineskip}
+    % \vspace{\baselineskip}
     % \vspace{\stretch{1}}
-    # \vspace{\baselineskip}
+    \vspace{\baselineskip}
     \vspace{\stretch{1}}
     \noindent
     \begin{tabular}{@{}l@{\hspace{22pt}}ll}
@@ -806,7 +799,7 @@ Make the equation numbers follow the chapter, not the whole thesis.
 
 %From robotics, to industrial processing, to finanace, learning-based approaches to control
 %help alleviate the dependence on domain exerts for system identification and controller design.
-This dissertation is concerned with learning-based control for robotic systems in multimodal environments,
+This dissertation is concerned with learning-based control for robotic systems subject to multiple dynamics modes,
 where both the underlying dynamics modes, and how the system switches between them, are \textit{not fully known a priori}.
 In particular, it is interested in controlling multimodal dynamical system to a target state,
 whilst remaining in a desired dynamics mode.
@@ -850,7 +843,7 @@ The first two approaches
 exploit concepts of Riemannian geometry -- extended to probabilistic geometries -- to encode the mode remaining
 behaviour, whilst the third approach formulates the control problem as probabilistic inference
 and encodes the mode remaining behaviour by conditioning on a mode assignment variable.
-All three algorithms are evaluated in a set of simulated quadcopter experiments, which highlight that only two of the
+All three algorithms are evaluated in a set of simulated quadcopter experiments, which demonstrates that two of the
 algorithms consistently perform well.
 % , whilst the other does not.
 % , as well as a data set collected onboard
@@ -1017,8 +1010,8 @@ until it can find a trajectory to the target state that does not violate the cha
 # http://www.bristol.ac.uk/academic-quality/pg/pgrcode/annex17/
 #+BEGIN_EXPORT latex
 \begin{SingleSpace}
-In order to mitigate risk due to Covid-19 lab closures, many of the methods in this dissertation were validated in
-simulation, as opposed to in real-world experiments.
+In order to mitigate risk due to Covid-19 lab closures, many of the methods in this dissertation are validated in
+simulated experiments and not in real-world experiments.
 A real-world state transition data set was collected by flying a quadcopter around the \acrfull{brl} with constant controls.
 This data set was used to test the \acrshort{mosvgpe} method in \cref{sec-brl-experiment}
 and to test the collocation solver presented in \cref{sec-traj-opt-collocation}.
@@ -1029,7 +1022,7 @@ In order to mitigate the risk associated with Covid-19 lab closures, we decided 
 that could be used to train the dynamics model (with controls).
 Instead, we developed a simulator and used it to generate a data set.
 This had the added benefit that the simulator could be used to test the trajectory optimisation
-algorithms in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-active-learning}.
+algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-active-learning}.
 %without requiring aceess to the \acrshort{brl}.
 
 %It was used to train the model in cref:sec-traj-opt-collocation,sec-brl-experiment
@@ -1083,9 +1076,9 @@ You have shown me how to build rich intuitions for seemingly complex problems
 and you have generally inspired me as an academic.
 I could not have asked for better supervisors.
 
-I have thoroughly enjoyed our disscusions,
-Arthur, I have especially enjoyed the many connections you've made between machine learning concepts and control theory.
-Carl,
+%I have thoroughly enjoyed our disscusions,
+%Arthur, I have especially enjoyed the many connections you've made between machine learning concepts and control theory.
+%Carl,
 %in particular, our many whiteboard sessions.
 %and how to find there simple solutions
 
@@ -1105,14 +1098,19 @@ Carl,
 %Arthur, you have taught me how to find the right problem
 
 
-I want to thank my family: mum, dad, Ciaran and Mhairi, for be amazing;
+I want to thank my family: mum, dad, Ciaran and Mhairi, for being amazing;
 none of this would have been possible without your support.
 I love you all very much.
-I am also grateful to my friends, you have made my time in Bristol so much fun!
+I am also grateful to my friends who have made my time in Bristol so much fun!
 
-Finally, I would like to thank the Reddit users that supported me through my journey with RSI.
+I would like to thank the Reddit users that supported me through my journey with RSI.
 It seems like a life time ago since I was consiering giving up my PhD along with all my hopes of a career in programming.
 Your support gave me the confidence that I needed to overcome my RSI. I am eteranlly grateful.
+
+This dissertation was written in Org Mode and exported to LaTeX.
+Writing my dissertaion in Org Mode has been an enjoyable experience and I would like to
+thank everyone that helped me get started with Emacs.
+I would especially like to thank all of the contributors to GNU Emacs and Org Mode.
 
 %I acknowledge the financial support toward this PhD from the EPSRC
 %Centre for Doctoral Training in Future Autonomous and Robotic Systems (FARSCOPE) at the
@@ -1120,203 +1118,25 @@ Your support gave me the confidence that I needed to overcome my RSI. I am etera
 This work was supported by the EPSRC Centre for Doctoral Training in Future
 Autonomous and Robotic Systems (FARSCOPE) at the Bristol Robotics Laboratory.
 
-This dissertation was written in org-mode for Emacs and exported to LaTeX
 \end{SingleSpace}
 #+END_EXPORT
 * TOC and Mainmatter :ignore:
 #+BEGIN_EXPORT latex
 \makeindex
 \tableofcontents
-\addtocontents{toc}{\par\nobreak \mbox{}\hfill{\bf Page}\par\nobreak}
+%\addtocontents{toc}{\par\nobreak \mbox{}\hfill{\bf Page}\par\nobreak}
 \clearemptydoublepage
 %
 \listoftables
-\addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
+%\addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
 \clearemptydoublepage
 %
 \listoffigures
-\addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
+%\addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
 \clearemptydoublepage
 
 \mainmatter
 #+END_EXPORT
-
-* Testing Maths Variables :noexport:
-** Tables :ignore:
-#+CAPTION: Variables
-| Name                    | Symbol     | Equation                                                   |
-|-------------------------+------------+------------------------------------------------------------|
-| State                   | $\state$   | $\R^{\StateDim}$                                           |
-| Control                 | $\control$ | $\R^{\ControlDim}$                                         |
-| Time                    | $t$        | $\R$                                                       |
-| State-action input      | $\x$       | $(\state, \control) \in \R^{\StateDim \times \ControlDim}$ |
-| State difference        | $\y$       | $\state_{t} - \state_{t-1} \in \R^{\StateDim}$             |
-| Mode indicator variable | $\modeVar$ | $\{1,\ldots,\ModeInd\}$                                    |
-|                         |            |                                                            |
-
-#+CAPTION: Variables at single data points
-| Name                    | Symbol           | Equation                                                          |
-|-------------------------+------------------+-------------------------------------------------------------------|
-| State                   | $\singleState$   | $\R^{\StateDim}$                                                  |
-| Control                 | $\singleControl$ | $\R^{\ControlDim}$                                                |
-| State-Action input      | $\singleInput$   | $(\singleState, \singleControl) \in \R^{\StateDim + \ControlDim}$ |
-| State Difference        | $\singleOutput$  | $\R^{\StateDim}$                                                  |
-| Mode indicator variable | $\modeVarn$      | $\{1,\ldots,\ModeInd\}$                                           |
-
-#+CAPTION: Variables at all data points
-| Name                    | Symbol        | Equation                                                                      |
-|-------------------------+---------------+-------------------------------------------------------------------------------|
-| State                   | $\allState$   | $\R^{\NumData \times \StateDim}$                                              |
-| Control                 | $\allControl$ | $\R^{\NumData \times \ControlDim}$                                            |
-| State-Action input      | $\allInput$   | $(\allState, \allControl) \in \R^{\NumData \times (\StateDim + \ControlDim)}$ |
-| State Difference        | $\allOutput$  | $\R^{\NumData \times \StateDim}$                                              |
-| Mode indicator variable | $\ModeVarK$   | $\{\singleData{\modeVar}=k\}_{\numData=1}^{\NumData}$                         |
-
-#+CAPTION: Gating network notation
-|                | Name                                   | Symbol        | Equation                                                                         |
-|----------------+----------------------------------------+---------------+----------------------------------------------------------------------------------|
-| Function       | Gating function k                      | $\hk$         | $\hk : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R$                    |
-|                | Gating function                        | $\gatingFunc$ | $\gatingFunc : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\ModeInd}$ |
-|----------------+----------------------------------------+---------------+----------------------------------------------------------------------------------|
-| $\singleInput$ | Gating function k at $\singleInput$    | $\hkn$        | $\hk(\singleInput) \in \R$                                                       |
-|                | Gating function at $\singleInput$      | $\hn$         | $\gatingFunc(\singleInput) \in \R^{\ModeInd}$                                    |
-|----------------+----------------------------------------+---------------+----------------------------------------------------------------------------------|
-| $\allInput$    | Gating function k                      | $\Hk$         | $\hk(\allInput) \in \R^{\NumData}$                                               |
-|                | Gating functions                       | $\Hall$       | $\gatingFunc(\allInput) \in \R^{\NumData \times \ModeInd}$                       |
-|----------------+----------------------------------------+---------------+----------------------------------------------------------------------------------|
-| $\zH$          | Inducing variables - gating function k | $\uHk$        | $\hk(\zHk) \in \R^{\NumInd}$                                                     |
-|                | Inducing variables - gating functions | $\uH$         | $\h(\zH) \in \R^{\NumInd \times \ModeInd}$                                       |
-
-
-#+CAPTION: Transition dynamics function notation
-|                | Name                                    | Symbol  | Equation                                                                                 |
-|----------------+-----------------------------------------+---------+------------------------------------------------------------------------------------------|
-|                | Dimension d of mode k                   | $\fkd$  | $\fkd : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R$                           |
-| Function       | Mode k                                  | $\fk$   | $\fk : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\StateDim}$                |
-|                | All modes function                                          | $\f$    | $\f : \R^{\StateDim} \times \R^{\ControlDim} \rightarrow \R^{\ModeInd \times \StateDim}$ |
-|----------------+-----------------------------------------+---------+------------------------------------------------------------------------------------------|
-|                | Dimension d mode k                      | $\fknd$ | $\fkd(\singleInput) \in \R$                                                              |
-| $\singleInput$ | Mode k                                  | $\fkn$  | $\fk(\singleInput) \in \R^{\StateDim}$                                                   |
-|                | All modes                               | $\fn$   | $\f(\singleInput) \in \R^{\ModeInd \times \StateDim}$                                    |
-|----------------+-----------------------------------------+---------+------------------------------------------------------------------------------------------|
-|                | Dimension d mode k                      | $\Fkd$  | $\fkd(\allInput) \in \R^{\NumData}$                                                      |
-| $\allInput$    | Mode k                                  | $\Fk$   | $\fk(\allInput) \in \R^{\NumData \times \StateDim}$                                      |
-|                | All modes                               | $\F$    | $\f(\allInput) \in \R^{\NumData \times \ModeInd \times \StateDim}$                       |
-|----------------+-----------------------------------------+---------+------------------------------------------------------------------------------------------|
-|                | Inducing variables - dimension d mode k | $\uFkd$ | $\fkd(\zFkd) \in \R^{\NumInd}$                                                           |
-| $\zF$          | Inducing variables - mode k             | $\uFk$  | $\fk(\zFk) \in \R^{\NumInd \times \StateDim}$                                            |
-|                | Inducing variables - all modes          | $\uF$   | $\f(\zF) \in \R^{\NumInd \times \ModeInd \times \StateDim}$                              |
-** Experts
-GP prior over each output dimension $d$ for each dynamics mode $k$,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-single-expert-prior-single-dim}
-p\left(\Fkd \mid \allInput \right) &= \mathcal{N}\left( \Fkd \mid \singleDimMode{\mu}(\allInput), \singleDimMode{k}(\allInput, \allInput) \right)
-\end{align}
-#+END_EXPORT
-Assume each output dimension is independent,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-single-expert-prior}
-\pFk &= \prod_{\stateDim=1}^{\StateDim} \pFkd
-\end{align}
-#+END_EXPORT
-Assume each dynamics mode $k$ is independent,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-prior}
-\pF &= \prod_{k=1}^{K} \pFk
-\end{align}
-#+END_EXPORT
-The process noise in each mode is modelled as,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-single-expert-likelihood}
-\pYkGivenFk = \prod_{\numData=1}^{\NumData} \pykGivenfk &= \prod_{\numData=1}^{\NumData} \mathcal{N}\left( \singleOutput \mid \fkn, \text{diag}\left[ \left(\noiseVarOneK\right)^{2}, \ldots, \left( \noiseVarDK \right)^{2} \right]  \right)
-\end{align}
-#+END_EXPORT
-where $\noiseVardK$ represents the noise variance associated with the $d$^{\text{th}} dimension of the $k$^{\text{th}} mode.
-
-Each expert is then given by marginalising its associated latent function values,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-single-expert}
-\pYkGivenX = \int  \pYkGivenFk \pFk \text{d} \Fk
-\end{align}
-#+END_EXPORT
-
-The dynamics modes are combined via a distribution over the mode indicator variable $\modeVar$.
-The resulting marginal likelihood is given by,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-experts-prior}
-\pYGivenX = \sum_{\modeInd=1}^{\ModeInd} \Pr(\ModeVarK) \pYkGivenX
-\end{align}
-#+END_EXPORT
-
-** Mixture of Experts
-Mixture model marginal likelihood,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mixture-marginal-likelihood}
-\pYGivenX = \prod_{\numData=1}^{\NumData} \sum_{\modeInd=1}^{\ModeInd} \Pr(\modeVarK) p(\singleOutput \mid \modeVarn=\modeInd, \singleInput)
-\end{align}
-#+END_EXPORT
-Mixture of experts marginal likelihood,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-moe-marginal-likelihood}
-\pYGivenX &= \prod_{\numData=1}^{\NumData} \sum_{\modeInd=1}^{\ModeInd} \PraGivenx \pykGivenx
-\end{align}
-#+END_EXPORT
-
-** Gating Network
-This work is interested in transition dynamics where the governing mode varies over the input domain
-
-This work specifies a probability mass function over the mode indicator variable that is governed by a set of input-dependent
-latent functions. These model how the transition dynamics switch between modes over the input domain.
-In the literature they are commonly referred to as gating functions.
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-mode-indicator-dist}
-\PaGivenhx = \prod_{\modeInd=1}^{\ModeInd} \PraGivenhx^{[\modeVarn = \modeInd]},
-\end{align}
-#+END_EXPORT
-The probabilities $\Pr(\modeVarn=\modeInd \mid \hn )$ are obtained by normalising the outputs of all the gating functions, e.g.
-$\text{softmax}(\hn)$.
-Following a Bayesian formulation independent GP priors are placed on each of the gating functions,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-gating-funcs-prior}
-\pHGivenX = \prod_{\modeInd=1}^{\ModeInd} \pHkGivenX
-= \prod_{\modeInd=1}^{\ModeInd} \mathcal{N}\left( \Hk \mid \mode{\mu}(\allInput), \mode{k}(\allInput, \allInput) \right).
-\end{align}
-#+END_EXPORT
-Each GP models the epistemic uncertainty associated with its gating function.
-The probabilities $\PraGivenx$ associated with the probability mass function over
-the mode indicator variable are then obtained by marginalising the
-latent gating functions,
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-indicator-mult}
-\PraGivenxNegH
-&= \int \text{softmax}_k(\hn) p(\hn \mid \singleInput, \neg\Hall) \text{d} \mathbf{h}_t.
-\end{align}
-#+END_EXPORT
-This equation integrates out the uncertainty associated with the gating functions.
-High variance in the gating function GPs tends the distribution over the mode indicator variable
-to a uniform distribution.
-
-** Marginal Likelihood
-#+BEGIN_EXPORT latex
-\begin{align*} \label{eq-expert}
-\pykGivenxNegF = \pyk
-\end{align*}
-#+END_EXPORT
-
-Our marginal likelihood can be written with the same factorisation as the \acrshort{moe}
-marginal likelihood in Equation ref:eq-moe-marginal-likelihood,
-
-#+BEGIN_EXPORT latex
-\begin{align} \label{eq-marginal-likelihood}
-\pYGivenX &= \prod_{\numData=1}^{\NumData} \sum_{\modeInd=1}^{\ModeInd} \underset{\text{Mixing probability}}{\PraGivenxNegH} \underset{\text{Dynamics mode } k}{\pykGivenxNegF}
-\end{align}
-#+END_EXPORT
-The
-$\PraGivenxNegH$ contains $\ModeInd$ GP conditionals with complexity
-
-$\pykGivenxNegF$ contains a GP conditional with complexity
-
-** Inference
 
 * Tools :noexport:
 ** word count
@@ -1544,7 +1364,6 @@ recent successes in machine learning.
 # theoretic approaches.
 
 This growing interest in learning-based control
-\parmarginnote{real-world systems}
 has emphasised the importance for real-world considerations.
 Real-world systems are often highly /nonlinear/, exhibit /stochasticity/ and /multimodalities/,
 are expensive to run (energy intensive, subject to wear and tear) and
@@ -1552,15 +1371,14 @@ must be controlled subject to /constraints/ (for safety, efficiency, and so on).
 In contrast to simulation, the control of physical systems also has real-world consequences:
 components may get damaged, the system may damage its environment, or the system may catastrophically fail.
 As such, any learning-based control strategy deployed in the real-world should handle both the uncertainty inherent
-to the environment, and the uncertainty introduced by learning from observations.
+to the environment and the uncertainty introduced by learning from observations.
 # As such, any control strategy deployed in the real-world should ensure the safety of itself and
 # its surrounding environment.
 # Therefore, any control strategy deployed in the real-world should ensure the safety of itself and
 # its surrounding environment.
 
-Many dynamical systems exhibit multimodalities (in their transition dynamics), where some of the dynamics modes
-\parmarginnote{multimodal systems}
-are believed to be /inoperable/ or are /undesirable/.
+Many dynamical systems exhibit multimodalities, where some of the dynamics modes
+are believed to be /inoperable/ or /undesirable/.
 These multimodalities may be due to spatially varying model parameters, for example,
 process noise terms modelling aircraft turbulence, or friction coefficients modelling
 surface-tyre interactions for ground vehicles over different terrain.
@@ -1577,7 +1395,6 @@ to a target state, whilst avoiding specific dynamics modes.
 # and remaining in the operable (non turbulent) dynamics mode.
 
 Model-based control comprises a powerful set of techniques for finding controls of /constrained/ dynamical
-\parmarginnote{model-based control}
 systems, given a dynamics model describing the evolution of the controlled system.
 It is commonly used for controlling aircraft, robotic manipulators, and walking
 robots citep:vonstrykDirect1992,bettsSurvey1998,gargUnified2010.
@@ -1601,7 +1418,6 @@ control citep:freemanRobust1996,stengelStochastic1986.
 # 3) assumed constant when in reality they vary with time, e.g. mass reducing due to fuel consumption.
 
 The difficulties associated with constructing mathematical representations of dynamical systems
-\parmarginnote{learning dynamics models}
 can be overcome by learning from observations citep:ljungSystem1999.
 Learning dynamics models has the added benefit that it
 alleviates the dependence on domain experts for specifying accurate models, in turn making it easier to
@@ -1615,9 +1431,10 @@ Correctly quantifying uncertainty is crucial for intelligent decision-making.
 \begin{myquote}
 \textbf{Epistemic uncertainty}
 is the uncertainty attributed to incomplete knowledge about a phenomenon that limits our ability to model it.
-It manifests in parameters taking a range of values, there being a range of viable models,
-the level of modelling detail, and statistical confidence.
-It can be reduced by the accumulation of additional information.
+It represents the knowledge about the phenomenon that we could know, but that we do \textit{not know a priori}.
+It is reduced through the accumulation of additional information.
+%It manifests in parameters taking a range of values, there being a range of viable models,
+%the level of modelling detail, and statistical confidence.
 %In machine learning, \textit{epistemic uncertainty} arises due to lack of training observations and model mis-specification.
 %This dissertation, uses the notion of \textit{epistemic uncertainty} to refer to a
 %models lack of knowledge due to limited training data.
@@ -1626,7 +1443,6 @@ It can be reduced by the accumulation of additional information.
 
 In a *risk-averse setting*, it is desirable for control strategies
 to avoid entering regions of a learned dynamics model with high /epistemic uncertainty/.
-\parmarginnote{decision-making under uncertainty}
 This is because it is impossible to guarantee /constraint/ satisfaction in a learned model, i.e.
 if the trajectory will avoid the undesired dynamics mode.
 Conversely, in an *explorative setting*,
@@ -1634,18 +1450,16 @@ if the /epistemic uncertainty/ has been quantified, then it can be used to guide
 regions of the dynamics that have not previously been observed.
 This experience can then be used to update the model and reduce its associated /epistemic uncertainty/.
 
-These two settings are the main concepts explored in this dissertation.
+These two settings are the main focus of this dissertation.
 If the dynamics are not fully /known a priori/, an agent will not be able to confidently plan a
 risk-averse trajectory to the target state.
 How can the agent explore its environment, in turn reducing the /epistemic uncertainty/
 associated with its dynamics model?
-This dissertation assumes that complete knowledge of the underlying dynamics modes and how the system
-switches between them, are /not fully known a priori/.
-Therefore, a central interest is jointly inferring the underlying dynamics modes, as well as how the system switches
+As this dissertation assumes that complete knowledge of the dynamics are /not fully known a priori/,
+a central interest is jointly inferring the underlying dynamics modes, as well as how the system switches
 between them, through repeated interactions with the system.
 Once the agent has explored enough, how can the learned model be exploited to plan risk-averse trajectories
-that attempt to remain in a desired dynamics mode, and in regions of the learned
-dynamics with low /epistemic uncertainty/?
+that remain in a desired dynamics mode?
 
 # More generally, this dissertation is interested in learning and control in multimodal dynamical systems.
 # In Chapter ref:chap-dynamics, it starts by formulating learning as approximate Bayesian inference in
@@ -1783,7 +1597,7 @@ The goal is to fly the quadcopter from an initial state $\state_0$, to a target 
 However, it considers a quadcopter operating in an environment subject to spatially varying wind --
 induced by a fan -- where the system can be represented by two dynamics modes,
 - Mode 1 :: an /operable/ dynamics mode away from the fan,
-- Mode 2 :: an inoperable, /turbulent/ dynamics mode in front of the fan.
+- Mode 2 :: an /inoperable/, turbulent dynamics mode in front of the fan.
 The turbulent dynamics mode is subject to higher drift (in the negative $x$ direction) and
 to higher diffusion (process noise).
 It is hard to know the exact turbulent dynamics due to complex and uncertain interactions between the
@@ -2118,28 +1932,27 @@ to solve the problem in \cref{eq-main-problem}.
 # However, the underlying dynamics modes and how the system switches between them, are \textit{not fully known a priori}.
 
 ** Contributions
-This dissertation explores mode remaining control in multimodal dynamical systems that explicitly reasons
+This dissertation explores methods for mode remaining control in multimodal dynamical systems that explicitly reason
 about the uncertainties that arise during learning and control.
 The primary contributions of this dissertation are as follows:
-- cref:chap-dynamics: is concerned with learning representations of the multimodal dynamical
-  system in cref:eq-dynamics-main, where both the underlying dynamics modes and
-  how the system switches between them, are /not fully known a priori/.
-  Motivated by learning models for model-based control, it formulates cref:eq-dynamics-main as a probabilistic model,
+- cref:chap-dynamics: is concerned with learning representations of multimodal dynamical
+  system, where both the underlying dynamics modes and how the system switches between them, are /not fully known a priori/.
+  Motivated by learning dynamics models for model-based control, it formulates a probabilistic model that is
   rich with latent spaces for control.
   It then derives a variational inference scheme that principally handles uncertainty whilst providing scalability
   via stochastic gradient methods.
-  The method is a \acrfull{mogpe} method with a \acrshort{gp}-based gating network.
+  The method is a \acrfull{mogpe} method with a \acrfull{gp}-based gating network.
   # learns
   # As such, it strives to address the issues previously mentioned
   # As such, it strives to address the issues previously mentioned
   # by learning representations of multimodal dynamical systems that correctly identify the underlying dynamics modes and
   # how the system switches between them.
 - cref:chap-traj-opt-control: investigates model-based control techniques that leverage the probabilistic model
-  from cref:chap-dynamics to solve the mode remaining control problem in cref:eq-main-problem.
+  from cref:chap-dynamics to solve the mode remaining navigation problem.
   Due to the complexity of the problem, this chapter
   assumes prior access to the environment, such that a data set of state transitions $\mathcal{D}$ has been collected
   and used to train the model. It presents three trajectory optimisation algorithms that
-  leverage the learned dynamics model's latent structure to solve the mode remaining control problem.
+  leverage the learned dynamics model's latent structure to solve the mode remaining navigation problem.
 - cref:chap-active-learning: then considers the more realistic scenario of not having prior access
   to the environment. As such, the agent does not have access to a historical data set for model learning.
   Instead, it must actively explore its environment, collect data and use it to update its dynamics model,
@@ -2147,7 +1960,7 @@ The primary contributions of this dissertation are as follows:
   It presents an exploration strategy for exploring multimodal dynamical systems whilst remaining in a
   desired dynamics mode with high probability.
   It then details how this exploration strategy can be combined with the methods from
-  cref:chap-traj-opt-control,chap-dynamics to solve the mode remaining control problem in cref:eq-main-problem.
+  cref:chap-traj-opt-control,chap-dynamics to solve the mode remaining navigation problem.
   # avoid the inoperable, turbulent dynamics mode.
   # Due to lack of training observations, the learned dynamics model may be uncertain which mode governs the
   # dynamics at a particular region (epistemic uncertainty).
@@ -2333,116 +2146,6 @@ cite:kaiserBayesian2020 propose a Bayesian model that learns independent
 dynamics modes whilst maintaining a
 probabilistic belief over which mode is responsible for predicting at a given input location.
 
-* Motivation label:to_motivation :noexport:
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}{1.0\textwidth}
-\centering
-\includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/baseline-svgp-traj-opt/trajectories_over_desired_gating_mask.pdf}
-\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
-\label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
-\end{minipage}
-\begin{minipage}{1.0\textwidth}
-\centering
-\includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
-\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
-\label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
-\end{minipage}
-\caption{Trajectory optimisation results obtained using a SVGP dynamics model trained on different data sets.
-The optimised control trajectories are rolled out in the SVGP dynamics model (magenta) and in the environment (cyan).
-The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
-White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
-The hashed box indicates a subset of the environment that has not been observed.}
-\label{fig-traj-opt-over-gating-mask-svgp-baseline}
-\end{figure}
-#+END_EXPORT
-Given a historical data set of state transitions from the environment,
-a common approach is to first learn a single-step dynamics model using a Gaussian process
-citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
-This learned dynamics model can then be leveraged for model-based control.
-
-cref:fig-traj-opt-over-gating-mask-svgp-all-baseline demonstrates the shortcomings of performing trajectory
-optimisation in a GP dynamics model trained on state transitions sampled from *both* dynamics modes.
-It shows that the GP is not able to learn a representation of the dynamics which is true to the underlying system.
-This is because it cannot model the multimodal behaviour present in the environment.
-The optimised controls successfully drive the GP dynamics from the start state $\state_0$,
-to the target state $\targetState$.
-However, as the GP dynamics model does not correspond to the true underlying dynamics,
-the optimised controls do not successfully navigate to the target state $\targetState$ in the environment.
-This example demonstrates the issues associated with learning a dynamics model that cannot model the discontinuities
-associated with multimodal transition dynamics.
-Further to this, it demonstrates the more general shortcomings of model-based control when leveraging learned
-dynamics models that cannot represent the true underlying dynamics.
-# This motivates cref:chap-dynamics that looks at learning representations of multimodal dynamical systems.
-# This example demonstrates the issues associated with learning a dynamics model that cannot correctly identify
-# the underlying dynamics modes.
-# without deploying a technique that can infer both the underlying dynamics modes
-# and how the system switches between them.
-# The optimised controls are rolled out in the SVGP dynamics model (magenta)
-# and in the environment (cyan) to highlight the issues with both approaches.
-
-In contrast,
-cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline shows results after training on state transitions from
-only the desired (operable) dynamics mode.
-It is able to accurately predict state transitions in the desired dynamics mode.
-However, as this approach only considers the dynamics of the desired mode,
-trajectories in the environment deviate from those planned in the learned dynamics model when they pass through the
-turbulent mode.
-This approach is problematic because the trajectory does not reach the target state $\targetState$,
-nor does it avoid the turbulent dynamics mode, which may lead to catastrophic failure.
-It is also worth noting here that the underlying dynamics modes and how the system switches between them,
-are /not fully known a priori/.
-As such, partitioning the data set and learning the dynamics model in
-cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline is not possible in realistic scenarios.
-
-#+BEGIN_EXPORT latex
-\begin{myquote}
-Following standard methodologies, these trajectories were found by minimising the expected cost
-under the state distribution, resulting from cascading single-step predictions through the GP dynamics model.
-A terminal state cost term ensured trajectories ended at the target state and
-a quadratic integral control cost term regularised the controls to encode the notion of
-"minimal effort" trajectories.
-\end{myquote}
-#+END_EXPORT
-
-
-
-
-# #+BEGIN_EXPORT latex
-# \begin{myquote}
-# Following standard methodologies, trajectories were found by minimising the expected cost under the state distribution,
-# resulting from cascading single-step predictions through the SVGP dynamics model.
-# The cost function consisted of a quadratic integral control cost and a terminal state cost.
-# \end{myquote}
-# #+END_EXPORT
-\todo{update fig-traj-opt-baseline with trajectories which don't use nominal mean function so that they deviate in the region with high epistemic uncertainty.}
-
-
-# The first example in cref:fig-traj-opt-over-gating-mask-svgp-all-baseline demonstrates the issues of
-# learning a dynamics model without deploying a technique that can infer both the underlying dynamics modes
-# and how the system switches between them.
-# cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline then demonstrates the
-# difficulties of finding trajectories from the start state $\state_0$, to the target state $\targetState$,
-# without avoiding the turbulent dynamics mode.
-
-
-
-# #+BEGIN_EXPORT latex
-# \begin{figure}[t!]
-# \centering
-# \includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
-# \caption{\label{fig-traj-opt-baseline}
-# Trajectory optimisation results obtained using a SVGP dynamics model trained only on state transitions from the
-# desired (non-turbulent) dynamics mode.
-# To demonstrate the methods shortcomings, the optimised controls are rolled out in the desired
-# mode's GP dynamics (magenta) and in the environment (cyan).
-# The state trajectories are overlayed on the gating mask, indicating where each mode governs the dynamics.
-# White indicates the turbulent dynamics mode and red indicates the operable mode.
-# The hashed box indicates a subset of the environment that has not been observed.}
-# \end{figure}
-# #+END_EXPORT
-
 * Background and Related Work
 ** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -2520,7 +2223,7 @@ $\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\Mod
 
 Throughout this dissertation it is assumed that the state $\state$ is observed directly and is not subject to
 observation noise.
-This is a standard assumption in the \acrfull{mdp} framework which is commonly adopted
+This is a standard assumption in the \acrfull{mdp} framework, which is commonly adopted
 in the reinforcement learning literature.
 In this case, the $\mode{\bm\epsilon}$ term solely represents the process noise,
 which accounts for unwanted (and, in general, unknown) disturbances of the system.
@@ -2583,22 +2286,23 @@ Given this definition of a mode remaining controlled system, this dissertation s
 \begin{subequations} \label{eq-main-problem}
 \begin{align}
 \min_{\policy \in \Pi} \quad
-&J_{\pi}(\state_0) \\
+%&J_{\pi}(\state_0) \\
+&\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd)) \mid \state_0=\state_0 \right] \\
 %&\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
 %\mid \state_0=\state \right] \\
 \text{s.t.} \quad &\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\bm\epsilon},
-\quad \modeVar(\state_{\timeInd}) = \modeInd \\
+\quad \modeVar(\state_{\timeInd}) = \modeInd \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\} \\
 %&\text{\cref{eq-mode-remaining-def-explore}} \\
 &\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd))
-\in \desiredStateDomain \\
+\in \desiredStateDomain \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\} \\
 %\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
 %&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
 &\state_{0} = \state_0 \\
 &\state_\TimeInd = \targetState,
 \end{align}
 \end{subequations}
-where $\targetState$ denotes the target state, $\desiredMode$ denotes the desired dynamics mode
-and $J_{\pi}(\state_0)$ is the objective from \cref{eq-optimal-control-objective}.
+where $\targetState$ denotes the target state and $\desiredMode$ denotes the desired dynamics mode.
+%and $J_{\pi}(\state_0)$ is the objective from \cref{eq-optimal-control-objective}.
 \end{myquote}
 % This is a constrained \acrfull{soc} problem with a terminal boundary condition.
 #+end_export
@@ -2631,7 +2335,7 @@ The novelty of this work arises from remaining in a desired dynamics mode $\desi
 \begin{figure}[!t]
 \centering
 \begin{tikzpicture}[
-squarednode/.style={rectangle, fill=teal!5, width=2cm},
+squarednode/.style={rectangle, fill=teal!7, width=2cm},
 blanknode/.style={rectangle, width=2cm}
 ]
 
@@ -2645,7 +2349,7 @@ blanknode/.style={rectangle, width=2cm}
 \draw[--] (env) -| (cost);
 \draw[->] (cost) |- (agent);
 \end{tikzpicture}
-\caption[Markov decision process]{\textbf{Markov Decision Process (MDP)} Illustration of a \acrshort{mdp} through the lens of optimal control. The controller (agent) uses all past knowledge, absorbed into the previous state $\state_t$ (Markov property), to decide which control (action) $\control_t$ to execute. It then observes the next state $\state_{t+1}$ and the cost (negative reward) associated with the state transtion. The cost function is assumed to be known. The agent's goal is to minimise the cumulative cost, or to maximise the cumulative reward.}
+\caption[Markov decision process]{\textbf{Markov Decision Process (MDP)} Illustration of a \acrshort{mdp} through the lens of optimal control. The controller (agent) uses all past knowledge, absorbed into the previous state $\state_t$ (Markov property), to decide which control (action) $\control_t$ to execute. It then observes the next state $\state_{t+1}$ and the cost (negative reward) associated with the state transtion. The cost function is assumed to be known. The agent's goal is to minimise the cumulative cost (maximise the cumulative reward).}
 \label{fig-mdp}
 \end{figure}
 #+END_EXPORT
@@ -2653,11 +2357,11 @@ blanknode/.style={rectangle, width=2cm}
 *** intro :ignore:
 The discrete time optimal control problem considered in this dissertation can be modelled as a
 \acrfull{mdp}, as seen in cref:fig-mdp.
-In the \acrshort{mdp} framework a controller is referred to as an agent, the control is referred to as an action,
-and the dynamical system is referred to as the environment.
+In the \acrshort{mdp} framework a controller $\pi$ is referred to as an agent, the control $\control$
+is referred to as an action, and the dynamical system $f$ is referred to as the environment.
 Further to this, the goal is to maximise the cumulative reward, as opposed to minimising the cumulative cost.
 However, slight manipulation of the objective enables cost and reward functions to be interchanged.
-The key idea is that all past information is represented by the current state $\state_t$,
+The key idea in \acrshort{mdp}s is that all past information is represented by the current state $\state_t$,
 which is known as the Markov property.
 In this dissertation most work is formulated through the lens of optimal control.
 However, the controller is sometimes referred to as the agent and the system is often referred to
@@ -2695,7 +2399,7 @@ as dynamic programming.
 
 Approximate dynamic programming encompasses a large class of methods that given a controller $\pi$,
 approximate the value function $V_{\pi}(\state)$ for each state $\state$ with a parameterised function.
-The approximate value function can then be used for /policy improvement/ where a controller
+The approximate value function can then be used for /policy improvement/, where a controller
 with superior performance is computed.
 In general, approximate dynamic programming is a large collection of algorithms that encompasses methods from
 \acrshort{rl} as well.
@@ -2775,7 +2479,8 @@ As both \acrshort{mfrl} and \acrshort{mbrl} methods learn models,
 the model in the name is referring to the dynamics model $f$, as  \acrshort{mfrl} approaches do not learn
 representations of the dynamics $f$.
 cref:alg-mbrl-background illustrates a common \acrshort{mbrl} procedure where an agent incrementally explores
-its environment, collecting data at each iteration $\mathcal{D}_{i}$ and updating its dynamics model $\dynamicsModel$.
+its environment, collecting data $\mathcal{D}_i$ at each iteration $i$ and
+updating its dynamics model $\dynamicsModel$.
 
 
 As more systems are becoming data-driven, learning dynamics models for model-based control has shifted to
@@ -2789,12 +2494,12 @@ There are two main components to a \acrshort{mbrl} algorithm: 1) a method for le
 model $\dynamicsModel$ and 2) a controller (or policy) $\pi$ that leverages the learned dynamics model $\dynamicsModel$.
 The controller may be a parameterised state feedback controller (policy) $\pi$, which is trained using
 \acrshort{mfrl} algorithms and the learned dynamics model.
-Alternatively, the controller may take the form of a model-based control or planning algorithm such as \acrfull{mpc}.
+Alternatively, the controller may take the form of a model-based control algorithm such as \acrfull{mpc}.
    # a. a control method that utilises the learned model to explore the environment whilst simultaneously trying to achieve an objective.
 
 *** Model-based Control and Planning
-This section reviews model-based control and planning methods that leverage learned dynamics models in the
-\acrshort{mbrl} setting.
+This section reviews model-based control methods that leverage learned dynamics models in the \acrshort{mbrl} setting.
+In the \acrshort{rl} literature model-based control is often referred to as planning.
 The work in this dissertation is primarily focused on model-based control techniques,
 in particular, trajectory optimisation.
 
@@ -2803,12 +2508,14 @@ Instead of approximating a value function or a policy, it is possible to directl
 $\controlTraj = \{\control_1, \ldots, \control_{T-1} \}$ over a horizon $T$.
 This is known as trajectory optimisation and is given by,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-trajectory-optimisation}
+\begin{subequations} \label{eq-trajectory-optimisation}
+\begin{align}
 \controlTraj =
-\argmin_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \contro_{\timeInd})
+\argmin_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \control_{\timeInd})
 \mid \state_0=\state \right] \\
 &\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t) + \epsilon,
 \end{align}
+\end{subequations}
 #+END_EXPORT
 which finds an optimal sequence of controls $\controlTraj$ for a given start state $\state_0$.
 Many recent works have used trajectory optimisation with learned dynamics models.
@@ -2819,22 +2526,24 @@ with a convolutional neural network for the encoder and a recurrent neural netwo
 In \acrshort{mbrl}, trajectory optimisers often exploit inaccuracies of the learned dynamics model.
 cite:boneyRegularizing2019 propose a trajectory optimisation approach that relives this exploitation by
 learning the dynamics using a denoising autoencoder.
-The resulting trajectory optimisation algorithm avoids regions of the learned dynamics model where not data
+The resulting trajectory optimisation algorithm avoids regions of the learned dynamics model where no data
 has been observed.
 
 *Model predictive control*
 Instead of directly applying the control inputs found with trajectory optimisation in an open-loop fashion,
 it is possible to obtain a closed-loop controller.
-This is achieved by iteratively applying the first control $\control_0$ and resolving the nonlinear program in
-cref:eq-trajectory-optimisation,
+This is achieved by iteratively applying the first control $\control_0$ and resolving the trajecotry optimisation
+problem in cref:eq-trajectory-optimisation,
 #+BEGIN_EXPORT latex
-\begin{align} \label{eq-mpc-loop}
-\pi_{\text{MPC}} =
+\begin{subequations} \label{eq-mpc-loop}
+\begin{align}
+\pi_{\text{MPC}}(\state) =
 \arg \min_{\control_0}
-\min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+\min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \control_{\timeInd})
 \mid \state_0=\state \right] \\
 &\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t) + \epsilon,
 \end{align}
+\end{subequations}
 #+END_EXPORT
 This is known as \acrfull{mpc} citep:eduardof.Model2007.
 However, in practice, it is often too computationally expensive to obtain real-time control with \acrshort{mpc}.
@@ -2912,7 +2621,8 @@ using guided policy search citep:levineGuided2013.
 The goal of this work is to control multimdoal dynamical systems subject to the mode remaining
 constraint in cref:eq-main-problem.
 However, neither the underlying dynamics, nor how the system switches between them, are /known a priori/.
-To this end, this dissertation is interested in model-based control (or planning) techniques with latent constraints.
+To this end, this dissertation is interested in model-based control techniques which can
+learn and enforce latent constraints.
 
 It is common to require constraints on the states $\state$ and controls $\control$ of a controlled system.
 For example, an autonomous system may wish to remain in a subset of it's state space where it knows its dynamics model
@@ -2949,7 +2659,7 @@ The state constraints can be enforced by ensuring that the set $\StateDomain$ is
 \begin{definition}[Forward invariant]
 Given a dynamical system $\state_{t+1} = f(\state_t, \pi(\state_t, t))$,
 a set $\safeSet$ is \textbf{forward invariant} under the controller $\pi \in \Pi$, iff, for all $\state_0 \in \safeSet$,
-all future states remain in the set, i.e.  $f(\state_t, \pi(\state_t, t)) \in \saftSet \quad \forall t$.
+all future states remain in the set, i.e.  $f(\state_t, \pi(\state_t, t)) \in \safeSet \quad \forall t$.
 %The system is safe with respect to the set $\safeSet$ if the set is \textbf{forward invariant}.
 \end{definition}
 #+END_EXPORT
@@ -2992,7 +2702,7 @@ with high probability.
 # usually consider worst-case criterion.
 # An alternative approach is to
 
-The most direct method to embed the constraints is in \acrfull{mpc} citep:eduardof.Model2007.
+The most direct method to embed constraints is in \acrfull{mpc} citep:eduardof.Model2007.
 At each time step \acrshort{mpc} ensures that the constraints hold over a given horizon.
 However, it is worth noting that these constraints still cannot be guaranteed in stochastic systems.
 For stochastic systems, cite:schwarmChanceconstrained1999 proposed to satisfy constraints with high probability.
@@ -3054,7 +2764,7 @@ This section characterises the uncertainty that arises in \acrshort{rl}.
 
 *Aleatoric uncertainty*
 Dynamical systems give rise to temporal observations arriving as a sequence
-$\state_{1:\TimeInd} = \{\state_1, \ldots, \state_\TimeInd\}$.
+$\stateTraj = \{\state_1, \ldots, \state_\TimeInd\}$.
 These measurements are often corrupted by (observation) noise due to imperfections in the measurement process.
 Even when it is known that there is uncertainty in the measurement process, there still remains uncertainty about its
 form.
@@ -3097,7 +2807,7 @@ citep:deisenrothPILCO2011,vinogradskaStability2016,rohrProbabilistic2021,hewingL
 for low-dimensional control problems.
 More recently, single-step dynamics models have been learned using neural networks.
 For example, citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018 use ensembles
-of neural networks and citep:mcallisterImproving2016,depewegLearning2017 use Bayesian neural networks
+of neural networks and citep:depewegLearning2017,galImproving2016 use Bayesian neural networks
 with parametric uncertainty.
 
 *Probabilistic models*
@@ -3105,7 +2815,7 @@ with parametric uncertainty.
 phenomenon of interest, in a precise mathematical form.
 Probabilistic modelling provides the capability of constructing /mathematical models/
 that can represent and manipulate uncertainty in data, models, decisions and predictions.
-As such, linking observed data to underlying phenomena through probabilistic models,
+As such, linking observed data to underlying phenomena through probabilistic models
 is an interesting direction for modelling, analysing and controlling dynamical systems.
 It enables the uncertainty to be represented and manipulated;
 it provides a systematic way to combine observations with existing knowledge, via a /mathematical model/.
@@ -3221,7 +2931,6 @@ More intuitively, a Gaussian process  is a distribution over functions $f(\cdot)
 defined over an input domain $\gpDomain \in \R^{D_f}$.
 Whilst Gaussian distributions represent distributions over finite-dimensional vectors, GPs represent
 distributions over infinite-dimensional functions.
-\marginpar{mean and covariance functions}
 A GP is fully defined by a mean function $\mu(\cdot) : \gpDomain \rightarrow \R$ and a covariance
 function $k(\cdot, \cdot) : \gpDomain \times \gpDomain \rightarrow \R$ (also known as a kernel),
 #+BEGIN_EXPORT latex
@@ -3232,7 +2941,6 @@ k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))],
 \end{align}
 #+END_EXPORT
 Importantly, for a given set of training inputs from the
-\marginpar{Gaussian process prior}
 functions domain $~{\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}}$, the associated function values
 $\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$,
 are jointly Gaussian.
@@ -3265,7 +2973,6 @@ where the dependency on the parameters $\bm\theta$ has been dropped, i.e.
 $p(\f \mid \mathbf{X}) = p(\f \mid \mathbf{X}, \bm\theta)$.
 This simplification will be used throughout this dissertation for notational conciseness.
 By definition, these observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
-\marginpar{jointly Gaussian}
 $f_* = f(\mathbf{x}_*)$ at a new test input,
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-gp-joint}
@@ -3286,7 +2993,6 @@ $f_* = f(\mathbf{x}_*)$ at a new test input,
 #+END_EXPORT
 Given the multivariate Gaussian conditionals in cref:eq-gaussian-conditional, it is easy to see how
 the distribution over the test function value $f_*$,
-\marginpar{noise-free predictions}
 can be obtained by conditioning on the observations,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-gp-prediction}
@@ -3298,7 +3004,6 @@ p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, 
 
 It is typical in real-world modelling scenarios that observations of the true function values $\f$
 are not directly accessible.
-\marginpar{predictions with noise}
 Instead, observations are usually corrupted by noise,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-gp-noisy}
@@ -3418,7 +3123,6 @@ To obtain a variational approximation Jensen's inequality is first used to bound
 This is the standard bound shown in cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
 In cite:titsiasVariational2009 this bound is then substituted into the marginal likelihood
 to obtain a tractable lower bound,
-# \marginpar{Titsias' bound}
 #+BEGIN_EXPORT latex
 \begin{align}
 \text{log} p(\mathbf{y} \mid \mathbf{X})
@@ -3445,7 +3149,6 @@ q(\u) = \mathcal{N}\left(\u \mid \mathbf{m}, \mathbf{S} \right),
 #+END_EXPORT
 which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf{X})$ by
 further bounding $\mathcal{L}_{\text{titsias}}$,
-# \marginpar{Hensman's bound}
 #+BEGIN_EXPORT latex
 \begin{align}
 \mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
@@ -3469,7 +3172,7 @@ only the marginals of $q(\mathbf{f})$ are needed to calculate cref:eq-hensman-bo
 Importantly, this bound is written as a sum over input-output pairs which has induced the necessary conditions
 to preform stochastic gradient methods on $q(\u)$.
 
-*** Learning Multimodal Dynamical Systems
+*** Learning Multimodal Dynamical Systems label:to_motivation
 **** figs :ignore:
 #+BEGIN_EXPORT latex
 \begin{figure}[t!]
@@ -3569,7 +3272,7 @@ cite:mckinnonLearning2017 also use an approach based on \acrshort{gp}s except th
 It is worth noting that the introduction of /latent variables/ into probabilistic models
 is a key component providing them with interesting and powerful capabilities for synergising model learning and control.
 For example, cite:hafnerLearning2019,rybkinModelBased2021 learn /latent spaces/ which provide
-convenient spaces for control (or planning)
+convenient spaces for control (or planning).
 cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline highlights the need for learning
 informative latent variables representing how the system switches between the underlying dynamics modes.
 Without such information, it is not possible to encode the notion of mode remaining/avoiding behaviour.
@@ -3636,7 +3339,7 @@ In \acrshort{mbrl}, the goal is often to reduce the real-world sample complexity
 model sample complexity.
 # This section provides an overview of existing exploration strategies in \acrshort{mbrl}.
 
-There are two main uncertainties which are modelled and used for exploration.
+There are two main uncertainties which are often modelled and used for exploration.
 Value-based methods base their exploration on the uncertainty of the value function $V$ at the current state $\state_t$.
 Actions with higher value estimates get higher probabilities of being selected based on
 uncertainty estimates around the values citep:moerlandEfficient2017,auerUsing2002.
@@ -3707,7 +3410,7 @@ with the parameters using Shannon's entropy citep:coverElements2006,
 Let $\crv$ be a continuos random variable, with a probability density
 $\density$,
 whose support is a set $\mathcal{X}$.
-The differential entropy $H(\crv)$ is then defined as,
+The differential entropy $H[\crv]$ is then defined as,
 \begin{align} \label{eq-differential-entropy}
 H[\crv] = - \int_{\mathcal{X}} \density \text{log} \density \text{d} \crv.
 \end{align}
@@ -3734,14 +3437,14 @@ cite:caponeLocalized2020,yuActive2021 propose to use the mutual information.
 \begin{myquote}
 \textbf{Mutual Information}
 Given two sets of random variables, $\mathbf{X}$ and $\mathbf{F}$, with joint density $p(\mathbf{X}, \mathbf{F})$ the
-mutual information \cite{coverElements2006} is given by,
+mutual information \citep{coverElements2006} is given by,
 \begin{align} \label{eq-mutual-information}
-I(\mathbf{X};\mathbf{F}) = \int p(\mathbf{X},\mathbf{F}) \text{log}\frac{p(\mathbf{X},\mathbf{F})}{p(\mathbf{X})p(\mathbf{F})}
+I[\mathbf{X};\mathbf{F}] = \int p(\mathbf{X},\mathbf{F}) \text{log}\frac{p(\mathbf{X},\mathbf{F})}{p(\mathbf{X})p(\mathbf{F})}
 \text{d}\mathb{X} \text{d}\mathb{F},
 \end{align}
-and its well known relationship to differential entropy $H(\cdot)$ is given by,
+and its well known relationship to differential entropy $H[\cdot]$ is given by,
 \begin{align} \label{eq-mutual-information-entropy}
-I(\mathbf{X};\mathbf{F}) =  H(\mathbf{X}) - H(\mathbf{X} \mid \mathbf{F}).
+I[\mathbf{X};\mathbf{F}] =  H[\mathbf{X}] - H[\mathbf{X} \mid \mathbf{F}].
 \end{align}
 \end{myquote}
 #+END_EXPORT
@@ -3760,15 +3463,25 @@ to study the latest mutual information $I[\hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{t
 
 *Myopic active learning*
 In reinforcement learning and control it is standard to consider objectives over a (potentially infinite) horizon.
-Should active learning in dynamical systems be any different?
-This dissertation hypothesises that it must
-be important to
-Some approaches myopically consider the information gain at the next query point only.
+However, active learning objectives often myopically consider the information gain at the next query point only.
 In contrast, it is possible to consider the information gain over a (potentially infinite) horizon, reliving this myopia.
 The mutual information approaches in cite:caponeLocalized2020,yuActive2021
 fall into this myopic category as they only maximise the information gain at the next
 time step. In contrast, the greedy entropy-based strategy in
 cite:buisson-fenetActively2020 considers the entropy over a horizon.
+
+# *Myopic active learning*
+# In reinforcement learning and control it is standard to consider objectives over a (potentially infinite) horizon.
+# Should active learning in dynamical systems be any different?
+# This dissertation hypothesises that it must
+# be important to
+# Some approaches myopically consider the information gain at the next query point only.
+# In contrast, it is possible to consider the information gain over a (potentially infinite) horizon, reliving this myopia.
+# The mutual information approaches in cite:caponeLocalized2020,yuActive2021
+# fall into this myopic category as they only maximise the information gain at the next
+# time step. In contrast, the greedy entropy-based strategy in
+# cite:buisson-fenetActively2020 considers the entropy over a horizon.
+
 # The exploration strategy presented in this chapter follows a similar approach and
 # relieves the myopia of active learning by leveraging a similar greedy entropy-based
 # strategy over a finite horizon.
@@ -3988,7 +3701,7 @@ a common approach is to first learn a single-step dynamics model using a Gaussia
 citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018.
 Alternative approaches include using ensembles
 of neural networks citep:chuaDeep2018,jannerWhen2019,kurutachModelEnsemble2018
-or Bayesian neural networks with parametric uncertainty citep:mcallisterImproving2016,depewegLearning2017.
+or Bayesian neural networks with parametric uncertainty citep:galImproving2016,depewegLearning2017.
 Quantifying uncertainty in dynamics models has been shown to be  important for \acrshort{mbrl}
 # These learned dynamics model can then be leveraged for model-based control.
 
@@ -4091,7 +3804,6 @@ More intuitively, a Gaussian process  is a distribution over functions $f(\cdot)
 defined over an input domain $\gpDomain \in \R^{D_f}$.
 Whilst Gaussian distributions represent distributions over finite-dimensional vectors, GPs represent
 distributions over infinite-dimensional functions.
-\marginpar{mean and covariance functions}
 A GP is fully defined by a mean function $\mu(\cdot) : \gpDomain \rightarrow \R$ and a covariance
 function $k(\cdot, \cdot) : \gpDomain \times \gpDomain \rightarrow \R$ (also known as a kernel),
 #+BEGIN_EXPORT latex
@@ -4102,7 +3814,6 @@ k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))].
 \end{align}
 #+END_EXPORT
 Importantly, for a given set of training inputs from the
-\marginpar{Gaussian process prior}
 functions domain $~{\mathbf{X} = \{ \mathbf{x}_1, \ldots, \mathbf{x}_N \}}$, the associated function values
 $\mathbf{f} = \{f(\mathbf{x}_1), \ldots, f(\mathbf{x}_N) \}$,
 are jointly Gaussian.
@@ -4135,7 +3846,6 @@ where the dependency on the parameters $\bm\theta$ has been dropped, i.e.
 $p(\f \mid \mathbf{X}) = p(\f \mid \mathbf{X}, \bm\theta)$.
 This simplification will be used throughout this dissertation for notational conciseness.
 By definition, these observations $\mathbf{f}$ are jointly Gaussian with any un-observed function value
-\marginpar{jointly Gaussian}
 $f_* = f(\mathbf{x}_*)$ at a new test input,
 #+BEGIN_EXPORT latex
 \begin{align*} \label{eq-gp-joint}
@@ -4156,7 +3866,6 @@ $f_* = f(\mathbf{x}_*)$ at a new test input,
 #+END_EXPORT
 Given the multivariate Gaussian conditionals in cref:eq-gaussian-conditional, it is easy to see how
 the distribution over the test function value $f_*$,
-\marginpar{noise-free predictions}
 can be obtained by conditioning on the observations,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-gp-prediction}
@@ -4168,7 +3877,6 @@ p(f_{*} \mid \mathbf{x}_*, \mathbf{f}, \mathbf{X}) &= \mathcal{N}(f_* \mid \mu, 
 
 It is typical in real-world modelling scenarios that observations of the true function values $\f$
 are not directly accessible.
-\marginpar{predictions with noise}
 Instead, observations are usually corrupted by noise,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-gp-noisy}
@@ -4282,7 +3990,6 @@ To obtain a variational approximation Jensen's inequality is first used to bound
 This is the standard bound shown in cite:hensmanGaussian2013 ($\mathcal{L}_{1}$ defined in Eq. 1).
 In cite:titsiasVariational2009 this bound is then substituted into the marginal likelihood
 to obtain a tractable lower bound,
-# \marginpar{Titsias' bound}
 #+BEGIN_EXPORT latex
 \begin{align}
 \text{log} p(\mathbf{y} \mid \mathbf{X})
@@ -4309,7 +4016,6 @@ q(\u) = \mathcal{N}\left(\u \mid \mathbf{m}, \mathbf{S} \right),
 #+END_EXPORT
 which they use to lower bound the marginal likelihood $p(\mathbf{y} \mid \mathbf{X})$ by
 further bounding $\mathcal{L}_{\text{titsias}}$,
-# \marginpar{Hensman's bound}
 #+BEGIN_EXPORT latex
 \begin{align}
 \mathcal{L}_{\text{titsias}} &= \text{log} \E_{p(\u \mid \mathbf{Z})} \left[ \text{exp}(\mathcal{L}_{1}) \right] \\
@@ -4371,7 +4077,6 @@ process models.
 In machine learning it is common to use hierarchical models.
 At the lowest level are model parameters $\weights$, such as the weights of a neural network,
 or the weights in linear regression.
-\marginpar{hierarchical models}
 At the next level are hyperparameters $\hyperparameters$, which serve as parameters in the distributions
 over the model parameters at the lowest level.
 For example, kernel hyperparameters in Gaussian process regression or the weight decay term in
@@ -4385,7 +4090,6 @@ Let us quickly introduce a simple (non Bayesian) approach to finding the best
 values for the parameters.
 This approach finds the best parameter settings by maximising the likelihood $\weightLikelihood$
 with respect to the parameters $\weights$.
-\marginpar{maximum likelihood}
 This approach is known as maximum likelihood and is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-maximum-likelihood}
@@ -4413,7 +4117,6 @@ The principle says that "one should pick the simplest model that adequately expl
 Model selection takes place one step at a time, by repeatedly applying the rules of probability theory,
 see cite:mackayBayesian1992 for more details on this framework.
 At the lowest level, the /posterior/ distribution over the model parameters $\weightPosterior$
-\marginpar{level 1 inference}
 is obtained via Bayes' rule,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-bayes-rule-1}
@@ -4439,7 +4142,6 @@ where the variables of interest (the model parameters $\weights$) have been inte
 joint distribution.
 So far so good, however, how should the hyperparameters $\hyperparameters$ be set?
 The same process can be repeated to obtain the /posterior/ distribution over the
-\marginpar{level 2 inference}
 hyperparameters,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-bayes-rule-2}
@@ -4456,7 +4158,6 @@ is given by integrating out the object of interest (the hyperparameters $\hyperp
 \end{align}
 #+END_EXPORT
 Finally, at the top level, the /posterior/ distribution over the model structure $\modelPosterior$
-\marginpar{level 3 inference}
 is computed,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-bayes-rule-3}
@@ -4473,7 +4174,6 @@ These approximations may be analytical or based on Markov Chain Monte Carlo (MCM
 *Type II Maximum Likelihood*
 In Gaussian process methods, the marginalisation of the hyperparameters in cref:eq-marginal-likelihood-2
 is often difficult.
-\marginpar{type II maximum likelihood}
 When it is not possible to marginalise all of the variables, the next best thing to a full Bayesian
 treatment -- without resorting to Maximum Likelihood --
 is to marginalise as many variables as possible, and optimise the remaining variables subject to maximising
@@ -5071,7 +4771,6 @@ This is a constrained \acrfull{soc} problem with a terminal boundary condition.
 # As this work is interested in learning and control in multimodal dynamical systems,
 # a primary interest is correctly /identifying/ the underlying dynamics modes.
 # That is, ensuring that the learned dynamics modes accurately model the true underlying dynamics modes.
-# \marginpar{identifiability}
 # Incorrectly identifying the underlying dynamics modes will have a detrimental impact on performance
 # and may even lead to system failure.
 # Learning
@@ -5106,7 +4805,6 @@ that can be exploited by model-based control algorithms.
 Probabilistic models provide the capability of constructing mathematical
 models that can represent and manipulate uncertainty in data, models, decisions and
 predictions.
-\marginpar{probabilistic models}
 Learning representations of dynamical systems for control using probabilistic models has shown much promise.
 For example, see
 cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019,cutlerEfficient2015,deisenrothPILCO2011,panProbabilistic2014.
@@ -5114,7 +4812,6 @@ cite:deisenrothPILCO2011,schneiderExploiting1996,chuaDeep2018,hafnerLearning2019
 # As this work is interested in learning and control in multimodal dynamical systems,
 # a primary interest is correctly /identifying/ the underlying dynamics modes.
 # That is, ensuring that the learned dynamics modes accurately model the true underlying dynamics modes.
-# \marginpar{identifiability}
 # Incorrectly identifying the underlying dynamics modes will have a detrimental impact on performance
 # and may even lead to system failure.
 
@@ -5206,7 +4903,6 @@ and powerful capabilities for synergising model learning and control.
 For example, cite:hafnerLearning2019,rybkinModelBased2021
 \todo{add more latent space dynamics refs}
 learn /latent spaces/ which provide convenient spaces for planning.
-\marginpar{latent spaces for control}
 cref:fig-traj-opt-over-gating-mask-svgp-desired-baseline highlights the need for learning
 informative latent variables representing how the system switches between the underlying dynamics modes.
 Without such information, it is not possible to encode the notion of mode remaining/avoiding behaviour.
@@ -5522,7 +5218,6 @@ review the \acrshort{mogpe} literature, starting from their origin, the mixture 
 Mixture models are a natural choice for modelling multimodal systems.
 Given an input $\singleInput$ and an output $\singleOutput$, mixture models
 model a mixture of distributions over the output,
-\marginpar{mixture models}
 #+BEGIN_EXPORT latex
 \begin{equation} \label{eq-mixture-model}
 \singleMoeEvidence = \sum_{\modeInd=1}^\ModeInd
@@ -5544,7 +5239,6 @@ The individual component densities $\moeExpertPosterior$ are then referred to as
 as at different regions in the input space, different components are responsible for predicting.
 Given $\ModeInd$ experts $\moeExpertPosterior$, each with parameters $\expertParamsK$,
 the MoE marginal likelihood is given by,
-\marginpar{mixture of experts}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mixture-marginal-likelihood}
 \moeEvidence = \prod_{\numData=1}^\NumData \sum_{\modeInd=1}^{\ModeInd}
@@ -5576,7 +5270,6 @@ experts are nonparametric.
 This is because the model assumes that the observations are i.i.d. given the model parameters,
 which is contrary to \acrshort{gp} models, which model the dependencies in the joint distribution, given the
 hyperparameters.
-\marginpar{mixtures of nonparametric experts}
 cite:rasmussenInfinite2001 point out that there is a joint distribution corresponding to every possible
 combination of assignments (of observations to experts).
 The marginal likelihood is then a sum over exponentially many ($\ModeInd^{\NumData}$) sets of assignments,
@@ -5600,7 +5293,6 @@ Assuming a mixture of Gaussian process regression models,
 the marginal likelihood in cref:eq-np-moe-marginal-likelihood-assign
 can be expanded to show each of the experts' latent variables,
 #+BEGIN_EXPORT latex
-\marginpar{marginal likelihood}
 \begin{align} \label{eq-np-moe-marginal-likelihood}
 %\moeEvidence
 \evidence
@@ -5616,7 +5308,6 @@ p\left(\singleOutput \mid \mode{\latentFunc}(\singleInput) \right)
 \end{align}
 #+END_EXPORT
 where each expert follows the standard Gaussian likelihood model,
-\marginpar{expert's Gaussian likelihood}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-likelihood}
 \singleOutput &= \mode{f}(\singleInput) + \epsilon_{k}, \quad \epsilon_{k} \sim \mathcal{N}(0, \mode{\noiseVar}^2), \\
@@ -5630,7 +5321,6 @@ Note that for notational conciseness the dependency on $\modeVarK$ is dropped fr
 $\singleExpertLikelihood$ as it is implied by the mode indexing $\mode{\latentFunc}$.
 The dependence on $\gatingParams$ and $\expertParams$ is also dropped from here on in.
 Independent GP priors are placed on each of the expert's latent functions,
-\marginpar{expert's GP prior}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-prior}
 %\expertPrior &= \mathcal{N}\left( \mode{f}(\allInput) \mid \expertMeanFunc(\allInput), \expertCovFunc(\allInput, \allInput) \right) \\
@@ -7081,7 +6771,7 @@ dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
 \newcommand{\expertInducingVariational}{\ensuremath{q(\expertInducingOutput)}}
 \newcommand{\expertsInducingVariational}{\ensuremath{q(\expertsInducingOutput)}}
 \newcommand{\expertVariational}{\ensuremath{q(\mode{\latentFunc}(\singleInput))}}
-\newcommand{\expertsVariational}{\ensuremath{q(\LatentFunc_\numData)}}
+\newcommand{\expertsVariational}{\ensuremath{q(\LatentFunc(\singleInput))}}
 %\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \mode{\latentFunc}(\expertInducingInput))}}
 \newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \expertInducingOutput)}}
 \newcommand{\allExpertGivenInducing}{\ensuremath{p(\allOutput \mid \expertInducingOutput)}}
@@ -7098,7 +6788,7 @@ dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
 %\newcommand{\gatingInducingVariational}{\ensuremath{q(\GatingFunc(\gatingInducingInput))}}
 \newcommand{\gatingInducingVariational}{\ensuremath{q(\gatingInducingOutput)}}
 \newcommand{\gatingsInducingVariational}{\ensuremath{q(\gatingsInducingOutput)}}
-\newcommand{\gatingsVariational}{\ensuremath{q(\GatingFunc_\numData)}}
+\newcommand{\gatingsVariational}{\ensuremath{q(\GatingFunc(\singleInput))}}
 \newcommand{\singleGatingGivenInducing}{\ensuremath{\Pr(\singleModeVarK \mid \gatingsInducingOutput)}}
 \newcommand{\allGatingGivenInducing}{\ensuremath{\Pr(\allModeVarK \mid \gatingInducingOutput)}}
 \newcommand{\allGatingsGivenInducing}{\ensuremath{\Pr(\allModeVarK \mid \gatingsInducingOutput)}}
@@ -7138,7 +6828,6 @@ have previously been sampled from the system at a constant frequency, i.e. with 
 # inference in the model.
 
 # This chapter is motivated by synergising model learning and control.
-\todo{update ref to motivation}
 Following the motivation in cref:to_motivation, this chapter
 seeks to correctly identify the underlying dynamics modes, whilst inferring
 latent structure that can be exploited for control.
@@ -7531,11 +7220,11 @@ With this notation, the regression problem can be written as,
 # for all dimensions as $\fkn$ and at all data points as $\Fk$.
 
 ** Problem Statement
-This work considers learning representations of /unknown/, or /partially unknown/,  multimodal,
-stochastic, nonlinear dynamical systems.
-That is, it seeks to learn the dynamics from the problem statement in cref:problem-statement-main.
-This chapter modifies the dynamics from cref:eq-dynamics-main to consider mapping
-a state and control at a given time step to the state difference at the next time step, as opposed to the next state.
+This work considers learning representations of /unknown/, or /partially unknown/, stochastic, multimodal,
+nonlinear dynamical systems.
+That is, it seeks to learn a representation of the dynamics from the problem statement in cref:problem-statement-main.
+This chapter considers single-step dynamics models with the delta state formulation
+that regularises the predictive distribution.
 The dynamics are given by,
 #+BEGIN_EXPORT latex
 %\begin{align} \label{eq-multimodal-dynamics-disc}
@@ -7546,9 +7235,9 @@ The dynamics are given by,
 %\end{align}
 \begin{subequations} \label{eq-multimodal-dynamics-disc}
 \begin{align}
-\Delta \state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd; \Delta t = t_*) + \bm\epsilon \\
-&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd; \Delta t = t_*) + \mode{\bm\epsilon}
-\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \nonumber \\
+\Delta \state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon \\
+&= \mode{\dynamicsFunc}(\state_\timeInd, \control_\timeInd) + \mode{\bm\epsilon}
+\quad \text{if} \quad \modeVar(\state_{\timeInd})=\modeInd \quad \forall \modeInd \in \{1,\ldots \ModeInd \} \nonumber \\
 \mode{\bm\epsilon} &\sim \mathcal{N}(\mathbf{0}, \Sigma_{\mode{\bm\epsilon}}),
 \end{align}
 \end{subequations}
@@ -7562,7 +7251,6 @@ $\{\unknownDynamicsK : \mode{\stateDomain} \times \controlDomain \rightarrow \st
 and associated noise models
 $\mode{\bm\epsilon} &\sim \mathcal{N}\left(\mathbf{0}, \bm\Sigma_{\mode{\bm\epsilon}} \right)$,
 are selected by a discrete mode indicator variable
-$\alpha_{\timeInd}$ with domain
 $\alpha_{\timeInd} \in \modeDomain = \{1,\ldots,\ModeInd\}$.
 This work assumes that the discrete mode indicator variable depends on the state $\state$ such that it is governed by
 a discrete mode indicator function $\alpha : \stateDomain \rightarrow \modeDomain$.
@@ -7590,7 +7278,8 @@ This chapter assumes access to historical data comprising state transitions from
 of length $T$, sampled  with a  fixed  time step $\Delta t=t_{*}$.
 The data set has ${N=ET}$ elements
 and we abuse notation by appending the independent trajectories along
-time to get the data set $\mathcal{D}=\{(\state_{\timeInd},\control_{\timeInd}),\Delta \state_{t+1}\}^\NumData_{\timeInd=0}$.
+time to get the data set
+$\mathcal{D}=\{(\state_{\timeInd},\control_{\timeInd}),\Delta \state_{t+1}\}^{\NumData-1}_{\timeInd=0}$.
 
 To ease notation, our modelling only considers a single output dimension.
 The extension to multiple output dimensions follows from standard GP methodologies and is detailed where necessary.
@@ -7870,7 +7559,6 @@ This section recaps the \acrshort{mogpe} concepts that this chapter builds upon.
 Mixture models are a natural choice for modelling multimodal systems.
 Given an input $\singleInput$ and an output $\singleOutput$, mixture models
 model a mixture of distributions over the output,
-\marginpar{mixture models}
 #+BEGIN_EXPORT latex
 \begin{equation} \label{eq-mixture-model}
 \singleMoeEvidence = \sum_{\modeInd=1}^\ModeInd
@@ -7896,7 +7584,6 @@ The individual component densities $\moeExpertPosterior$ are then referred to as
 as at different regions in the input space, different components are responsible for predicting.
 Given $\ModeInd$ experts $\moeExpertPosterior$, each with parameters $\expertParamsK$,
 the MoE marginal likelihood is given by,
-\marginpar{mixture of experts}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mixture-marginal-likelihood}
 \moeEvidence = \prod_{\numData=1}^\NumData \sum_{\modeInd=1}^{\ModeInd}
@@ -8013,12 +7700,12 @@ the formulation of their gating network and their approximate inference algorith
   %\caption{Graphical model where the output $\singleOutput$}
   \caption[Graphical models of nonparametric mixtures of experts]{
   Graphical models where the outputs $\allOutput = \{\allOutputK\}_{\modeInd=1}^{\ModeInd}$
-are generated by mapping the inputs $\allInput = \{\allInputK\}_{\modeInd=1}^{\ModeInd}$ through the latent process.
+are generated by mapping the inputs $\allInput = \{\allInputK\}_{\modeInd=1}^{\ModeInd}$ through the latent processes.
   An input assigned to expert $\modeInd$ is denoted $\singleInputK$
   and the sets of all $\NumData_{\modeInd}$ inputs and outputs assigned to expert $\modeInd$ are denoted
   $\allInputK$ and $\allOutputK$ respectively.
 The experts are shown on the left of each model and the gating network on the right.
-The generative process involves evaluating the gating network
+The generative processes involve evaluating the gating network
 and sampling an expert mode indicator variable $\singleModeVar$.
 The indicated mode's latent function $\mode{f}$ and noise model $\mathcal{N}(0, \noiseVarK)$ are
 then evaluated to generate the output $\singleOutput$.
@@ -8046,7 +7733,6 @@ experts are nonparametric.
 This is because the model assumes that the observations are i.i.d. given the model parameters,
 which is contrary to \acrshort{gp} models, which model the dependencies in the joint distribution, given the
 hyperparameters.
-\marginpar{mixtures of nonparametric experts}
 cite:rasmussenInfinite2001 point out that there is a joint distribution corresponding to every possible
 combination of assignments (of observations to experts).
 The marginal likelihood is then a sum over exponentially many ($\ModeInd^{\NumData}$) sets of assignments,
@@ -8071,7 +7757,6 @@ Assuming a mixture of Gaussian process regression models,
 the marginal likelihood in cref:eq-np-moe-marginal-likelihood-assign
 can be expanded to show each of the experts' latent variables,
 #+BEGIN_EXPORT latex
-\marginpar{marginal likelihood}
 \begin{align} \label{eq-np-moe-marginal-likelihood}
 %\moeEvidence
 \evidence
@@ -8087,7 +7772,6 @@ p\left(\singleOutput \mid \mode{\latentFunc}(\singleInput) \right)
 \end{align}
 #+END_EXPORT
 where each expert follows the standard Gaussian likelihood model,
-\marginpar{expert's Gaussian likelihood}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-likelihood}
 \singleOutput &= \mode{f}(\singleInput) + \epsilon_{k}, \quad \epsilon_{k} \sim \mathcal{N}(0, \mode{\noiseVar}^2), \\
@@ -8101,7 +7785,6 @@ Note that for notational conciseness the dependency on $\modeVarK$ is dropped fr
 $\singleExpertLikelihood$ as it is implied by the mode indexing $\mode{\latentFunc}$.
 The dependence on $\gatingParams$ and $\expertParams$ is also dropped from here on in.
 Independent GP priors are placed on each of the expert's latent functions,
-\marginpar{expert's GP prior}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-prior}
 %\expertPrior &= \mathcal{N}\left( \mode{f}(\allInput) \mid \expertMeanFunc(\allInput), \expertCovFunc(\allInput, \allInput) \right) \\
@@ -8256,7 +7939,6 @@ algorithm in Section ref:sec-traj-opt-geometric.
 The marginal likelihood in cref:eq-np-moe-marginal-likelihood-assign
 can be expanded to show each of the experts' latent variables,
 #+BEGIN_EXPORT latex
-\marginpar{marginal likelihood}
 \begin{align} \label{eq-np-moe-marginal-likelihood}
 \moeEvidence &= \sum_{\allModeVar} \npmoeGatingPosterior \npmoeExpertPosterior  \\
 &= \sum_{\allModeVar} \npmoeGatingPosterior
@@ -8270,7 +7952,6 @@ p\left(\mode{\latentFunc}(\allInputK) \mid \allInputK \right)
 \end{align}
 #+END_EXPORT
 # #+BEGIN_EXPORT latex
-# \marginpar{marginal likelihood}
 # \begin{align} \label{eq-np-moe-marginal-likelihood}
 # \moeEvidence &=
 # \sum_{\modeInd=1}^\ModeInd
@@ -8284,7 +7965,6 @@ p\left(\mode{\latentFunc}(\allInputK) \mid \allInputK \right)
 # \end{align}
 # #+END_EXPORT
 # #+BEGIN_EXPORT latex
-# \marginpar{marginal likelihood}
 # \begin{align} \label{eq-np-moe-marginal-likelihood}
 # \moeEvidence &=
 # \prod_{\numData=1}^\NumData \sum_{\modeInd=1}^\ModeInd
@@ -8293,7 +7973,6 @@ p\left(\mode{\latentFunc}(\allInputK) \mid \allInputK \right)
 # \end{align}
 # #+END_EXPORT
 # #+BEGIN_EXPORT latex
-# \marginpar{marginal likelihood}
 # \begin{align} \label{eq-np-moe-marginal-likelihood}
 # \moeEvidence &=
 # \underbrace{\E_{\expertPrior}}_{\text{expert } k \text{ prior}} \left[
@@ -8304,7 +7983,6 @@ p\left(\mode{\latentFunc}(\allInputK) \mid \allInputK \right)
 # \end{align}
 # #+END_EXPORT
 where each expert follows the standard Gaussian likelihood model,
-\marginpar{expert's Gaussian likelihood}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-expert-likelihood}
 \singleOutput &= \mode{f}(\singleInput) + \epsilon_{k}, \quad \epsilon_{k} \sim \mathcal{N}(0, \mode{\noiseVar}^2), \\
@@ -8316,7 +7994,6 @@ with $\mode{f}$ and $\mode{\noiseVar}^2$ representing the latent function and th
 with the $\modeInd$^{\text{th}} expert.
 Note that the dependency on $\modeVarK$ is dropped from $\singleExpertLikelihood$ for notational conciseness.
 Independent GP priors are placed on each of the expert's latent functions,
-\marginpar{expert's GP prior}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-expert-prior}
 %\expertPrior &= \mathcal{N}\left( \mode{f}(\allInput) \mid \expertMeanFunc(\allInput), \expertCovFunc(\allInput, \allInput) \right) \\
@@ -8431,13 +8108,12 @@ are evaluated and normalised to obtain the mixing probabilities
 $\singleGatingLikelihood$.
 The mode indicator variable $\singleModeVar$ is then sampled from the Categorical distribution
 governed by these probabilities.
-The indicated mode's latent function $\mode{f}$ and process noise $\noiseVarK$ are
+The indicated expert's latent function $\mode{f}$ and noise model $\mathcal{N}\left(\bm0,\noiseVarK \right)$ are
 then evaluated to generate the output $\singleOutput$.
 
 
-*Softmax ($\ModeInd>2$)* In the general case, that is, when there are more than two experts,
-$\ModeInd > 2$, the gating network's likelihood is defined as the Softmax function,
-\marginpar{softmax}
+*Softmax ($\ModeInd>2$)* In the general case, when there are more than two experts,
+the gating network's likelihood is defined as the Softmax function,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-softmax}
 \singleGatingLikelihood = \text{softmax}_{\modeInd}\left(\GatingFunc(\singleInput)\right) = \frac{\text{exp}\left(\mode{\gatingFunc}(\singleInput)\right)}{\sum_{j=1}^{\ModeInd} \text{exp}\left(\gatingFunc_j(\singleInput) \right)}.
@@ -8450,7 +8126,6 @@ informative prior knowledge to be encoded through the placement of GP priors on 
 Further to this, if the modes are believed to only vary over a subset of the state-control input space,
 then the gating functions can depend only on this subset.
 Independent GP priors are placed on each gating function, giving the gating network prior,
-\marginpar{GP priors}
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-gating-prior}
 %\gatingPrior &= \prod_{\modeInd=1}^\ModeInd \mathcal{N}\left( \mode{\gatingFunc}(\allInput) \mid \gatingMeanFunc(\allInput), \gatingCovFunc(\allInput, \allInput) \right) \\
@@ -8478,11 +8153,10 @@ as each gating function should depend on all of the training observations.
 Each mode's mixing probability $\singleGatingPosterior$ is then obtained by marginalising
 *all* of the gating functions.
 In the general case where $\singleGatingLikelihood$ uses the softmax function
-(cref:eq-softmax) this integral is intractable, so it is approximated with Monte carlo quadrature.
+(cref:eq-softmax) this integral is intractable, so it is approximated with Monte Carlo quadrature.
 
 *Bernoulli ($\ModeInd=2$)* Instantiating the model with two experts, $\singleModeVar \in \{1, 2\}$, is a special case
 where only a single gating function is needed.
-\marginpar{two experts}
 This is because the output of a function $\gatingFunc(\singleInput)$ can be mapped through a sigmoid
 function $\text{sig} : \R \rightarrow [0, 1]$ and interpreted as a probability,
 #+BEGIN_EXPORT latex
@@ -8874,7 +8548,6 @@ Further to this, the marginal likelihood is extremely expensive to evaluate,
 as there are $\ModeInd^{\NumData}$ sets of assignments $\allModeVar$ that need to be marginalised.
 For each set of assignments, there are $\ModeInd$ GP experts that need to be evaluated, each with
 complexity $\mathcal{O}(\NumData^{3})$.
-\todo{add marginal likelihood's correct complexity}
 For these reasons, this work derives a variational approximation based on inducing variables, that provides scalability
 by utilising stochastic gradient-based optimisation.
 # The resulting complexity is  $\mathcal{O}(\ModeInd^{\NumData} \NumData_{\modeInd}^3)$,
@@ -8977,7 +8650,7 @@ cref:fig-graphical-model-sparse shows the graphical model of the augmented joint
       \plate {} {(uh) (h) (phik)} {$\ModeInd$};
     \end{tikzpicture}
     }
-  \caption[Graphical model of \acrshort{mosvgpe}'s augmented probability space]{Graphical model of the augmented probability space where the joint distribution over the data is captured by the inducing variables $\expertInducingOutput=\mode{\latentFunc}(\expertInducingInput)$ and $\gatingInducingOutput=\mode{\gatingFunc}(\gatingInducingInput)$.
+  \caption[Graphical model of \acrshort{mosvgpe}'s augmented probability space]{Graphical model of the augmented probability space where the joint distribution over the data is captured by the inducing variables $\expertInducingOutput$ and $\gatingInducingOutput$.
   The observations assigned to expert $\modeInd$ are modelled by the
   inducing points $\{\expertInducingInput, \expertInducingOutput\}_{\modeInd=1}^{\ModeInd}$.
   This model avoids the hard assignment of observations to experts by letting the gating network
@@ -9005,7 +8678,7 @@ Each expert's inducing points are assumed to be from its GP prior,
 #+END_EXPORT
 where the set of all inducing inputs associated with the experts has been denoted $\expertsInducingInput$
 and the  set of all inducing variables as $\expertsInducingOutput$.
-Note that the dependence on the inducing inputs has dropped for notational conciseness.
+Note that the dependence on the inducing inputs has been dropped for notational conciseness.
 Introducing separate inducing points from each expert's GP can loosely be seen as "partitioning"
 the observations between experts.
 However, as the assignment of observations to experts is /not known a priori/, the inducing inputs
@@ -9024,8 +8697,7 @@ set of $\NumInducing$ inducing points from its corresponding GP prior,
 \gatingCovFunc(\gatingInducingInput, \gatingInducingInput) \right),
 \end{align}
 #+END_EXPORT
-where  $\gatingInducingOutput = \mode{\gatingFunc}(\gatingInducingInput)$
-are the inducing points associated with the $\modeInd^{\text{th}}$ gating function.
+where $\gatingInducingOutput$ are the inducing variables associated with the $\modeInd^{\text{th}}$ gating function.
 Again, the dependence on the inducing inputs has been dropped for notational conciseness.
 The set of all inducing variables associated with the gating network has been
 denoted $\gatingsInducingOutput$.
@@ -9073,7 +8745,7 @@ Our work follows from sparse GP methodologies, that assume,
 given the inducing variables, the latent function values factorise over observations.
 Our approximation assumes that given the inducing points,
 the marginalisation over every possible assignment of data points to experts, can be factorised over data.
-In a similar spirit to the FITC approximation citep:naish-guzmanGeneralized2008,quinonero-candelaUnifying2005,
+In a similar spirit to the \acrfull{fitc} approximation citep:naish-guzmanGeneralized2008,quinonero-candelaUnifying2005,
 this can be viewed as a likelihood approximation,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-likelihood-approximation}
@@ -9093,7 +8765,7 @@ $\{\mode{\latentFunc}(\allInputK) \}_{\modeInd=1}^\ModeInd$
 and the set of assignments $\allModeVar$.
 This approximation becomes exact in the limit $\ModeInd\NumInducing=\NumData$,
 if each expert's inducing points represent the true data partition
-$(\expertInducingInput, \expertInducingOutput) = (\allInputK, \mode{\latentFunc}(\allInputK))$.
+$\{\expertInducingInput, \expertInducingOutput\}_{\modeInd=1}^{\ModeInd} = \{\allInputK, \mode{\latentFunc}(\allInputK)\}_{\modeInd=1}^{\ModeInd}$.
 It is also worth noting that cref:eq-augmented-marginal-likelihood captures a rich approximation of each
 expert's covariance but as $\ModeInd\NumInducing \ll \NumData$ the computational complexity is
 much lower.
@@ -9107,7 +8779,6 @@ As such, information regarding the assignment of observations to experts must pa
 inducing variables.
 This approximation induces a local factorisation over observations and a set of global variables
 -- the necessary conditions for \acrshort{svi}.
-cref:fig-graphical-model-sparse shows the graphical model of this augmented joint probability model.
 This approach can loosely be viewed as parameterising the full nonparametric model
 in cref:eq-np-moe-marginal-likelihood-assign to obtain a desirable
 factorisation for 1) constructing a GP-based gating network and 2) deriving an ELBO that can
@@ -9406,11 +9077,11 @@ Following a similar approach to cite:hensmanGaussian2013,hensmanScalable2015,
 a lower bound on cref:eq-augmented-marginal-likelihood can be obtained,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-lower-bound-tight}
-\text{log} \evidence &\geq  \sum_{\numData=1}^\NumData \E_{\gatingsInducingVariational \expertsInducingVariational}
+\text{log} \evidence \geq  \sum_{\numData=1}^\NumData &\E_{\gatingsInducingVariational \expertsInducingVariational}
 \left[ \text{log} \left( \sum_{\modeInd=1}^\ModeInd
 \singleGatingGivenInducing \singleExpertGivenInducing \right) \right] \nonumber \\
-&- \gatingsKL \nonumber \\
-&- \expertsKL := \tightBound,
+&- \expertsKL \nonumber \\
+&- \gatingsKL := \tightBound,
 \end{align}
 #+END_EXPORT
 # From cref:eq-lower-bound-tight it is clear that the optimal distribution for gating network's variational
@@ -9438,10 +9109,10 @@ and each gating function GP $\gatingInducingVariational$,
 are $\NumInducing$ dimensional multivariate normal distributions.
 Therefore, each expectation requires an $\NumInducing$ dimensional integral to be approximated.
 # integral being approximated is $\NumInducing$ dimensional.
-\todo{add more on why we don't want M dimensional integral}
+# \todo{add more on why we don't want M dimensional integral}
 
 *Further lower bound* Following cite:hensmanScalable2015, these issues can be overcome
-by further bounding the bound in cref:eq-lower-bound-tight ($\tightBound$).
+by further bounding $\tightBound$ from cref:eq-lower-bound-tight.
 This removes the $\NumInducing$ dimensional integrals associated with each of the gating functions.
 Jensen's inequality can be applied to the conditional probability $\singleLatentGatingGivenInducing$,
 obtaining the further bound,
@@ -9449,8 +9120,8 @@ obtaining the further bound,
 \begin{align} \label{eq-lower-bound-further}
 \tightBound \geq \sum_{\numData=1}^\NumData &\E_{\gatingsVariational \expertsInducingVariational}
 \left[ \text{log} \sum_{\modeInd=1}^{\ModeInd} \singleGatingLikelihood \singleExpertGivenInducing \right] \nonumber \\
-&- \gatingsKL \nonumber \\
-&- \expertsKL := \furtherBound,
+&- \expertsKL \nonumber \\
+&- \gatingsKL := \furtherBound,
 \end{align}
 #+END_EXPORT
 where $\gatingsVariational$ represents the variational posterior given by,
@@ -9478,8 +9149,8 @@ obtaining the further^2 bound,
 \begin{align} \label{eq-lower-bound-further-2}
 \furtherBound \geq \sum_{\numData=1}^\NumData &\E_{\gatingsVariational \expertsVariational}
 \left[ \text{log} \sum_{\modeInd=1}^{\ModeInd} \singleGatingLikelihood \singleExpertLikelihood \right] \nonumber \\
-&- \gatingsKL \nonumber \\
-&- \expertsKL := \furtherBoundTwo,
+&- \expertsKL \nonumber \\
+&- \gatingsKL := \furtherBoundTwo,
 \end{align}
 #+END_EXPORT
 where $\expertsVariational$ represents the variational posterior given by,
@@ -9565,7 +9236,7 @@ in practice only single samples are used because the added stochasticity helps t
 
 The tight lower bound $\tightBound$ is the most accurate lower bound but it is also the most
 computationally expensive.
-The further $\furtherBound$ and the further^2 $\furtherBoundTwo$ lower bounds
+Both the further lower bound $\furtherBound$ and the further^2 lower bound $\furtherBoundTwo$
 have lower computational complexity at the cost of being looser bounds.
 The performance of these bounds is evaluated in cref:sec-mcycle-results.
 
@@ -9588,7 +9259,7 @@ The performance of these bounds is evaluated in cref:sec-mcycle-results.
 
 \newcommand{\gatingsVariationalSample}{\ensuremath{q(\GatingFunc(\x_{\batchSampleInd}))}}
 #+END_EXPORT
-\todo{add unbiased estimate of ELBO}
+# \todo{add unbiased estimate of ELBO}
 The bounds in  cref:eq-lower-bound-further,eq-lower-bound-tight,eq-lower-bound-further-2
 meet the necessary conditions to perform stochastic
 gradient methods on $\expertsInducingVariational$ and $\gatingsInducingVariational$.
@@ -9643,6 +9314,8 @@ where $\expertInducingOutput^{(\expertSampleInd)} &\sim \expertInducingVariation
 and
 $\mathbf{\gatingFunc}(\x_{\batchSampleInd})^{(\gatingSampleInd)} &\sim \gatingsVariationalSample$
 denote samples from the variational posteriors.
+$\hat{S}$ samples are drawn from the gating network's variational posterior and $S$ are drawn from the experts'
+variational posterior.
 The variational distributions over the inducing variables are represented using the mean vector $\mode{\mathbf{m}}$
 and the lower triangular $\mode{\mathbf{L}}$ of the covariance matrix
 $\mode{\mathbf{S}} = \mode{\mathbf{L}} \mode{\mathbf{L}}^T$.
@@ -9671,7 +9344,7 @@ has complexity $\mathcal{O}(\NumInducing^2)$ because
 the covariance is represented as the lower triangular (via the cholesky decomposition).
 In addition to this sampling, calculating each experts conditional $\singleExpertGivenInducing$ given these samples
 has complexity $\mathcal{O}(\NumInducing^2)$.
-\todo{How to combine all of these complexities?}
+# \todo{How to combine all of these complexities?}
 
 
 # For each data point in the minibatch, each of the $\ModeInd$ gating function GPs and $\ModeInd$ expert GPs has complexity
@@ -9735,13 +9408,16 @@ For a given set of test inputs $\testInput \in \R^{\NumTest \times \InputDim$,
 this model makes probabilistic predictions following
 a mixture of $\ModeInd$ Gaussians.
 Making predictions with this model involves calculating a density over the output for each expert and combining
-them using the probabilities obtained from the gating network, i.e. marginalising the expert indicator variable,
+them using the probabilities obtained from the gating network, i.e. marginalising the expert indicator variable.
+This is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-predictive-posterior}
 \predictivePosterior &= \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \underbrace{\predictiveProb}_{\text{gating network posterior}} \underbrace{\predictiveExpert}_{\text{expert } \ModeInd \text{ posterior}} \\
-&\approx \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \approxPredictiveProb \approxPredictiveExpert
+&\approx \prod_{\numData=1}^{\NumTest} \sum_{\modeInd=1}^\ModeInd \approxPredictiveProb \approxPredictiveExpert,
 \end{align}
 #+END_EXPORT
+where dependence on the test inputs $\testInput$ and the training inputs $\allInput$ have been dropped for
+notational conciseness.
 
 *Experts*
 The experts make predictions at new test locations by integrating over their latent function posteriors,
@@ -10055,8 +9731,7 @@ Note that all figures in this section show models that were trained on the full 
 **** intro :ignore:
 The Motorcycle data set
 (discussed in cite:Silverman1985) contains 133 data points
-($\allInput \in \inputDomain \subseteq \R^{133 \times 1}$ and
-$\allOutput \in \outputDomain \subseteq \R^{133 \times 1}$)
+($\allInput \in \R^{133 \times 1}$ and $\allOutput \in \R^{133 \times 1}$)
 and input dependent noise.
 The data set represents motorcycle impact data -- time (ms) vs acceleration (g).
 The data set is represented by the black crosses in cref:fig-y-mcycle-two-experts.
@@ -10064,7 +9739,7 @@ The data set is represented by the black crosses in cref:fig-y-mcycle-two-expert
 
 # The model and inference are evaluated by instantiating the model with both two $\ModeInd=2$
 # and three $\ModeInd=3$ experts.
-To test the performance of our method (\acrshort{mosvgpe}), the model is
+To test the performance of \acrshort{mosvgpe}, the model is
 instantiated with $\ModeInd=2$ and $\ModeInd=3$ experts.
 All experiments on the Motorcycle data set use $\NumInducing=32$ inducing points for
 all GPs and are trained for $25,000$ iterations
@@ -10147,10 +9822,14 @@ Although adding more experts to the \acrshort{mosvgpe} model appears to learn mo
 predictive means appear to deteriorate ever so slightly (indicated by higher RMSE/MAE values).
 This is most likely due to bias at the boundaries between the experts,
 resulting from the mixing behaviour arising from our GP-based gating network.
-If the gating functions do not have extremely low lengthscales then they will not be able to immediately switch
+If the gating functions do not have low lengthscales then they will not be able to immediately switch
 from one expert to another.
-Although this appears to negatively impact performance here, it should be noted that in theory
-the GP-based gating network can offer superior generalisation and identifiability.
+It is worth noting that this drop in performance is negligible.
+# , especially when considering the
+# superior generalisation and identifiability offered by the GP-based gating network.
+
+# Although this appears to negatively impact performance here, it should be noted that in theory
+# the GP-based gating network can offer superior generalisation and identifiability.
 
 **** two expert y fig :ignore:
 #+BEGIN_EXPORT latex
@@ -10196,10 +9875,52 @@ the GP-based gating network can offer superior generalisation and identifiabilit
 
 # #+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
 
+**** Parameter settings two experts :ignore:
+#+begin_table
+#+LATEX: \caption{Initial parameter settings before training on motorcycle data set with two experts.}
+#+LATEX: \label{tab-params-motorcycle-two}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center nil
+|                 | Description                | Symbol                    | Value                                                                                         |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                 | Num data                   | $\NumData$                | $133$                                                                                         |
+|                 | Batch size                 | $\NumData_b$              | $16$                                                                                          |
+| Optimiser       | Epochs                     | N/A                       | $25000$                                                                                       |
+|                 | Num gating samples         | $\hat{S}$                 | $1$                                                                                           |
+|                 | Num expert samples         | $S$                       | $1$                                                                                           |
+|                 | Learning rate              | N/A                       | $0.01$                                                                                        |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                 | Kernel variance            | $\sigma_f$                | $0.1$                                                                                         |
+|                 | Kernel lengthscales        | $l$                       | $10$                                                                                          |
+|                 | Likelihood variance        | $\sigma_n$                | $0.032$                                                                                       |
+| Expert 1        | Num inducing points        | $\NumInducing$            | $32$                                                                                          |
+|                 | Inducing inputs            | $\expertsInducingInput_1$ | $\expertsInducingInput_1 \subseteq \allInput$ with $\#\expertsInducingInput_1 = \NumInducing$ |
+|                 | Inducing variable mean     | $\hat{\mathbf{m}}_1$      | zeros plus Gaussian noise                                                                     |
+|                 | Inducing variable Cholesky | $\hat{\mathbf{S}}_1$      | ones plus Gaussian noise                                                                      |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                 | Kernel variance            | $\sigma_f$                | $20$                                                                                          |
+|                 | Kernel lengthscales        | $l$                       | $0.5$                                                                                         |
+|                 | Likelihood variance        | $\sigma_n$                | $0.9$                                                                                         |
+| Expert 2        | Num inducing points        | $\NumInducing$            | $32$                                                                                          |
+|                 | Inducing inputs            | $\expertsInducingInput_2$ | $\expertsInducingInput_2 \subseteq \allInput$ with $\#\expertsInducingInput_2 = \NumInducing$ |
+|                 | Inducing variable mean     | $\hat{\mathbf{m}}_2$      | zeros plus Gaussian noise                                                                     |
+|                 | Inducing variable Cholesky | $\hat{\mathbf{S}}_2$      | ones plus Gaussian noise                                                                      |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                 | Kernel variance            | $\sigma_f$                | $3$                                                                                           |
+|                 | Kernel lengthscales        | $l$                       | $0.5$                                                                                         |
+| Gating function | Num inducing points        | $\NumInducing$            | $32$                                                                                          |
+|                        | Inducing inputs            | $\gatingInducingInput$    | $\gatingInducingInput \subseteq \allInput$ with $\#\gatingInducingInput = \NumInducing$       |
+|                        | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                                     |
+|                        | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                          |
+|-----------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+#+LATEX: }
+#+end_table
+
 **** Two Experts
 The two further lower bounds ($\furtherBound$ and $\furtherBoundTwo$),
 derived in cref:sec-inference, are compared by training each instantiation of
 the model using the same model and training parameters.
+Table cref:tab-params-motorcycle-two contains the initial values for all of the trainable parameters in the model.
 They are compared by instantiating the model with two experts $\ModeInd=2$
 and comparing their performance.
 The results are shown in cref:fig-y-mcycle-two-experts,fig-latent-mcycle-two-experts,
@@ -10225,9 +9946,9 @@ As the \acrshort{mosvgpe} posterior is a Gaussian mixture, it is visualised by d
 from its posterior, i.e. sample a mode indicator variable $\modeVar_*$ and then draw a sample
 from the corresponding expert.
 
+# \todo{quantify this with local RMSE?}
 *Predictive posteriors* Both \acrshort{mosvgpe} results are capable of modelling the non-stationarity
 at $x \approx -0.7$ better than the sparse variational Gaussian process (SVGP).
-\todo{quantify this with local RMSE?}
 At this non-stationary point there are clearly two modes in the \acrshort{mosvgpe} predictive distributions,
 indicated by the overlap in samples from each expert
 in cref:fig-y-samples-mcycle-two-experts-tight,fig-y-samples-mcycle-two-experts-further.
@@ -10236,7 +9957,7 @@ noise variance term. In contrast, both of the \acrshort{mosvgpe} results have be
 two noise variances and these reflect the noise in the observations much better.
 This is indicated by expert one learning a low noise variance and expert two a high noise
 variance (similar to the SVGP's noise variance).
-\todo{Add values for noise variances}
+# \todo{Add values for noise variances}
 
 *Latent variables* More insight into this behaviour can be obtained by considering the latent variables.
 Figure ref:fig-latent-mcycle-two-experts shows the posteriors over the latent variables where
@@ -10430,12 +10151,61 @@ their associated mixing probabilities $\approxPredictiveProb$ in
 # \end{figure}
 # #+END_EXPORT
 
+**** Parameter settings three experts :ignore:
+#+begin_table
+#+LATEX: \caption{Initial parameter settings before training on motorcycle data set with three experts.}
+#+LATEX: \label{tab-params-motorcycle-three}
+#+LATEX: \resizebox{\textwidth}{!}{
+#+ATTR_LATEX: :center nil
+|                        | Description                | Symbol                    | Value                                                                                         |
+|------------------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                        | Num data                   | $\NumData$                | $133$                                                                                         |
+|                        | Batch size                 | $\NumData_b$              | $16$                                                                                          |
+| Optimiser              | Epochs                     | N/A                       | $25000$                                                                                       |
+|                        | Num gating samples         | $\hat{S}$                 | $1$                                                                                           |
+|                        | Num expert samples         | $S$                       | $1$                                                                                           |
+|                        | Learning rate              | N/A                       | $0.01$                                                                                        |
+|------------------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                        | Kernel variance            | $\sigma_f$                | $0.1$                                                                                         |
+|                        | Kernel lengthscales        | $l$                       | $10$                                                                                          |
+|                        | Likelihood variance        | $\sigma_n$                | $0.03$                                                                                        |
+| Expert 1               | Num inducing points        | $\NumInducing$            | $32$                                                                                          |
+|                        | Inducing inputs            | $\expertsInducingInput_1$ | $\expertsInducingInput_1 \subseteq \allInput$ with $\#\expertsInducingInput_1 = \NumInducing$ |
+|                        | Inducing variable mean     | $\hat{\mathbf{m}}_1$      | zeros plus Gaussian noise                                                                     |
+|                        | Inducing variable Cholesky | $\hat{\mathbf{S}}_1$      | ones plus Gaussian noise                                                                      |
+|------------------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                        | Kernel variance            | $\sigma_f$                | $0.1$                                                                                         |
+|                        | Kernel lengthscales        | $l$                       | $10.0$                                                                                        |
+|                        | Likelihood variance        | $\sigma_n$                | $0.1$                                                                                         |
+| Expert 2               | Num inducing points        | $\NumInducing$            | $32$                                                                                          |
+|                        | Inducing inputs            | $\expertsInducingInput_2$ | $\expertsInducingInput_2 \subseteq \allInput$ with $\#\expertsInducingInput_2 = \NumInducing$ |
+|                        | Inducing variable mean     | $\hat{\mathbf{m}}_2$      | zeros plus Gaussian noise                                                                     |
+|                        | Inducing variable Cholesky | $\hat{\mathbf{S}}_2$      | ones plus Gaussian noise                                                                      |
+|------------------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                        | Kernel variance            | $\sigma_f$                | $1.0$                                                                                         |
+|                        | Kernel lengthscales        | $l$                       | $0.5$                                                                                         |
+|                        | Likelihood variance        | $\sigma_n$                | $0.9$                                                                                         |
+| Expert 3               | Num inducing points        | $\NumInducing$            | $32$                                                                                          |
+|                        | Inducing inputs            | $\expertsInducingInput_3$ | $\expertsInducingInput_3 \subseteq \allInput$ with $\#\expertsInducingInput_3 = \NumInducing$ |
+|                        | Inducing variable mean     | $\hat{\mathbf{m}}_3$      | zeros plus Gaussian noise                                                                     |
+|                        | Inducing variable Cholesky | $\hat{\mathbf{S}}_3$      | ones plus Gaussian noise                                                                      |
+|------------------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+|                        | Kernel variance            | $\sigma_f$                | $3.0$                                                                                         |
+|                        | Kernel lengthscales        | $l$                       | $0.5$                                                                                         |
+| Gating functions (1-3) | Num inducing points        | $\NumInducing$            | $32$                                                                                          |
+|                        | Inducing inputs            | $\gatingInducingInput$    | $\gatingInducingInput \subseteq \allInput$ with $\#\gatingInducingInput = \NumInducing$       |
+|                        | Inducing variable mean     | $\mode{\hat{\mathbf{m}}}$ | zeros plus Gaussian noise                                                                     |
+|                        | Inducing variable Cholesky | $\mode{\hat{\mathbf{S}}}$ | $10 \times$ ones plus Gaussian noise                                                          |
+|------------------------+----------------------------+---------------------------+-----------------------------------------------------------------------------------------------|
+#+LATEX: }
+#+end_table
+
 **** Three Experts
 # Given that the two lower bounds lead to different ways for explaining the data
 # at $x \geq 1.5$, it is interesting to consider adding a third expert.
 The model was then instantiated with three experts $\ModeInd=3$ and trained
-following the same procedure as the two experts' experiments,
-i.e. with the same initial model and training parameters.
+following the same procedure as the two experts' experiments.
+Table cref:tab-params-motorcycle-three shows the initial values for all of the trainable parameters in the model.
 The results are show in cref:fig-y-mcycle-three-experts,
 where the top row visualises the predictive mean and
 the bottom row the predictive density, for $\furtherBound$ (left column) and $\furtherBoundTwo$ (right column).
@@ -14486,7 +14256,6 @@ In the nonlinear case, approximate methods are required to obtain efficient clos
 
 Constructing approximate closed-form solutions based on the model in Chapter ref:chap-dynamics
 is especially difficult, due to the exponential growth in the number of Gaussian components.
-\marginpar{multimodal exponential growth}
 Consider approximating the dynamics modes to be independent over a trajectory of length, $N$,
 and recursively propagating each component through both modes.
 This approximation would lead to the distribution over the final state consisting of
@@ -16771,7 +16540,7 @@ cref:tab-geometry-control-comparison offers a succinct comparison of the three a
 # #+LATEX: }
 # #+end_table
 #+begin_table
-#+LATEX: \caption{Comparison of the indirect optimal control via latent geodesics \ig method from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannian energy \dre method from \cref{sec-traj-opt-energy} and the control-as-inference \cai method from \cref{chap-traj-opt-inference}.}
+#+LATEX: \caption[Comparison of mode remaining trajectory optimisation algorithms]{Comparison of the \acrfull{ig} method from \cref{sec-traj-opt-collocation}, the \acrfull{dre} method from \cref{sec-traj-opt-energy} and the \acrfull{cai} method from \cref{chap-traj-opt-inference}.}
 #+LATEX: \label{tab-geometry-control-comparison}
 #+ATTR_LATEX: :center t :placement [!t] :align lccc
 |                                                    | \cai       | \ig        | \dre       |
@@ -22289,22 +22058,26 @@ Table ref:tab-params-quadcopter contains the initial values for all of the train
 ** Bibliography :ignore:
 
 #+BEGIN_EXPORT latex
-\bookmarksetup{startatroot}
-\backmatter
+%\bookmarksetup{startatroot}
+%\backmatter
+
+\printglossary[type=\acronymtype]
+
+% \printglossary
 
 
 % This ensures that the subsequent sections are being included as root
 % items in the bookmark structure of your PDF reader.
-\begingroup
-    \let\clearpage\relax
-    \glsaddall
-    \printglossary[type=\acronymtype]
-    \newpage
-    \printglossary
-\endgroup
-\printindex
+%\begingroup
+%    \let\clearpage\relax
+%    \glsaddall
+%    \printglossary[type=\acronymtype]
+%    \newpage
+%    \printglossary
+%\endgroup
+%\printindex
 
-\printglossary
+%\printglossary
 % \begingroup
 % \sloppy
 % \setstretch{1}
