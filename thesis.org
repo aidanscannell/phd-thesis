@@ -1,5 +1,11 @@
 * Config :ignore:
+#+AUTHOR: Aidan Scannell
+#+TITLE: Bayesian Learning \& Control in Multimodal Dynamical Systems
+#+DESCRIPTION: Aidan Scannell's PhD Thesis
+#+KEYWORDS: Machine Learning, Probabilistic Modelling, Bayesian Inference, Gaussian Processes, Model-Based Reinforcement Learning, Optimal Control, Learning-based Control, Robotics, Multimodal Dynamical Systems
 #+latex_class: mimosis
+#+EXPORT_FILE_NAME: ./phd-thesis.pdf
+** Run this src block with C-c C-c :noexport:
 #+begin_src emacs-lisp :exports none  :results none
 (unless (boundp 'org-latex-classes)
   (setq org-latex-classes nil))
@@ -31,11 +37,20 @@
                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                ("\\paragraph{%s}\\newline" . "\\paragraph*{%s}\\newline")
                ("\\subparagraph{%s}\\newline" . "\\subparagraph*{%s}\\newline")))
+
+(setq org-latex-hyperref-template
+    "\\\hypersetup{
+    pdfauthor={%a},
+    pdftitle={%t},
+    pdfkeywords={%k},
+    pdfsubject={%d},
+    pdfcreator={%c},
+    pdflang={%L}}\n")
 #+end_src
-# #+EXPORT_FILE_NAME: ./tmp/thesis.pdf
 ** Org Mode Export Options :noexport:
 #+EXCLUDE_TAGS: journal noexport
-#+OPTIONS: title:nil toc:nil date:nil author:nil H:6
+#+OPTIONS: title:nil toc:nil date:nil author:nil H:6 latex-hyperref-template:t
+# #+OPTIONS:  H:3 num:t toc:nil \n:nil @:t ::t |:t ^:{} _:{} *:t TeX:t LaTeX:t
 
 ** Macros :ignore:
 # #+MACRO: acronym #+latex_header: \newacronym[description={$1}]{$2}{$2}{$3}
@@ -56,8 +71,6 @@ xspace for space after text in newcommands
 #+LATEX_HEADER: \usepackage{xspace}
 *** Font Awesome icons
 #+LATEX_HEADER: \usepackage{fontawesome}
-*** Maths cancel
-#+LATEX_HEADER: \usepackage[makeroom]{cancel}
 *** Footnotes
 #+LATEX_HEADER: \usepackage{footnote}
 *** Tensor indexing (pre subscripts)
@@ -190,7 +203,9 @@ The following commands make chapter numbers BrickRed, which look like the Donder
 
 Already imported when using mimosis.
 # #+latex_header: \usepackage{setspace}
-#+latex_header: \setstretch{1.25} 
+# #+latex_header: \setstretch{1.25}
+#+latex_header: \setstretch{1.5}
+# #+latex_header: \doublespace
 
 *** Parskip
 
@@ -234,16 +249,46 @@ Make the equation numbers follow the chapter, not the whole thesis.
 *** Algorithms
 #+LATEX_HEADER: \usepackage{algpseudocode}
 #+LATEX_HEADER: \usepackage{algorithm}
+*** Maths
+**** argmin/argmax
+#+LATEX_HEADER: \DeclareMathOperator*{\argmax}{argmax}
+#+LATEX_HEADER: \DeclareMathOperator*{\argmin}{argmin}
+**** Maths cancel
+#+LATEX_HEADER: \usepackage[makeroom]{cancel}
+*** UoB guidelines
+# The pages should be numbered consecutively at the bottom centre of the page.
+#+latex_header: \cfoot{\pagemark}
+#+latex_header: \refoot{} \lefoot{} \rofoot{} \lofoot{}
+*** PDF metadata:
+# #+latex_header: \usepackage{datetime}
+# #+latex_header: \usepackage{ifpdf}
+# #+latex_header: \ifpdf
+# #+latex_header: \pdfinfo{
+# #+latex_header:    /Author (Aidan Scannell)
+# #+latex_header:    /Title (PhD Thesis)
+# #+latex_header:    /Keywords (One; Two;Three)
+# #+latex_header:    /CreationDate (D:\pdfdate)
+# #+latex_header: }
+# #+latex_header: \fi
+#+begin_latex
+%  \hypersetup{% Setup for hyperref
+%  pdftitle    = {{{{\ThesisTitle}}}}, %Org macro to take from #+TITLE
+%  pdfauthor   = {{{{Aidan Scannell}}}} %Org macro to take from #+AUTHOR
+%  }
+
+#+end_latex
 ** Text Variables :noexport:
-#+latex_header: \newcommand{\ThesisTitle}{{Mode Remaining Model-Based Reinforcement Learning for Control in Multimodal Dynamical Systems}}
+# #+latex_header: \newcommand{\ThesisTitle}{{Mode Remaining Model-Based Reinforcement Learning for Control in Multimodal Dynamical Systems}}
+# #+latex_header: \newcommand{\ThesisTitle}{{Mode Remaining Model-Based Reinforcement Learning for Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Model-Based Reinforcement Learning for Mode Remaining Control in Multimodal Dynamical Systems}}
+#+latex_header: \newcommand{\ThesisTitle}{{Bayesian Learning \& Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Learning \& Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Data Efficient Learning for Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisSubTitle}{Synergising Bayesian Inference for  Control}
 # #+latex_header: \newcommand{\ThesisSubTitle}{Synergising Bayesian Inference and Riemannian Geometry for Control}
-#+latex_header: \newcommand{\FormattedThesisDefenseDate}{\mbox{\formatdate{1}{1}{2100}}}
-#+latex_header: \newcommand{\FormattedAuthorDateOfBirth}{\mbox{\formatdate{1}{1}{2000}}}
-#+latex_header: \newcommand{\FormattedThesisDefenseTime}{\mbox{10:00}}
+# #+latex_header: \newcommand{\FormattedThesisDefenseDate}{\mbox{\formatdate{1}{1}{2100}}}
+# #+latex_header: \newcommand{\FormattedAuthorDateOfBirth}{\mbox{\formatdate{1}{1}{2000}}}
+# #+latex_header: \newcommand{\FormattedThesisDefenseTime}{\mbox{10:00}}
 #+latex_header: \newcommand{\AuthorShortName}{\mbox{Aidan Scannell}}
 #+latex_header: \newcommand{\AuthorFullName}{\mbox{Aidan J. Scannell}}
 #+latex_header: \newcommand{\ThesisISBN}{\mbox{}}
@@ -634,11 +679,11 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
 #+LATEX_HEADER: \newcommand{\singleOutputK}{\ensuremath{\mode{\singleOutput}}}
 
-** Acronyms :noexport:
-Use with
-- \acrfull{gp} prints Gaussian Process (GP)
-- \acrshort{gp} prints GP
-- \acrlong{gp} prints Gaussian Process
+** Acronyms :ignore:
+# Use with
+# - \acrfull{gp} prints Gaussian Process (GP)
+# - \acrshort{gp} prints GP
+# - \acrlong{gp} prints Gaussian Process
 
 {{{glossaryentry(LaTeX,\LaTeX,A document preparation system,LaTeX)}}}
 {{{glossaryentry(Real Numbers,$\real$,The set of Real numbers,Real Numbers)}}}
@@ -724,7 +769,7 @@ Use with
     \end{minipage}\\
      \vspace{\baselineskip}
     % \vspace{\stretch{1}}
-    \vspace{\baselineskip}
+    # \vspace{\baselineskip}
     \vspace{\stretch{1}}
     \noindent
     \begin{tabular}{@{}l@{\hspace{22pt}}ll}
@@ -735,7 +780,7 @@ Use with
     %\vspace{\baselineskip}
     %\vspace{\baselineskip}
     \vspace{9mm}
-    {\large\textsc{January 2022}}
+    {\large\textsc{May 2022}}
     \vspace{12mm}
     \vfill
   \end{center}
@@ -761,7 +806,7 @@ Use with
 
 %From robotics, to industrial processing, to finanace, learning-based approaches to control
 %help alleviate the dependence on domain exerts for system identification and controller design.
-This dissertation is concerned with learning-based control for robotic systems in uncertain environments,
+This dissertation is concerned with learning-based control for robotic systems in multimodal environments,
 where both the underlying dynamics modes, and how the system switches between them, are \textit{not fully known a priori}.
 In particular, it is interested in controlling multimodal dynamical system to a target state,
 whilst remaining in a desired dynamics mode.
@@ -805,8 +850,9 @@ The first two approaches
 exploit concepts of Riemannian geometry -- extended to probabilistic geometries -- to encode the mode remaining
 behaviour, whilst the third approach formulates the control problem as probabilistic inference
 and encodes the mode remaining behaviour by conditioning on a mode assignment variable.
-All three algorithms are evaluated in a set of simulated quadcopter experiments, which highlight that two of the
-algorithms consistently perform well, whilst the other does not.
+All three algorithms are evaluated in a set of simulated quadcopter experiments, which highlight that only two of the
+algorithms consistently perform well.
+% , whilst the other does not.
 % , as well as a data set collected onboard
 % a DJI Tello quadcopter.
 
@@ -834,7 +880,7 @@ The algorithm restricts exploration to the region of the state space which it be
 desired dynamics mode.
 The resulting algorithm is evalutated in a simulated quadcopter environment which shows that it can
 solve the mode remaining navigation problem.
-However, more in-depth analysis of the exploration strategy is left for future work.
+%However, more in-depth analysis of the exploration strategy is left for future work.
 
 
 % This is achieved via a set of chance constraints.
@@ -979,13 +1025,12 @@ and to test the collocation solver presented in \cref{sec-traj-opt-collocation}.
 These results are a step towards validating that the methods presented in this dissertation work on real-world systems.
 However, this constant controls data set could not be used to learn a dynamics model for the control methods
 in \cref{chap-traj-opt-inference,sec-traj-opt-energy} (due to the lack of controls).
-Due to Covid-19 lab closures, it was not possible to collect a new real-world data set that could be used
-to train the dynamics model (with controls).
-Instead, this dissertation used a simulator to generate a data set.
-This had the added benefit that the simulator could be used to test the mode remaining trajectory optimisation
-algorithms in \cref{chap-traj-opt-inference,sec-traj-opt-energy},
-as well as the explorative trajectory optimisation algorithm in \cref{chap-active-learning},
-without requiring aceess to the \acrshort{brl}.
+In order to mitigate the risk associated with Covid-19 lab closures, we decided not to collect a new real-world data set
+that could be used to train the dynamics model (with controls).
+Instead, we developed a simulator and used it to generate a data set.
+This had the added benefit that the simulator could be used to test the trajectory optimisation
+algorithms in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-active-learning}.
+%without requiring aceess to the \acrshort{brl}.
 
 %It was used to train the model in cref:sec-traj-opt-collocation,sec-brl-experiment
 %was collected before the pandemic.
@@ -1008,7 +1053,7 @@ without requiring aceess to the \acrshort{brl}.
 \end{SingleSpace}
 #+END_EXPORT
 
-** Declaration :noexport:
+** Declaration
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -1024,18 +1069,34 @@ without requiring aceess to the \acrshort{brl}.
 \end{SingleSpace}
 #+END_EXPORT
 
-** Acknowledgements :noexport:
+** Acknowledgements
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
 #+BEGIN_EXPORT latex
 \begin{SingleSpace}
 \initial{I} am deeply grateful to my two supervisors, Arthur Richards and Carl Henrik Ek.
-Thank you for taking me on as a student.
 Your expertise and willigness to explore new ideas has made my PhD extrememly enjoyable.
-I have learned so much under you supervision and am extremely grateful for your continued support.
+I have learned so much under your supervision and am extremely grateful for your continued support.
 I have thoroughly enjoyed our disscusions, in particular, our many whiteboard sessions.
-I could not have asked for a better supervisors.
+You have shown me how to build rich intuitions for seemingly complex problems
+and you have generally inspired me as an academic.
+I could not have asked for better supervisors.
+
+I have thoroughly enjoyed our disscusions,
+Arthur, I have especially enjoyed the many connections you've made between machine learning concepts and control theory.
+Carl,
+%in particular, our many whiteboard sessions.
+%and how to find there simple solutions
+
+%I especially the ones where Arthur sees through the
+%I have particularly enjoyed
+
+%and how
+%think on a much deeper level,
+%on why
+
+%Thank you for taking me on as a student.
 
 %I'd also like to thank Carl for his countelss tips with bikes and Emacs.
 %Carl, I have especially enjoyed wathcing your transition to the Emacs X Window Manager.
@@ -1043,33 +1104,39 @@ I could not have asked for a better supervisors.
 
 %Arthur, you have taught me how to find the right problem
 
-I would also like to thank the Reddit users that supported me through my journey with RSI.
-It seems like a life time ago since I was consiering giving up my PhD and all hopes of a career in programming.
+
+I want to thank my family: mum, dad, Ciaran and Mhairi, for be amazing;
+none of this would have been possible without your support.
+I love you all very much.
+I am also grateful to my friends, you have made my time in Bristol so much fun!
+
+Finally, I would like to thank the Reddit users that supported me through my journey with RSI.
+It seems like a life time ago since I was consiering giving up my PhD along with all my hopes of a career in programming.
 Your support gave me the confidence that I needed to overcome my RSI. I am eteranlly grateful.
 
-I am grateful to my friends, you have made my time in Bristol so much fun!
-I also want to thank my family: mum, dad, Ciaran and Mhairi for be amazing;
-none of this would have been possible without your support.
+%I acknowledge the financial support toward this PhD from the EPSRC
+%Centre for Doctoral Training in Future Autonomous and Robotic Systems (FARSCOPE) at the
+%Bristol Robotics Laboratory.
+This work was supported by the EPSRC Centre for Doctoral Training in Future
+Autonomous and Robotic Systems (FARSCOPE) at the Bristol Robotics Laboratory.
 
-I acknowledge the financial support toward this PhD from the EPSRC
-Centre for Doctoral Training in Future Autonomous and Robotic Systems (FARSCOPE) at the
-Bristol Robotics Laboratory.
-
+This dissertation was written in org-mode for Emacs and exported to LaTeX
 \end{SingleSpace}
 #+END_EXPORT
 * TOC and Mainmatter :ignore:
 #+BEGIN_EXPORT latex
+\makeindex
 \tableofcontents
-% This ensures that the subsequent sections are being included as root
-% items in the bookmark structure of your PDF reader.
-\begingroup
-    \let\clearpage\relax
-    \glsaddall
-    \printglossary[type=\acronymtype]
-    \newpage
-    \printglossary
-\endgroup
-\printindex
+\addtocontents{toc}{\par\nobreak \mbox{}\hfill{\bf Page}\par\nobreak}
+\clearemptydoublepage
+%
+\listoftables
+\addtocontents{lot}{\par\nobreak\textbf{{\scshape Table} \hfill Page}\par\nobreak}
+\clearemptydoublepage
+%
+\listoffigures
+\addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
+\clearemptydoublepage
 
 \mainmatter
 #+END_EXPORT
@@ -1730,7 +1797,7 @@ it is desirable to find trajectories that avoid entering this turbulent dynamics
 \centering
 %\includegraphics[width=1.0\textwidth]{./images/point-mass-problem-statement-scenario-4.pdf}
 \includegraphics[width=1.0\textwidth]{./images/quadcopter-domain-collocation-ppt.png}
-\caption{\label{fig-problem-statement}\textbf{Quadcopter navigation problem}
+\caption[Quadcopter navigation problem]{\label{fig-problem-statement}\textbf{Quadcopter navigation problem}
 Diagram showing a top down view of an environment, representing a quadcopter
 subject to two dynamics modes: 1) a turbulent dynamics mode
 induced by a fan (green) and 2) a non-turbulent dynamics mode everywhere else (blue).
@@ -1968,7 +2035,7 @@ The main goals of the trajectory optimisation in this Chapter can be summarised 
 # \end{figure}
 # #+END_EXPORT
 
-** Problem Statement label:problem-statement-main
+** Problem Statement label:problem-statement-main :noexport:
 # The overall goal is to navigate from an initial state $\state_0$ -- in a desired dynamics mode $\desiredMode$
 # -- to the target state $\targetState$, whilst guaranteeing that the controlled
 # system remains in the desired dynamics mode.
@@ -2381,6 +2448,8 @@ a quadratic integral control cost term regularised the controls to encode the no
 #+BEGIN_EXPORT latex
 \newcommand{\gpDomain}{\ensuremath{\mathcal{X}}}
 \newcommand{\dynamicsModel}{\ensuremath{p_{\theta}}}
+\newcommand{\constraintFunc}{\ensuremath{c}}
+\newcommand{\safeSet}{\ensuremath{\mathcal{X}_{\text{feasible}}}}
 #+END_EXPORT
 ** intro :ignore:
 # This chapter reviews learning-based control and details the relevant background information
@@ -2395,7 +2464,8 @@ This is a \acrfull{soc} problem which can be summarised as follows:
 it can navigate to a target state, whilst remaining in a desired dynamics mode.}
 \end{displayquote}
 #+END_EXPORT
-This chapter now reviews the relevant literature for learning to control dynamical systems.
+This chapter formally defines this mode remaining navigation problem and then reviews the relevant literature.
+# for learning to control dynamical systems.
 
 # Due to incomplete knowledge of the system or corruption by noise,
 
@@ -2414,13 +2484,13 @@ This chapter now reviews the relevant literature for learning to control dynamic
 # system remains in the desired dynamics mode.
 
 ** Problem Statement label:problem-statement-main
-This section formally defines the mode remaining navigation problem that this dissertation seeks to solve.
-However, before doing so, it first introduces the necessary concepts.
+# This section formally defines the mode remaining navigation problem that this dissertation seeks to solve.
+# However, before doing so, it first introduces the necessary concepts.
 # to formally define the mode remaining navigation problem
 # and then formally defines
 # It then formally defines the mode remaining navigation problem and highlights its novelty.
 
-*Dynamical systems*
+# *Dynamical systems*
 Dynamical systems describe the behaviour of a system over time, $t$, and
 are a key component of both control theory and reinforcement learning.
 At any given time, $t$, a dynamical system has a state, which is
@@ -2575,7 +2645,7 @@ blanknode/.style={rectangle, width=2cm}
 \draw[--] (env) -| (cost);
 \draw[->] (cost) |- (agent);
 \end{tikzpicture}
-\caption{Illustration of a \acrfull{mdp} through the lens of optimal control. The controller (agent) uses all past knowledge, absorbed into the previous state $\state_t$ (Markov property), to decide which control (action) $\control_t$ to execute. It then observes the next state $\state_{t+1}$ and the cost (negative reward) associated with the state transtion. The cost (reward) function is assumed to be known. The agent's goal is to minimise the cumulative cost, or to maximise the cumulative reward.}
+\caption[Markov decision process]{\textbf{Markov Decision Process (MDP)} Illustration of a \acrshort{mdp} through the lens of optimal control. The controller (agent) uses all past knowledge, absorbed into the previous state $\state_t$ (Markov property), to decide which control (action) $\control_t$ to execute. It then observes the next state $\state_{t+1}$ and the cost (negative reward) associated with the state transtion. The cost function is assumed to be known. The agent's goal is to minimise the cumulative cost, or to maximise the cumulative reward.}
 \label{fig-mdp}
 \end{figure}
 #+END_EXPORT
@@ -2662,8 +2732,13 @@ the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
 and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
 Further to this, the problem statement in cref:eq-main-problem contains a mode remaining constraint,
 which requires explicit knowledge of the desired dynamics mode and its state domain.
-# To this end, this dissertation is interested in synergising model learning and model-based control (or planning),
-# to solve the problem in \cref{eq-main-problem}.
+
+To apply control and planning techniques in systems with unknown dynamics,
+system identification emerged as a set of techniques for computing unknown parameters (e.g. mass of a component)
+citep:ljungSystem1999.
+This is a two-staged approach which first learns about the environment and then uses this
+learned model to find the optimal controller.
+However, this approach learns about the environment globally and often incurs high costs during system identification.
 
 \acrfull{rl} provides the most general framework extending optimal
 control to problems with incomplete knowledge of the system dynamics.
@@ -2702,12 +2777,6 @@ representations of the dynamics $f$.
 cref:alg-mbrl-background illustrates a common \acrshort{mbrl} procedure where an agent incrementally explores
 its environment, collecting data at each iteration $\mathcal{D}_{i}$ and updating its dynamics model $\dynamicsModel$.
 
-To apply control and planning techniques in systems with unknown dynamics,
-system identification emerged as a set of techniques for computing unknown parameters (e.g. mass of a component)
-citep:ljungSystem1999.
-This is a two-staged approach which first learns about the environment and then uses this
-learned model to find the optimal controller.
-However, this approach learns about the environment globally and often incurs high costs during system identification.
 
 As more systems are becoming data-driven, learning dynamics models for model-based control has shifted to
 needing task centric methods that simultaneously learn about the environment, whilst optimising a controller
@@ -2724,9 +2793,10 @@ Alternatively, the controller may take the form of a model-based control or plan
    # a. a control method that utilises the learned model to explore the environment whilst simultaneously trying to achieve an objective.
 
 *** Model-based Control and Planning
-This section reviews model-based control (or planning) methods that leverage learned dynamics models.
+This section reviews model-based control and planning methods that leverage learned dynamics models in the
+\acrshort{mbrl} setting.
 The work in this dissertation is primarily focused on model-based control techniques,
-in particular, trajectory optimisation algorithms.
+in particular, trajectory optimisation.
 
 *Trajectory optimisation*
 Instead of approximating a value function or a policy, it is possible to directly optimise the controls
@@ -2735,14 +2805,14 @@ This is known as trajectory optimisation and is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-trajectory-optimisation}
 \controlTraj =
-\arg \min_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \contro_{\timeInd})
+\argmin_{\controlTraj} &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \contro_{\timeInd})
 \mid \state_0=\state \right] \\
 &\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t) + \epsilon,
 \end{align}
 #+END_EXPORT
 which finds an optimal sequence of controls $\controlTraj$ for a given start state $\state_0$.
 Many recent works have used trajectory optimisation with learned dynamics models.
-For example, cite:nakkaChanceConstrained2021 develop a chance-constrained trajectory optimisation
+For example, cite:nakkaChanceConstrained2021 developed a chance-constrained trajectory optimisation
 algorithm that leverages a dynamics model learned using a robust regression model.
 cite:rybkinModelBased2021 utilise a latent space dynamics model -- learned
 with a convolutional neural network for the encoder and a recurrent neural network for the dynamics -- which scales to high-dimensional inputs such as images.
@@ -2766,10 +2836,10 @@ cref:eq-trajectory-optimisation,
 &\text{s.t. } \quad \state_{t+1} = f(\state_t, \control_t) + \epsilon,
 \end{align}
 #+END_EXPORT
-This is known as \acrfull{mpc} cite:eduardof.Model2007.
+This is known as \acrfull{mpc} citep:eduardof.Model2007.
 However, in practice, it is often too computationally expensive to obtain real-time control with \acrshort{mpc}.
 Many approximate solutions have been introduced in the literature, that seek to balance the computational complexity
-and accuracy trade-off differently cite:bettsSurvey1998.
+and accuracy trade-off differently citep:bettsSurvey1998.
 
 For example, \acrfull{ilqr} can be used to generate trajectories for non-linear systems by
 iteratively approximating the dynamics to be linear around a nominal trajectory and optimising for the controls.
@@ -2780,12 +2850,12 @@ to terrible (local) optima if the true cost function is highly non-convex.
 cite:boedeckerApproximate2014 present a real-time iLQR controller based on sparse GPs.
 cite:rohrProbabilistic2021 propose a novel LQR controller synthesis for
 linearised GP dynamics that yields robust controllers with respect to a probabilistic stability margin.
-In cite:marcoAutomatic2016 they parameterise the weight matrices
-$\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
-and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
+# In cite:marcoAutomatic2016 they parameterise the weight matrices
+# $\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
+# and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
 
 \acrshort{mpc} has directly been used with ensembles of probabilistic neural networks citep:chuaDeep2018,nagabandiDeep2020
-and with \acrshort{gp}s cite:kamtheDataEfficient2018.
+and with \acrshort{gp}s citep:kamtheDataEfficient2018.
 cite:lambertLowLevel2019 control a quadcopter using online \acrshort{mpc} and a dynamics model learned using
 probabilistic neural networks.
 
@@ -2794,14 +2864,14 @@ Instead of solving the trajectory optimisation problem in cref:eq-trajectory-opt
 it can be solved offline.
 For example, the state-control trajectory can be found offline and used as a reference trajectory
 for a tracking controller.
-Alternatively, the trajectory optimiser can be used to learn a state feedback controller (policy)
+Alternatively, the trajectory optimiser can be used offline to learn a state feedback controller (policy)
 using guided policy search citep:levineGuided2013.
 
-*Collocation*
+# *Collocation*
 
-*Direct optimal control*
+# *Direct optimal control*
 
-*Indirect optimal control*
+# *Indirect optimal control*
 
 # *Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
 # iLQR to a stochastic setting, where the process
@@ -2838,13 +2908,116 @@ using guided policy search citep:levineGuided2013.
 # but has since been extended to general nonlinear
 # dynamical systems cite:williamsInformation2017,williamsInformationTheoretic2018.
 
+*** Constrained Control
+The goal of this work is to control multimdoal dynamical systems subject to the mode remaining
+constraint in cref:eq-main-problem.
+However, neither the underlying dynamics, nor how the system switches between them, are /known a priori/.
+To this end, this dissertation is interested in model-based control (or planning) techniques with latent constraints.
+
+It is common to require constraints on the states $\state$ and controls $\control$ of a controlled system.
+For example, an autonomous system may wish to remain in a subset of it's state space where it knows its dynamics model
+is valid.
+The system may also be subject to constraints on the controls due to physical limitations, e.g.
+how quickly a quadcopter can accelerate and turn.
+Constraints of this type can be encoded via inequality constraints on the states $\state$ and controls $\control$,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+&\constraintFunc_\state(\state_\timeInd) \geq 0, \quad \forall \timeInd \geq 0, \\
+&\constraintFunc_\control(\control_\timeInd) \geq 0, \quad \forall \timeInd \geq 0.
+\end{align}
+#+END_EXPORT
+The feasible regions of these constraints can be written as sets,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\stateDomain_{\text{feasible}} = &\{ \state \in \R^\StateDim \mid \constraintFunc_\state(\state) \geq 0 \}, \\
+\controlDomain_{\text{feasible}} = &\{ \control \in \R^\ControlDim \mid \constraintFunc_\control(\control) \geq 0 \},
+\end{align}
+#+END_EXPORT
+so the constraints can alternatively be written as,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-}
+\state_\timeInd &\in \stateDomain_{\text{feasible}}  \quad \forall t \geq 0 \\
+\control_\timeInd &\in \controlDomain_{\text{feasible}} \quad \forall t \geq 0.
+\end{align}
+#+END_EXPORT
+For a parametric controller $\policy$, the control constraints can be encoded directly into the controller by
+parameterising it so that its range is restricted to $\controlDomain_{\text{feasible}}$,
+i.e. $\policy(\state_\timeInd) \in \controlDomain_{\text{feasible}}$,
+for all $\state \in \stateDomain_{\text{feasible}}$.
+The state constraints can be enforced by ensuring that the set $\StateDomain$ is forward invariant.
+#+BEGIN_EXPORT latex
+\begin{definition}[Forward invariant]
+Given a dynamical system $\state_{t+1} = f(\state_t, \pi(\state_t, t))$,
+a set $\safeSet$ is \textbf{forward invariant} under the controller $\pi \in \Pi$, iff, for all $\state_0 \in \safeSet$,
+all future states remain in the set, i.e.  $f(\state_t, \pi(\state_t, t)) \in \saftSet \quad \forall t$.
+%The system is safe with respect to the set $\safeSet$ if the set is \textbf{forward invariant}.
+\end{definition}
+#+END_EXPORT
+There are multiple approaches to enforcing state constraints via invariant sets.
+Lyapanov functions citep:lyapunovGeneral1992a and control barrier functions citep:amesControl2019 are two common
+approaches.
+Lyapanov functions are more restrictive than control barrier functions as they provide stability guarantees
+which are not a necessary condition to render $\stateDomain_{\text{feasible}}$ forward invariant.
+Although these are an interesting direction for future work, they are out of the scope of this dissertation.
+# However, these are out of the scope of this dissertation.
+
+*Unknown constraints*
+This work is interested in learning constraints whilst trying to ensure that they are satisfied.
+cite:ariafarADMMBO2019,gelbartBayesian2014 introduce algorithms to minimise an unknown objective
+(Bayesian optimisation) subject to unknown constraints.
+cite:sadighSafe2016 propose an \acrshort{mpc} method that satisfies /a priori unknown/ constraints with high probability.
+However, they do not deploy a strategy to actively learn about the constraints.
+In contrast, cite:schreiterSafe2015 consider safe exploration for active learning
+where they distinguish safe and unsafe regions with a binary GP classifier, which is
+learned separately to the dynamics model. Their exploration strategy then considers
+the differential entropy of the dynamics GP and they use the GP classifier to define
+a set of safety constraints.
+
+*Stochastic constraints*
+In stochastic systems it is not possible to make deterministic statements about constraints.
+This is because given a start state $\state_0$ the resulting trajectories are random variables.
+Therefore, the constraints $\constraintFunc_{\state}(\state)$ are random variables to.
+In order to reason about constraints in stochastic systems we need a method to measure uncertainty in this
+random variable.
+
+A simple approach is to consider expected constraints $\E[\constraintFunc_{\state}(\state)]$.
+However, although expected performance is a reasonable objective, expected constraints make less sense.
+For example, although the expected constraints $\E[\constraintFunc_{\state}(\state)]$ hold, a system may
+still violate them frequently if the constraints variance $\V[\constraintFunc_{\state}(\state)]$ is high.
+cite:ferberGames1958 proposed risk sensitivity which uses higher-order moments as well as the expected value.
+An even stronger notion is value at risk citep:duffieOverview1997a, which guarantees constraint satisfaction
+with high probability.
+
+# Instead of considering uncertainty, formal methods and robust control citep:Woodcock2009FormalMP,freemanRobust1996
+# usually consider worst-case criterion.
+# An alternative approach is to
+
+The most direct method to embed the constraints is in \acrfull{mpc} citep:eduardof.Model2007.
+At each time step \acrshort{mpc} ensures that the constraints hold over a given horizon.
+However, it is worth noting that these constraints still cannot be guaranteed in stochastic systems.
+For stochastic systems, cite:schwarmChanceconstrained1999 proposed to satisfy constraints with high probability.
+Such constraints are named chance constraints.
+Chance constraints are applicable in systems where the uncertainty arises from learning from observations.
+i.e. they are applicable with latent constraints.
+# Similar approaches can be followed when dealing with latent constraints.
+
+# cite:altmanConstrained2021
+
+
+# In
+# cite:moldovanSafe2012
+# guarantees safety bu not exploration.
+
+
+# cite:turchettaSafe2016
+
 ** Learning Dynamical Systems for Control
 *** intro :ignore:
 This section reviews methods for learning representations of dynamical systems for control.
 When learning representations of dynamical systems from observations it is important to consider the different
 forms of uncertainty.
 For example, when using a learned model for control it is important to /know what we do not know/.
-This knowledge can be used to encode /risk-sensitive/ control (avoid places your model cannot predict confidently)
+This knowledge can be used to encode /risk-sensitive/ control (avoid regions where the model cannot predict confidently)
 or to guide exploration.
 cref:sec-unc-exploration discusses exploration strategies that leverage well-calibrated uncertainty estimates.
 
@@ -2907,7 +3080,7 @@ In contrast, driving the system into regions of the model with high /aleatoric u
 Consider the case where the model is confident that the system is subject to high process noise in a particular region.
 Guiding the system into this region will not reduce the model's /epistemic uncertainty/ because the model
 has already been trained on data from this region.
-Further to this, it some systems, it may actually be desirable to avoid entering regions of
+Further to this, it may be desirable to avoid entering regions of
 high /aleatoric uncertainty/ because it may result in poor performance or even catastrophic failure.
 
 *** Learning Single-Step Dynamics Models
@@ -3313,7 +3486,8 @@ to preform stochastic gradient methods on $q(\u)$.
 \subcaption{GP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
 \label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
 \end{minipage}
-\caption{Trajectory optimisation results obtained using a GP dynamics model trained on different data sets.
+\caption[Motivation for multimodal dynamical models]{
+Trajectory optimisation results obtained using a GP dynamics model trained on different data sets.
 The optimised control trajectories are rolled out in the GP dynamics model (magenta) and in the environment (cyan).
 The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
 White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
@@ -3324,7 +3498,7 @@ The hashed box indicates a subset of the environment that has not been observed.
 
 **** intro :ignore:
 # ***** Motivation label:to_motivation :ignore:
-In contrast, to the previously presented  approaches, we are interested in learning representations
+In contrast to the previously presented  approaches, we are interested in learning representations
 of multimodal dynamical systems.
 cref:fig-traj-opt-over-gating-mask-svgp-all-baseline
 demonstrates the shortcomings of learning a GP dynamics model for the quadcopter navigation problem in the
@@ -3336,7 +3510,8 @@ due to the discontinuities associated with the multimodal transition dynamics (c
 The trajectory optimiser was able to find a trajectory from the start state $\state_0$,
 to the target state $\targetState$ in the GP dynamics (magenta).
 However, as the GP dynamics do not represent the true underlying dynamics accurately,
-the optimised controls do not successfully navigate to the target state $\targetState$ in the environment (cyan).
+the state trajectory resulting from rolling out the optimised controls in the environment (cyan) does not match
+the GP dynamics trajectory (magenta).
 This example motivates the need to correctly identify the underlying modes when learning representations of
 multimodal dynamical systems for control.
 
@@ -3374,7 +3549,7 @@ are \textit{not fully known a priori}, partitioning the data set and learning th
 Following standard methodologies, the trajectories in \cref{fig-traj-opt-over-gating-mask-svgp-baseline}
 were found by minimising the expected cost
 under the state distribution, resulting from cascading single-step predictions through the GP dynamics model
-using the moment matching approaximation \cite{kussGaussian2006}.
+using the moment matching approximation \citep{kussGaussian2006}.
 A terminal state cost term ensured trajectories ended at the target state and
 a quadratic integral control cost term regularised the controls to encode the notion of
 "minimal effort" control.
@@ -3387,7 +3562,7 @@ to learn multimodal transition dynamics for \acrfull{mbrl}.
 cite:kaiserBayesian2020 use the data association with \acrshort{gp}s model;
 a Bayesian model that learns independent dynamics modes whilst maintaining a
 probabilistic belief over which mode is responsible for predicting at a given input location.
-cite:mckinnonLearning2017 also use an approach based on \acrshort{gp} except that they use a
+cite:mckinnonLearning2017 also use an approach based on \acrshort{gp}s except that they use a
 \acrfull{mogpe} method to learn the switching behaviour for robot dynamics online.
 
 *Latent spaces for control*
@@ -3453,6 +3628,50 @@ that are rich with information regarding how a system switches between its under
 # There are many \acrshort{mfrl} approaches but they are out of the scope of this dissertation.
 
 ** Uncertainty-based Exploration Strategies label:sec-unc-exploration
+# Given a statistical model
+\acrfull{rl} agents face a trade-off between /exploration/, where they seek to explore the environment and improve
+their models, and /exploitation/, where agents make decisions which are optimal with respect to the data observed so far.
+There are many approaches from the literature used to tackle the exploration-exploitation trade-off.
+In \acrshort{mbrl}, the goal is often to reduce the real-world sample complexity at the cost of increased
+model sample complexity.
+# This section provides an overview of existing exploration strategies in \acrshort{mbrl}.
+
+There are two main uncertainties which are modelled and used for exploration.
+Value-based methods base their exploration on the uncertainty of the value function $V$ at the current state $\state_t$.
+Actions with higher value estimates get higher probabilities of being selected based on
+uncertainty estimates around the values citep:moerlandEfficient2017,auerUsing2002.
+An alternative approach for \acrshort{mbrl} is to use state-based exploration.
+This approach is state-specific, reward independent and usually seeks states with high /epistemic uncertainty/.
+This section recaps some relevant exploration strategies that fit into the general
+\acrfull{mbrl} procedure shown in cref:alg-mbrl-background.
+# This section recaps some relevant exploration strategies that fit into the general
+# \acrfull{mbrl} procedure shown in cref:alg-mbrl.
+
+*Greedy exploitation*
+One of the most commonly used exploration strategies is to select the controller that maximises
+the expected performance under the learned dynamics model $\dynamicsModel(f \mid \mathcal{D}_{0:i-1})$.
+Note that $i$ denotes the iteration/episode number of the \acrshort{mbrl} loop.
+This greedy strategy is given by,
+#+BEGIN_EXPORT latex
+\begin{align} \label{eq-greedy-exploration}
+\pi_i^{\text{greedy}} = \arg \max_{\pi \in \Pi} \E_{f \sim \dynamicsModel(f \mid \mathcal{D}_{0:i-1})} \left[ -J(f, \pi) \right].
+\end{align}
+#+END_EXPORT
+Note that the negative sign is used because the objective $J(f, \pi)$ is based on a cost function and not a reward
+function.
+This approach is used in \acrshort{pilco} citep:deisenrothPILCO2011 and GP-MPC citep:kamtheDataEfficient2018
+where the dynamics are represented using \acrshort{gp}s and the moment matching approximation is used to cascade
+single-step predictions.
+cite:parmasPIPPS2018 propose \acrshort{pipps},
+a similar approach to \acrshort{pilco}, except that they use Monte Carlo methods
+to propagate uncertainty forward it time, instead of using the moment matching approximation.
+Similarly, \acrshort{pets} citep:chuaDeep2018 uses this exploration strategy but represents the dynamics
+using ensembles of probabilistic neural networks.
+This strategy initially favours exploring regions of the environment where the learned dynamics
+model is not confident, i.e. has high epistemic uncertainty.
+Once it has gathered knowledge of the environment and the model’s
+epistemic uncertainty has been reduced, it favours maximising the objective function $J(f, \pi)$.
+
 *Thompson sampling*
 An alternative and theoretically grounded strategy is Thompson sampling.
 This approach samples a single model  $f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i})$ at every iteration $i$
@@ -3460,19 +3679,144 @@ and uses the sampled model to optimise the controller.
 This is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-thompson-exploration}
-\pi_i^{\text{thompson}} = \arg \max_{\pi \in \Pi} J(f_i, \pi) \quad \text{s.t.} \quad f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i}).
+\pi_i^{\text{thompson}} = \arg \max_{\pi \in \Pi} -J(f_i, \pi) \quad \text{s.t.} \quad f_i \sim \dynamicsModel(f \mid \mathcal{D}_{0:i}).
 \end{align}
 #+END_EXPORT
 # This contrasts the greedy approach that averages over the
-In general it is intractable to sample from $\dynamicsModel(f \mid \mathcal{D}_{0:i})$, although methods do exist
-for both \acrshort{gp} models and ensembles.
+In general it is intractable to sample from $\dynamicsModel(f \mid \mathcal{D}_{0:i})$.
 Note that after the sampling step this problem is equivalent to greedy exploitation.
+# See cite:curiEfficient2020 for a recap of some commonly used MBRL exploration strategies.
 
-*Active Learning in Dynamical Systems*
-cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively2020
+Alternatively, some \acrshort{mbrl} algorithms, such as cite:sekarPlanning2020, adopt a two-phase exploration strategy.
+The first phase is interested in exploring the environment and summarising this past experience in the form of a model.
+The second phase then seeks to solve a downstream task, for which it is given a cost (reward) function.
+This two-stage approach does not require an objective that changes its exploration-exploitation balance as
+it gathers more knowledge of the environment.
 
-*Information Theoretic Active Learning with Gaussian Processes*
-cite:krauseNonmyopic2007,houlsbyBayesian2011
+
+*Active learning*
+Active learning is another class of exploration algorithms which fit into the two-phase exploration approach.
+The goal of information theoretic active learning is to reduce the number of
+possible hypothesis as fast as possible, e.g. minimise the uncertainty associated
+with the parameters using Shannon's entropy citep:coverElements2006,
+#+BEGIN_EXPORT latex
+\newcommand{\crv}{\ensuremath{X}}
+\newcommand{\density}{\ensuremath{p(\crv)}}
+\begin{myquote}
+\textbf{Differential Entropy}
+Let $\crv$ be a continuos random variable, with a probability density
+$\density$,
+whose support is a set $\mathcal{X}$.
+The differential entropy $H(\crv)$ is then defined as,
+\begin{align} \label{eq-differential-entropy}
+H[\crv] = - \int_{\mathcal{X}} \density \text{log} \density \text{d} \crv.
+\end{align}
+\end{myquote}
+#+END_EXPORT
+In contrast to greedy exploitation, active learning does not seek to maximise a
+black-box objective. Instead, it is only interested in exploration. There are many
+approaches to active learning in the static setting, i.e. in systems where an arbitrary
+state $\state$ can be sampled. In contrast, dynamical system must be steered to $\state$
+through the unknown dynamics $f$ through a sequence of controls $\controlTraj$. Thus, there is
+information gain along the trajectory which must also be considered. As highlighted
+by cite:buisson-fenetActively2020, information gain in dynamical systems is therefore
+fundamentally different to the static problem addressed by cite:krauseNearOptimal2008  and
+cite:houlsbyBayesian2011.
+The goal here is to pick the most informative control trajectory
+$\controlTraj$ whilst observing $\stateTraj$.
+
+Recent work has addressed active learning in GP dynamics models. cite:schreiterSafe2015
+propose a greedy entropy-based strategy that considers the entropy of the
+next state. cite:buisson-fenetActively2020 also propose a greedy entropy-based strategy
+except that they consider the entropy accumulated over a trajectory. In contrast,
+cite:caponeLocalized2020,yuActive2021 propose to use the mutual information.
+#+BEGIN_EXPORT latex
+\begin{myquote}
+\textbf{Mutual Information}
+Given two sets of random variables, $\mathbf{X}$ and $\mathbf{F}$, with joint density $p(\mathbf{X}, \mathbf{F})$ the
+mutual information \cite{coverElements2006} is given by,
+\begin{align} \label{eq-mutual-information}
+I(\mathbf{X};\mathbf{F}) = \int p(\mathbf{X},\mathbf{F}) \text{log}\frac{p(\mathbf{X},\mathbf{F})}{p(\mathbf{X})p(\mathbf{F})}
+\text{d}\mathb{X} \text{d}\mathb{F},
+\end{align}
+and its well known relationship to differential entropy $H(\cdot)$ is given by,
+\begin{align} \label{eq-mutual-information-entropy}
+I(\mathbf{X};\mathbf{F}) =  H(\mathbf{X}) - H(\mathbf{X} \mid \mathbf{F}).
+\end{align}
+\end{myquote}
+#+END_EXPORT
+cite:caponeLocalized2020 find the most informative state as the one that minimises the
+mutual information between it and a set of reference states (a discretisation of the
+domain). They then find a set of controls to drive the system to this most informative state.
+Given a fixed number of time steps, their method yields a better model
+than the greedy entropy-based strategies.
+cite:yuActive2021  propose an alternative
+approach that leverages their \acrfull{gpssm} inference scheme to estimate the mutual
+information between all the variables in time
+$I \left[\mathbf{y}_{1:t}, \hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{1:t+1} \right]$.
+Here $\mathbf{y}_{1:t}$ denotes the set of observed outputs and $\hat{\mathbf{y}}_{t+1}$ denotes
+the output predicted by the \acrshort{gpssm}. This contrasts other approaches, which tend
+to study the latest mutual information $I[\hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{t+1}]$.
+
+*Myopic active learning*
+In reinforcement learning and control it is standard to consider objectives over a (potentially infinite) horizon.
+Should active learning in dynamical systems be any different?
+This dissertation hypothesises that it must
+be important to
+Some approaches myopically consider the information gain at the next query point only.
+In contrast, it is possible to consider the information gain over a (potentially infinite) horizon, reliving this myopia.
+The mutual information approaches in cite:caponeLocalized2020,yuActive2021
+fall into this myopic category as they only maximise the information gain at the next
+time step. In contrast, the greedy entropy-based strategy in
+cite:buisson-fenetActively2020 considers the entropy over a horizon.
+# The exploration strategy presented in this chapter follows a similar approach and
+# relieves the myopia of active learning by leveraging a similar greedy entropy-based
+# strategy over a finite horizon.
+
+# *Active Learning in Dynamical Systems*
+# cite:yuActive2021,schreiterSafe2015,caponeLocalized2020,buisson-fenetActively2020
+
+# *Information Theoretic Active Learning with Gaussian Processes*
+# cite:krauseNonmyopic2007,houlsbyBayesian2011
+
+
+
+
+
+# In contrast to the previous approaches, active learning does not seek to maximise a black-box objective.
+# Instead, it is only interested in exploration.
+# This is given by,
+# #+BEGIN_EXPORT latex
+# \begin{align} \label{eq-active-exploration}
+# \pi_i^{\text{active}} = \arg \max_{\pi \in \Pi} \matahbb{H} \left[ f \mid \mathcal{D}_{0:i} \right].
+# \end{align}
+# #+END_EXPORT
+
+# In dynamical systems an arbitrary state $\state$ cannot be sampled, so instead, the system must be steered
+# to $\state$ through the unknown dynamics $\dynamicsFunc$ through a sequence of controls $\control$.
+# Thus, there is information gain along the trajectory which must also be
+# considered.
+# As highlighted by cite:buisson-fenetActively2020, information gain in dynamical systems is therefore
+# fundamentally different to the /static/ problem addressed by cite:krauseNearOptimal2008
+# and cite:houlsbyBayesian2011.
+# The goal here is to pick the most informative control trajectory $\controlTraj$ whilst observing $\stateTraj$.
+
+# Recent work has addressed active learning in \acrshort{gp} dynamics models
+# citep:buisson-fenetActively2020 and \acrshort{gp} state-space models citep:caponeLocalized2020.
+# cite:schreiterSafe2015 consider safe exploration for active learning where they distinguish safe and unsafe regions
+# with a binary \acrshort{gp} classifier, which is learned separately to the dynamics model.
+# Their exploration strategy considers the differential entropy of the dynamics \acrshort{gp} and they
+# use the \acrshort{gp} classifier to define a set of safety constraints.
+
+# This chapter resembles cite:schreiterSafe2015
+# except that it exploits the coupled learning of the dynamics modes and the gating network, instead of learning
+# a separate \acrshort{gp} classifier to distinguish safe and unsafe regions.
+# The exploration strategy is then projected onto the posterior \acrshort{gp}(s) associated with the gating network.
+# The coupled learning provides well-calibrated uncertainty estimates in the gating network, making it a
+# good choice for information-based exploration.
+
+
+# *Maximum entropy reinforcement learning*
 
 ** Model-based Reinforcement Learning :noexport:
 *** intro :ignore:
@@ -7667,7 +8011,7 @@ the formulation of their gating network and their approximate inference algorith
 \label{fig-graphical-model-gp-gating-network}
 \end{minipage}
   %\caption{Graphical model where the output $\singleOutput$}
-  \caption{
+  \caption[Graphical models of nonparametric mixtures of experts]{
   Graphical models where the outputs $\allOutput = \{\allOutputK\}_{\modeInd=1}^{\ModeInd}$
 are generated by mapping the inputs $\allInput = \{\allInputK\}_{\modeInd=1}^{\ModeInd}$ through the latent process.
   An input assigned to expert $\modeInd$ is denoted $\singleInputK$
@@ -8633,7 +8977,7 @@ cref:fig-graphical-model-sparse shows the graphical model of the augmented joint
       \plate {} {(uh) (h) (phik)} {$\ModeInd$};
     \end{tikzpicture}
     }
-  \caption{Graphical model of the augmented probability space where the joint distribution over the data is captured by the inducing variables $\expertInducingOutput=\mode{\latentFunc}(\expertInducingInput)$ and $\gatingInducingOutput=\mode{\gatingFunc}(\gatingInducingInput)$.
+  \caption[Graphical model of \acrshort{mosvgpe}'s augmented probability space]{Graphical model of the augmented probability space where the joint distribution over the data is captured by the inducing variables $\expertInducingOutput=\mode{\latentFunc}(\expertInducingInput)$ and $\gatingInducingOutput=\mode{\gatingFunc}(\gatingInducingInput)$.
   The observations assigned to expert $\modeInd$ are modelled by the
   inducing points $\{\expertInducingInput, \expertInducingOutput\}_{\modeInd=1}^{\ModeInd}$.
   This model avoids the hard assignment of observations to experts by letting the gating network
@@ -9743,7 +10087,7 @@ objectives -- the marginal likelihood and evidence lower bound.
 ***** Results table :ignore:
 
 #+Name: tab-mcycle-metrics
-#+Caption: Results on the Motorcycle data set cite:Silverman1985 with different instantiations of our model (\acrshort{mosvgpe}).
+#+Caption[\acrshort{mosvgpe} results on motorcycle data set]: Results on the Motorcycle data set cite:Silverman1985 with different instantiations of our model (\acrshort{mosvgpe}).
 #+Caption: Comparison of the root mean squared error (RMSE) mean absolute error (MAE)
 #+Caption: and negative log predictive probability (NLPP) on the test data set.
 #+Caption: Results for a Gaussian process (GP) and a sparse variational Gaussian process (SVGP) with
@@ -9845,7 +10189,7 @@ the GP-based gating network can offer superior generalisation and identifiabilit
 %\subcaption{}
 %\label{fig-y-samples-mcycle-three-experts}
 %\end{minipage}
-\caption{Visualisation of the model instantiated with $\ModeInd=2$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\furtherBound$ (left column) and with $\furtherBoundTwo$ (right column).  (\subref{fig-y-means-mcycle-two-experts-tight}-\subref{fig-y-means-mcycle-two-experts-further}) show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and the SVGP (red dashed line) for comparison. (\subref{fig-y-samples-mcycle-two-experts-tight}-\subref{fig-y-samples-mcycle-two-experts-further}) show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
+\caption[\acrshort{mosvgpe}'s predictive posterior with $\ModeInd=2$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model instantiated with $\ModeInd=2$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\furtherBound$ (left column) and with $\furtherBoundTwo$ (right column).  (\subref{fig-y-means-mcycle-two-experts-tight}-\subref{fig-y-means-mcycle-two-experts-further}) show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and the SVGP (red dashed line) for comparison. (\subref{fig-y-samples-mcycle-two-experts-tight}-\subref{fig-y-samples-mcycle-two-experts-further}) show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
 \label{fig-y-mcycle-two-experts}
 \end{figure}
 #+END_EXPORT
@@ -9991,7 +10335,7 @@ assigned it responsibility.
 \subcaption{$\furtherBoundTwo$, mixing probabilities}
 \label{fig-mixing-probs-mcycle-two-experts-further}
 \end{minipage}
-\caption{Visualisation of the model's latent variables (instantiated with $\ModeInd=2$ experts), after training on the
+\caption[\acrshort{mosvgpe}'s latent variables' posteriors with $\ModeInd=2$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model's latent variables (instantiated with $\ModeInd=2$ experts), after training on the
 Motorcycle data set \citep{Silverman1985}, with $\furtherBound$ (left column)
 and with $\furtherBoundTwo$ (right column).
 (\subref{fig-expert-gps-mcycle-two-experts-tight}-\subref{fig-expert-gps-mcycle-two-experts-further}) show the GP
@@ -10040,7 +10384,7 @@ their associated mixing probabilities $\approxPredictiveProb$ in
 %\subcaption{}
 %\label{fig-y-samples-mcycle-three-experts}
 %\end{minipage}
-\caption{Visualisation of the model instantiated with $\ModeInd=3$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\furtherBound$ (left column) and with $\furtherBoundTwo$ (right column).  (\subref{fig-y-means-three-experts-tight}-\subref{fig-y-means-three-experts-further}) show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and the SVGP (red dashed line) for comparison. (\subref{fig-y-samples-mcycle-three-experts-tight}-\subref{fig-y-samples-mcycle-three-experts-further}) show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$, yellow $\ModeInd=3$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
+\caption[\acrshort{mosvgpe}'s predictive posterior with $\ModeInd=3$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model instantiated with $\ModeInd=3$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\furtherBound$ (left column) and with $\furtherBoundTwo$ (right column).  (\subref{fig-y-means-three-experts-tight}-\subref{fig-y-means-three-experts-further}) show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and the SVGP (red dashed line) for comparison. (\subref{fig-y-samples-mcycle-three-experts-tight}-\subref{fig-y-samples-mcycle-three-experts-further}) show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$, yellow $\ModeInd=3$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
 \label{fig-y-mcycle-three-experts}
 \end{figure}
 #+END_EXPORT
@@ -10161,7 +10505,7 @@ experts and the set of assignments, i.e. implicitly assigning data points to exp
 \subcaption{$\furtherBoundTwo$, mixing probabilities}
 \label{fig-mixing-probs-mcycle-three-experts-further}
 \end{minipage}
-\caption{Visualisation of the model's latent variables (instantiated with $\ModeInd=3$ experts), after training on the
+\caption[\acrshort{mosvgpe}'s latent variables' posteriors with $\ModeInd=3$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model's latent variables (instantiated with $\ModeInd=3$ experts), after training on the
 Motorcycle data set \citep{Silverman1985}, with $\furtherBound$ (left column)
 and with $\furtherBoundTwo$ (right column).
 (\subref{fig-expert-gps-mcycle-three-experts-tight}-\subref{fig-expert-gps-mcycle-three-experts-further}) show the GP
@@ -10338,7 +10682,7 @@ For this reason, the remainder of this dissertation uses $\furtherBound$ for all
 \subcaption{}
 \label{fig-mcycle-training-curve-16}
 \end{minipage}
-\caption{Training curves showing the negative ELBO (- $\furtherBound$) vs step when training
+\caption[Motorcycle training curves]{Training curves showing the negative ELBO (- $\furtherBound$) vs step when training
 \acrshort{mosvgpe} (instantiated with two experts $\ModeInd=2$), on the
 Motorcycle data set \citep{Silverman1985} with different numbers of inducing points $M$ and different
 batch sizes $\NumData_b$. All experiments used the Adam optimiser \citep{kingmaAdam2017} with a learning rate
@@ -10382,10 +10726,9 @@ $\Delta\state_{\timeInd} = \latentFunc(\state_{\timeInd-1};\control_{\timeInd-1}
 \subcaption{Quiver plot showing the data set of state transitions from 9 trajectories flown 7 times.}
 \label{fig-quiver}
 \end{minipage}
-\caption{Illustration of (\subref{fig-quadcopter-environment}) the environment (a room in the Bristol Robotics Laboratory) and (\subref{fig-quiver}) the data set of state transitions. A turbulent dynamics mode is induced by a desk top fan at the right hand side of the room and a subset of the enivornment has not been observed.}
+\caption[Diagram of the real-world quadcotper environment and the state transition data set]{Illustration of (\subref{fig-quadcopter-environment}) the environment (a room in the Bristol Robotics Laboratory) and (\subref{fig-quiver}) the data set of state transitions. A turbulent dynamics mode is induced by a desk top fan at the right hand side of the room and a subset of the enivornment has not been observed.}
 \end{figure}
 #+END_EXPORT
-
 
 
 *Environment* The environment is modelled with two dimensions
@@ -10442,7 +10785,7 @@ The model was trained using the model and training parameters in cref:tab-params
 
 #+NAME: fig-y-mm-quadcopter-subset
 #+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
-#+caption: Moment matched predictive posterior $p(\Delta \state_* \mid \x_*)$ after training on the quadcopter data set. Each row corresponds to an output dimension $d$ where the left plot shows the moment matched mean $\E[\Delta \state_d]$ and the right plot shows the moment matched variance $\V[\Delta \state_d]$.
+#+caption[\acrshort{mosvgpe}'s moment matched predictive posterior with $\ModeInd=2$ after training on the real-world quadcopter data set with $\furtherBound$]: Moment matched predictive posterior $p(\Delta \state_* \mid \x_*)$ after training on the quadcopter data set. Each row corresponds to an output dimension $d$ where the left plot shows the moment matched mean $\E[\Delta \state_d]$ and the right plot shows the moment matched variance $\V[\Delta \state_d]$.
 [[file:./images/model/quadcopter/subset-10/y_moment_matched.pdf]]
 
 #+BEGIN_EXPORT latex
@@ -10459,14 +10802,14 @@ The model was trained using the model and training parameters in cref:tab-params
 \subcaption{GP posteriors over gating functions.}
 \label{fig-gating-gps-quadcopter-subset}
 \end{minipage}
-\caption{Visualisation of the gating network after training on the quadcopter data set. The plots in (\subref{fig-gating-mixing-probs-quadcopter-subset}) show the predictive mixing probabilities $\predictiveProb$ for Expert 1 (left) and Expert 2 (right). The plots in (\subref{fig-gating-gps-quadcopter-subset}) show the predictive GP posteriors $q(h_{k}(\singleTestInput))$ associated with Expert 1 (top) and Expert 2 (bottom). The left hand plots show the means and the right hand plots show the variances.}
+\caption[\acrshort{mosvgpe}'s gating network posterior with $\ModeInd=2$ after training on the real-world quadcopter data set with $\furtherBound$]{Visualisation of the gating network after training on the quadcopter data set. The plots in (\subref{fig-gating-mixing-probs-quadcopter-subset}) show the predictive mixing probabilities $\predictiveProb$ for Expert 1 (left) and Expert 2 (right). The plots in (\subref{fig-gating-gps-quadcopter-subset}) show the predictive GP posteriors $q(h_{k}(\singleTestInput))$ associated with Expert 1 (top) and Expert 2 (bottom). The left hand plots show the means and the right hand plots show the variances.}
 \label{fig-gating-network-quadcopter-subset}
 \end{figure}
 #+END_EXPORT
 
 #+NAME: fig-experts-f-quadcopter-subset
 #+ATTR_LATEX: :width 1\textwidth :placement [hbt!] :center t
-#+caption: Visualisation of the experts' predictive posteriors $\predictiveExpertsPrior$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(f_{kd}(\singleTestInput))$, corresponding to dimension $d$ of expert $\modeInd$. The mean $\E[f_{kd}(\singleTestInput)]$ is on the left and the variance $\V[f_{kd}(\x_*)]$ is on the right. The noise variances learned by Expert 1 and Expert 2 were $\Sigma_1 = \diag\left([0.0063, 0.0259]]\right)$ and $\Sigma_2 = \diag\left([0.0874, 0.0432]\right)$ respectively.
+#+caption[\acrshort{mosvgpe}'s experts' posteriors with $\ModeInd=2$ after training on the real-world quadcopter data set with $\furtherBound$]: Visualisation of the experts' predictive posteriors $\predictiveExpertsPrior$ after training on the quadcopter data set. Each row corresponds to a single GP posterior, $q(f_{kd}(\singleTestInput))$, corresponding to dimension $d$ of expert $\modeInd$. The mean $\E[f_{kd}(\singleTestInput)]$ is on the left and the variance $\V[f_{kd}(\x_*)]$ is on the right. The noise variances learned by Expert 1 and Expert 2 were $\Sigma_1 = \diag\left([0.0063, 0.0259]]\right)$ and $\Sigma_2 = \diag\left([0.0874, 0.0432]\right)$ respectively.
 [[file:./images/model/quadcopter/subset-10/experts_f.pdf]]
 
 
@@ -11656,7 +11999,7 @@ with the mode remaining behaviour encoded via a geometric objective function.
 \subcaption{Gating function's GP posterior}
 \label{eq-traj-opt-gating-network-gp-post}
 \end{minipage}
-\caption{
+\caption[\acrshort{mosvgpe}'s gating network posterior after training on simulated quadcopoter data set]{
 Visualisation of the gating network posterior after training \acrshort{mosvgpe}
 on the state transition data set from the simulated version of the 2D quadcopter environment
 in the illustrative example from \cref{illustrative_example}.
@@ -13314,7 +13657,7 @@ can be obtained with a Taylor expansion.
   \caption{Graphical model with optimality variable.}
 \label{fig-augmented-control-graphical-model}
 \end{subfigure}
-\caption{Graphical models of control formulated as inference.}
+\caption[Graphical models of control formulated as inference]{Graphical models of control formulated as inference.}
 \label{fig-control-graphical-model}
 \end{figure}
 #+END_EXPORT
@@ -13497,7 +13840,7 @@ citep:shumwayAPPROACH1982,ghahramaniLearning1999,schonSystem2011, with input est
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.98\textwidth]{./images/mode-opt/env/scenario_7/mosvgpe/mixing_probs_no_obs.pdf}
-\caption{
+\caption[\acrshort{mosvgpe}'s mixing probabilities after training on simulated quadcopter data set from Environment 1]{
 Visualisation of the probability mass function over the expert indicator variable after training \acrshort{mosvgpe}
 on the state transition data set from the simulated version of the 2D quadcopter environment
 in the illustrative example from \cref{illustrative_example}.
@@ -13574,7 +13917,7 @@ remaining in the desired dynamics mode.
       \draw[->] (x4)--(a4);
     \end{tikzpicture}
     }
-  \caption{Graphical model with optimality and mode indicator variables.}
+  \caption[Graphical model of control as inference in multimodal dynamical systems]{Graphical model with optimality and mode indicator variables.}
 \label{fig-mode-augmented-control-graphical-model}
 \end{figure}
 #+END_EXPORT
@@ -14384,11 +14727,15 @@ the dynamics constraints, whilst ensuring trajectories are $\delta-\text{mode re
 # dynamics model with high epistemic uncertainty.
 
 * Quadcopter Experiments - Mode Remaining Trajectory Optimisation label:chap-traj-opt-results
+** acronyms :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\ig}{IG\xspace}
 \newcommand{\dre}{DRE\xspace}
 \newcommand{\cai}{CaI\xspace}
 #+END_EXPORT
+{{{acronym(ig,IG,Indirect Optimal Control via Latent Geodesics)}}}
+{{{acronym(dre,DRE,Direct Optimal Control via Riemannian Energy)}}}
+{{{acronym(cai,CaI,Control as Inference)}}}
 ** maths :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\deltaTime}{\ensuremath{\Delta \timeInd}}
@@ -14427,7 +14774,7 @@ It is therefore desirable to find trajectories that avoid entering this turbulen
         \subcaption{Environment 2}
         \label{fig-environment-2}
     \end{minipage}
-    \caption{Visualisation of two quadcopter navigation problems in environments with different spatially
+    \caption[Diagrams illustrating two quadcopter navigation problems]{Visualisation of two quadcopter navigation problems in environments with different spatially
     varying modes.
     It shows the desired dynamics mode in blue (Mode 1) and
     the turbulent dynamics mode induced by a fan in green (Mode 2).
@@ -14512,7 +14859,7 @@ See cref:sec-brl-experiment for more details on data collection and processing.
 \subcaption{GP posterior mean (left) and variance (right) over the desired mode's gating function.}
 \label{fig-geometric-traj-opt-over-svgp}
 \end{minipage}
-\caption{\textbf{Indirect geodesic control} Trajectory optimisation results after solving the nonlinear
+\caption[\acrfull{ig} trajectory optimisation results in real-world quadcopter experiments over gating network posterior]{\textbf{\acrfull{ig}} trajectory optimisation results after solving the nonlinear
 program in \cref{eq-collocation-problem}
 using the desired mode's ($\modeVar=1$) gating function from the \acrshort{mosvgpe} (with $\ModeInd=2$ experts)
 after training on the real-world velocity controlled quadcopter data set.
@@ -14559,7 +14906,7 @@ i.e. where the model is uncertain which mode governs the dynamics.
 \subcaption{Posterior variance associated with the desired mode's (\modeVar=1) gating function over the trajectories.}
 \label{fig-epistemic_var_vs_time}
 \end{minipage}
-\caption{\textbf{Indirect geodesic control} Comparision of the intial and optimised trajectories' performance -- for two
+\caption[\acrfull{ig} trajectory optimisation results in real-world quadcopter experiments - performance vs time]{\textbf{\acrfull{ig}} Comparision of the intial and optimised trajectories' performance -- for two
 settings of $\lambda$ -- at a) staying in the desired mode and b) avoiding regions of the gating network
 with high epistemic uncertainty.}
 \label{fig-metric-vs-time}
@@ -14581,7 +14928,7 @@ with high epistemic uncertainty.}
 # For example, minimising the total expenditure of fuel, or minimising the energy dissipated from the system.
 *** Table :ignore:
 #+LABEL: tab-results
-#+CAPTION: *Indirect geodesic control* Comparison of performance with different settings of $\lambda$.
+#+CAPTION[Comparison of \acrfull{ig} experiments on real-world quadcopter]: *\acrfull{ig}* Comparison of performance with different settings of $\lambda$.
 #+CAPTION: The performance measures are summed over collocation points.
 #+attr_latex: :placement [!t]
 |--------------------------+--------------------------------------------------+--------------------------------------------------------|
@@ -14796,7 +15143,7 @@ $\windTurbulenceNoise{1} = \diag\left([0.0001, 0.0002]\right)$ and
 $\windTurbulenceNoise{2} = \diag\left([0.05, 0.2]\right)$}
 \label{fig-dataset-scenario-7}
 \end{minipage}
-\caption{\textbf{Simulated Environments} - Visualisation of the simulated environments with their true mode boundaries
+\caption[Diagram of two simulated environments]{\textbf{Simulated Environments} - Visualisation of the simulated environments with their true mode boundaries
 indicated by the purple lines.
 The state transition data set sampled from each environment is visualised by the quiver plots.
 The initial $\state_0$ and target states $\targetState$ for the trajectory optimisation are overlayed.}
@@ -14842,7 +15189,7 @@ This results from Expert 1 learning much higher drift and process noise than Exp
 \subcaption{Gating function's GP posterior}
 \label{eq-traj-opt-gating-network-gp-post-7}
 \end{minipage}
-\caption{\textbf{Environment 1} Visualisation of the gating network posterior after training \acrshort{mosvgpe}
+\caption[Environment 1 gating network posterior]{\textbf{Environment 1} Visualisation of the gating network posterior after training \acrshort{mosvgpe}
 on the state transition data set from Environment 1.
 (\subref{eq-traj-opt-gating-network-prob-post-7}) shows the probability mass function over the expert indicator
 variable and (\subref{eq-traj-opt-gating-network-gp-post-7}) shows the gating function's GP
@@ -14868,7 +15215,7 @@ and the subset of the environment which has not been observed (hashed box).}
 \subcaption{Gating function's GP posterior}
 \label{eq-traj-opt-gating-network-gp-post-5}
 \end{minipage}
-\caption{\textbf{Environment 2} Visualisation of the gating network posterior after training \acrshort{mosvgpe}
+\caption[Environment 2 gating network posterior]{\textbf{Environment 2} Visualisation of the gating network posterior after training \acrshort{mosvgpe}
 on the state transition data set from Environment 2.
 (\subref{eq-traj-opt-gating-network-prob-post-5}) shows the probability mass function over the expert indicator
 variable and (\subref{eq-traj-opt-gating-network-gp-post-5}) shows the gating function's GP
@@ -14998,7 +15345,7 @@ with all of the model's epistemic uncertainty marginalised, i.e. maximising cref
 
 *** Table :ignore:
 #+begin_table
-#+LATEX: \caption{\textbf{Results in simulated environments} Comparison of the  indirect optimal control via latent geodesics method (\ig) from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannain energy method (\dre) from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{sec-traj-opt-inference}, with max entropy (\cai gauss) and without max entropy (\cai dirac). All methods are evaluated in the two simulated environments. The performance measures are summed over the collocation points for the indirect optimal control method and over each time step for the direct optimal control method and the control-as-inference method. The "Mode prob" column calculates the probability of being in the desired dynamics mode at each time step without marginalising the state and gating function uncertainty over the trajectory. In contrast the "Mode prob with unc." marginalises both the state and gating function uncertainty at each time step. The target state column indicates if the trajectory reached the target state in the environment ($\checkmark$ both), only under the desired mode's dynamics \acrshort{gp} ($\checkmark$ dynamics) or not at all ($\times$).}
+#+LATEX: \caption[Trajectory optimisation results in simulated environments]{\textbf{Results in simulated environments} Comparison of the  indirect optimal control via latent geodesics method (\ig) from \cref{sec-traj-opt-collocation}, the direct optimal control via Riemannain energy method (\dre) from \cref{sec-traj-opt-energy} and the control-as-inference method from \cref{sec-traj-opt-inference}, with max entropy (\cai gauss) and without max entropy (\cai dirac). All methods are evaluated in the two simulated environments. The performance measures are summed over the collocation points for the indirect optimal control method and over each time step for the direct optimal control method and the control-as-inference method. The "Mode prob" column calculates the probability of being in the desired dynamics mode at each time step without marginalising the state and gating function uncertainty over the trajectory. In contrast the "Mode prob with unc." marginalises both the state and gating function uncertainty at each time step. The target state column indicates if the trajectory reached the target state in the environment ($\checkmark$ both), only under the desired mode's dynamics \acrshort{gp} ($\checkmark$ dynamics) or not at all ($\times$).}
 #+LATEX: \label{tab-results-sim-envs}
 #+LATEX: \resizebox{\textwidth}{!}{
 #+ATTR_LATEX: :center t :placement [!b] :align clccccccc
@@ -15090,7 +15437,7 @@ it's collocation state trajectory is compared to its dynamics trajectory in cref
 \subcaption{Environment 2}
 \label{fig-collocation-traj-opt-5}
 \end{minipage}
-\caption{\textbf{Indirect geodesic control \ig}
+\caption[\acrfull{ig} trajectory optimisation results in simulated environments]{\textbf{\acrfull{ig}}
 This figure shows how well the indirect geodesic control \ig method's inference strategy
 in \cref{eq-control-elbo-svgp} can
 recover the controls from the collocation solver's state trajectory $\bar{\mathbf{z}}$ in each environment.
@@ -15184,12 +15531,12 @@ However, in practice, setting a high terminal state cost matrix $\terminalStateC
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_prob_both_scenarios.pdf}
-\caption{\textbf{Trajectory optimisation results over the desired mode's mixing probability  $\Pr(\modeVar=\desiredMode \mid \state)$}
+\caption[Trajectory optimisation results over desired mode's mixing probability]{\textbf{Trajectory optimisation results over the desired mode's mixing probability  $\Pr(\modeVar=\desiredMode \mid \state)$}
 Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$, using the indirect geodesic control (\ig) method
+to the target state $\targetState$, using the \acrfull{ig} method
 from \cref{sec-traj-opt-collocation}
-(top row), the direct riemannian energy (\dre) method from \cref{sec-traj-opt-energy} (middle row) and the
-control-as-inference (\cai) method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
+(top row), the \acrfull{dre} method from \cref{sec-traj-opt-energy} (middle row) and the
+\acrfull{cai} method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
 and Environment 2 (right).
 The optimised controls are rolled out in the desired mode's GP dynamics and are overlayed on the
 desired mode's mixing probability.}
@@ -15202,12 +15549,12 @@ desired mode's mixing probability.}
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_gating_mean_both_scenarios.pdf}
-\caption{\textbf{Trajectory optimisation results over the gating function's posterior mean $\mathbb{E}[h_{\desiredMode}(\state)]$}
+\caption[Trajectory optimisation results over the gating function's posterior mean]{\textbf{Trajectory optimisation results over the gating function's posterior mean $\mathbb{E}[h_{\desiredMode}(\state)]$}
 Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$, using the indirect geodesic control (\ig) method
+to the target state $\targetState$, using the \acrfull{ig} method
 from \cref{sec-traj-opt-collocation}
-(top row), the direct riemannian energy (\dre) method from \cref{sec-traj-opt-energy} (middle row) and the
-control-as-inference (\cai) method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
+(top row), the \acrfull{dre} method from \cref{sec-traj-opt-energy} (middle row) and the
+\acrfull{cai} method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
 and Environment 2 (right).
 The optimised controls are rolled out in the desired mode's GP dynamics and are overlayed on the
 posterior mean associated with the desired mode's gating function.}
@@ -15455,12 +15802,12 @@ which is likely due to the state variance being extremely low.
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_gating_variance_both_scenarios.pdf}
-\caption{\textbf{Trajectory optimisation results over the gating function's posterior variance $\mathbb{V}[h_{\desiredMode}(\state)]$}
+\caption[Trajectory optimisation results over the gating function's posterior variance]{\textbf{Trajectory optimisation results over the gating function's posterior variance $\mathbb{V}[h_{\desiredMode}(\state)]$}
 Trajectory optimisation results after finding trajectories from the start state $\state_0$,
-to the target state $\targetState$, using the indirect geodesic control (\ig) method
+to the target state $\targetState$, using the \acrfull{ig} method
 from \cref{sec-traj-opt-collocation}
-(top row), the direct riemannian energy (\dre) method from \cref{sec-traj-opt-energy} (middle row) and the
-control-as-inference (\cai) method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
+(top row), the \acrfull{dre} method from \cref{sec-traj-opt-energy} (middle row) and the
+\acrfull{cai} method from \cref{chap-traj-opt-inference} (bottom row) in Environment 1 (left)
 and Environment 2 (right).
 The optimised controls are rolled out in the desired mode's GP dynamics and are overlayed on the
 posterior variance associated with the desired mode's gating function.}
@@ -15729,7 +16076,6 @@ posterior mean (left) and posterior variance (right) associated with the desired
 \label{fig-all-traj-opt-7}
 \end{figure}
 #+END_EXPORT
-
 
 *** Environment 1 :ignore:noexport:
 **** Geodesic collocation 0.5 :ignore:
@@ -16940,17 +17286,17 @@ Thus, the algorithm should consider two important properties:
 \centering
 \begin{minipage}[r]{\columnwidth}
 \centering
-\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_\stepNum_epoch_\epochNum.pdf}
 \subcaption{}
 \label{fig-explorative-data-over-prob-7-initial}
 \end{minipage}
 \begin{minipage}[r]{\columnwidth}
 \centering
-\includegraphics[width=\textwidth]{./images/mode-opt/exploration/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
+\includegraphics[width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov/data_over_desired_gating_gp_step_\stepNum_epoch_\epochNum.pdf}
 \subcaption{}
 \label{fig-explorative-data-over-svgp-7-initial}
 \end{minipage}
-\caption{\textbf{Initial gating network} Gating network posterior after training on the initial data set $\dataset_0$
+\caption[Gating network posterior at initial iteration of \modeOpt]{\textbf{Initial gating network} Gating network posterior after training on the initial data set $\dataset_0$
 shown by the blue crosses.
 The goal is to incrementally explore the environment until $\delta-\text{mode remaining}$ trajectories
 under the learned dynamics model, can be found from the start state $\state_0$, to the target state $\targetState$.
@@ -17205,7 +17551,7 @@ the model’s epistemic uncertainty.
 \draw [arrow] (constraints) -- node[anchor=south] {no} (explore);
 \draw [arrow] (explore) |- node[anchor=west] {Experience} (start);
 \end{tikzpicture}
-\caption{\textbf{\modeOpt} Flowchart showing the sequence of steps and processes needed to control a system
+\caption[Flowchart showing the sequence of steps of \modeOpt]{\textbf{\modeOpt} Flowchart showing the sequence of steps and processes needed to control a system
 from an initial state $\state_0$, to a target state $\targetState$, with a $\delta-\text{mode remaining}$ guarantee,
 when the underlying dynamics modes and how
 the system switches between them, are \textit{not fully known a priori}.}
@@ -17241,7 +17587,7 @@ with mode remaining guarantees.
 That is, a controller that will explore the environment whilst ensuring the controlled system remains in the
 desired dynamics mode with high probability, i.e. satisfy cref:eq-mode-remaining-def-explore.
 
-*** Exploration Strategies label:sec-exploration-strategies
+*** Exploration Strategies label:sec-exploration-strategies :noexport:
 The performance of \modeOpt depends on its ability to explore the environment.
 This section recaps some relevant exploration strategies that fit into the general
 \acrfull{mbrl} procedure shown in cref:alg-mbrl.
@@ -17280,7 +17626,7 @@ seek to reduce the epistemic uncertainty in the learned dynamics model $\dynamic
 $\delta-\text{mode remaining}$ trajectories to the target state $\targetState$ can eventually be found.
 That is, the exploration should be targeted towards the target state $\targetState$.
 
-*** MBRL Alg :ignore:
+*** MBRL Alg :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{algorithm}[!t]
 \caption{Model-based reinforcement learning}\label{alg-mbrl}
@@ -17294,7 +17640,7 @@ That is, the exploration should be targeted towards the target state $\targetSta
 \end{algorithmic}
 \end{algorithm}
 #+END_EXPORT
-*** Active learning :ignore:
+*** Active learning :ignore:noexport:
 \newline
 
 *Active learning*
@@ -17426,7 +17772,8 @@ strategy over a finite horizon.
 # *Maximum entropy reinforcement learning*
 
 *** Mode Remaining Exploration label:sec-exploration
-The exploration strategy presented in this chapter is primarily interested
+The performance of \modeOpt depends on its ability to explore the environment.
+The exploration strategy is primarily interested
 in exploring a single desired dynamics mode whilst avoiding entering any of the other modes.
 This is a challenging problem because the agent must observe regions outside of the desired dynamics mode
 in order to learn that a particular region does not belong to the desired mode.
@@ -17956,7 +18303,7 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mo
 \centering
 %\includegraphics[width=0.78\textwidth]{./images/mode-opt/exploration/trajectories_over_mixing_probs_step_\stepNum.pdf}
 \adjincludegraphics[trim={{.54\width} {.12\height} 0 0},clip, width=0.5\textwidth]{./images/mode-opt/exploration/state-diff-only/trajectories_over_mixing_probs_step_17.pdf}
-\caption{\textbf{State difference only}
+\caption[Exploration results with only state difference term]{\textbf{State difference only}
 Results when solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with only the state difference
 term, i.e. $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd-1}
 \E \left[ - (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$.
@@ -17983,7 +18330,7 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on the des
 \subcaption{Joint entropy \cref{eq-joint-entropy}}
 \label{fig-entropy-mvn-full-cov-traj-opt-over-prob-7}
 \end{minipage}
-\caption{\textbf{Comparison of factorised/joint entropy objectives}
+\caption[Comparison of factorised/joint entropy objectives]{\textbf{Comparison of factorised/joint entropy objectives}
 Comparison of solving the constrainted optimisation in \cref{eq-explorative-traj-opt} with
 (\subref{fig-entropy-mvn-diag-traj-opt-over-prob-7})
 the sum of marginal entropies at each time step (factorised entropy) and
@@ -18185,7 +18532,7 @@ and how this lead to the mode chance constraints expanding at each iteration.
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov-grid/desired_prob_iterations_\startStepNum_to_\endStepNum.pdf}
 %\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
-\caption{\textbf{\modeOpt iterations $\mathbf{i=0, 2, 3, 4}$ over mode probability}
+\caption[\modeOpt iterations $\mathbf{i=0, 2, 3, 4}$ over mode probability]{\textbf{\modeOpt iterations $\mathbf{i=0, 2, 3, 4}$ over mode probability}
 Visualisation of \modeOpt at the start of it's exploration phase in Environment 1 overlayed
 on the desired mode's mixing probability.
 It shows how the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
@@ -18212,7 +18559,7 @@ controller.}
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov-grid/gating_function_variance_iterations_\startStepNum_to_\endStepNum.pdf}
 %\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
-\caption{\textbf{\modeOpt iterations $\mathbf{i=0, 2, 3, 4}$ over gating function variance}
+\caption[\modeOpt iterations $\mathbf{i=0, 2, 3, 4}$ over gating function variance]{\textbf{\modeOpt iterations $\mathbf{i=0, 2, 3, 4}$ over gating function variance}
 Visualisation of \modeOpt at the start of it's exploration phase in Environment 1 overlayed
 on the gating function's posterior variance.
 It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
@@ -18357,7 +18704,7 @@ arguably this is necessary in order to learn the location of the mode boundary.
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov-grid/desired_prob_iterations_\startStepNum_to_\endStepNum.pdf}
 %\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
-\caption{\textbf{\modeOpt iterations $\mathbf{i=6, 8, 12, 14}$ over mode probability}
+\caption[\modeOpt iterations $\mathbf{i=6, 8, 12, 14}$ over mode probability]{\textbf{\modeOpt iterations $\mathbf{i=6, 8, 12, 14}$ over mode probability}
 Visualisation of \modeOpt at the \textbf{end} of it's exploration phase in Environment 1 overlayed
 on the desired mode's mixing probability.
 It shows how the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
@@ -18384,7 +18731,7 @@ controller.}
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/exploration/mvn-full-cov-grid/gating_function_variance_iterations_\startStepNum_to_\endStepNum.pdf}
 %\subcaption{$\dataset_{0:\stepNum}$ overlayed on $\Pr(\modeVar = 2 \mid \state, \dataset_{0:\stepNum})$}
-\caption{\textbf{\modeOpt iterations $\mathbf{i=6, 8, 12, 14}$ over gating function variance}
+\caption[\modeOpt iterations $\mathbf{i=6, 8, 12, 14}$ over gating function variance]{\textbf{\modeOpt iterations $\mathbf{i=6, 8, 12, 14}$ over gating function variance}
 Visualisation of \modeOpt at the \textbf{end} of it's exploration phase in Environment 1 overlayed
 on the gating function's posterior variance.
 It shows the explorable region -- indicated by the boundary of the mode chance constraints (purple 0.8 contour)
@@ -21292,7 +21639,7 @@ This would enable a better comparison of myopic and non-myopic strategies.
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/exploration/entropy_comparison_iterations_2_to_7.pdf}
-\caption{\textbf{Comparison of information-based objectives at \modeOpt iterations $\mathbf{i=2, 4, 5, 7}$}
+\caption[Comparison of information-based objectives at \modeOpt iterations $\mathbf{i=2, 4, 5, 7}$]{\textbf{Comparison of information-based objectives at \modeOpt iterations $\mathbf{i=2, 4, 5, 7}$}
 Each column visualises how a different information-based objective changes as the
 dynamics model is udpated during \modeOpt, i.e. after training on the data set $\dataset_{0:i}$ collected at previous
 iterations.
@@ -21942,6 +22289,22 @@ Table ref:tab-params-quadcopter contains the initial values for all of the train
 ** Bibliography :ignore:
 
 #+BEGIN_EXPORT latex
+\bookmarksetup{startatroot}
+\backmatter
+
+
+% This ensures that the subsequent sections are being included as root
+% items in the bookmark structure of your PDF reader.
+\begingroup
+    \let\clearpage\relax
+    \glsaddall
+    \printglossary[type=\acronymtype]
+    \newpage
+    \printglossary
+\endgroup
+\printindex
+
+\printglossary
 % \begingroup
 % \sloppy
 % \setstretch{1}
