@@ -72,7 +72,6 @@ The policy can be time-dependent and can also depend on all past information up 
 In the time-independent case the policy is denoted $\pi(\mathbf{x}(t))$ and
 the resulting closed-loop system is denoted $f_{\pi}(\mathbf{x}) = f(\mathbf{x},\pi(\mathbf{x}))$.
 
-** Dynamical Systems and Uncertainty Quantification :ignore:
 ** Dynamical Systems :noexport:
 *** maths :ignore:
 #+BEGIN_EXPORT latex
