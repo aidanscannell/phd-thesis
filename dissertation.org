@@ -1,8 +1,8 @@
 * Config :ignore:
 #+AUTHOR: Aidan Scannell
-#+TITLE: Bayesian Learning \& Control in Multimodal Dynamical Systems
+#+TITLE: Bayesian Learning for Control in Multimodal Dynamical Systems
 #+DESCRIPTION: Aidan Scannell's PhD Thesis
-#+KEYWORDS: Machine Learning, Probabilistic Modelling, Bayesian Inference, Gaussian Processes, Model-Based Reinforcement Learning, Optimal Control, Learning-based Control, Robotics, Multimodal Dynamical Systems
+#+KEYWORDS: Machine Learning, Probabilistic Modelling, Bayesian Inference, Gaussian Processes, Model-Based Reinforcement Learning, Optimal Control, Learning-based Control, Robotics, Multimodal Dynamical Systems, Riemannian Geometry
 #+latex_class: mimosis
 #+EXPORT_FILE_NAME: ./phd-dissertation.pdf
 ** Run this src block with C-c C-c :noexport:
@@ -55,6 +55,7 @@
 ** Macros :ignore:
 # #+MACRO: acronym #+latex_header: \newacronym[description={$1}]{$2}{$2}{$3}
 #+MACRO: glossaryentry #+latex_header: \newglossaryentry{$1}{name={$2},description={$3},sort={$4}}
+# #+MACRO: acronym #+latex_header: \newabbreviation{$1}{$2}{$3}
 #+MACRO: acronym #+latex_header: \newacronym{$1}{$2}{$3}
 # #+MACRO: newline @@latex:\hspace{0pt}\\@@ @@html:<br>@@
 # #+MACRO: fourstar @@latex:\bigskip{\centering\color{BrickRed}\FourStar\par}\bigskip@@
@@ -83,10 +84,6 @@ xspace for space after text in newcommands
 #+LATEX_HEADER: \definecolor{block-gray}{gray}{0.85}
 #+LATEX_HEADER: \newtcolorbox{myquote}{colback=block-gray,boxrule=0pt,boxsep=0pt,breakable}
 # #+LATEX_HEADER: \newtcolorbox{myquote}{colback=block-gray,grow to right by=-10mm,grow to left by=-10mm, boxrule=0pt,boxsep=0pt,breakable}
-*** Acronym and Glossary :ignore:
-#+latex_header: \usepackage[acronym]{glossaries}
-#+latex_header: \makeglossaries
-
 *** Equation Definitions
 
 #+LATEX_HEADER: \usepackage{mathtools}
@@ -249,8 +246,12 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \usepackage[makeroom]{cancel}
 *** UoB guidelines
 # The pages should be numbered consecutively at the bottom centre of the page.
-#+latex_header: \cfoot{\pagemark}
-#+latex_header: \refoot{} \lefoot{} \rofoot{} \lofoot{}
+# #+latex_header: \cfoot{\pagemark}
+#+latex_header: \refoot[]{} \lefoot[]{} \rofoot[]{} \lofoot[]{}
+# #+latex_header: \ihead[whatever]{\headmark}
+# #+latex_header: \chead[]{}
+# #+latex_header: \cfoot[something]{-~\pagemark~-}
+#+latex_header: \cfoot[-~\pagemark~-]{-~\pagemark~-}
 *** PDF metadata:
 # #+latex_header: \usepackage{datetime}
 # #+latex_header: \usepackage{ifpdf}
@@ -269,11 +270,9 @@ Make the equation numbers follow the chapter, not the whole thesis.
 %  }
 
 #+end_latex
-*** Nomenclature
-#+latex_header: \usepackage{nomencl}
-#+latex_header: \makenomenclature
 ** Text Variables :noexport:
-#+latex_header: \newcommand{\ThesisTitle}{{Model-based Reinforcement Learning for Mode Remaining Control in Multimodal Dynamical Systems}}
+# #+latex_header: \newcommand{\ThesisTitle}{{Model-based Reinforcement Learning for Mode Remaining Control in Multimodal Dynamical Systems}}
+#+latex_header: \newcommand{\ThesisTitle}{{Bayesian Learning for Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Mode Remaining Model-Based Reinforcement Learning in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Mode Remaining Model-Based Reinforcement Learning for Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Model-Based Reinforcement Learning for Mode Remaining Control in Multimodal Dynamical Systems}}
@@ -675,14 +674,25 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+LATEX_HEADER: \newcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
 #+LATEX_HEADER: \newcommand{\singleOutputK}{\ensuremath{\mode{\singleOutput}}}
 
-** Acronyms :ignore:
+** Tools :noexport:
+*** word count
+#+begin_src shell
+ps2ascii thesis.pdf | wc -w
+#+end_src
+* Acronyms :ignore:
 # Use with
 # - \acrfull{gp} prints Gaussian Process (GP)
 # - \acrshort{gp} prints GP
 # - \acrlong{gp} prints Gaussian Process
+# #+latex_header: \usepackage[toc]{glossaries}
+# #+latex_header: \usepackage[acronym,xindy,automake,nogroupskip,nomain,nopostdot,nonumberlist,toc]{glossaries-extra}
+# #+latex_header: \usepackage[acronym]{glossaries}
+# {{{glossaryentry(LaTeX,\LaTeX,A document preparation system,LaTeX)}}}
+# {{{glossaryentry(Real Numbers,$\real$,The set of Real numbers,Real Numbers)}}}
+#+latex_header: \usepackage[acronym]{glossaries}
+# #+latex_header: \usepackage[abbreviations,symbols]{glossaries-extra}
 
-{{{glossaryentry(LaTeX,\LaTeX,A document preparation system,LaTeX)}}}
-{{{glossaryentry(Real Numbers,$\real$,The set of Real numbers,Real Numbers)}}}
+#+latex_header: \newglossaryentry{elite}{name={elite},description={select group or class}}
 
 {{{acronym(brl,BRL,Bristol Robotics Laboratory)}}}
 {{{acronym(mogpe,MoGPE,Mixtures of Gaussian Process Experts)}}}
@@ -713,6 +723,11 @@ Make the equation numbers follow the chapter, not the whole thesis.
 
 {{{acronym(gpssm,GPSSM,Gaussian Process State Space Model)}}}
 {{{acronym(bald,BALD,Bayesian Active Learning by Disagreement)}}}
+
+{{{acronym(ig,IG,Indirect Optimal Control via Latent Geodesics)}}}
+{{{acronym(dre,DRE,Direct Optimal Control via Riemannian Energy)}}}
+{{{acronym(cai,CaI,Control as Inference)}}}
+#+latex_header: \makeglossaries
 
 * Frontmatter :ignore:
 #+BEGIN_EXPORT latex
@@ -790,6 +805,116 @@ Make the equation numbers follow the chapter, not the whole thesis.
 #+END_EXPORT
 
 ** Abstract
+:PROPERTIES:
+:UNNUMBERED: t
+:END:
+#+BEGIN_EXPORT latex
+\setcounter{page}{1}
+\begin{singlespace}
+The main goal of the work in this dissertation is to control \textit{unknown},
+multimodal dynamical systems to a target state, whilst avoiding inoperable or undesirable dynamics modes.
+Over the last decade, learning-based control has become a popular paradigm for controlling dynamical systems.
+Although recent algorithms can find high-performance controllers, they typically only consider unimodal systems and
+cannot correctly identify multimodal dynamical systems.
+Further to this, deploying learning algorithms in the real world requires handling the uncertainties
+inherent to the system and the uncertainties arising from learning from observations.
+To this end, we consider the model-based reinforcement learning setting, where an explicit dynamics model -- that includes uncertainties -- is used to plan trajectories to a target state.
+
+Motivated by synergising model learning and control, we introduce a \acrfull{mogpe} method for learning
+dynamics models, which infers latent structure regarding how systems switch between their underlying dynamics modes.
+We then present three trajectory optimisation algorithms which, given this learned dynamics model, find trajectories
+to a target state with mode remaining guarantees.
+Initially, the agent’s dynamics model will be highly uncertain — due to a lack of training observations — so these algorithms cannot guarantee mode remaining navigation with high confidence.
+When this is the case, the agent should actively explore its environment, collect data and update its dynamics model.
+Based on this intuition, we introduce an explorative trajectory optimisation algorithm that explicitly reasons about
+the uncertainties in the dynamics model.
+As a result, it can explore the environment whilst guaranteeing that the agent remains in
+the desired dynamics mode with high probability.
+Finally, we consolidate the work in this dissertation into a model-based reinforcement learning algorithm, which solves the mode remaining navigation problem, with a high probability of remaining in the desired dynamics mode.
+\end{singlespace}
+#+END_EXPORT
+# %\initial{R}einforcement learning and data-driven control have seen significant advances over the last decade,
+# %especially in simulated environments.
+# %real-world systems are often highly nonlinear, exhibit stochasticity and multimodalities,
+# %are expensive to run (slow, energy intensive, subject to wear and tear) and
+# %must be controlled subject to constraints (for safety, efficiency, etc).
+
+# %From robotics, to industrial processing, to finanace, learning-based approaches to control
+# %help alleviate the dependence on domain exerts for system identification and controller design.
+# \initial{O}ver the last decade, learning-based control has seen significant advances and has become a popular paradigm for
+# controlling dynamical systems.
+# Although recent algorithms can find high-performance controllers for some real-world systems,
+# they typically only consider systems with a single dynamics mode.
+# These methods are not able to correctly identify the underlying dynamics modes of multimodal systems and
+# as a consequence, are not able to perform well.
+# Moreover, they cannot control multimodal dynamical systems whilst guaranteeing that they avoid undesirable dynamics modes.
+# %For example, consider controlling a quadcopter in an environment subject to two dynamics modes: 1) a turbulent
+# %dynamics mode in front of a fan, and 2) an operable, non-turbulent dynamics mode everywhere else.
+# %In this scenario, it is not possible to fly the quadcopter to the target location, whilst remaining in the operable,
+# %non-turbulent dynamics mode, when both the underlying dynamics modes, and how the system switches between them, are \textit{not fully known a priori}.
+
+# The main goal of the work in this dissertation is to control \textit{unknown} or \textit{partially unknown},
+# multimodal dynamical systems, to a target state, whilst avoiding inoperable or undesirable dynamics modes.
+# However, instead of directly avoiding undesirable dynamics modes, our algorithms remain in a single dynamics mode,
+# which is believed to be operable \textit{a priori}.
+# Deploying learning algorithms in the real-world requires them to handle both the uncertainties
+# inherent in the system, as well as the uncertainties arising from learning from observations.
+# To this end, we consider the model-based reinforcement learning setting where an explicit model of the environment
+# -- that includes uncertainties -- is used to plan trajectories to a target state.
+# We explicitly model the uncertainty in the underlying dynamics modes, and how the system switches between them,
+# so that we can provide mode remaining guarantees during the learning process.
+
+# In this dissertation, we first consider learning representations of multimodal dynamical systems.
+# Motivated by synergising model learning and control, we introduce a \acrfull{mogpe} method which
+# infers latent structure regarding how systems switch between their underlying dynamics modes.
+# Well-calibrated uncertainty estimates and scalability are obtained via stochastic variational inference.
+
+# Secondly, we consider the mode remaining navigation problem, under the assumption that prior access to the environment
+# has enabled a state transition data set to be collected and used to learn a single-step dynamics model.
+# The goal of the mode remaining navigation problem is to use the learned dynamics model to
+# find trajectories to a target state, whilst remaining in the desired dynamics mode.
+# We present three approaches that leverage the learned dynamics model and its well-calibrated uncertainty estimates
+# to find trajectories with mode remaining guarantees.
+# The first two approaches
+# exploit concepts from Riemannian geometry -- extended to probabilistic geometries -- to encode the mode remaining
+# behaviour, whilst the third approach formulates the control problem as probabilistic inference
+# and encodes the mode remaining behaviour by conditioning on a mode assignment variable.
+
+# Finally, we consider the more realistic setting of not having prior access to the environment, where
+# the agent uses its explicit model of the environment, to actively explore, collect data and update its dynamics model.
+# We introduce an explorative trajectory optimisation algorithm that explicitly reasons about the
+# uncertainty in the dynamics model to guide exploration.
+# The algorithm restricts exploration to the region of the state space that it believes governs the desired dynamics mode.
+
+# %The resulting algorithm is evaluated in a simulated quadcopter environment which shows that it can
+# %solve the mode remaining navigation problem.
+
+# %The model and its approximate inference scheme are
+# %evaluated on a real-world quadcopter data set and on the motorcycle data set.
+
+# Secondly, we consider the mode remaining navigation problem, under the assumption that prior access to the environment
+# has enabled a state transition data set to be collected and used to learn a single-step dynamics model.
+# The goal of the mode remaining navigation problem is to use the learned dynamics model to
+# find trajectories to a target state, whilst remaining in the desired dynamics mode.
+# We present three approaches that leverage the learned dynamics model and its well-calibrated uncertainty estimates
+# to find trajectories with mode remaining guarantees.
+# The first two approaches
+# exploit concepts from Riemannian geometry -- extended to probabilistic geometries -- to encode the mode remaining
+# behaviour, whilst the third approach formulates the control problem as probabilistic inference
+# and encodes the mode remaining behaviour by conditioning on a mode assignment variable.
+# All three algorithms are evaluated in a set of simulated quadcopter experiments, which demonstrates that two of the
+# algorithms consistently perform well.
+
+# Finally, we consider the more realistic setting of not having prior access to the environment.
+# In this setting, the agent uses its explicit model of the environment that includes uncertainties, to actively
+# explore its environment, collect data and update its dynamics model.
+# We introduce an explorative trajectory optimisation algorithm that explicitly reasons about the
+# uncertainty in the dynamics model to guide exploration.
+# The algorithm restricts exploration to the region of the state space that it believes governs the desired dynamics mode.
+# The resulting algorithm is evaluated in a simulated quadcopter environment which shows that it can
+# solve the mode remaining navigation problem.
+
+** Abstract :noexport:
 :PROPERTIES:
 :UNNUMBERED: t
 :END:
@@ -1013,7 +1138,7 @@ until it can find a trajectory to the target state that does not violate the cha
 # 800 words max
 # http://www.bristol.ac.uk/academic-quality/pg/pgrcode/annex17/
 #+BEGIN_EXPORT latex
-\begin{SingleSpace}
+\begin{singlespace}
 To mitigate risk due to Covid-19 lab closures, many of the methods in this dissertation are validated in
 simulated experiments and not in real-world experiments.
 A real-world state transition data set was collected by flying a quadcopter around the \acrfull{brl} with constant controls.
@@ -1022,7 +1147,7 @@ and to test the collocation solver presented in \cref{sec-traj-opt-collocation}.
 These results are a step towards validating that the methods presented in this dissertation work on real-world systems.
 However, this constant controls data set could not be used to learn a dynamics model for the control methods
 in \cref{chap-traj-opt-inference,sec-traj-opt-energy} (due to the lack of controls).
-To mitigate the risk associated with Covid-19 lab closures, we decided not to collect a new real-world data set
+Therefore, to mitigate the risk associated with Covid-19 lab closures, we decided not to collect a new real-world data set
 that could be used to train the dynamics model (with controls).
 Instead, we developed a simulator and used it to generate a data set.
 This had the added benefit that the simulator could be used to test the trajectory optimisation
@@ -1047,7 +1172,7 @@ algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-a
 %in cref:chap-traj-opt-inference,sec-traj-opt-energy,
 %as well as the explorative trajectory optimisation algorithm in cref:chap-active-learning to evaluated.
 
-\end{SingleSpace}
+\end{singlespace}
 #+END_EXPORT
 
 ** Declaration
@@ -1055,7 +1180,7 @@ algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-a
 :UNNUMBERED: t
 :END:
 #+BEGIN_EXPORT latex
-\begin{SingleSpace}
+\begin{singlespace}
 \begin{quote}
 \initial{I} declare that the work in this dissertation was carried out in accordance with the requirements of  the University's Regulations and Code of Practice for Research Degree Programmes and that it  has not been submitted for any other academic award. Except where indicated by specific  reference in the text, the work is the candidate's own work. Work done in collaboration with, or with the assistance of, others, is indicated as such. Any views expressed in the dissertation are those of the author.
 
@@ -1063,7 +1188,7 @@ algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-a
 \noindent
 \hspace{-0.75cm}\textsc{SIGNED: .................................................... DATE: ..........................................}
 \end{quote}
-\end{SingleSpace}
+\end{singlespace}
 #+END_EXPORT
 
 ** Acknowledgements
@@ -1071,7 +1196,7 @@ algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-a
 :UNNUMBERED: t
 :END:
 #+BEGIN_EXPORT latex
-\begin{SingleSpace}
+\begin{singlespace}
 \initial{I} am deeply grateful to my two supervisors, Arthur Richards and Carl Henrik Ek.
 Your expertise and willingness to explore new ideas have made my PhD extremely enjoyable.
 I have learned so much under your supervision and am extremely grateful for your continued support.
@@ -1122,11 +1247,11 @@ I would especially like to thank all of the contributors to GNU Emacs and Org Mo
 This work was supported by the EPSRC Centre for Doctoral Training in Future
 Autonomous and Robotic Systems (FARSCOPE) at the Bristol Robotics Laboratory.
 
-\end{SingleSpace}
+\end{singlespace}
 #+END_EXPORT
 * TOC and Mainmatter :ignore:
 #+BEGIN_EXPORT latex
-\makeindex
+%\makeindex
 \tableofcontents
 %\addtocontents{toc}{\par\nobreak \mbox{}\hfill{\bf Page}\par\nobreak}
 \clearemptydoublepage
@@ -1142,12 +1267,34 @@ Autonomous and Robotic Systems (FARSCOPE) at the Bristol Robotics Laboratory.
 \mainmatter
 #+END_EXPORT
 
-* Tools :noexport:
-** word count
-#+begin_src shell
-ps2ascii thesis.pdf | wc -w
-#+end_src
-* Maths Notation
+* lit review maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
+
+\renewcommand{\allInput}{\ensuremath{\hat{\state}_{1:\TimeInd}}}
+\renewcommand{\allOutput}{\ensuremath{{\Delta\state}_{1:\TimeInd}}}
+
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+
+\newcommand{\dynamicsFunc}{\ensuremath{f}}
+
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
+\newcommand{\integralCostFunc}{\ensuremath{C}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+
+\newcommand{\policySpace}{\ensuremath{\Pi}}
+\newcommand{\policy}{\ensuremath{\pi}}
+
+\renewcommand{\u}{\ensuremath{\mathbf{u}}}
+#+END_EXPORT
+
+* Maths Notation :noexport:
 ** Maths Symbols :ignore:
 *** Domains :ignore:
 #+BEGIN_EXPORT latex
@@ -1505,33 +1652,6 @@ $\modeInd$ & Mode indicator \\
 
 #+END_EXPORT
 
-* lit review maths :ignore:
-#+BEGIN_EXPORT latex
-\newcommand{\timeInd}{\ensuremath{t}}
-\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
-
-\renewcommand{\allInput}{\ensuremath{\hat{\state}_{1:\TimeInd}}}
-\renewcommand{\allOutput}{\ensuremath{{\Delta\state}_{1:\TimeInd}}}
-
-\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
-\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
-
-\newcommand{\dynamicsFunc}{\ensuremath{f}}
-
-\newcommand{\costFunc}{\ensuremath{c}}
-\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
-\newcommand{\integralCostFunc}{\ensuremath{C}}
-\newcommand{\constraintsFunc}{\ensuremath{g}}
-
-\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
-\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
-
-\newcommand{\policySpace}{\ensuremath{\Pi}}
-\newcommand{\policy}{\ensuremath{\pi}}
-
-\renewcommand{\u}{\ensuremath{\mathbf{u}}}
-#+END_EXPORT
-
 * Introduction
 ** maths :ignore:
 #+BEGIN_EXPORT latex
@@ -1677,6 +1797,7 @@ $\modeInd$ & Mode indicator \\
 \renewcommand{\transitionDistK}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVar_{\timeInd}=\modeInd)}}
 #+END_EXPORT
 ** Intro :ignore:
+\glspl{elite}
 # *Dynamical Systems*
 # The modern world is pervaded with dynamical systems that we seek to control to achieve the desired behaviour.
 # Examples include autonomous vehicles, aircraft, robotic manipulators, financial markets and energy management systems.
@@ -8144,15 +8265,15 @@ cref:chap-traj-opt-geometry details two methods that leverage the geometry of th
 The first method in cref:sec-traj-opt-collocation
 resembles an indirect optimal control method as it solves the necessary conditions which /indirectly/ represent the
 original optimal control problem.
-In contrast, the second method in cref:sec-traj-opt-energy takes the more standard approach and directly solves the
+In contrast, the second method in cref:sec-traj-opt-energy takes a more standard approach and directly solves the
 optimal control problem.
 cref:chap-traj-opt-inference then introduces an alternative approach to mode remaining trajectory optimisation, which
 does not leverage the geometry of the gating network.
-Instead, it extends the control-as-inference framework and encodes mode remaining behaviour via conditioning on
+Instead, it extends the \acrfull{cai} framework and encodes mode remaining behaviour via conditioning on
 the mode indicator variable.
 cref:chap-traj-opt-results evaluates and compares all three methods using the illustrative
 example from cref:illustrative_example.
-An initial version of the indirect optimal control via latent geodesics method presented in cref:sec-traj-opt-collocation
+An initial version of the \acrfull{ig} method presented in cref:sec-traj-opt-collocation
 is published in cite:scannellTrajectory2021.
 # The work in this chapter is implemented in JAX and TensorFlow/GPflow and is available on GitHub[fn::Code accompanying
 # cref:sec-traj-opt-collocation can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt]] and
@@ -10978,9 +11099,9 @@ mode remaining behaviour can be encoded by conditioning on the mode indicator va
 
 In cref:chap-traj-opt-results the methods presented in this chapter are evaluated and compared using the
 quadcopter navigation problem from the illustrative example in cref:illustrative_example.
-It turns out that in practice, the direct optimal control via Riemannian energy approach from  cref:sec-traj-opt-energy
-and the mode remaining control as probabilistic inference approach from cref:chap-traj-opt-inference,
-perform significantly better than the indirect optimal control via latent geodesics method.
+It turns out that in practice, the \acrfull{dre} method from  cref:sec-traj-opt-energy
+and the \acrfull{cai} method from cref:chap-traj-opt-inference,
+perform significantly better than the \acrfull{ig} method.
 # The mode remaining control as probabilistic inference approach from cref:chap-traj-opt-inference also performs
 # well in practice
 
@@ -11097,9 +11218,6 @@ the dynamics constraints, whilst ensuring trajectories are $\delta-\text{mode re
 \newcommand{\dre}{DELETEDELETE\xspace}
 \newcommand{\cai}{DELETEDELETE\xspace}
 #+END_EXPORT
-{{{acronym(ig,IG,Indirect Optimal Control via Latent Geodesics)}}}
-{{{acronym(dre,DRE,Direct Optimal Control via Riemannian Energy)}}}
-{{{acronym(cai,CaI,Control as Inference)}}}
 ** maths :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\deltaTime}{\ensuremath{\Delta \timeInd}}
@@ -14337,7 +14455,7 @@ dynamics model $\dynamicsModel$.
 \begin{algorithmic}[1]
 \Require{Start state $\state_0$, target state $\targetState$, desired dynamics mode $\desiredMode$, initial data set $\dataset_0$, explorative controller $\explorativeController$, mode remaining controller $\modeController$, dynamics model $\dynamicsModel}$}
 \For{$i = 0, 1, \ldots $}
-    \State Train model $\dynamicsModel}$ on $\dataset_i$ using \acrshort{elbo} from \cref{eq-lower-bound-further}
+    \State Train model $\dynamicsModel$ on $\dataset_i$ using \acrshort{elbo} from \cref{eq-lower-bound-further}
     %\State Find trajectory $\controlTraj$ to $\targetState$ using \cref{eq-}
     \State Optimise mode remaining controller $\modeController$ using learned model $\dynamicsModel$
     \If{$\state_{\TimeInd}$ = $\targetState$ and $\modeController$ is $\delta-\text{mode remaining}$}
@@ -18488,17 +18606,38 @@ Table ref:tab-params-quadcopter contains the initial values for all of the train
 #+LATEX: }
 #+end_table
 
+* Bibliography :ignore:
+#+BEGIN_EXPORT latex
+\begingroup
+\sloppy
+\setstretch{1}
+\setlength\bibitemsep{3pt}
+\printbibliography
+\endgroup
+#+END_EXPORT
 * Back Matter :ignore:
-** Bibliography :ignore:
+#+BEGIN_EXPORT latex
+% This ensures that the subsequent sections are being included as root
+% items in the bookmark structure of your PDF reader.
+\bookmarksetup{startatroot}
+\backmatter
+ \begingroup
+     \let\clearpage\relax
+     \glsaddall
+     \printglossary[type=\acronymtype]
+     \newpage
+     \printglossary
+ \endgroup
+ \printindex
+#+END_EXPORT
 
 #+BEGIN_EXPORT latex
 %\bookmarksetup{startatroot}
 %\backmatter
+%\printglossary[type=\acronymtype]
 
-\printglossary[type=\acronymtype]
-
-% \printglossary
-
+%\printglossary
+%\printunsrtglossaries
 
 % This ensures that the subsequent sections are being included as root
 % items in the bookmark structure of your PDF reader.
@@ -18516,6 +18655,5 @@ Table ref:tab-params-quadcopter contains the initial values for all of the train
 % \sloppy
 % \setstretch{1}
 % \setlength\bibitemsep{3pt}
-\printbibliography
 % \endgroup
 #+END_EXPORT
