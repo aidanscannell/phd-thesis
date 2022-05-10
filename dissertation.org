@@ -693,6 +693,8 @@ ps2ascii thesis.pdf | wc -w
 {{{acronym(moe,MoE,Mixture of Experts)}}}
 {{{acronym(mosvgpe,MoSVGPE,Mixtures of Sparse Variational Gaussian Process Experts)}}}
 {{{acronym(gp,GP,Gaussian Process)}}}
+{{{acronym(gps,GPs,Gaussian Processes)}}}
+{{{acronym(svgp,SVGP,Sparse Variational Gaussian Process)}}}
 {{{acronym(fitc,FITC,Fully Independent Training Conditional)}}}
 {{{acronym(mdp,MDP,Markov Decision Process)}}}
 {{{acronym(ard,ARD,Automatic Relevance Determination)}}}
@@ -708,8 +710,15 @@ ps2ascii thesis.pdf | wc -w
 {{{acronym(soc,SOC,Stochastic Optimal Control)}}}
 {{{acronym(mpc,MPC,Model Predictive Control)}}}
 {{{acronym(lqr,LQR,Linear Quadratic Regulator)}}}
-{{{acronym(lqg,LQG,Linear Quadratic Gaussian)}}}
+# {{{acronym(lqg,LQG,Linear Quadratic Gaussian)}}}
+# {{{acronym(ilqr,iLQR,iterative Linear Quadratic Regulator)}}}
+{{{acronym(ddp,DDP,Differential Dynamic Programming)}}}
 {{{acronym(ilqr,iLQR,iterative Linear Quadratic Regulator)}}}
+{{{acronym(ilqg,iLQG,iterative Linear Quadratic Gaussian)}}}
+{{{acronym(mcmc,MCMC,Markov Chain Monte Carlo)}}}
+
+{{{acronym(epsrc,EPSRC,Engineering and Physical Sciences Research Council)}}}
+{{{acronym(farscope,FARSCOPE,Future Autonomous and Robotic Systems)}}}
 
 {{{acronym(pets,PETS,Probabilistic Ensembles with Trajectory Sampling)}}}
 {{{acronym(pipps,PIPPS,Probabilistic Inference for Particle-based Policy Search)}}}
@@ -720,9 +729,13 @@ ps2ascii thesis.pdf | wc -w
 
 {{{acronym(ig,IG,Indirect Optimal Control via Latent Geodesics)}}}
 {{{acronym(dre,DRE,Direct Optimal Control via Riemannian Energy)}}}
-{{{acronym(cai,CaI,Control as Inference)}}}
+{{{acronym(cai,CaI,Control-as-Inference)}}}
 
 {{{acronym(modeopt,ModeOpt,Mode Optimisation)}}}
+
+{{{acronym(nlpp,NLPP,Negative Log Predictive Probability)}}}
+{{{acronym(mae,MAE,Mean Absolute Error)}}}
+{{{acronym(rmse,RMSE,Root Mean Squared Error)}}}
 #+latex_header: \makeglossaries
 
 * Frontmatter :ignore:
@@ -814,7 +827,7 @@ The main goal of this dissertation is to control \textit{unknown},
 \textit{multimodal} dynamical systems, to a target state, whilst \textit{avoiding inoperable or undesirable dynamics modes}.
 Further to this, deploying learning algorithms in the real world requires handling the uncertainties
 inherent to the system and the uncertainties arising from learning from observations.
-To this end, we consider the model-based reinforcement learning setting, where an explicit dynamics model -- that includes uncertainties -- is used to plan trajectories to a target state.
+To this end, we consider the \acrfull{mbrl} setting, where an explicit dynamics model -- that includes uncertainties -- is used to plan trajectories to a target state.
 
 Motivated by synergising model learning and control, we introduce a \acrfull{mogpe} method for learning
 dynamics models, which infers latent structure regarding how systems switch between their underlying dynamics modes.
@@ -826,7 +839,7 @@ We introduce an explorative trajectory optimisation algorithm that explicitly re
 the uncertainties in the dynamics model.
 As a result, it can explore the environment whilst guaranteeing that the agent remains in
 the desired dynamics mode with high probability.
-Finally, we consolidate the work in this dissertation into a model-based reinforcement learning algorithm, which solves the mode remaining navigation problem, with a high probability of remaining in the desired dynamics mode.
+Finally, we consolidate the work in this dissertation into a \acrshort{mbrl} algorithm, which solves the mode remaining navigation problem, with a high probability of remaining in the desired dynamics mode.
 \end{singlespace}
 #+END_EXPORT
 # %\initial{R}einforcement learning and data-driven control have seen significant advances over the last decade,
@@ -932,7 +945,7 @@ For example, consider controlling a quadcopter in an environment subject to two 
 dynamics mode in front of a fan, and 2) an operable, non-turbulent dynamics mode everywhere else.
 In this scenario, it is preferred to fly the quadcopter to the target location,
 whilst remaining in the operable, non-turbulent dynamics mode.
-This dissertation considers the model-based reinforcement learning setting where an explicit model of the environment
+This dissertation considers the \acrfull{mbrl} setting where an explicit model of the environment
 -- that includes uncertainties -- is used to plan trajectories to the target state.
 Moreover, it considers trajectory optimisation algorithms that leverage learned dynamics models to
 provide mode remaining guarantees during the learning process.
@@ -1058,7 +1071,7 @@ and how the system switches between them, are \textit{not fully known a priori}.
 
 This dissertation first considers learning representations of multimodal dynamical systems, assuming
 access to a historial data set of state transitions.
-\todo{add comment about MoGPE vs SVGP}
+\todo{add comment about \acrshort{mogpe} vs SVGP}
 The model resembles the Mixture of Gaussian Process Experts model with a gating network based on Gaussian processes.
 Motivated by synergising model learning and control,
 this model infers latent \textit{geometric} structure in the gating network,
@@ -1144,7 +1157,7 @@ These results are a step towards validating that the methods presented in this d
 However, this constant controls data set could not be used to learn a dynamics model for the control methods
 in \cref{chap-traj-opt-inference,sec-traj-opt-energy} (due to the lack of controls).
 Therefore, to mitigate the risk associated with Covid-19 lab closures, we decided not to collect a new real-world data set
-that could be used to train the dynamics model (with controls).
+that could be used to train the dynamics model.
 Instead, we developed a simulator and used it to generate a data set.
 This had the added benefit that the simulator could be used to test the trajectory optimisation
 algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-active-learning}.
@@ -1240,8 +1253,7 @@ I would especially like to thank all of the contributors to GNU Emacs and Org Mo
 %I acknowledge the financial support toward this PhD from the EPSRC
 %Centre for Doctoral Training in Future Autonomous and Robotic Systems (FARSCOPE) at the
 %Bristol Robotics Laboratory.
-This work was supported by the EPSRC Centre for Doctoral Training in Future
-Autonomous and Robotic Systems (FARSCOPE) at the Bristol Robotics Laboratory.
+This work was supported by the \acrshort{epsrc} Centre for Doctoral Training in \acrfull{farscope} at the \acrfull{brl}.
 
 \end{singlespace}
 #+END_EXPORT
@@ -1257,18 +1269,20 @@ Autonomous and Robotic Systems (FARSCOPE) at the Bristol Robotics Laboratory.
 \listoffigures
 %\addtocontents{lof}{\par\nobreak\textbf{{\scshape Figure} \hfill Page}\par\nobreak}
 
-\begingroup
-    \let\clearpage\relax
-    \glsaddall
-    \printglossary[type=\acronymtype]
-    \newpage
-    %\printglossary
-\endgroup
+\printglossary[type=\acronymtype]
+%\begingroup
+%    \let\clearpage\relax
+%    \glsaddall
+%    \printglossary[type=\acronymtype]
+%    \newpage
+%    %\printglossary
+%\endgroup
 
 \mainmatter
 #+END_EXPORT
 
-* lit review maths :ignore:
+* Maths :ignore:
+** lit review maths :ignore:
 #+BEGIN_EXPORT latex
 \newcommand{\timeInd}{\ensuremath{t}}
 \newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
@@ -1295,6 +1309,229 @@ Autonomous and Robotic Systems (FARSCOPE) at the Bristol Robotics Laboratory.
 \renewcommand{\u}{\ensuremath{\mathbf{u}}}
 #+END_EXPORT
 
+** Domains :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+%\renewcommand{\stateDomain}{\ensuremath{\mathcal{S}}}
+\renewcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+\renewcommand{\modeDomain}{\ensuremath{\mathcal{A}}}
+%\renewcommand{\inputDomain}{\ensuremath{\mathcal{X}}}
+\renewcommand{\inputDomain}{\ensuremath{\mathcal{Z}}}
+
+%\renewcommand{\state}{\ensuremath{\mathbf{s}}}
+\renewcommand{\state}{\ensuremath{\mathbf{x}}}
+
+%\renewcommand{\nominalDynamics}{\ensuremath{\mathbf{n}}}
+%\renewcommand{\unknownDynamics}{\ensuremath{\mathbf{f}}}
+%\renewcommand{\nominalDynamicsK}{\ensuremath{\mode{\mathbf{n}}}}
+%\renewcommand{\unknownDynamicsK}{\ensuremath{\mode{\mathbf{f}}}}
+
+\renewcommand{\unknownDynamics}{\ensuremath{f}}
+\renewcommand{\unknownDynamicsK}{\ensuremath{\mode{f}}}
+
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{T}}
+\newcommand{\inputDim}{\ensuremath{d}}
+\newcommand{\InputDim}{\ensuremath{D}}
+#+END_EXPORT
+
+** Bounds :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\tightBound}{\ensuremath{\mathcal{L}_{\text{tight}}}}
+\newcommand{\furtherBound}{\ensuremath{\mathcal{L}_{\text{further}}}}
+\newcommand{\furtherBoundTwo}{\ensuremath{\mathcal{L}_{\text{further}^2}}}
+#+END_EXPORT
+** maths :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\mode}[1]{\ensuremath{#1_{\modeInd}}}
+\renewcommand{\modei}[2]{\ensuremath{#1_{#2}}}
+%\renewcommand{\singleOutput}{\ensuremath{\Delta x_{\numData}}}
+%\renewcommand{\allOutput}{\ensuremath{\Delta\mathbf{\state}}}
+\newcommand{\singleModeVar}{\ensuremath{\singleData{\modeVar}}}
+\newcommand{\allModeVar}{\ensuremath{\bm{\modeVar}}}
+\newcommand{\singleModeVarK}{\ensuremath{\singleModeVar = \modeInd}}
+\newcommand{\allModeVarK}{\ensuremath{\bm{\modeVar}_{\modeInd}}}
+%\newcommand{\allModeVarK}{\ensuremath{\{\singleModeVarK\}_{\numData=1}^\NumData}}
+\newcommand{\modeVarnk}{\ensuremath{\modeVar_{\numData,\modeInd}}}
+
+% new
+\renewcommand{\numData}{\ensuremath{n}}
+\renewcommand{\NumData}{\ensuremath{N}}
+\renewcommand{\singleOutput}{\ensuremath{y_{\numData}}}
+\renewcommand{\singleInput}{\ensuremath{\mathbf{x}_{\numData}}}
+\renewcommand{\allInput}{\ensuremath{\mathbf{X}}}
+\renewcommand{\allOutput}{\ensuremath{\mathbf{y}}}
+\renewcommand{\allOutput}{\ensuremath{\mathbf{y}}}
+%\renewcommand{\allInputK}{\ensuremath{\{\singleInput : \singleModeVarK \}}}
+%\renewcommand{\allOutputK}{\ensuremath{\{\singleOutput : \singleModeVarK\}}}
+%\renewcommand{\allInputK}{\ensuremath{\allInput^{\modeInd}}}
+%\renewcommand{\allOutputK}{\ensuremath{\allOutput^{\modeInd}}}
+\renewcommand{\singleInputK}{\ensuremath{\mathbf{x}_{\numData, \modeInd}}}
+\renewcommand{\allInputK}{\ensuremath{\mode{\allInput}}}
+\renewcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
+
+%\renewcommand{\x}{\ensuremath{\mathbf{z}}}
+%\renewcommand{\y}{\ensuremath{y}}
+%\renewcommand{\singleInput}{\ensuremath{\mathbf{z}_{\numData}}}
+%\renewcommand{\allInput}{\ensuremath{\mathbf{Z}}}
+%\renewcommand{\singleInputK}{\ensuremath{\mathbf{z}_{\numData, \modeInd}}}
+%\renewcommand{\allInputK}{\ensuremath{\mode{\allInput}}}
+
+%\newcommand{\expertPrior}{\ensuremath{p\left(\mode{f}(\allInput) \right)}}
+\newcommand{\expertPrior}{\ensuremath{p\left(\mode{f}(\allInputK) \right)}}
+\newcommand{\expertsPrior}{\ensuremath{p\left(\LatentFunc(\allInput) \right)}}
+\newcommand{\expertMeanFunc}{\ensuremath{\mode{\mu}}}
+\newcommand{\expertCovFunc}{\ensuremath{\mode{k}}}
+\newcommand{\expertLikelihood}{\ensuremath{p\left(\allOutput \mid \mode{f}(\allInput)\right)}}
+\newcommand{\singleExpertLikelihood}{\ensuremath{p(\singleOutput \mid \mode{f}(\singleInput))}}
+%\newcommand{\allExpertLikelihood}{\ensuremath{p(\allOutput \mid \mode{f}(\allInput))}}
+%\newcommand{\allExpertLikelihood}{\ensuremath{p(\allOutputK \mid \mode{f}(\allInputK))}}
+\newcommand{\allExpertLikelihood}{\ensuremath{p(\allOutputK \mid \mode{f}(\allInputK))}}
+\newcommand{\expertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVarK, \allInput \right)}}
+\newcommand{\singleExpertPosterior}{\ensuremath{p\left(\singleOutput \mid \singleModeVarK, \allInput \right)}}
+% \newcommand{\expertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVarK \right)}}
+
+\newcommand{\gatingPrior}{\ensuremath{p\left(\GatingFunc(\allInput ) \right)}}
+\newcommand{\gatingMeanFunc}{\ensuremath{\mode{\hat{\mu}}}}
+\newcommand{\gatingCovFunc}{\ensuremath{\mode{\hat{k}}}}
+\newcommand{\singleGatingLikelihood}{\ensuremath{\Pr\left(\singleModeVarK \mid \GatingFunc(\singleInput) \right)}}
+%\newcommand{\allGatingLikelihood}{\ensuremath{\Pr\left(\allModeVarK \mid \GatingFunc(\allInput) \right)}}
+\newcommand{\allGatingLikelihood}{\ensuremath{p\left(\allModeVar \mid \GatingFunc(\allInput) \right)}}
+\newcommand{\gatingLikelihood}{\ensuremath{P\left(\singleModeVar \mid \GatingFunc(\singleInput) \right)}}
+%\newcommand{\gatingPosterior}{\ensuremath{\Pr\left( \singleModeVar \mid \singleInput \right)}}
+\newcommand{\gatingPosterior}{\ensuremath{\Pr\left( \allModeVarK \mid \allInput \right)}}
+\newcommand{\singleGatingPosterior}{\ensuremath{\Pr\left( \singleModeVarK \mid \singleInput, \gatingParams \right)}}
+\newcommand{\evidence}{\ensuremath{p\left(\allOutput \mid \allInput \right)}}
+
+\newcommand{\moeExpertPosterior}{\ensuremath{p\left(\singleOutput \mid \singleModeVarK, \singleInput, \expertParamsK \right)}}
+\newcommand{\moeGatingPosterior}{\ensuremath{\Pr\left(\singleModeVarK \mid \singleInput, \gatingParams \right)}}
+\newcommand{\moeEvidence}{\ensuremath{p\left(\allOutput \mid \allInput, \expertParams, \gatingParams \right)}}
+\newcommand{\singleMoeEvidence}{\ensuremath{p\left(\singleOutput \mid \singleInput, \expertParams, \gatingParams \right)}}
+
+\newcommand{\npmoeExpertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVar, \allInput, \expertParams \right)}}
+\newcommand{\npmoeGatingPosterior}{\ensuremath{p\left(\allModeVar \mid \allInput, \gatingParams \right)}}
+
+\newcommand{\moeLikelihood}{\ensuremath{p\left(\allOutput \mid \LatentFunc(\allInput), \GatingFunc (\allInput) \right)}}
+\newcommand{\singleMoeLikelihood}{\ensuremath{p\left(\singleOutput \mid \mode{\latentFunc}(\allInput), \GatingFunc (\allInput) \right)}}
+
+#+END_EXPORT
+** kernels :ignore:
+#+BEGIN_EXPORT latex
+%\renewcommand{\expertKernelnn}{\ensuremath{k_{\singleInput\singleInput}}}
+%\renewcommand{\expertKernelnM}{\ensuremath{\mathbf{k}_{\singleInput \expertInducingInput}}}
+%\renewcommand{\expertKernelMM}{\ensuremath{\mathbf{K}_{\expertInducingInput\expertInducingInput}}}
+%\renewcommand{\expertKernelMn}{\ensuremath{\mathbf{k}_{\expertInducingInput \singleInput}}}
+\renewcommand{\expertKernelnn}{\ensuremath{k_{\modeInd \numData \numData}}}
+\renewcommand{\expertKernelNN}{\ensuremath{\mathbf{K}_{\modeInd \NumData \NumData}}}
+\renewcommand{\expertKernelnM}{\ensuremath{\mathbf{k}_{\modeInd \numData \NumInducing}}}
+\renewcommand{\expertKernelNM}{\ensuremath{\mathbf{K}_{\modeInd \NumData \NumInducing}}}
+\renewcommand{\expertKernelMM}{\ensuremath{\mathbf{K}_{\modeInd \NumInducing \NumInducing}}}
+\renewcommand{\expertKernelMn}{\ensuremath{\mathbf{k}_{\modeInd \NumInducing \numData}}}
+\renewcommand{\expertKernelMN}{\ensuremath{\mathbf{K}_{\modeInd \NumInducing \NumData}}}
+\renewcommand{\expertKernelsM}{\ensuremath{\mathbf{k}_{\modeInd * \NumInducing}}}
+\renewcommand{\expertKernelss}{\ensuremath{k_{\modeInd **}}}
+\renewcommand{\expertKernelSM}{\ensuremath{\mathbf{K}_{\modeInd * \NumInducing}}}
+\renewcommand{\expertKernelSS}{\ensuremath{\mathbf{K}_{\modeInd **}}}
+
+%\renewcommand{\gatingKernelnn}{\ensuremath{\hat{k}_{\singleInput\singleInput}}}
+%\renewcommand{\gatingKernelnM}{\ensuremath{\hat{\mathbf{k}}_{\singleInput \gatingInducingInput}}}
+%\renewcommand{\gatingKernelMM}{\ensuremath{\hat{\mathbf{K}}_{\gatingInducingInput\gatingInducingInput}}}
+%\renewcommand{\gatingKernelMn}{\ensuremath{\hat{\mathbf{k}}_{\gatingInducingInput \singleInput}}}
+\renewcommand{\gatingKernelnn}{\ensuremath{\hat{k}_{\modeInd \numData \numData}}}
+\renewcommand{\gatingKernelNN}{\ensuremath{\hat{\mathbf{K}}_{\modeInd \NumData \NumData}}}
+\renewcommand{\gatingKernelnM}{\ensuremath{\hat{\mathbf{k}}_{\modeInd \numData \NumInducing}}}
+\renewcommand{\gatingKernelNM}{\ensuremath{\hat{\mathbf{K}}_{\modeInd \NumData \NumInducing}}}
+\renewcommand{\gatingKernelMM}{\ensuremath{\hat{\mathbf{K}}_{\modeInd \NumInducing \NumInducing}}}
+\renewcommand{\gatingKernelMn}{\ensuremath{\hat{\mathbf{k}}_{\modeInd \NumInducing \numData}}}
+\renewcommand{\gatingKernelss}{\ensuremath{\hat{k}_{\modeInd **}}}
+\renewcommand{\gatingKernelsM}{\ensuremath{\hat{\mathbf{k}}_{\modeInd * \NumInducing}}}
+\renewcommand{\gatingKernelMs}{\ensuremath{\hat{\mathbf{k}}_{\modeInd \NumInducing *}}}
+\renewcommand{\gatingKernelSM}{\ensuremath{\hat{\mathbf{K}}_{\modeInd * \NumInducing}}}
+\renewcommand{\gatingKernelMS}{\ensuremath{\hat{\mathbf{K}}_{\modeInd \NumInducing *}}}
+\renewcommand{\gatingKernelSS}{\ensuremath{\hat{\mathbf{K}}_{\modeInd **}}}
+
+\renewcommand{\expertA}{\ensuremath{\mode{\mathbf{A}}}}
+\renewcommand{\gatingA}{\ensuremath{\mode{\hat{\mathbf{A}}}}}
+#+END_EXPORT
+
+** inference :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\input}{\ensuremath{\hat{\state}}}
+\renewcommand{\output}{\ensuremath{\Delta \state}}
+
+\newcommand{\kernel}{\ensuremath{k}}
+\newcommand{\expertKernel}{\ensuremath{\mode{\kernel}}}
+\newcommand{\gatingKernel}{\ensuremath{\mode{\hat{\kernel}}}}
+
+\newcommand{\numInducing}{\ensuremath{m}}
+\newcommand{\NumInducing}{\ensuremath{\MakeUppercase{\numInducing}}}
+%\newcommand{\inducingInput}{\ensuremath{\mathbf{Z}}}
+\newcommand{\inducingInput}{\ensuremath{\bm{\zeta}}}
+\newcommand{\inducingOutput}{\ensuremath{\mathbf{u}}}
+
+%\newcommand{\expertInducingInput}{\ensuremath{\mode{\inducingInput}}}
+%\newcommand{\expertsInducingInput}{\ensuremath{\inducingInput}}}
+\newcommand{\expertInducingInput}{\ensuremath{\mode{\bm{\zeta}}}}
+\newcommand{\expertsInducingInput}{\ensuremath{\bm{\zeta}}}
+%\newcommand{\expertInducingOutput}{\ensuremath{\mode{\inducingOutput}}}
+%\newcommand{\expertsInducingOutput}{\ensuremath{\MakeUppercase{\inducingOutput}}}
+%\newcommand{\expertInducingOutput}{\ensuremath{\mode{\hat{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertInducingOutput}{\ensuremath{\mode{\tilde{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertsInducingOutput}{\ensuremath{\tilde{\MakeUppercase{\mathbf{\latentFunc}}}}}
+\newcommand{\expertInducingOutput}{\ensuremath{\mode{\latentFunc}(\expertInducingInput)}}
+\newcommand{\expertsInducingOutput}{\ensuremath{\mathbf{\latentFunc}(\expertsInducingInput)}}
+
+%\newcommand{\gatingInducingInput}{\ensuremath{\hat{\inducingInput}}}
+\newcommand{\gatingInducingInput}{\ensuremath{\bm{\xi}}}
+%\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\hat{\inducingOutput}}}}
+%\newcommand{\gatingsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\inducingOutput}}}}
+%\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\hat{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\tilde{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingsInducingOutput}{\ensuremath{\tilde{\MakeUppercase{\mathbf{\gatingFunc}}}}}
+\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\gatingFunc}(\gatingInducingInput)}}
+\newcommand{\gatingsInducingOutput}{\ensuremath{\mathbf{\gatingFunc}(\gatingInducingInput)}}
+
+%\newcommand{\expertInducingPrior}{\ensuremath{p(\mode{\latentFunc}(\expertInducingInput))}}
+%\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput \mid \expertInducingInput)}}
+%\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput \mid \expertsInducingInput)}}
+\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput)}}
+\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput)}}
+%\newcommand{\expertInducingVariational}{\ensuremath{q(\mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\expertInducingVariational}{\ensuremath{q(\expertInducingOutput)}}
+\newcommand{\expertsInducingVariational}{\ensuremath{q(\expertsInducingOutput)}}
+\newcommand{\expertVariational}{\ensuremath{q(\mode{\latentFunc}(\singleInput))}}
+\newcommand{\expertsVariational}{\ensuremath{q(\LatentFunc(\singleInput))}}
+%\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \expertInducingOutput)}}
+\newcommand{\allExpertGivenInducing}{\ensuremath{p(\allOutput \mid \expertInducingOutput)}}
+%\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \expertInducingOutput)}}
+\newcommand{\allLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\allInput) \mid \expertInducingOutput)}}
+
+
+%\newcommand{\gatingInducingPrior}{\ensuremath{p(\GatingFunc(\gatingInducingInput))}}
+%\newcommand{\gatingInducingPrior}{\ensuremath{p(\gatingInducingOutput \mid \gatingInducingInput)}}
+%\newcommand{\gatingsInducingPrior}{\ensuremath{p(\gatingsInducingOutput \mid \gatingInducingInput)}}
+\newcommand{\gatingInducingPrior}{\ensuremath{p(\gatingInducingOutput)}}
+\newcommand{\gatingsInducingPrior}{\ensuremath{p(\gatingsInducingOutput)}}
+%\newcommand{\gatingInducingVariational}{\ensuremath{q(\GatingFunc(\gatingInducingInput))}}
+\newcommand{\gatingInducingVariational}{\ensuremath{q(\gatingInducingOutput)}}
+\newcommand{\gatingsInducingVariational}{\ensuremath{q(\gatingsInducingOutput)}}
+\newcommand{\gatingsVariational}{\ensuremath{q(\GatingFunc(\singleInput))}}
+\newcommand{\singleGatingGivenInducing}{\ensuremath{\Pr(\singleModeVarK \mid \gatingsInducingOutput)}}
+\newcommand{\allGatingGivenInducing}{\ensuremath{\Pr(\allModeVarK \mid \gatingInducingOutput)}}
+\newcommand{\allGatingsGivenInducing}{\ensuremath{\Pr(\allModeVarK \mid \gatingsInducingOutput)}}
+\newcommand{\singleLatentGatingsGivenInducing}{\ensuremath{p(\GatingFunc(\singleInput) \mid \gatingsInducingOutput)}}
+\newcommand{\allLatentGatingsGivenInducing}{\ensuremath{p(\GatingFunc(\allInput) \mid \gatingsInducingOutput)}}
+\newcommand{\singleLatentGatingGivenInducing}{\ensuremath{p(\mode{\gatingFunc}(\singleInput) \mid \gatingInducingOutput)}}
+
+\newcommand{\expertKL}{\ensuremath{\text{KL}\left( \expertInducingVariational \mid\mid \expertInducingPrior \right)}}
+\newcommand{\expertsKL}{\ensuremath{\sum_{\modeInd=1}^\ModeInd\text{KL}\left( \expertInducingVariational \mid\mid \expertInducingPrior \right)}}
+\newcommand{\gatingKL}{\ensuremath{\text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
+\newcommand{\gatingsKL}{\ensuremath{\sum_{\modeInd=1}^\ModeInd \text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
+#+END_EXPORT
 * Maths Notation :noexport:
 ** Maths Symbols :ignore:
 *** Domains :ignore:
@@ -1798,7 +2035,6 @@ $\modeInd$ & Mode indicator \\
 \renewcommand{\transitionDistK}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVar_{\timeInd}=\modeInd)}}
 #+END_EXPORT
 ** Intro :ignore:
-\gls{elite}
 # *Dynamical Systems*
 # The modern world is pervaded with dynamical systems that we seek to control to achieve the desired behaviour.
 # Examples include autonomous vehicles, aircraft, robotic manipulators, financial markets and energy management systems.
@@ -1838,7 +2074,7 @@ $\modeInd$ & Mode indicator \\
 
 The modern world is pervaded with dynamical systems that we seek to control to achieve a desired behaviour.
 Examples include autonomous vehicles, aircraft, robotic manipulators, financial markets and energy management systems.
-In the last decade, reinforcement learning, and learning-based
+In the last decade, \acrfull{rl}, and learning-based
 control in general, have become
 popular paradigms for controlling dynamical systems citep:hewingLearningBased2020,sutton2018reinforcement.
 This can be accounted to significant improvements in sensing and computational capabilities, as well as
@@ -1861,9 +2097,9 @@ to the environment and the uncertainty introduced by learning from observations.
 # Therefore, any control strategy deployed in the real-world should ensure the safety of itself and
 # its surrounding environment.
 
-Many dynamical systems exhibit multimodalities, where some of the dynamics modes
+Many dynamical systems exhibit /multimodalities/, where some of the dynamics modes
 are believed to be /inoperable/ or /undesirable/.
-These multimodalities may be due to spatially varying model parameters, for example,
+These /multimodalities/ may be due to spatially varying model parameters, for example,
 process noise terms modelling aircraft turbulence, or friction coefficients modelling
 surface-tyre interactions for ground vehicles over different terrain.
 In these systems, it is desirable to avoid entering specific dynamics modes that are believed to be /inoperable/.
@@ -1889,7 +2125,7 @@ lead to the introduction of model errors.
 These model errors may be due to incorrectly specifying model parameters, or the
 models themselves.
 For example, modelling a nonlinear system to be linear, or a multimodal system to be unimodal.
-Incorrectly specifying these model parameters, and their associated uncertainty
+Incorrectly specifying these model parameters and their associated uncertainty,
 can have a detrimental impact on controller performance.
 Handling these issues is a central goal of robust and stochastic optimal
 control citep:freemanRobust1996,stengelStochastic1986.
@@ -1915,7 +2151,7 @@ Correctly quantifying uncertainty is crucial for intelligent decision-making.
 \begin{myquote}
 \textbf{Epistemic uncertainty}
 is the uncertainty attributed to incomplete knowledge about a phenomenon that limits our ability to model it.
-It represents the knowledge about the phenomenon that we could know, but that we do \textit{not know a priori}.
+It represents knowledge about a phenomenon that we could know, but that we do \textit{not know a priori}.
 It is reduced through the accumulation of additional information.
 %It manifests in parameters taking a range of values, there being a range of viable models,
 %the level of modelling detail, and statistical confidence.
@@ -1930,9 +2166,9 @@ a learned dynamics model with high /epistemic uncertainty/.
 This is because it is impossible to guarantee /constraint/ satisfaction in a learned model, i.e.
 if the trajectory will avoid the undesired dynamics mode.
 Conversely, in an *explorative setting*,
-if the /epistemic uncertainty/ has been quantified, then it can be used to guide exploration into
+if the /epistemic uncertainty/ has been quantified, it can be used to guide exploration into
 regions of the dynamics that have not previously been observed.
-This experience can then be used to update the model and reduce its associated /epistemic uncertainty/.
+This experience can then be used to update the model, in turn, reducing its /epistemic uncertainty/.
 
 These two settings are the main focus of this dissertation.
 If the dynamics are not fully /known a priori/, an agent will not be able to confidently plan a
@@ -1942,7 +2178,7 @@ associated with its dynamics model?
 As this dissertation assumes that complete knowledge of the dynamics are /not fully known a priori/,
 a central interest is jointly inferring the underlying dynamics modes, as well as how the system switches
 between them, through repeated interactions with the system.
-Once the agent has explored enough, how can the learned model be exploited to plan risk-averse trajectories
+Once the agent has explored enough, how can this learned dynamics model be exploited to plan risk-averse trajectories
 that remain in the desired dynamics mode?
 
 # More generally, this dissertation is interested in learning and control in multimodal dynamical systems.
@@ -2096,15 +2332,14 @@ it is desirable to find trajectories that avoid entering this turbulent dynamics
 %\includegraphics[width=1.0\textwidth]{./images/point-mass-problem-statement-scenario-4.pdf}
 \includegraphics[width=1.0\textwidth]{./images/quadcopter-domain-collocation-ppt.png}
 \caption[Quadcopter navigation problem]{\label{fig-problem-statement}\textbf{Quadcopter navigation problem}
-Diagram showing a top-down view of an environment, representing a quadcopter
-subject to two dynamics modes: 1) a turbulent dynamics mode
-induced by a fan (green) and 2) a non-turbulent dynamics mode everywhere else (blue).
+Diagram showing a top-down view of an environment, representing a quadcopter subject to two dynamics modes:
+1) an \textit{operable} dynamics mode away from the fan (blue) and 2) an \textit{inoperable}, turbulent dynamics mode in front of the fan (green).
 The goal is to find trajectories from a start state $\state_0$, to the target state $\targetState$ (red star),
 whilst avoiding the turbulent dynamics mode.}
 \end{figure}
 #+END_EXPORT
-The state-space of the velocity controlled quadcopter example consists of the 2D Cartesian coordinates $\state = (x, y)$.
-The controls consist of the speed in each direction, given by $\control = (\velocity_x, \velocity_y)$.
+The state-space of the velocity controlled quadcopter example consists of the 2D Cartesian coordinates $\state = (x, y)$
+and the controls consist of the speed in each direction, given by $\control = (\velocity_x, \velocity_y)$.
 
 *** Problem Statement :noexport:
 The overall goal is to navigate from an initial state $\state_0$ -- in the desired dynamics mode $\desiredMode$
@@ -2212,17 +2447,17 @@ to solve this problem.
 \begin{minipage}{1.0\textwidth}
 \centering
 \includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/baseline-svgp-traj-opt/trajectories_over_desired_gating_mask.pdf}
-\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
+\subcaption{\acrshort{svgp} dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
 \label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
 \end{minipage}
 \begin{minipage}{1.0\textwidth}
 \centering
 \includegraphics[width=0.9\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
-\subcaption{SVGP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
+\subcaption{\acrshort{svgp} dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
 \label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
 \end{minipage}
-\caption{Trajectory optimisation results obtained using a SVGP dynamics model trained on different data sets.
-The optimised control trajectories are rolled out in the SVGP dynamics model (magenta) and in the environment (cyan).
+\caption{Trajectory optimisation results obtained using a \acrshort{svgp} dynamics model trained on different data sets.
+The optimised control trajectories are rolled out in the \acrshort{svgp} dynamics model (magenta) and in the environment (cyan).
 The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
 White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
 The hashed box indicates a subset of the environment that has not been observed.}
@@ -2251,7 +2486,7 @@ dynamics models that cannot represent the true underlying dynamics.
 # the underlying dynamics modes.
 # without deploying a technique that can infer both the underlying dynamics modes
 # and how the system switches between them.
-# The optimised controls are rolled out in the SVGP dynamics model (magenta)
+# The optimised controls are rolled out in the \acrshort{svgp} dynamics model (magenta)
 # and in the environment (cyan) to highlight the issues with both approaches.
 
 In contrast,
@@ -2287,7 +2522,7 @@ Conveniently, the \acrshort{mosvgpe} method from cref:chap-dynamics can be used 
 dynamics modes.
 This method correctly identifies the underlying dynamics modes and provides informative latent spaces that
 can be used to encode mode remaining behaviour into control strategies.
-In particular, the GP-based gating network infers informative latent structure.
+In particular, the \acrshort{gp}-based gating network infers informative latent structure.
 The remainder of this chapter is concerned with encoding mode remaining behaviour into trajectory optimisation
 algorithms after training a \acrshort{mosvgpe} dynamics model on the historical data set of state transitions.
 
@@ -2302,7 +2537,7 @@ The main goals of the trajectory optimisation in this Chapter can be summarised 
 # #+BEGIN_EXPORT latex
 # \begin{myquote}
 # Following standard methodologies, trajectories were found by minimising the expected cost under the state distribution,
-# resulting from cascading single-step predictions through the SVGP dynamics model.
+# resulting from cascading single-step predictions through the \acrshort{svgp} dynamics model.
 # The cost function consisted of a quadratic integral control cost and a terminal state cost.
 # \end{myquote}
 # #+END_EXPORT
@@ -2323,7 +2558,7 @@ The main goals of the trajectory optimisation in this Chapter can be summarised 
 # \centering
 # \includegraphics[width=1.0\textwidth]{./images/traj-opt/mode-remaining/baseline-traj-opt/trajectories_over_desired_gating_mask.pdf}
 # \caption{\label{fig-traj-opt-baseline}
-# Trajectory optimisation results obtained using a SVGP dynamics model trained only on state transitions from the
+# Trajectory optimisation results obtained using a \acrshort{svgp} dynamics model trained only on state transitions from the
 # desired (non-turbulent) dynamics mode.
 # To demonstrate the methods shortcomings, the optimised controls are rolled out in the desired
 # mode's \acrshort{gp} dynamics (magenta) and in the environment (cyan).
@@ -2417,7 +2652,7 @@ to solve the problem in \cref{eq-main-problem}.
 
 ** Contributions
 This dissertation explores methods for mode remaining control in multimodal dynamical systems that explicitly reason
-about the uncertainties that arise during learning and control.
+about the uncertainties arising during learning and control.
 The primary contributions of this dissertation are as follows:
 - cref:chap-dynamics: is concerned with learning representations of multimodal dynamical
   systems, where both the underlying dynamics modes and how the system switches between them, are /not fully known a priori/.
@@ -2434,8 +2669,8 @@ The primary contributions of this dissertation are as follows:
 - cref:chap-traj-opt-control: investigates model-based control techniques that leverage the probabilistic model
   from cref:chap-dynamics to solve the mode remaining navigation problem.
   Due to the complexity of the problem, this chapter
-  assumes prior access to the environment, such that a data set of state transitions $\mathcal{D}$ has been collected
-  and used to train the model. It presents three trajectory optimisation algorithms that
+  assumes prior access to the environment, such that a data set of state transitions $\mathcal{D}$ has
+  previously been collected and used to train the model. It presents three trajectory optimisation algorithms that
   leverage the learned dynamics model's latent structure to solve the mode remaining navigation problem.
 - cref:chap-active-learning: then considers the more realistic scenario of not having prior access
   to the environment. As such, the agent does not have access to a historical data set for model learning.
@@ -2595,7 +2830,7 @@ provide a principled approach to modelling stochasticity i.e. aleatoric uncertai
 cite:Schneider1996,Deisenroth2011.
 For example, cite:Cutler,Deisenroth2011,Pan2014 use Gaussian processes (GPs) to learn
 transition dynamics.
-GPs lend themselves to data-efficient learning through the selection of informative priors, and
+\acrshort{gps} lend themselves to data-efficient learning through the selection of informative priors, and
 when used in a Bayesian setting offer well calibrated uncertainty estimates.
 Methods for learning probabilistic multimodal transition dynamics have also been proposed:
 cite:Mckinnon used a mixture of \acrshort{gp} experts method,
@@ -2621,7 +2856,7 @@ and the /aleatoric uncertainty/ inherent to the system (e.g. process noise).
 For example, cite:deisenrothPILCO2011,cutlerEfficient2015,panProbabilistic2014
 use Gaussian processes (GPs) to learn
 transition dynamics from observations.
-GPs lend themselves to data-efficient learning through the selection of informative priors, and
+\acrshort{gps} lend themselves to data-efficient learning through the selection of informative priors, and
 when used in a Bayesian setting offer well calibrated uncertainty estimates.
 Methods for learning probabilistic multimodal transition dynamics have also been proposed:
 cite:mckinnonLearning2017 use a Mixture of \acrshort{gp} Experts method,
@@ -2642,13 +2877,13 @@ probabilistic belief over which mode is responsible for predicting at a given in
 # This chapter reviews learning-based control and details the relevant background information
 # for the remainder of the dissertation.
 
-The primary goal of this dissertation is to control stochastic, nonlinear,
-multimodal dynamical systems to a target state, whilst remaining in the desired dynamics mode.
+The primary goal of this dissertation is to control /stochastic/, /multimodal/, /nonlinear/ dynamical systems
+to a target state, whilst remaining in the desired dynamics mode.
 This is a \acrfull{soc} problem which can be summarised as follows:
 #+BEGIN_EXPORT latex
 \begin{displayquote}
 \textit{For a given multimodal dynamical system with control inputs, determine a controller, such that
-it can navigate to a target state, whilst remaining in the desired dynamics mode.}
+it can navigate to a target state, whilst remaining in a desired dynamics mode.}
 \end{displayquote}
 #+END_EXPORT
 This chapter formally defines this mode remaining navigation problem and then reviews the relevant literature.
@@ -2678,13 +2913,13 @@ This chapter formally defines this mode remaining navigation problem and then re
 # It then formally defines the mode remaining navigation problem and highlights its novelty.
 
 # *Dynamical systems*
-Dynamical systems describe the behaviour of a system over time, $t$, and
-are a key component of both control theory and reinforcement learning.
-At any given time, $t$, a dynamical system has a state, which is
+Dynamical systems describe the behaviour of a system over time $t$, and
+are a key component of both control theory and \acrshort{rl}.
+At any given time $t$, a dynamical system has a state, which is
 represented as a vector of real numbers $\state_t \in \stateDomain \subseteq \R^{\StateDim}$.
 The system can be controlled by applying control actions $\mathbf{u}_t \in \controlDomain \subseteq \R^{\ControlDim}$
-at any given time, $t$.
-This dissertation considers nonlinear, stochastic, multimodal dynamical systems, given by,
+at any given time.
+This dissertation considers /stochastic/, /multimodal/, /nonlinear/ dynamical systems, given by,
 #+begin_export latex
 \begin{subequations} \label{eq-dynamics-main}
 \begin{align}
@@ -2708,9 +2943,9 @@ $\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\Mod
 Throughout this dissertation, it is assumed that the state $\state$ is observed directly and is not subject to
 observation noise.
 This is a standard assumption in the \acrfull{mdp} framework, which is commonly adopted
-in the reinforcement learning literature.
+in the \acrshort{rl} literature.
 In this case, the $\mode{\bm\epsilon}$ term solely represents the process noise,
-which accounts for unwanted (and, in general, unknown) disturbances of the system.
+which accounts for unwanted and, in general, unknown disturbances of the system.
 For example, it is hard to model aerodynamic effects on aircraft so these could be accounted
 for in the process noise term.
 
@@ -2732,14 +2967,13 @@ The objective $J_{\pi}(\state)$ quantifies the cost associated with deploying th
 an initial state $\state$.
 The cost function typically consists of a terminal cost and a term which is integrated over the horizon (integral cost).
 In a navigation task, the terminal cost may consist of the distance to the target, whilst the integral cost
-may encode the notion of minimum effort control, e.g. energy consumption.
+may encode the notion of minimum effort control, e.g. energy consumption citep:kirkOptimal2004.
 
 *Controller space*
 The controller space $\Pi$ defines the set of controllers over which optimisation is performed.
 Controllers can have state feedback such that they are given by $\control_t = \policy(\state_t)$.
-These are closed-loop controllers and  in the reinforcement learning literature are referred to as policies.
-Alternatively, controllers can depend on time $\control_t = \policy(t)$, in which case they are known
-as open-loop controllers.
+These are closed-loop controllers and  in the \acrshort{rl} literature are referred to as policies.
+Alternatively, controllers can depend on time $\control_t = \policy(t)$, in which case they are open-loop controllers.
 This dissertation considers the general case, given by $\control_t = \policy(\state_t, t)$,
 which encompasses both open-loop and closed-loop controllers.
 
@@ -2861,7 +3095,7 @@ dynamic programming.
 
 *** Dynamic Programming
 Dynamic programming citep:bellmanDynamic1956 encompasses a large class of algorithms that can be
-used to find optimal controllers given an accurate model of the environment as an \acrshort{mdp}.
+used to find optimal controllers given a model of the environment as an \acrshort{mdp}.
 However, classical dynamic programming algorithms are of limited use as they rely on
 accurate dynamics models and have significant computational expense.
 Nevertheless, they are still important theoretically.
@@ -2915,14 +3149,14 @@ These methods are out of the scope of this dissertation.
 There are multiple approaches to finding controllers $\pi$ that minimise the expected cost
 in cref:eq-optimal-control-objective subject to the stochastic dynamics in cref:eq-dynamics-main.
 However, a central assumption of many methods is that both the system dynamics and cost function are /known a priori/.
-In contrast, this dissertation considers problems where
+In contrast, we consider problems where
 the underlying dynamics modes $\{\mode{\dynamicsFunc}\}_{\modeInd=1}^{\ModeInd}$
 and how the system switches between them $\modeVar$, are \textit{not fully known a priori}.
 Further to this, the problem statement in cref:eq-main-problem contains a mode remaining constraint,
 which requires explicit knowledge of the desired dynamics mode and its state domain.
 
 To apply control and planning techniques in systems with unknown dynamics,
-system identification emerged as a set of techniques for computing unknown parameters (e.g. mass of a component)
+system identification emerged as a set of techniques for computing unknown parameters, e.g. mass of a component
 citep:ljungSystem1999.
 This is a two-staged approach which first learns about the environment and then uses this
 learned model to find the optimal controller.
@@ -2944,7 +3178,7 @@ the optimal control problem.
 **** MBRL Alg :ignore:
 #+BEGIN_EXPORT latex
 \begin{algorithm}[!t]
-\caption{Model-based reinforcement learning}\label{alg-mbrl-background}
+\caption{\acrfull{mbrl}}\label{alg-mbrl-background}
 \begin{algorithmic}[1]
 \Require{Policy/controller $\policy_0$, dynamics model $\dynamicsModel$, start state $\state_0$}
 \For{$i = 0, 1,  \ldots $}
@@ -2959,7 +3193,7 @@ the optimal control problem.
 This dissertation is interested in a subset of \acrshort{rl} known as \acrfull{mbrl}.
 It solves the optimal control problem in cref:eq-optimal-control-objective
 by first learning a dynamics model and then using this learned model with model-based control techniques.
-As both \acrshort{mfrl} and \acrshort{mbrl} methods learn models,
+As both \acrfull{mfrl} and \acrshort{mbrl} methods learn models,
 the model in the name is referring to the dynamics model $f$, as  \acrshort{mfrl} approaches do not learn
 representations of the dynamics $f$.
 cref:alg-mbrl-background illustrates a common \acrshort{mbrl} procedure where an agent incrementally explores
@@ -2970,7 +3204,7 @@ updating its dynamics model $\dynamicsModel$.
 As more systems are becoming data-driven, learning dynamics models for model-based control has shifted to
 needing task-centric methods that simultaneously learn about the environment, whilst optimising a controller
 to obtain low cumulative costs.
-The field of \acrfull{mbrl} seeks to solve many optimal control problems by incrementally learning a dynamics model
+The field of \acrshort{mbrl} seeks to solve many optimal control problems by incrementally learning a dynamics model
 in this way citep:deisenrothPILCO2011,chuaDeep2018.
 \acrshort{mbrl} shares similarities with the system identification and control process except that the dynamics learning
 and control are updated simultaneously.
@@ -3034,21 +3268,21 @@ However, in practice, it is often too computationally expensive to obtain real-t
 Many approximate solutions have been introduced in the literature, that seek to balance the computational complexity
 and accuracy trade-off differently citep:bettsSurvey1998.
 
-For example, \acrfull{ilqr} can be used to generate trajectories for non-linear systems by
+For example, \acrfull{ilqr} can be used to generate trajectories for nonlinear systems by
 iteratively approximating the dynamics to be linear around a nominal trajectory and optimising for the controls.
 \acrshort{ilqr} works well for quadratic cost functions but can be used with any cost function by approximating the cost
 function with a second-order Taylor expansion.
-However, in this case, iLQR is susceptible to converging
+However, in this case, \acrshort{ilqr} is susceptible to converging
 to terrible (local) optima if the true cost function is highly non-convex.
-cite:boedeckerApproximate2014 present a real-time iLQR controller based on sparse GPs.
-cite:rohrProbabilistic2021 propose a novel LQR controller synthesis for
+cite:boedeckerApproximate2014 present a real-time \acrshort{ilqr} controller based on sparse \acrshort{gps}.
+cite:rohrProbabilistic2021 propose a novel \acrshort{lqr} controller synthesis for
 linearised \acrshort{gp} dynamics that yields robust controllers with respect to a probabilistic stability margin.
 # In cite:marcoAutomatic2016 they parameterise the weight matrices
 # $\stateMatrix$ and $\controlMatrix$ with parameters $\theta$
 # and perform BO (entropy search) on $J(\theta)$. Their method handles model mis-specification by adapting the parameters.
 
 \acrshort{mpc} has directly been used with ensembles of probabilistic neural networks citep:chuaDeep2018,nagabandiDeep2020
-and with \acrshort{gp}s citep:kamtheDataEfficient2018.
+and with \acrshort{gps} citep:kamtheDataEfficient2018.
 cite:lambertLowLevel2019 control a quadcopter using online \acrshort{mpc} and a dynamics model learned using
 probabilistic neural networks.
 
@@ -3066,28 +3300,28 @@ using guided policy search citep:levineGuided2013.
 
 # *Indirect optimal control*
 
-# *Iterative Linear Quadratic Gaussian (iLQG)* is an extension of
-# iLQR to a stochastic setting, where the process
+# *Iterative Linear Quadratic Gaussian (\acrshort{ilqg})* is an extension of
+# \acrshort{ilqr} to a stochastic setting, where the process
 # noise is assumed to be Gaussian.
-# cite:mitrovicAdaptive2010 combine learned dynamics models with iLQG to develop an adaptive optimal feedback controller.
+# cite:mitrovicAdaptive2010 combine learned dynamics models with \acrshort{ilqg} to develop an adaptive optimal feedback controller.
 
-# *Differential Dynamic Programming (DDP)* iLQR and iLQG  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
+# *Differential Dynamic Programming (DDP)* \acrshort{ilqr} and \acrshort{ilqg}  are variants of the classic Differential Dynamic Programming (DDP) algorithm cite:rosenbrockDifferential1972,
 # the main difference being that only a /first-order/ approximation of the dynamics is used, instead of a /second-order/.
-# cite:liaoAdvantages1992 show that DDP is comparable to a full Gauss-Newton step (for nonlinear least squares)
+# cite:liaoAdvantages1992 show that \acrshort{gp} is comparable to a full Gauss-Newton step (for nonlinear least squares)
 # over the entire control sequence.
 # Therefore, care must be taken when either the Hessian isn't positive-definite or the minimum isn't close
 # and the quadratic model is inaccurate.
-# \todo{remember improvements to standard iLQR/DDP from cite:tassaSynthesis2012}
-# DDP solutions provides greater accuracy than iLQG/iLQR but
+# \todo{remember improvements to standard \acrshort{ilqr}/\acrshort{gp} from cite:tassaSynthesis2012}
+# \acrshort{gp} solutions provides greater accuracy than \acrshort{ilqg}/\acrshort{ilqr} but
 # at the cost
 # of increased computational time cite:tassaSynthesis2012.
-# The extension of DDP to stochastic state and controls is addressed in cite:theodorouStochastic2010.
-# DDP under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
+# The extension of \acrshort{gp} to stochastic state and controls is addressed in cite:theodorouStochastic2010.
+# \acrshort{gp} under parametric uncertainty using generalised polynomial chaos cite:aoyamaReceding2021.
 
 # cite:panProbabilistic2014 present a probabilistic trajectory optimisation
 # framework for systems with unknown dynamics called probabilistic
 # differential dynamic programming (PDDP).
-# It extends DDP to explicitly account
+# It extends \acrshort{gp} to explicitly account
 # for uncertainty in dynamics modelled using gaussian processes.
 # In contrast to typical gradient based policy search methods, PDDP does not
 # require a policy parameterisation as it learns a locally optimal,
@@ -3186,7 +3420,7 @@ with high probability.
 # usually consider worst-case criterion.
 # An alternative approach is to
 
-The most direct method to embed constraints is in \acrfull{mpc} citep:eduardof.Model2007.
+The most direct method to embed constraints is in \acrshort{mpc} citep:eduardof.Model2007.
 At each time step, \acrshort{mpc} ensures that the constraints hold over a given horizon.
 However, it is worth noting that these constraints still cannot be guaranteed in stochastic systems.
 For stochastic systems, cite:schwarmChanceconstrained1999 proposed to satisfy constraints with high probability.
@@ -3266,7 +3500,7 @@ This type of uncertainty accounts for those that we could know, but that we do /
 As such, /epistemic uncertainty/ can be reduced by exploring, collecting data and updating the model with
 this new experience.
 
-Distinguishing these two sources of uncertainty is important in reinforcement learning.
+Distinguishing these two sources of uncertainty is important in \acrshort{rl}.
 For example, the /epistemic uncertainty/ is useful for guiding exploration into regions
 of the system that have not been observed.
 In turn, this data can be used to reduce the model's /epistemic uncertainty/ by updating the model.
@@ -3274,8 +3508,8 @@ In contrast, driving the system into regions of the model with high /aleatoric u
 Consider the case where the model is confident that the system is subject to high process noise in a particular region.
 Guiding the system into this region will not reduce the model's /epistemic uncertainty/ because the model
 has already been trained on data from this region.
-Further to this, it may be desirable to avoid entering regions of
-high /aleatoric uncertainty/ because it may result in poor performance or even catastrophic failure.
+Further to this, it may be undesirable to enter regions of
+high /aleatoric uncertainty/ because they may result in poor performance or even catastrophic failure.
 
 *** Learning Single-Step Dynamics Models
 This work considers single-step dynamics models with the delta state formulation
@@ -3286,7 +3520,7 @@ out of the scope of this dissertation.
 
 Single-step dynamics models have been deployed in a large variety of learning-based control algorithms.
 Early approaches include using single-step linear models citep:schneiderExploiting1996 and
-single-step \acrfull{gp} models
+single-step \acrshort{gp} models
 citep:deisenrothPILCO2011,vinogradskaStability2016,rohrProbabilistic2021,hewingLearningBased2020,kollerLearningBased2018
 for low-dimensional control problems.
 More recently, single-step dynamics models have been learned using neural networks.
@@ -3309,13 +3543,13 @@ recent successes in \acrshort{mbrl} citep:chuaDeep2018,jannerWhen2019.
 
 Modelling a Bayesian belief over the dynamics function $f$ provides a principled method for modelling
 /epistemic uncertainty/ arising from learning from data, through the posterior distribution.
-Gaussian processes (GP) are the state-of-the-art approach for Bayesian nonparametric regression and
+\acrshort{gps} are the state-of-the-art approach for Bayesian nonparametric regression and
 are a building block for the methods presented in this dissertation.
-\acrshort{gp}s have become a popular choice for learning representations of dynamical systems
+\acrshort{gps} have become a popular choice for learning representations of dynamical systems
 citep:nguyen-tuongModel2009,buisson-fenetActively2020,wangSafe2018
 and have been used for both \acrshort{rl}
 citep:deisenrothPILCO2011,doerrOptimizing2017,vinogradskaNumerical2020,polymenakosSafe2019
-and for \acrfull{mpc}
+and for \acrshort{mpc}
 citep:kollerLearningBased2018,hewingCautious2020,hewingLearningBased2020,kollerLearningBased2018,kamtheDataEfficient2018.
 
 # For example, see
@@ -3331,7 +3565,7 @@ citep:kollerLearningBased2018,hewingCautious2020,hewingLearningBased2020,kollerL
 # Although \acrfull{gp} do not scale as well as deep learning in high-dimensional tasks,
 # they are powerful because of their structured handling of uncertainty.
 # This work adopts \acrshort{gp} methods and leverages sparse approximations to improve scalability to larger data sets.
-# This section introduces \acrshort{gp}s and the sparse approximations that this work builds upon.
+# This section introduces \acrshort{gps} and the sparse approximations that this work builds upon.
 # Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
 # As such, introducing the multivariate Gaussian identities is a natural place to start.
 
@@ -3341,10 +3575,10 @@ citep:kollerLearningBased2018,hewingCautious2020,hewingLearningBased2020,kollerL
 
 *** Gaussian Processes
 **** intro :ignore:
-The mathematical machinery underpinning \acrshort{gp}s is now detailed.
+The mathematical machinery underpinning \acrshort{gps} is now detailed.
 
 *Multivariate Gaussian identities*
-Inference techniques with GPs leverage multivariate Gaussian conditioning operations.
+Inference techniques with \acrshort{gps} leverage multivariate Gaussian conditioning operations.
 As such, introducing the multivariate Gaussian identities is a natural place to start.
 
 Gaussian distributions are popular in machine learning and control theory. This is not only due to their
@@ -3398,14 +3632,14 @@ Gaussian processes provide this mathematical machinery.
 
 
 *Gaussian processes*
-Informally, GPs are a generalisation of the multivariate Gaussian distribution, indexed by an
+Informally, \acrshort{gps} are a generalisation of the multivariate Gaussian distribution, indexed by an
 input domain as opposed to an index set.
 Similar to how a sample from an $N-\text{dimensional}$ multivariate Gaussian is an $N-\text{dimensional}$ vector,
 a sample from a \acrshort{gp} is a random function over its domain.
 Formally, a \acrshort{gp} is defined as follows,
 #+BEGIN_EXPORT latex
 \begin{definition}[Gaussian process]
-A Gaussian process (GP) is a collection of random variables, any finite number of which
+A \acrfull{gp} is a collection of random variables, any finite number of which
 have a joint Gaussian distribution \citep{rasmussenGaussian2006}.
 \end{definition}
 #+END_EXPORT
@@ -3413,7 +3647,7 @@ have a joint Gaussian distribution \citep{rasmussenGaussian2006}.
 # More intuitively, a Gaussian process is a distribution over functions $f : \R^{D_f} \rightarrow \R$
 More intuitively, a Gaussian process  is a distribution over functions $f(\cdot): \gpDomain \rightarrow \R$
 defined over an input domain $\gpDomain \in \R^{D_f}$.
-Whilst Gaussian distributions represent distributions over finite-dimensional vectors, GPs represent
+Whilst Gaussian distributions represent distributions over finite-dimensional vectors, \acrshort{gps} represent
 distributions over infinite-dimensional functions.
 A \acrshort{gp} is fully defined by a mean function $\mu(\cdot) : \gpDomain \rightarrow \R$ and a covariance
 function $k(\cdot, \cdot) : \gpDomain \times \gpDomain \rightarrow \R$ (also known as a kernel),
@@ -3421,7 +3655,7 @@ function $k(\cdot, \cdot) : \gpDomain \times \gpDomain \rightarrow \R$ (also kno
 \begin{align} \label{eq-gp-mean-cov}
 f(\cdot) &\sim \mathcal{GP}\left(\mu(\cdot), k(\cdot,\cdot) \right), \\
 \mu(\cdot) &= \E[f(\cdot)], \\
-k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))],
+k(\cdot, \cdot') &= \E[(f(\cdot) -\mu(\cdot)) (f(\cdot') - \mu(\cdot'))].
 \end{align}
 #+END_EXPORT
 Importantly, for a given set of training inputs from the
@@ -3519,7 +3753,7 @@ This predictive distribution is the \acrshort{gp} posterior.
 Importantly, the predictive variance $\sigma^2$ in cref:eq-gp-prediction-noisy quantifies the /epistemic uncertainty/
 associated with making a prediction at the test input $\mathbf{x}_*$, whilst the value of the noise variance
 $\sigma_n^2$ quantifies the /aleatoric uncertainty/.
-This structured handling of uncertainty makes \acrshort{gp}s extremely powerful for learning representations
+This structured handling of uncertainty makes \acrshort{gps} extremely powerful for learning representations
 of dynamical systems.
 
 **** Sparse Gaussian Processes for Regression label:sec-sparse-gps :noexport:
@@ -3664,21 +3898,20 @@ to preform stochastic gradient methods on $q(\u)$.
 \begin{minipage}{0.49\textwidth}
 \centering
 \includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/scenario_7_svgp_baseline_both_modes.pdf}
-\subcaption{GP dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
+\subcaption{\acrshort{gp} dynamics model trained on state transitions sampled from \textbf{both} dynamics modes.}
 \label{fig-traj-opt-over-gating-mask-svgp-all-baseline}
 \end{minipage}
 \begin{minipage}{0.49\textwidth}
 \centering
 \includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/scenario_7_svgp_baseline_desired_mode.pdf}
-\subcaption{GP dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
+\subcaption{\acrshort{gp} dynamics model trained on state transitions sampled from \textbf{only the desired} (operable) dynamics mode.}
 \label{fig-traj-opt-over-gating-mask-svgp-desired-baseline}
 \end{minipage}
 \caption[Motivation for multimodal dynamical models]{
 Trajectory optimisation results obtained using a \acrshort{gp} dynamics model trained on different data sets.
 The optimised control trajectories are rolled out in the \acrshort{gp} dynamics model (magenta) and in the environment (cyan).
 The state trajectories are overlayed on the gating mask, which indicates where each mode governs the dynamics.
-White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.
-The hashed box indicates a subset of the environment that has not been observed.}
+White indicates the turbulent dynamics mode and red indicates the desired (operable) mode.}
 \label{fig-traj-opt-over-gating-mask-svgp-baseline}
 \end{figure}
 #+END_EXPORT
@@ -3737,7 +3970,7 @@ Following standard methodologies, the trajectories in \cref{fig-traj-opt-over-ga
 were found by minimising the expected cost
 under the state distribution, resulting from cascading single-step predictions through the \acrshort{gp} dynamics model
 using the moment matching approximation \citep{kussGaussian2006}.
-A terminal state cost term ensured trajectories ended at the target state and
+A terminal state cost term favoured trajectories ending at the target state and
 a quadratic integral control cost term regularised the controls to encode the notion of
 "minimal effort" control.
 \end{myquote}
@@ -3745,11 +3978,11 @@ a quadratic integral control cost term regularised the controls to encode the no
 
 Methods for learning probabilistic multimodal dynamics have been proposed.
 cite:moerlandLearning2017 use deep generative models, namely a conditional \acrfull{vae},
-to learn multimodal transition dynamics for \acrfull{mbrl}.
-cite:kaiserBayesian2020 use the data association with \acrshort{gp}s model;
+to learn multimodal transition dynamics for \acrshort{mbrl}.
+cite:kaiserBayesian2020 use the data association with \acrshort{gps} model;
 a Bayesian model that learns independent dynamics modes whilst maintaining a
 probabilistic belief over which mode is responsible for predicting at a given input location.
-cite:mckinnonLearning2017 also use an approach based on \acrshort{gp}s except that they use a
+cite:mckinnonLearning2017 also use an approach based on \acrshort{gps} except that they use a
 \acrfull{mogpe} method to learn the switching behaviour for robot dynamics online.
 
 *Latent spaces for control*
@@ -3817,7 +4050,7 @@ that are rich with information regarding how a system switches between its under
 ** Uncertainty-based Exploration Strategies label:sec-unc-exploration
 # Given a statistical model
 \acrfull{rl} agents face a trade-off between /exploration/, where they seek to explore the environment and improve
-their models, and /exploitation/, where agents make decisions which are optimal for the data observed so far.
+their models, and /exploitation/, where they make decisions which are optimal for the data observed so far.
 There are many approaches from the literature used to tackle the exploration-exploitation trade-off.
 In \acrshort{mbrl}, the goal is often to reduce the real-world sample complexity at the cost of increased
 model sample complexity.
@@ -3830,7 +4063,7 @@ uncertainty estimates around the values citep:moerlandEfficient2017,auerUsing200
 An alternative approach for \acrshort{mbrl} is to use state-based exploration.
 This approach is state-specific, reward independent and usually seeks states with high /epistemic uncertainty/.
 This section recaps some relevant exploration strategies that fit into the general
-\acrfull{mbrl} procedure shown in cref:alg-mbrl-background.
+\acrshort{mbrl} procedure shown in cref:alg-mbrl-background.
 # This section recaps some relevant exploration strategies that fit into the general
 # \acrfull{mbrl} procedure shown in cref:alg-mbrl.
 
@@ -3846,8 +4079,8 @@ This greedy strategy is given by,
 #+END_EXPORT
 Note that the negative sign is used because the objective $J(f, \pi)$ is based on a cost function and not a reward
 function.
-This approach is used in \acrshort{pilco} citep:deisenrothPILCO2011 and GP-\acrshort{mpc} citep:kamtheDataEfficient2018
-where the dynamics are represented using \acrshort{gp}s and the moment matching approximation is used to cascade
+This approach is used in \acrshort{pilco} citep:deisenrothPILCO2011 and \acrshort{gp}-\acrshort{mpc} citep:kamtheDataEfficient2018
+where the dynamics are represented using \acrshort{gps} and the moment matching approximation is used to cascade
 single-step predictions.
 cite:parmasPIPPS2018 propose \acrshort{pipps},
 a similar approach to \acrshort{pilco}, except that they use Monte Carlo methods
@@ -3872,7 +4105,7 @@ This is given by,
 # This contrasts the greedy approach that averages over the
 In general, it is intractable to sample from $\dynamicsModel(f \mid \mathcal{D}_{0:i})$.
 Note that after the sampling step this problem is equivalent to greedy exploitation.
-# See cite:curiEfficient2020 for a recap of some commonly used MBRL exploration strategies.
+# See cite:curiEfficient2020 for a recap of some commonly used \acrshort{mbrl} exploration strategies.
 
 Alternatively, some \acrshort{mbrl} algorithms, such as cite:sekarPlanning2020, adopt a two-phase exploration strategy.
 The first phase is interested in exploring the environment and summarising this past experience in the form of a model.
@@ -3882,7 +4115,7 @@ it gathers more knowledge of the environment.
 
 
 *Active learning*
-Active learning is another class of exploration algorithms which fit into the two-phase exploration approach.
+Active learning is a class of exploration algorithms which fit into the two-phase exploration approach.
 The goal of information-theoretic active learning is to reduce the number of
 possible hypotheses as fast as possible, e.g. minimise the uncertainty associated
 with the parameters using Shannon's entropy citep:coverElements2006,
@@ -3946,12 +4179,12 @@ the output predicted by the \acrshort{gpssm}. This contrasts with other approach
 to study the latest mutual information $I[\hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{t+1}]$.
 
 *Myopic active learning*
-In reinforcement learning and control it is standard to consider objectives over a (potentially infinite) horizon.
+In \acrshort{rl} and control it is standard to consider objectives over a potentially infinite horizon.
 However, active learning objectives often myopically consider the information gain at the next query point only.
-In contrast, it is possible to consider the information gain over a (potentially infinite) horizon, reliving this myopia.
+In contrast, it is possible to consider the information gain over a potentially infinite horizon, reliving this myopia.
 The mutual information approaches in cite:caponeLocalized2020,yuActive2021
 fall into this myopic category as they only maximise the information gain at the next
-time step. In contrast, the greedy entropy-based strategy in
+time step. In contrast, the entropy-based strategy in
 cite:buisson-fenetActively2020 considers the entropy over a horizon.
 
 # *Myopic active learning*
@@ -4302,7 +4535,7 @@ example detailed in cref:illustrative_example.
 
 
 # Based on this assumption, this chapter constructs a discrete-time representation of the system's transition dynamics
-# and then formulates it as a probabilistic model-based on GPs.
+# and then formulates it as a probabilistic model-based on \acrshort{gps}.
 
 # This thesis is interested in multimodal systems where the dynamics modes vary over the
 # input (state, control) domain, such that the mode switching can by modelled
@@ -4316,7 +4549,7 @@ example detailed in cref:illustrative_example.
 # where prior knowledge of the system can be encoded into the model via informative priors.
 # As a result, the probabilistic model constructed in this chapter resembles a \acrfull{mogpe}
 # with a \acrshort{gp}-based gating network.
-# This work derives a novel variational lower bound based on sparse GPs that
+# This work derives a novel variational lower bound based on sparse \acrshort{gps} that
 # enables the model to be trained with stochastic gradient methods.
 
 
@@ -4325,10 +4558,10 @@ example detailed in cref:illustrative_example.
 # Motivated by control,
 # Given this data set $\dataset$, this chapter constructs a discrete-time, probabilistic
 # representation of the multimodal transition dynamics
-# and then formulates it as a probabilistic model-based on GPs.
+# and then formulates it as a probabilistic model-based on \acrshort{gps}.
 
 # the system's transition dynamics
-# and then formulates it as a probabilistic model-based on GPs.
+# and then formulates it as a probabilistic model-based on \acrshort{gps}.
 
 # that pairs of input $\x$ and output $\y$ observations
 # have previously been sampled from the system at a constant frequency,
@@ -4343,7 +4576,7 @@ example detailed in cref:illustrative_example.
 # have previously been sampled from the system at a constant frequency,
 # (i.e. with a fixed time-step) to give a data set $\dataset$.
 # Based on this assumption, this chapter constructs a discrete-time representation of the system's transition dynamics
-# and then formulates it as a probabilistic model-based on GPs.
+# and then formulates it as a probabilistic model-based on \acrshort{gps}.
 
 # This thesis is interested in multimodal systems where the dynamics modes vary over the
 # input (state, control) domain, such that the mode switching can by modelled
@@ -4354,7 +4587,7 @@ example detailed in cref:illustrative_example.
 # where prior knowledge of the system can be encoded into the model via informative priors.
 # As a result, the probabilistic model constructed in this chapter resembles a \acrfull{mogpe}
 # with a \acrshort{gp}-based gating network.
-# This work derives a novel variational lower bound based on sparse GPs that
+# This work derives a novel variational lower bound based on sparse \acrshort{gps} that
 # enables the model to be trained with stochastic gradient methods.
 # The work in this chapter is implemented in GPflow/TensorFlow and is available on GitHub
 # cite:matthewsGPflow2017,GPflow2017,tensorflow2015-whitepaper[fn:1:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/mogpe][\icon{\faGithub}/aidanscannell/mogpe]].].
@@ -4571,7 +4804,7 @@ collectively referred to as the /gating network/.
 The individual component densities $\moeExpertPosterior$ are then referred to as /experts/,
 as at different regions in the input space, different components are responsible for predicting.
 Given $\ModeInd$ experts $\moeExpertPosterior$, each with parameters $\expertParamsK$,
-the MoE marginal likelihood is given by,
+the \acrshort{moe} marginal likelihood is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-mixture-marginal-likelihood}
 \moeEvidence = \prod_{\numData=1}^\NumData \sum_{\modeInd=1}^{\ModeInd}
@@ -4590,7 +4823,7 @@ and the mode indicator variable from cref:eq-multimodal-dynamics-disc.
 
 \newline
 *Nonparametric Mixtures of Experts*
-Modelling the experts as GPs gives rise to a class of powerful models known as \acrfull{mogpe}.
+Modelling the experts as \acrshort{gps} gives rise to a class of powerful models known as \acrfull{mogpe}.
 They can model multimodal distributions as they model a mixture of distributions
 over the outputs, usually a Gaussian mixture in the regression setting citep:trespMixtures2000a,rasmussenInfinite2001.
 They can model non-stationary functions as
@@ -4702,7 +4935,7 @@ then evaluated to generate the output $\singleOutput$.
   \cite{rasmussenInfinite2001} but without the Dirichlet process prior on the gating network.
   This represents the basic conditional model, not the full generative model over both the inputs and outputs as
   presented in \cite{NIPS2005_f499d34b}.
-  (\subref{fig-graphical-model-gp-gating-network}) shows our model with a GP-based gating network
+  (\subref{fig-graphical-model-gp-gating-network}) shows our model with a \acrshort{gp}-based gating network
 which involves evaluating $\ModeInd$ latent gating functions $\GatingFunc$
 and normalising their output to obtain the mixing probabilities $\singleGatingLikelihood$.
 The mode indicator variable $\singleModeVar$ is then sampled from the Categorical distribution
@@ -4716,7 +4949,7 @@ governed by these probabilities.}
 \newline
 
 As highlighted by cite:rasmussenInfinite2001,
-the traditional MoE marginal likelihood does not apply when the
+the traditional \acrshort{moe} marginal likelihood does not apply when the
 experts are nonparametric.
 This is because the model assumes that the observations are i.i.d. given the model parameters,
 which is contrary to \acrshort{gp} models, which model the dependencies in the joint distribution, given the
@@ -4790,7 +5023,7 @@ i.e. $\expertPrior = p\left( \mode{f}(\allInputK) \mid \allInputK, \expertParams
 # is inside the marginalisation of the expert indicator variable $\modeVar$.
 
 ** Related Work :noexport:
-Modelling the experts as GPs gives rise to a class of powerful models known as
+Modelling the experts as \acrshort{gps} gives rise to a class of powerful models known as
 Mixture of Gaussian Process Experts (MoGPE).
 These models address both of the limitations that we discussed.
 They can model multimodal predictive distributions as they model a mixture of distributions
@@ -4798,10 +5031,10 @@ over the outputs, usually a Gaussian mixture in the regression setting (cite:Tre
 They are able to model non-stationary functions as
 each expert can learn different lengthscales, noise variances etc and the gating
 network can turn each one "on" and "off" in different regions of the input space.
-Many approaches to MoGPE have been proposed and in general the key differences between them are
+Many approaches to \acrshort{mogpe} have been proposed and in general the key differences between them are
 the formulation of the gating network
 and their inference algorithms (and associated approximations) cite:Yuksel2012.
-The original MoGPE work by cite:Tresp proposed a gating network as a softmax of $K$ GPs
+The original \acrshort{mogpe} work by cite:Tresp proposed a gating network as a softmax of $K$ \acrshort{gps}
 (bottom left plot in Figure [[ref:gating_network_comparison]]).
 An EM inference scheme is proposed, which assuming there are $N$ observations requires
 $\mathcal{O}(3KN^3)$ computations per iteration.
@@ -4812,7 +5045,7 @@ data not assigned to a \acrshort{gp} expert will lead to bias near the boundarie
 Instead cite:Rasmussen2002 formulate the gating network in terms of conditional
 distributions on the expert indicator variable, on which they place an input-dependent
 Dirichlet process prior.
-cite:Meeds2005 proposed an alternative infinite MoGPE similar to cite:Rasmussen2002 except
+cite:Meeds2005 proposed an alternative infinite \acrshort{mogpe} similar to cite:Rasmussen2002 except
 that they specify a full generative model over the input and output space $p(\mathbf{y}, \mathbf{x})$
 as opposed to just a
 conditional model $p(\mathbf{y} | \mathbf{x})$.
@@ -4824,8 +5057,8 @@ of the input space. It will instead generate a new cluster and assign it a new e
 These approaches reduce the computational burden by associating each expert with a
 subset of the observations but rely on Markov Chain Monte Carlo (MCMC) inference schemes.
 
-cite:Yuan proposed a MoGPE with a variational inference scheme which is much
-faster than using MCMC.
+cite:Yuan proposed a \acrshort{mogpe} with a variational inference scheme which is much
+faster than using \acrshort{mcmc}.
 They assume that the expert indicators $\alpha$ are generated by a Dirichlet distribution and
 that given the expert indicator the inputs follow a Gaussian mixture model (GMM), i.e. they
 have introduced a cluster indicator variable $z$.
@@ -4850,7 +5083,7 @@ different gating network formulations,
 providing intuition for how they can differ in restricting the set of admissible functions.
 
 
-Modelling the gating network with GPs enables us
+Modelling the gating network with \acrshort{gps} enables us
 to encode informative prior knowledge through the choice of mean and covariance functions.
 For example, adopting a squared exponential covariance function would encode prior belief that
 the mixing probabilities should vary smoothly across the input space.
@@ -4867,18 +5100,18 @@ ability to extrapolate as it will be more true to the underlying system.
 
 We can also consider the implications of the mentioned gating networks from an inference perspective.
 It is known that developing inference algorithms for propagating uncertain (Gaussian) inputs
-through GPs is itself a challenging problem (see cite:Ustyuzhaninov2019).
+through \acrshort{gps} is itself a challenging problem (see cite:Ustyuzhaninov2019).
 Therefore, developing a scalable inference algorithm to propagate inputs that are distributed according to
 a Gaussian mixture will likely lead to valuable information loss.
 Theoretically the approaches by cite:Rasmussen2002,Meeds2005 are able to achieve
-accurate results but their inference relies on MCMC sampling methods,
+accurate results but their inference relies on \acrshort{mcmc} sampling methods,
 which can be slow to converge.
 
 We consider our approach as trading in the computational benefits that can be obtained through
 the formulation of the gating network
 for the ability to improve identifiability with informative \acrshort{gp} priors.
 The main contributions of this paper are twofold. Firstly, we re-formulate a gating network
-based on GPs to improve identifiability.
+based on \acrshort{gps} to improve identifiability.
 Secondly, we derive an evidence lower bound
 which improves on the complexity issues associated with inference when adopting such a gating network.
 Motivated by learning representations of dynamical systems with two regimes we instantiate
@@ -4895,14 +5128,14 @@ input space are operable, providing a convenient space for planning.
 # bound in Section ref:sec-variational-approximation.
 # In Section ref:sec-model-validation we test our method on an artificial data set where we show
 # the benefits of adopting informative covariance functions in the gating network.
-# We then test our model on the motorcycle data set and compare it to a sparse variational GP.
+# We then test our model on the motorcycle data set and compare it to a sparse variational \acrshort{gp}.
 
 ** Identifiable Mixtures of Gaussian Process Experts
 *** intro :ignore:noexport:
 # Motivated by synergising model learning and control, the probabilistic model constructed in this chapter
 # Given this motivation, the probabilistic model constructed in this chapter
 # is a \acrfull{mogpe} with a \acrshort{gp}-based gating network.
-# Motivated by identifiability this work adopts a GP-based gating network resembling a \acrshort{gp} classification model.
+# Motivated by identifiability this work adopts a \acrshort{gp}-based gating network resembling a \acrshort{gp} classification model.
 # Such a gating network is able to turn a single expert on in multiple subsets of the domain.
 
 # The \acrshort{gp}-based gating network infers latent /geometric/ structure that is exploited by the control
@@ -5006,7 +5239,7 @@ is inside the marginalisation of the expert indicator variable $\modeVar$.
 
 For ease of notation and understanding, only a single output dimension has been considered,
 although in most scenarios the output dimension will be greater than $1$.
-This work can be extended to multiple output dimensions following standard multioutput GP
+This work can be extended to multiple output dimensions following standard multioutput \acrshort{gp}
 methodologies cite:vanderwilkFramework2020.
 
 *** Identifiable Mixtures of Sparse Variational Gaussian Process Experts :ignore:
@@ -5015,7 +5248,7 @@ methodologies cite:vanderwilkFramework2020.
 # is a \acrfull{mogpe} with a \acrshort{gp}-based gating network.
 
 Motivated by improving identifiability and learning latent spaces for control,
-this work adopts a GP-based gating network resembling a \acrshort{gp} classification model,
+this work adopts a \acrshort{gp}-based gating network resembling a \acrshort{gp} classification model,
 similar to that used in the original \acrshort{mogpe} model citep:trespMixtures2000a.
 The \acrshort{gp}-based gating network can be used to constrain the set of
 admissible functions through the placement of informative \acrshort{gp} priors on the gating functions.
@@ -5124,7 +5357,7 @@ where $\gatingMeanFunc(\cdot)$ and $\gatingCovFunc(\cdot,\cdot)$ are the mean an
 associated with the $\modeInd^\text{th}$ gating function.
 Similarly to the experts, dependence on the inputs and hyperparameters is dropped from the gating network's \acrshort{gp} prior,
 i.e. $\gatingPrior = p(\GatingFunc(\allInput) \mid \allInput, \gatingParams)$.
-In contrast to the experts, partitioning of the data set is not desirable for the gating network GPs,
+In contrast to the experts, partitioning of the data set is not desirable for the gating network \acrshort{gps},
 as each gating function should depend on all of the training observations.
 
 # Each mode's mixing probability $\singleGatingPosterior$ is then obtained by marginalising
@@ -5418,7 +5651,7 @@ and the general case (with more than two experts) has complexity $\mathcal{O}(\M
 
 For ease of notation and understanding, only a single output dimension has been considered,
 although in most scenarios the state dimension will be greater than $1$.
-This work considers independent output dimensions which follow trivially from multioutput GP
+This work considers independent output dimensions which follow trivially from multioutput \acrshort{gp}
 methodologies.
 # The extension to multiple output dimensions is fairly straightforward.
 \todo{Can I just say it's left out because trivial?}
@@ -5456,7 +5689,7 @@ provides a principled approach to
 modelling the /epistemic uncertainty/ associated with each gating function.
 The gating function's posterior covariance is a quantitative value that can be exploited by the
 trajectory optimisation.
-# GPs also provide data-efficient and interpretable learning through the selection of informative mean
+# \acrshort{gps} also provide data-efficient and interpretable learning through the selection of informative mean
 # and covariance functions.
 # For example, if the transition dynamics modes are subject to oscillatory mixing then a periodic
 # covariance function could be selected.
@@ -5530,7 +5763,7 @@ p(\GatingFunc(\allInput), \LatentFunc(\allInput) \mid \allInput, \allOutput, \ga
 where the denominator is the marginal likelihood from cref:eq-marginal-likelihood-assign.
 Exact inference in our model is intractable, due to the marginalisation over the set of expert indicator variables.
 For this reason, we resort to a variational approximation.
-The rich structure of our model makes it hard to construct an ELBO that can
+The rich structure of our model makes it hard to construct an \acrshort{elbo} that can
 be evaluated in closed-form, whilst accurately modelling the complex dependencies.
 Further to this, the marginal likelihood is extremely expensive to evaluate,
 as there are $\ModeInd^{\NumData}$ sets of assignments $\allModeVar$ that need to be marginalised.
@@ -5550,7 +5783,7 @@ in cref:eq-np-moe-marginal-likelihood is prohibitive to \acrshort{svi}.
 This is because \acrshort{svi} requires a set of local variables factorised over data but the
 marginalisation considers the sets of assignments for the entire data set.
 Following the approach by cite:titsiasVariational2009, the probability space is augmented
-with a set of $\NumInducing$ inducing variables for each GP.
+with a set of $\NumInducing$ inducing variables for each \acrshort{gp}.
 However, instead of collapsing these inducing variables they are explicitly
 represented as variational distributions and used to lower bound
 (and then further bound) the marginal likelihood, similar to
@@ -5569,21 +5802,21 @@ cref:fig-graphical-model-sparse shows the graphical model of the augmented joint
 # *Inducing Variables* As this approach essentially parameterises a nonparametric model,
 # it is interesting to pause here and consider the implications of defining inducing inputs in different ways.
 # For example, what are the implications of having shared or separate inducing inputs
-# for the gating network GPs, for the expert GPs and for combinations of the experts and gating functions?
+# for the gating network \acrshort{gps}, for the expert \acrshort{gps} and for combinations of the experts and gating functions?
 
-# 1. *Separate inducing inputs* for each *expert* GP, i.e. $\expertInducingOutput=\mode{\latentFunc}(\expertInducingInput)$,
+# 1. *Separate inducing inputs* for each *expert* \acrshort{gp}, i.e. $\expertInducingOutput=\mode{\latentFunc}(\expertInducingInput)$,
 #    - Introducing separate inducing inputs for each expert's \acrshort{gp} can loosely be seen as "partitioning"
-#       the observations between experts. This requires less inducing points for each expert and achieves data partitioning behaviour like other MoGPE methods.
+#       the observations between experts. This requires less inducing points for each expert and achieves data partitioning behaviour like other Mo\acrshort{gp}E methods.
 # - Introducing separate inducing inputs for each expert's \acrshort{gp} can loosely be seen as "partitioning"
 #   the observations between experts,
 # - Less inducing inputs needed for each expert,
-# - Achieves data partitioning behaviour like other MoGPE methods.
+# - Achieves data partitioning behaviour like other \acrshort{mogpe} methods.
 # 3. *Shared inducing inputs* for the *gating network* GPs, i.e. $\gatingInducingOutput=\mode{\gatingFunc}(\gatingInducingInput)$,
 #    - Partitioning of the data set is not desirable for the gating function GPs as each gating function
-#       should depend on all of the training observations. For this reason, the inducing inputs should be shared between each gating function GP.
-# - Partitioning of the data set is not desirable for the gating function GPs as each gating function
+#       should depend on all of the training observations. For this reason, the inducing inputs should be shared between each gating function \acrshort{gp}.
+# - Partitioning of the data set is not desirable for the gating function \acrshort{gps} as each gating function
 #   should depend on all of the training observations,
-# - For this reason, the inducing inputs should be shared between each gating function GP.
+# - For this reason, the inducing inputs should be shared between each gating function \acrshort{gp}.
 
 *** sparse graphical model :ignore:
 #+BEGIN_EXPORT latex
@@ -5642,7 +5875,7 @@ cref:fig-graphical-model-sparse shows the graphical model of the augmented joint
   The observations assigned to expert $\modeInd$ are modelled by the
   inducing points $\{\expertInducingInput, \expertInducingOutput\}_{\modeInd=1}^{\ModeInd}$.
   This model avoids the hard assignment of observations to experts by letting the gating network
-  softly assign them in the ELBO.}
+  softly assign them in the \acrshort{elbo}.}
 \label{fig-graphical-model-sparse}
 \end{figure}
 #+END_EXPORT
@@ -5689,12 +5922,12 @@ where $\gatingInducingOutput$ are the inducing variables associated with the $\m
 Again, the dependence on the inducing inputs has been dropped for notational conciseness.
 The set of all inducing variables associated with the gating network has been
 denoted $\gatingsInducingOutput$.
-Partitioning of the data set is not desirable for the gating function GPs as each gating function
+Partitioning of the data set is not desirable for the gating function \acrshort{gps} as each gating function
 should depend on all of the training observations.
 For this reason, the gating functions share the same inducing inputs $\gatingInducingInput$.
 
 *Marginal likelihood* These inducing points are used to approximate the marginal likelihood with a factorisation over observations
-that is favourable for constructing a GP-based gating network.
+that is favourable for constructing a \acrshort{gp}-based gating network.
 Our approximate marginal likelihood is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-augmented-marginal-likelihood}
@@ -5769,7 +6002,7 @@ This approximation induces a local factorisation over observations and a set of 
 -- the necessary conditions for \acrshort{svi}.
 This approach can loosely be viewed as parameterising the full nonparametric model
 in cref:eq-np-moe-marginal-likelihood-assign to obtain a desirable
-factorisation for 1) constructing a GP-based gating network and 2) deriving an ELBO that can
+factorisation for 1) constructing a \acrshort{gp}-based gating network and 2) deriving an \acrshort{elbo} that can
 be optimised with stochastic gradient methods,
 whilst still capturing the complex dependencies between the gating network and experts.
 
@@ -5801,7 +6034,7 @@ the probability space is first augmented with a set of $\NumInducing$ inducing v
 #+END_EXPORT
 where  $\gatingInducingOutput = \mode{\gatingFunc}(\gatingInducingInput)$
 are the inducing points associated with the $\modeInd^{\text{th}}$ gating function.
-Partitioning of the data set is not desirable for the gating function GPs as each gating function
+Partitioning of the data set is not desirable for the gating function \acrshort{gps} as each gating function
 should depend on all of the training observations.
 For this reason, the gating functions share the same inducing inputs $gatingInducingInput$.
 The set of all inducing variables associated with the gating network has been
@@ -6148,7 +6381,7 @@ where $\expertsVariational$ represents the variational posterior given by,
 \end{align}
 #+END_EXPORT
 Intuitively, this bound can be seen as modifying the likelihood approximation in cref:eq-likelihood-approximation.
-Instead of mixing the GPs associated with each expert, this approximation simply mixes their associated
+Instead of mixing the \acrshort{gps} associated with each expert, this approximation simply mixes their associated
 noise models.
 
 # *Further Lower Bound* Following cite:hensmanScalable2015, the bound in
@@ -6188,7 +6421,7 @@ noise models.
 # \gatingsVariational &= \prod_{\modeInd=1}^\ModeInd \E_{\gatingInducingVariational} \left[ \singleLatentGatingGivenInducing \right].
 # \end{align}
 # #+END_EXPORT
-As each GP's inducing variables are normally distributed, the functional form of the
+As each \acrshort{gp}'s inducing variables are normally distributed, the functional form of the
 variational posteriors are given by,
 #+BEGIN_EXPORT latex
 \begin{align}
@@ -6247,7 +6480,7 @@ The performance of these bounds is evaluated in cref:sec-mcycle-results.
 
 \newcommand{\gatingsVariationalSample}{\ensuremath{q(\GatingFunc(\x_{\batchSampleInd}))}}
 #+END_EXPORT
-# \todo{add unbiased estimate of ELBO}
+# \todo{add unbiased estimate of \acrshort{elbo}}
 The bounds in  cref:eq-lower-bound-further,eq-lower-bound-tight,eq-lower-bound-further-2
 meet the necessary conditions to perform stochastic
 gradient methods on $\expertsInducingVariational$ and $\gatingsInducingVariational$.
@@ -6335,7 +6568,7 @@ has complexity $\mathcal{O}(\NumInducing^2)$.
 # \todo{How to combine all of these complexities?}
 
 
-# For each data point in the minibatch, each of the $\ModeInd$ gating function GPs and $\ModeInd$ expert GPs has complexity
+# For each data point in the minibatch, each of the $\ModeInd$ gating function \acrshort{gps} and $\ModeInd$ expert \acrshort{gps} has complexity
 # $\mathcal{O}\left( \NumInducing^{2} \right)$ to evaluate.
 
 
@@ -6663,8 +6896,8 @@ This is another bound I implemented,
 # that we can place informative priors on.
 # As such, the method is tested on two data sets,
 # 1) *Artificial data set* to demonstrate how the method improves identifiability,
-# 2) *Motorcycle data set* cite:Silverman1985 to provide a comparison to other MoGPE methods and to,
-#    - thoroughly compare the different ELBO's in Section ref:sec-inference,
+# 2) *Motorcycle data set* cite:Silverman1985 to provide a comparison to other Mo\acrshort{gp}E methods and to,
+#    - thoroughly compare the different \acrshort{elbo}'s in Section ref:sec-inference,
 #    - evaluate the impact of the number of inducing points $M$ and the batch size $\NumData_b$.
 
 # This work also proposes to address their inherent identifiability issues, by adopting a gating network
@@ -6699,17 +6932,20 @@ That is, a data set collected onboard a DJI Tello quadcopter flying in an enviro
 
 # Each experiment was carried out on a system with an Intel Core i9 CPU at 2.4GHz with 16GB DDR4 RAM.
 All data sets were split into test and training sets with $70\%$ for training and $30\%$ for testing.
-In order to evaluate and compare the full predictive posteriors the Negative Log Predictive Probability (NLPP)
+In order to evaluate and compare the full predictive posteriors the \acrfull{nlpp}
 is computed on the test set.
-The models are also compared using the Root Mean Squared Error (RMSE) and the Mean Absolute Error (MAE).
+The models are also compared using the \acrfull{rmse} and the \acrfull{mae}.
 Given a test data set
 $(\testInput, \testOutput) = \{(\singleTestInput, \singleTestOutput)\}_{\numTest=1}^{\NumTest}$,
 they are calculated as follows,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-scores}
-\text{RMSE} &= \sqrt{\frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} (\predictedSingleOutput - \singleTestOutput)^2} \\
-\text{MAE} &= \frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} | \predictedSingleOutput - \singleTestOutput | \\
-\text{NLPP} &= \frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} - \log (\singleTestOutput \mid \singleTestInput, \mathcal{D}, \expertParams, \gatingParams)
+\text{\acrshort{rmse}} &=
+\sqrt{\frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} (\predictedSingleOutput - \singleTestOutput)^2} \\
+\text{\acrshort{mae}} &=
+\frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} | \predictedSingleOutput - \singleTestOutput | \\
+\text{\acrshort{nlpp}} &=
+\frac{1}{\NumTest} \sum_{\numTest=1}^{\NumTest} - \log (\singleTestOutput \mid \singleTestInput, \mathcal{D}, \expertParams, \gatingParams)
 \end{align}
 #+END_EXPORT
 where $\predictedSingleOutput$ is the model's prediction at $\singleTestInput$.
@@ -6730,45 +6966,42 @@ The data set is represented by the black crosses in cref:fig-y-mcycle-two-expert
 To test the performance of \acrshort{mosvgpe}, the model is
 instantiated with $\ModeInd=2$ and $\ModeInd=3$ experts.
 All experiments on the Motorcycle data set use $\NumInducing=32$ inducing points for
-all GPs and are trained for $25,000$ iterations
+all \acrshort{gps} and are trained for $25,000$ iterations
 with Adam citep:kingmaAdam2017, with a learning rate of $0.01$ and a batch size of $\NumData_b=16$.
-The results are compared against a Gaussian process (GP) and a sparse variational Gaussian
-process (SVGP),
-which use Squared Exponential (SE) kernels with automatic relevance determination (ARD) and
-a Gaussian likelihood.
-# The method is compared to a Sparse Variational Gaussian Process (SVGP) trained with the same
+The results are compared against a \acrshort{gp} and a \acrshort{svgp},
+which use Squared Exponential kernels with \acrfull{ard} and a Gaussian likelihood.
+# The method is compared to a Sparse Variational Gaussian Process (\acrshort{svgp}) trained with the same
 # number of inducing points and training parameters.
 
-cref:tab-mcycle-metrics summarises the results for the three ELBOs
+cref:tab-mcycle-metrics summarises the results for the three \acrshort{elbo}s
 ($\tightBound$, $\furtherBound$, $\furtherBoundTwo$)
 and compares them to a standard \acrshort{gp} regression model
-and a SVGP method instantiated with $\NumInducing=16$ and $\NumInducing=32$ inducing points.
+and a \acrshort{svgp} method instantiated with $\NumInducing=16$ and $\NumInducing=32$ inducing points.
 Both methods use Gaussian likelihoods and optimise their hyperparameters, noise variances
-(and inducing inputs in the SVGP case) using their well-known
+(and inducing inputs in the \acrshort{svgp} case) using their well-known
 objectives -- the marginal likelihood and evidence lower bound.
 
 ***** Results table :ignore:
 
 #+Name: tab-mcycle-metrics
 #+Caption[\acrshort{mosvgpe} results on motorcycle data set]: Results on the Motorcycle data set cite:Silverman1985 with different instantiations of our model (\acrshort{mosvgpe}).
-#+Caption: Comparison of the root mean squared error (RMSE) mean absolute error (MAE)
-#+Caption: and negative log predictive probability (NLPP) on the test data set.
-#+Caption: Results for a Gaussian process (GP) and a sparse variational Gaussian process (SVGP) with
+#+Caption: Comparison of the \acrfull{rmse}, \acrfull{mae} and \acrfull{nlpp} on the test data set.
+#+Caption: Results for a \acrshort{gp} and a \acrshort{svgp} with
 #+Caption: $\NumInducing=16$ and $\NumInducing=32$ inducing points are shown for comparison.
 #+Caption: All models were instantiated with Squared Exponential kernels and were
 #+Caption: trained for $25,000$ iterations.
-#+Caption: The GP's hyperparameters were optimised using SciPy's citep:2020SciPy-NMeth L-BFGS-B optimiser.
-#+Caption: The SVGP and \acrshort{mosvgpe} models were trained with Adam citep:kingmaAdam2017 using a learning rate
+#+Caption: The \acrshort{gp}'s hyperparameters were optimised using SciPy's citep:2020SciPy-NMeth L-BFGS-B optimiser.
+#+Caption: The \acrshort{svgp} and \acrshort{mosvgpe} models were trained with Adam citep:kingmaAdam2017 using a learning rate
 #+Caption: of $0.01$ and a minibatch size of $\NumData_b=16$.
-#+Caption: The \acrshort{mosvgpe} experiments used $\NumInducing=32$ inducing points for each expert GP
-#+Caption: and each gating function GP.
+#+Caption: The \acrshort{mosvgpe} experiments used $\NumInducing=32$ inducing points for each expert \acrshort{gp}
+#+Caption: and each gating function \acrshort{gp}.
 |----------------------------------------------+-------------------+-------------------+-------------------|
-|                                              | RMSE              | NLPP              | MAE               |
+|                                              | \acrshort{rmse}   | \acrshort{nlpp}   | \acrshort{mae}    |
 |----------------------------------------------+-------------------+-------------------+-------------------|
-| \acrshort{gp}                                           | $\mathbf{0.4357}$ | $0.9886$          | $0.3242$          |
+| \acrshort{gp}                                | $\mathbf{0.4357}$ | $0.9886$          | $0.3242$          |
 |----------------------------------------------+-------------------+-------------------+-------------------|
-| SVGP $(M=16)$                                | $0.4427$          | $0.9762$          | $0.3257$          |
-| SVGP $(M=32)$                                | $0.4437$          | $0.9832$          | $0.3271$          |
+| \acrshort{svgp} $(M=16)$                     | $0.4427$          | $0.9762$          | $0.3257$          |
+| \acrshort{svgp} $(M=32)$                     | $0.4437$          | $0.9832$          | $0.3271$          |
 |----------------------------------------------+-------------------+-------------------+-------------------|
 | \acrshort{mosvgpe} $(k=2, \tightBound)$      | $0.4442$          | $0.4863$          | $0.3260$          |
 | \acrshort{mosvgpe} $(k=2, \furtherBound)$    | $0.4590$          | $0.5073$          | $0.3355$          |
@@ -6778,24 +7011,24 @@ objectives -- the marginal likelihood and evidence lower bound.
 | \acrshort{mosvgpe} $(k=3 ,\furtherBoundTwo)$ | $0.4575$          | $0.5467$          | $0.3270$          |
 
 ***** After results table :ignore:
-The NLPP indicates the probability of the data given the
+The \acrshort{nlpp} indicates the probability of the data given the
 parameters which are not marginalised, e.g. hyperparameters and inducing inputs.
 Following Bayesian model selection, it is known that lower values indicate higher performing models, i.e.
 predictive posteriors that more accurately match the distribution of the data.
 The predictive posterior is most accurate when \acrshort{mosvgpe} is instantiated with three experts $\ModeInd=3$
 and trained using the tight lower bound $\tightBound$.
 In both the two and three expert experiments,
-the tight lower bound $\tightBound$ achieved better NLPP than both of the further/further^2
+the tight lower bound $\tightBound$ achieved better \acrshort{nlpp} than both of the further/further^2
 lower bounds,  $\furtherBound$ and $\furtherBoundTwo$.
 This is expected as it is a tighter bound.
 As both of the further/further^2 lower bounds offer improved computational properties,
 it is interesting to compare their performance.
-The NLPP scores for the further lower bound $\furtherBound$ are almost equal to the tight lower bound $\tightBound$.
-In contrast, the NLPP score in the three expert experiment for the further^2 lower bound $\furtherBoundTwo$ is
+The \acrshort{nlpp} scores for the further lower bound $\furtherBound$ are almost equal to the tight lower bound $\tightBound$.
+In contrast, the \acrshort{nlpp} score in the three expert experiment for the further^2 lower bound $\furtherBoundTwo$ is
 significantly worse.
 This indicates that valuable information is lost in this bound.
 This was expected as this bound corresponds to a further likelihood approximation,
-which mixes the experts' noise models as opposed to their full SVGP models.
+which mixes the experts' noise models as opposed to their full \acrshort{svgp} models.
 
 
 # It is worth noting here that the tight lower bound $\tightBound$ takes
@@ -6803,21 +7036,21 @@ which mixes the experts' noise models as opposed to their full SVGP models.
 # \todo{add something on further bound being better computationally????}
 
 With regards to the accuracy of the predictive means,
-the standard \acrshort{gp} regression model achieved the best RMSE, followed by the SVGP models and then the
+the standard \acrshort{gp} regression model achieved the best \acrshort{rmse}, followed by the \acrshort{svgp} models and then the
 \acrshort{mosvgpe} models.
-It is worth noting that all of the RMSE and MAE scores are very similar.
+It is worth noting that all of the \acrshort{rmse} and \acrshort{mae} scores are very similar.
 Although adding more experts to the \acrshort{mosvgpe} model appears to learn more accurate predictive posteriors, the
-predictive means appear to deteriorate ever so slightly (indicated by higher RMSE/MAE values).
+predictive means appear to deteriorate ever so slightly (indicated by higher \acrshort{rmse}/\acrshort{mae} values).
 This is most likely due to bias at the boundaries between the experts,
-resulting from the mixing behaviour arising from our GP-based gating network.
+resulting from the mixing behaviour arising from our \acrshort{gp}-based gating network.
 If the gating functions do not have low lengthscales then they will not be able to immediately switch
 from one expert to another.
 It is worth noting that this drop in performance is negligible.
 # , especially when considering the
-# superior generalisation and identifiability offered by the GP-based gating network.
+# superior generalisation and identifiability offered by the \acrshort{gp}-based gating network.
 
 # Although this appears to negatively impact performance here, it should be noted that in theory
-# the GP-based gating network can offer superior generalisation and identifiability.
+# the \acrshort{gp}-based gating network can offer superior generalisation and identifiability.
 
 **** two expert y fig :ignore:
 #+BEGIN_EXPORT latex
@@ -6856,12 +7089,12 @@ It is worth noting that this drop in performance is negligible.
 %\subcaption{}
 %\label{fig-y-samples-mcycle-three-experts}
 %\end{minipage}
-\caption[\acrshort{mosvgpe}'s predictive posterior with $\ModeInd=2$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model instantiated with $\ModeInd=2$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\furtherBound$ (left column) and with $\furtherBoundTwo$ (right column).  (\subref{fig-y-means-mcycle-two-experts-tight}-\subref{fig-y-means-mcycle-two-experts-further}) show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and the SVGP (red dashed line) for comparison. (\subref{fig-y-samples-mcycle-two-experts-tight}-\subref{fig-y-samples-mcycle-two-experts-further}) show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
+\caption[\acrshort{mosvgpe}'s predictive posterior with $\ModeInd=2$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model instantiated with $\ModeInd=2$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\furtherBound$ (left column) and with $\furtherBoundTwo$ (right column).  (\subref{fig-y-means-mcycle-two-experts-tight}-\subref{fig-y-means-mcycle-two-experts-further}) show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and the \acrshort{svgp} (red dashed line) for comparison. (\subref{fig-y-samples-mcycle-two-experts-tight}-\subref{fig-y-samples-mcycle-two-experts-further}) show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the \acrshort{svgp} posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All \acrshort{gps} use Squared Exponential kernels and $M=32$ inducing points.}
 \label{fig-y-mcycle-two-experts}
 \end{figure}
 #+END_EXPORT
 
-# #+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
+# #+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a \acrshort{svgp} with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the \acrshort{svgp} (solid red line). Both models use squared exponential covariance functions for all \acrshort{gps}.
 
 **** Parameter settings two experts :ignore:
 #+begin_table
@@ -6919,32 +7152,32 @@ This layout is used in
 cref:fig-y-mcycle-two-experts,fig-latent-mcycle-two-experts,fig-y-mcycle-three-experts,fig-latent-mcycle-three-experts.
 
 # For each lower bound, cref:fig-y-mcycle-two-experts visualises the predictive mean (top row) and
-# predictive density (bottom row) and compares them to a Sparse Variational Gaussian Process (SVGP).
+# predictive density (bottom row) and compares them to a Sparse Variational Gaussian Process (\acrshort{svgp}).
 # cref:fig-latent-mcycle-two-experts then visualises the posteriors over the latent variables associated with
 # each model.
 
 # for the tight bound $\tightBound$ (ref:fig-y-means-two-experts-tight)
 # and the further bound $\furtherBound$ (ref:fig-y-means-two-experts-further) respectively.
 cref:fig-y-means-mcycle-two-experts-tight,fig-y-means-mcycle-two-experts-further
-compare the posterior means (black solid line) to the SVGP's posterior mean (red dashed line) and
+compare the posterior means (black solid line) to the \acrshort{svgp}'s posterior mean (red dashed line) and
 cref:fig-y-samples-mcycle-two-experts-tight,fig-y-samples-mcycle-two-experts-further
-compare the posterior densities to the SVGP.
-The red lines show plus or minus two standard deviations of the SVGP's posterior variance.
+compare the posterior densities to the \acrshort{svgp}.
+The red lines show plus or minus two standard deviations of the \acrshort{svgp}'s posterior variance.
 As the \acrshort{mosvgpe} posterior is a Gaussian mixture, it is visualised by drawing samples
 from its posterior, i.e. sample a mode indicator variable $\modeVar_*$ and then draw a sample
 from the corresponding expert.
 
-# \todo{quantify this with local RMSE?}
+# \todo{quantify this with local \acrshort{rmse}?}
 *Predictive posteriors* Both \acrshort{mosvgpe} results are capable of modelling the non-stationarity
-at $x \approx -0.7$ better than the sparse variational Gaussian process (SVGP).
+at $x \approx -0.7$ better than the sparse variational Gaussian process (\acrshort{svgp}).
 At this non-stationary point, there are two modes in the \acrshort{mosvgpe} predictive distributions,
 indicated by the overlap in samples from each expert
 in cref:fig-y-samples-mcycle-two-experts-tight,fig-y-samples-mcycle-two-experts-further.
-The SVGP has explained the observations by increasing its single
+The \acrshort{svgp} has explained the observations by increasing its single
 noise variance term. In contrast, both of the \acrshort{mosvgpe} results have been able to learn
 two noise variances and these reflect the noise in the observations much better.
 This is indicated by expert one learning a low noise variance and expert two a high noise
-variance (similar to the SVGP's noise variance).
+variance (similar to the \acrshort{svgp}'s noise variance).
 # \todo{Add values for noise variances}
 
 *Latent variables* More insight into this behaviour can be obtained by considering the latent variables.
@@ -6986,7 +7219,7 @@ assigned it responsibility.
 
 # \todo{to make this point I need to need to train bounds with some missing data and see what happens?}
 # The gating network serves as a probabilistic decision boundary that is dependent on both the mean and
-# the variance of the GPs over the gating functions $\gatingFunc$.
+# the variance of the \acrshort{gps} over the gating functions $\gatingFunc$.
 # As such, the model loses a degree of freedom, w.r.t. interpretability, making it difficult to
 # interpret the meaning of $\Pr(\alpha_*=k \mid \mathbf{x}_*, \mathcal{D}, \bm\phi)= 0.5$.
 # It could mean that it is confident that the observations were generated by a 50:50 mixture of the two experts.
@@ -7051,7 +7284,7 @@ assigned it responsibility.
 \caption[\acrshort{mosvgpe}'s latent variables' posteriors with $\ModeInd=2$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model's latent variables (instantiated with $\ModeInd=2$ experts), after training on the
 Motorcycle data set \citep{Silverman1985}, with $\furtherBound$ (left column)
 and with $\furtherBoundTwo$ (right column).
-(\subref{fig-expert-gps-mcycle-two-experts-tight}-\subref{fig-expert-gps-mcycle-two-experts-further}) show the GP
+(\subref{fig-expert-gps-mcycle-two-experts-tight}-\subref{fig-expert-gps-mcycle-two-experts-further}) show the \acrshort{gp}
 posteriors associated with the experts' latent functions $q(\mode{\latentFunc}(\x_*))$,
 where the solid lines show the mean and the shaded regions show the $95\%$ confidence intervals, i.e. $\pm2\sigma$.
 The gating network's \acrshort{gp} posteriors $q(h_{k}(\x_*))$ are shown in
@@ -7097,7 +7330,7 @@ their associated mixing probabilities $\approxPredictiveProb$ in
 %\subcaption{}
 %\label{fig-y-samples-mcycle-three-experts}
 %\end{minipage}
-\caption[\acrshort{mosvgpe}'s predictive posterior with $\ModeInd=3$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model instantiated with $\ModeInd=3$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\furtherBound$ (left column) and with $\furtherBoundTwo$ (right column).  (\subref{fig-y-means-three-experts-tight}-\subref{fig-y-means-three-experts-further}) show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and the SVGP (red dashed line) for comparison. (\subref{fig-y-samples-mcycle-three-experts-tight}-\subref{fig-y-samples-mcycle-three-experts-further}) show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$, yellow $\ModeInd=3$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
+\caption[\acrshort{mosvgpe}'s predictive posterior with $\ModeInd=3$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model instantiated with $\ModeInd=3$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\furtherBound$ (left column) and with $\furtherBoundTwo$ (right column).  (\subref{fig-y-means-three-experts-tight}-\subref{fig-y-means-three-experts-further}) show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and the \acrshort{svgp} (red dashed line) for comparison. (\subref{fig-y-samples-mcycle-three-experts-tight}-\subref{fig-y-samples-mcycle-three-experts-further}) show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$, yellow $\ModeInd=3$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the \acrshort{svgp} posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All \acrshort{gps} use Squared Exponential kernels and $M=32$ inducing points.}
 \label{fig-y-mcycle-three-experts}
 \end{figure}
 #+END_EXPORT
@@ -7205,7 +7438,7 @@ cref:fig-latent-mcycle-three-experts then visualises the posteriors over the lat
 each model/bound combination.
 
 From cref:tab-mcycle-metrics, it is clear that the predictive posterior associated with $\furtherBound$
-is the most accurate as it obtained the highest NLPP score.
+is the most accurate as it obtained the highest \acrshort{nlpp} score.
 As expected, the two lower bounds explain the data completely differently.
 Instantiating the model with three experts $\ModeInd=3$ and training with $\furtherBound$,
 leads to the extra expert (magenta) fitting to the data at $x \geq 1.5$ and the gating network
@@ -7234,8 +7467,8 @@ all experiments.
 This indicates that $\furtherBound$ does not loosen the bound to a point where it loses valuable information.
 In contrast, $\furtherBoundTwo$ is not able to recover the same results.
 This was expected as $\furtherBoundTwo$ corresponds to a further likelihood approximation, where
-the experts' noise models are mixed instead of their full SVGPs.
-$\furtherBound$ offers a rich ELBO for optimising \acrshort{mosvgpe} that achieves similar results to $\tightBound$,
+the experts' noise models are mixed instead of their full \acrshort{svgp}s.
+$\furtherBound$ offers a rich \acrshort{elbo} for optimising \acrshort{mosvgpe} that achieves similar results to $\tightBound$,
 whilst having lower computational complexity per evaluation.
 For this reason, the remainder of this dissertation uses $\furtherBound$ for all experiments.
 
@@ -7285,7 +7518,7 @@ For this reason, the remainder of this dissertation uses $\furtherBound$ for all
 \caption[\acrshort{mosvgpe}'s latent variables' posteriors with $\ModeInd=3$ after training on motorcycle data set with $\furtherBound$ and $\furtherBoundTwo$]{Visualisation of the model's latent variables (instantiated with $\ModeInd=3$ experts), after training on the
 Motorcycle data set \citep{Silverman1985}, with $\furtherBound$ (left column)
 and with $\furtherBoundTwo$ (right column).
-(\subref{fig-expert-gps-mcycle-three-experts-tight}-\subref{fig-expert-gps-mcycle-three-experts-further}) show the GP
+(\subref{fig-expert-gps-mcycle-three-experts-tight}-\subref{fig-expert-gps-mcycle-three-experts-further}) show the \acrshort{gp}
 posteriors associated with the experts' latent functions $q(\mode{\latentFunc}(\state_*))$,
 where the solid lines show the mean and the shaded regions show the $95\%$ confidence intervals, i.e. $\pm2\sigma$.
 The gating network's \acrshort{gp} posteriors $q(h_{k}(\state_*))$ are shown in
@@ -7304,15 +7537,15 @@ their associated mixing probabilities $\approxPredictiveProb$ in
 One of the main benefits of the variational inference scheme presented in this chapter, is that the bound can be
 calculated with minibatches of a data set $\dataset$ and used as the objective for stochastic gradient descent.
 Decreasing the batch size increases the stochasticity in the bound and leads to convergence in less evaluations of
-the ELBO.
-This is evident in cref:fig-mcycle-training-curve, which compares the negative ELBO for different
+the \acrshort{elbo}.
+This is evident in cref:fig-mcycle-training-curve, which compares the negative \acrshort{elbo} for different
 numbers of inducing points and batch sizes.
-Further to this, computing the ELBO is less computationally demanding for smaller batch sizes.
+Further to this, computing the \acrshort{elbo} is less computationally demanding for smaller batch sizes.
 However, if the batch size is made too small, then the optimisation can become unstable and prevent the optimiser
 from finding a good solution.
 The (blue) learning curve for batch size $N_b=32$ in cref:fig-mcycle-training-curve-133 shows an example of this behaviour.
 In this case, the learning rate had to be made smaller, leading to slower convergence.
-This is shown by the orange learning curve, which has not been able to reach the same negative ELBO as the other batch
+This is shown by the orange learning curve, which has not been able to reach the same negative \acrshort{elbo} as the other batch
 sizes.
 This is most likely due to the lower learning rate.
 This interplay between the batch size and learning rate is well-known in machine learning.
@@ -7328,7 +7561,7 @@ of inducing points $\NumInducing$.
 Best performance is obtained when the model is instantiated with $\NumInducing=133$ inducing inputs,
 i.e. a one-to-one correspondence between inducing inputs and
 data inputs, $\expertInducingInput=\gatingInducingInput=\allInput$.
-As the number of inducing points decreases the model is still able to recover the same negative ELBO.
+As the number of inducing points decreases the model is still able to recover the same negative \acrshort{elbo}.
 
 \todo{add results for num inducing points leading to worse performance e.g. M=8}
 
@@ -7338,8 +7571,8 @@ all experiments.
 This indicates that $\furtherBound$ does not loosen the bound to a point where it loses valuable information.
 In contrast, $\furtherBoundTwo$ is not able to recover the same results.
 This was expected as $\furtherBoundTwo$ corresponds to a further likelihood approximation, where
-the experts' noise models are mixed instead of their full SVGPs.
-$\furtherBound$ offers a rich ELBO for optimising \acrshort{mosvgpe} that achieves similar results to $\tightBound$,
+the experts' noise models are mixed instead of their full \acrshort{svgp}s.
+$\furtherBound$ offers a rich \acrshort{elbo} for optimising \acrshort{mosvgpe} that achieves similar results to $\tightBound$,
 whilst having lower computational complexity per evaluation.
 For this reason, the remainder of this dissertation uses $\furtherBound$ for all experiments.
 
@@ -7379,12 +7612,12 @@ For this reason, the remainder of this dissertation uses $\furtherBound$ for all
 %\subcaption{}
 %\label{fig-y-samples-mcycle-three-experts}
 %\end{minipage}
-\caption{Visualisation of the model instantiated with $\ModeInd=2$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\tightBound$ (left column) and with $\furtherBound$ (right column).  \subref{fig-y-means-mcycle-two-experts-tight}-\subref{fig-y-means-mcycle-two-experts-further} show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and a SVGP (red dashed line) for comparison. \subref{fig-y-samples-mcycle-two-experts-tight}-\subref{fig-y-samples-mcycle-two-experts-further} show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the SVGP posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All GPs use Squared Exponential kernels and $M=32$ inducing points.}
+\caption{Visualisation of the model instantiated with $\ModeInd=2$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\tightBound$ (left column) and with $\furtherBound$ (right column).  \subref{fig-y-means-mcycle-two-experts-tight}-\subref{fig-y-means-mcycle-two-experts-further} show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and a \acrshort{svgp} (red dashed line) for comparison. \subref{fig-y-samples-mcycle-two-experts-tight}-\subref{fig-y-samples-mcycle-two-experts-further} show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the \acrshort{svgp} posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All \acrshort{gps} use Squared Exponential kernels and $M=32$ inducing points.}
 \label{fig-y-mcycle-two-vs-three-experts}
 \end{figure}
 #+END_EXPORT
 
-# #+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a SVGP with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the SVGP (solid red line). Both models use squared exponential covariance functions for all GPs.
+# #+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a \acrshort{svgp} with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the \acrshort{svgp} (solid red line). Both models use squared exponential covariance functions for all \acrshort{gps}.
 
 **** two vs three expert latent fig :ignore:noexport:
 #+BEGIN_EXPORT latex
@@ -7459,11 +7692,11 @@ For this reason, the remainder of this dissertation uses $\furtherBound$ for all
 \subcaption{}
 \label{fig-mcycle-training-curve-16}
 \end{minipage}
-\caption[Motorcycle training curves]{Training curves showing the negative ELBO (- $\furtherBound$) vs step when training
+\caption[Motorcycle training curves]{Training curves showing the negative \acrshort{elbo} (- $\furtherBound$) vs step when training
 \acrshort{mosvgpe} (instantiated with two experts $\ModeInd=2$), on the
 Motorcycle data set \citep{Silverman1985} with different numbers of inducing points $M$ and different
 batch sizes $\NumData_b$. All experiments used the Adam optimiser \citep{kingmaAdam2017} with a learning rate
-of $0.01$ and Squared Exponential kernels for all GPs.}
+of $0.01$ and Squared Exponential kernels for all \acrshort{gps}.}
 \label{fig-mcycle-training-curve}
 \end{figure}
 #+END_EXPORT
@@ -7617,7 +7850,7 @@ The model was trained using the model and training parameters in cref:tab-params
 \end{minipage}
 \begin{minipage}[r]{1.0\textwidth}
 \includegraphics[width=\textwidth]{./images/model/quadcopter/subset-10/gating_gps.pdf}
-\subcaption{GP posteriors over gating functions.}
+\subcaption{\acrshort{gp} posteriors over gating functions.}
 \label{fig-gating-gps-quadcopter-subset}
 \end{minipage}
 \caption[\acrshort{mosvgpe}'s gating network posterior with $\ModeInd=2$ after training on the real-world quadcopter data set with $\furtherBound$]{Visualisation of the gating network after training on the quadcopter data set. The plots in (\subref{fig-gating-mixing-probs-quadcopter-subset}) show the predictive mixing probabilities $\predictiveProb$ for Expert 1 (left) and Expert 2 (right). The plots in (\subref{fig-gating-gps-quadcopter-subset}) show the predictive \acrshort{gp} posteriors $q(h_{k}(\singleTestInput))$ associated with Expert 1 (top) and Expert 2 (bottom). The left-hand plots show the means and the right-hand plots show the variances.}
@@ -7668,17 +7901,17 @@ This implies that Expert 2 represents the turbulent dynamics mode in front of th
 Figure ref:fig-gating-gps-quadcopter-subset shows the \acrshort{gp} posteriors associated with the gating functions.
 The mean of the gating function associated with Expert 1 $\E[h_{1}(\singleTestInput)]$ is
 high (red) in the low-turbulence regions and low (white) in the high-turbulence region in front of the fan.
-The posterior variance associated with the gating function GPs is high in the region with no training
+The posterior variance associated with the gating function \acrshort{gps} is high in the region with no training
 observations. This is a desirable behaviour because it is modelling the /epistemic uncertainty/.
 These results demonstrate that the gating network infers important information regarding how the
 system switches between dynamics modes over the input space.
 # The mean also tends to zero where the model has had no training observations.
 
 *Identifiability*
-These results show that the GP-based gating network is capable of turning a single expert
+These results show that the \acrshort{gp}-based gating network is capable of turning a single expert
 on in multiple regions of the input space.
 This is a desirable behaviour as it has enabled only two underlying dynamics modes to be identified.
-In contrast, other MoGPE methods may have assigned an extra expert to one of the regions modelled by Expert 1.
+In contrast, other \acrshort{mogpe} methods may have assigned an extra expert to one of the regions modelled by Expert 1.
 In particular, the regions at $y>0$ and $y<-1$ may have been assigned to separate experts.
 
 *Latent spaces for control*
@@ -7686,7 +7919,7 @@ The gating network consists of two spaces which are rich with information regard
 system switches between dynamics modes.
 Firstly, the pmf over the expert indicator variable.
 Secondly, the \acrshort{gp} posteriors over the gating functions.
-It is worth noting that all MoGPE methods obtain a pmf over the expert indicator variable and
+It is worth noting that all \acrshort{mogpe} methods obtain a pmf over the expert indicator variable and
 this space suffers from interpretability issues.
 Consider the meaning of the mixing probabilities tending to a uniform
 distribution ${\Pr(\singleTestModeVarK \mid \singleTestInput)=0.5}$.
@@ -7698,7 +7931,7 @@ It could mean that,
 # 2) the model has training data in this region, so can confidently predict and is confident that the observations are generated by an equal mixture of the experts,
 # It could mean that the model is confident that the observations are generated by an equal mixture of the experts,
 # or it could mean that the gating network is not confident making predictions in this region.
-This interpretability issue is overcome by our GP-based gating network, as these two cases are modelled differently.
+This interpretability issue is overcome by our \acrshort{gp}-based gating network, as these two cases are modelled differently.
 Either the gating function(s) are all equal and their posterior variance(s) are low, implying that the gating network
 can predict confidently but is unsure which expert is responsible.
 This could mean that an extra expert is responsible for predicting at this location.
@@ -7779,8 +8012,8 @@ assignment of observations to experts via the inducing points.
 # high in the low-turbulence regions and low in front of the fan, i.e. the high-turbulence mode.
 # The mean also tends to zero where the model has had no training observations.
 # The posterior variance is also high in this region, indicating that the gating
-# network GPs have successfully modelled the /epistemic uncertainty/.
-# Exploiting a GP-based gating network has clearly provided a principled approach to distinguishing
+# network \acrshort{gps} have successfully modelled the /epistemic uncertainty/.
+# Exploiting a \acrshort{gp}-based gating network has clearly provided a principled approach to distinguishing
 # between the different reasons the mixing probabilities may tend to a uniform distribution.
 
 
@@ -7788,9 +8021,9 @@ assignment of observations to experts via the inducing points.
 
 
 # The posterior variance is high where the model has not observed
-# the system, indicating that the gating network GPs successfully infer the epistemic uncertainty when using the
+# the system, indicating that the gating network \acrshort{gps} successfully infer the epistemic uncertainty when using the
 # inference scheme in Section ref:sec-inference.
-# Formulating the gating network based on GPs has clearly provided a principled approach to distinguishing
+# Formulating the gating network based on \acrshort{gps} has clearly provided a principled approach to distinguishing
 # between the different reasons the mixing probabilities may tend to a uniform distribution.
 
 # The predictive posterior is mixture of $\ModeInd$ Gaussian resulting from combining the experts according to
@@ -8032,10 +8265,10 @@ the angular (yaw) velocity $\dot{\yaw}$,
 ** Discussion and Future Work
 
 *Implicit data assignment*
-It is worth noting that in contrast to other MoGPE methods, this model does not directly assign observations to experts.
+It is worth noting that in contrast to other \acrshort{mogpe} methods, this model does not directly assign observations to experts.
 However, after augmenting each expert with separate inducing points,
 the model has the flexibility to loosely /partition/ the data set.
-Just as sparse \acrshort{gp} methods can be viewed as methods that parameterise the full nonparametric GP,
+Just as sparse \acrshort{gp} methods can be viewed as methods that parameterise the full nonparametric \acrshort{gp},
 our approach can be viewed as parameterising the nonparametric Mixture of Gaussian Process Experts.
 Conveniently, our parameterisation, in particular the likelihood approximation in cref:eq-likelihood-approximation,
 deals with the issue of marginalising exponentially many sets of assignments of observations to experts.
@@ -8060,7 +8293,7 @@ In some instances, we observe that optimising the inducing inputs leads to them 
 training data.
 Often this can be avoided by simply sampling the inducing inputs from
 the training inputs and fixing them, i.e. not optimising them.
-This often leads to better NLPP scores as well.
+This often leads to better \acrshort{nlpp} scores as well.
 This observation highlights that a Bayesian treatment of the inducing inputs is an interesting direction for future work.
 However, specifying priors and performing /efficient/ posterior inference over the inducing inputs
 is a challenging problem.
@@ -8071,13 +8304,13 @@ In conventional \acrshort{mogpe} methods, the /epistemic uncertainty/ associated
 gating network is not decoupled from the probability mass function over the expert indicator variable.
 This is because an uncertain gating network is represented by a uniform distribution over the expert indicator variable.
 In contrast, \acrshort{mosvgpe} models the uncertainty associated with each gating function via
-their GPs' posterior covariance.
-Further to this, formulating the gating network GPs
+their \acrshort{gps}' posterior covariance.
+Further to this, formulating the gating network \acrshort{gps}
 with differentiable mean and covariance functions, enables techniques from Riemannian geometry
 to be deployed on the gating functions citep:carmoRiemannian1992.
 The power of the \acrshort{gp}-based gating network will become apparent
 when its latent /geometry/ is leveraged for control in cref:chap-traj-opt-geometry and when
-its \acrshort{gp}s are used to develop an information-based exploration strategy in cref:chap-active-learning.
+its \acrshort{gps} are used to develop an information-based exploration strategy in cref:chap-active-learning.
 # In particular, cref:chap-traj-opt-geometry is interested in finding length minimising trajectories on the
 # gating functions' \acrshort{gp} posteriors, aka geodesic trajectories citep:tosiMetrics2014.
 
@@ -8089,7 +8322,7 @@ be exploited for control,
 this work formulated a gating network based on input-dependent gating functions.
 This aids the inherent identifiability issues associated with mixture models
 as it can be used to constrain the set of admissible functions through the placement of informative
-GP priors on the gating functions.
+\acrshort{gp} priors on the gating functions.
 Further to this, the \acrshort{gp} posteriors over the gating functions provide convenient latent spaces for control.
 This is because they are rich with information regarding the separation of the underlying dynamics modes
 and also model the /epistemic uncertainty/ associated with the gating network.
@@ -8105,18 +8338,18 @@ and also model the /epistemic uncertainty/ associated with the gating network.
 The variational inference scheme presented in this chapter addresses the issue of marginalising
 every possible set of assignments of observations to experts
 -- of which there are $\ModeInd^{\NumData}$ possibilities
--- in the MoGPE marginal likelihood.
-It overcomes the issue of assigning observations to experts by augmenting each expert GP
+-- in the \acrshort{mogpe} marginal likelihood.
+It overcomes the issue of assigning observations to experts by augmenting each expert \acrshort{gp}
 with a set of inducing points.
 These inducing points are assumed to be a sufficient statistic for the joint distribution
 over every possible set of assignments to experts.
 This induces a factorisation over data which
-is used to derive three ELBOs that provide a coupling between the
+is used to derive three \acrshort{elbo}s that provide a coupling between the
 optimisation of the experts and the gating network, by efficiently marginalising the expert indicator variable for single
 data points.
-The ELBOs are compared on the Motorcycle data set citep:Silverman1985.
+The \acrshort{elbo}s are compared on the Motorcycle data set citep:Silverman1985.
 The $\furtherBound$ bound provides the best performance as it balances the accuracy offered by the tight bound $\tightBound$,
-with the computational improvements offered by further bounding the GPs.
+with the computational improvements offered by further bounding the \acrshort{gps}.
 The results demonstrate that the variational inference scheme principally handles uncertainty whilst
 providing scalability via stochastic variational inference.
 The method is further evaluated on a real-world quadcopter example demonstrating that
@@ -8455,7 +8688,7 @@ Visualisation of the gating network posterior after training \acrshort{mosvgpe}
 on the state transition data set from the simulated version of the 2D quadcopter environment
 in the illustrative example from \cref{illustrative_example}.
 (\subref{eq-traj-opt-gating-network-prob-post}) shows the probability mass function over the expert indicator
-variable and (\subref{eq-traj-opt-gating-network-gp-post}) shows the gating function's GP
+variable and (\subref{eq-traj-opt-gating-network-gp-post}) shows the gating function's \acrshort{gp}
 posterior mean (left) and posterior variance (right).
 The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line)
 and the subset of the environment which has not been observed (hashed box).}
@@ -8670,7 +8903,7 @@ of length minimising trajectories to probabilistic manifolds.
 
 Following cite:tosiMetrics2014 this work formulates a metric tensor that captures the variance in the manifold
 via a probability distribution.
-First note that as the differential operator is linear, the derivative of a \acrshort{gp} is also a GP,
+First note that as the differential operator is linear, the derivative of a \acrshort{gp} is also a \acrshort{gp},
 assuming that the mean and covariance functions are differentiable.
 #+BEGIN_EXPORT latex
 \begin{assumption}[Differentiable Gaussian Process] \label{}
@@ -8685,7 +8918,7 @@ $\exists \frac{\partial \mu(\state)}{\partial \state}, \frac{\partial^2 k(\state
 %\todo{should there be minus mean function in jac?}
 \begin{myquote}
 \textbf{Gaussian Process Jacobian}
-As the differential operator is linear, a function $\manifoldFunction: \gatingDomain \rightarrow  \R$ distributed as a GP,
+As the differential operator is linear, a function $\manifoldFunction: \gatingDomain \rightarrow  \R$ distributed as a \acrshort{gp},
 \begin{align} \label{eq-jacobian-gp-random-var}
 \manifoldFunction(\cdot) \sim \mathcal{GP}\left(\mu(\cdot), k(\cdot, \cdot)\right),
 \end{align}
@@ -8844,16 +9077,16 @@ encodes all of the goals.
 As shortest lengths on a manifold are known as geodesics, we refer to them as geodesic trajectories.
 The algorithm presented in this section
 exploits a classic result of Riemannian geometry, that geodesic trajectories are solutions
-to a 2^{nd} order \acrshort{ode}, known as the geodesic ODE $f_G$.
-As solutions to this ODE encode the necessary conditions for finding length minimising trajectories,
+to a 2^{nd} order \acrshort{ode}, known as the geodesic \acrshort{ode} $f_G$.
+As solutions to this \acrshort{ode} encode the necessary conditions for finding length minimising trajectories,
 the method presented in this section resembles an indirect optimal control method.
 
 # This algorithm exploits the fact that geodesic trajectories are solutions to a 2^{nd} order \acrshort{ode} and projects
 # the optimisation onto this \acrshort{ode}.
 
-# Therefore, the geodesic ODE encodes the necessary conditions for minimising our objective function
+# Therefore, the geodesic \acrshort{ode} encodes the necessary conditions for minimising our objective function
 
-# Therefore, the geodesic ODE encodes the necessary conditions for minimising our objective function
+# Therefore, the geodesic \acrshort{ode} encodes the necessary conditions for minimising our objective function
 # and projects
 # the optimisation onto this \acrshort{ode}.
 
@@ -8942,7 +9175,7 @@ Collocation methods are used to transcribe continuous-time trajectory optimisati
 nonlinear programs, i.e. constrained parameter optimisations citep:kellyIntroduction2017,fahrooDirect2000.
 The expected metric in cref:eq-expected-metric is substituted into cref:eq-2ode and solved via collocation.
 This work implements a Hermite-Simpson collocation method.
-It parameterises the state trajectory using cubic polynomials and the dynamics equations (the geodesic ODE in this case)
+It parameterises the state trajectory using cubic polynomials and the dynamics equations (the geodesic \acrshort{ode} in this case)
 are imposed as constraints at a set of collocation points.
 The trajectory $[t_0, t_f]$ is discretised into $I$ intervals where the collocation points
 are the mid points of the discretisation intervals.
@@ -9036,8 +9269,8 @@ $\stateTraj = \{\state_{\timeInd}\}_{\timeInd=0}^{I} = \{\stateCol_{i}\}_{i=0}^{
 The state difference outputs $\stateDiffTraj = \{\stateDiff_{\timeInd}\}_{\timeInd=1}^{\TimeInd}$ are then
 calculated from the state trajectory $\stateTraj$.
 The control trajectory $\controlTraj$ is then inferred from the state trajectory by extending
-the ELBO for the desired mode's SVGP expert with latent variable inputs.
-Following cite:hensmanGaussian2013, the ELBO for a single SVGP expert is given by,
+the \acrshort{elbo} for the desired mode's \acrshort{svgp} expert with latent variable inputs.
+Following cite:hensmanGaussian2013, the \acrshort{elbo} for a single \acrshort{svgp} expert is given by,
 #+BEGIN_EXPORT latex
 \begin{align}
 \log p(\stateDiffTraj \mid \stateTraj, \controlTraj) \geq
@@ -9071,7 +9304,7 @@ q(\controlTraj) = \prod_{\timeInd=0}^{\TimeInd-1} \mathcal{N}(\control_{\timeInd
 #+END_EXPORT
 The posterior over the latent control trajectory $q(\controlTraj) \approx p(\controlTraj \mid \stateTraj, \stateDiffTraj)$
 is obtained by finding the variational parameters
-$\{\mathbf{m}_{\timeInd}, \mathbf{S}_{\timeInd}\}_{\timeInd=0}^{\TimeInd-1}$ that maximise the ELBO in
+$\{\mathbf{m}_{\timeInd}, \mathbf{S}_{\timeInd}\}_{\timeInd=0}^{\TimeInd-1}$ that maximise the \acrshort{elbo} in
 cref:eq-control-elbo.
 
 # This objective regularises the control trajectory under the L2 norm.
@@ -9083,7 +9316,7 @@ cref:eq-control-elbo.
 # *** Results label:sec-traj-opt-results
 # #+NAME: fig-geometric-traj-opt-over-svgp
 # #+ATTR_LATEX: :width 1.1\textwidth :placement [!t] :center t
-# #+caption: Contour plots showing the \acrshort{gp} posterior mean (left) and variance (right) over the gating function associated with dynamics mode 1 after training on a subset of the quadcopter data set. The initial and optimised trajectories are overlayed to show the influence of the GP's mean and variance on the trajectory optimisation with different $\lambda$ settings.
+# #+caption: Contour plots showing the \acrshort{gp} posterior mean (left) and variance (right) over the gating function associated with dynamics mode 1 after training on a subset of the quadcopter data set. The initial and optimised trajectories are overlayed to show the influence of the \acrshort{gp}'s mean and variance on the trajectory optimisation with different $\lambda$ settings.
 # [[file:./images/geometric-traj-opt-over-svgp.pdf]]
 
 **** Remarks :ignore:
@@ -9101,7 +9334,7 @@ Without the inclusion of the full probabilistic dynamics model, it is impossible
 to consider the full distribution over state-control trajectories.
 Although propagating uncertainty through a single dynamics \acrshort{gp} is straightforward,
 handling the collocation constraints is not.
-This is because the geodesic \acrshort{ode} will become a Stochastic Differential Equation (SDE).
+This is because the geodesic \acrshort{ode} will become a \acrfull{sde}.
 #+BEGIN_EXPORT latex
 \begin{remark}
 Ignores much of the stochasticity inherent in the problem.
@@ -9192,7 +9425,7 @@ Without the inclusion of the full probabilistic dynamics model, it is impossible
 to consider the full distribution over state-control trajectories.
 Although propagating uncertainty through a single dynamics \acrshort{gp} is straightforward,
 handling the collocation constraints is not.
-This is because the geodesic \acrshort{ode} will become a Stochastic Differential Equation (SDE).
+This is because the geodesic \acrshort{ode} will become a \acrshort{sde}.
 #+BEGIN_EXPORT latex
 \begin{remark}
 Ignores much of the stochasticity inherent in the problem.
@@ -9470,7 +9703,7 @@ $\ModeInd^{\TimeInd}$ Gaussian components.
 This work sidesteps this issue and obtains closed-form multi-step predictions
 by enforcing that the controlled system remains in the desired dynamics mode.
 Multi-step predictions can then be calculated in closed-form by cascading single-step predictions
-using the desired dynamics GP, whose transition density is given by,
+using the desired dynamics \acrshort{gp}, whose transition density is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-single-dynamics-gp}
 \transitionDistK
@@ -9486,7 +9719,7 @@ where
 $\mathbf{A}_{\desiredMode} = \desiredExpertKernel(\singleInput, \desiredExpertInducingInput)\desiredExpertKernel(\desiredExpertInducingInput, \desiredExpertInducingInput)^{-1}$
 and $\singleInput=(\state_{\timeInd}, \control_{\timeInd})$.
 Cascading single-step predictions requires recursively mapping uncertain state-control inputs through
-the desired mode's dynamics GP, i.e. recursively calculating the following integral,
+the desired mode's dynamics \acrshort{gp}, i.e. recursively calculating the following integral,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-state-unc-prop}
 p(\state_{\timeInd+1} \mid \state_0, \control_{0:\timeInd}, \bm\modeVar_{0:\timeInd}=\desiredMode)
@@ -10282,7 +10515,7 @@ in particular for inverse optimal control citep:ziebartModeling2010.
 *Other approaches* There are multiple approaches to performing inference in this graphical model.
 Trading accuracy for computational complexity is often required for real-time control.
 In this case, one approach is to approximate the dynamics with linear or
-quadratic approximations, as is done in iLQR/iLQG and DDP respectively.
+quadratic approximations, as is done in \acrshort{ilqr}/\acrshort{ilqg} and \acrshort{gp} respectively.
 Given linear dynamics,
 the full graphical model in cref:eq-traj-opt-joint-dist can be
 computed using approximate Gaussian message passing, for which effective methods exist citep:loeligerFactor2007.
@@ -10600,7 +10833,7 @@ it suffices to assume that the dynamics are given by the desired mode's learned 
 Constructing approximate closed-form solutions based on the model in cref:chap-dynamics
 is difficult, due to the exponential growth in the number of Gaussian components.
 Similar to the approach in cref:sec-dynamics-predictions, this chapter obtains multi-step
-predictions by cascading single-step predictions through the desired mode's dynamics GP.
+predictions by cascading single-step predictions through the desired mode's dynamics \acrshort{gp}.
 However, this approach extends the predictions to handle normally distributed controls
 $\control_{\timeInd} \sim \mathcal{N}(\controlMean, \controlCov)$.
 Multi-step predictions are then obtained by recursively calculating the following integral,
@@ -10645,7 +10878,7 @@ Variational inference seeks to optimise $q(\controlTraj)$
 w.r.t. the \acrfull{elbo}.
 In this setup, the evidence is that $\optimalVar_{\timeInd}=1$ and $\modeVar_{\timeInd}=\desiredMode$ for
 all $\timeInd \in \{0,\ldots,\TimeInd\}$.
-Given this, the ELBO is given by,
+Given this, the \acrshort{elbo} is given by,
 # but we drop the dependence from here on out for notational conciseness.
 # #+BEGIN_EXPORT latex
 # \small
@@ -10702,7 +10935,7 @@ term reducing to an entropy term and a constant,
 + \sum_{\timeInd=0}^{\TimeInd-1} \underbrace{H[\control_{\timeInd}]}_{\text{entropy}}.
 \end{align}
 #+END_EXPORT
-The ELBO in cref:eq-traj-opt-elbo resembles the KL control objective in cref:eq-kl-control-uniform
+The \acrshort{elbo} in cref:eq-traj-opt-elbo resembles the KL control objective in cref:eq-kl-control-uniform
 but with an extra term encoding the mode remaining behaviour.
 In practice, maximum entropy control is achieved by parameterising the control at each time step to
 be normally distributed ${\controlVarDist = \mathcal{N}(\control_{\timeInd} \mid \controlMean, \controlCov)}$.
@@ -11123,7 +11356,7 @@ perform significantly better than the \acrfull{ig} method.
 # In cref:chap-traj-opt-results
 # the method is evaluated and compared to the geometry-based methods from cref:chap-traj-opt-geometry.
 
-# The first method is an indirect optimal control method that projects the trajectory optimisation onto the geodesic ODE
+# The first method is an indirect optimal control method that projects the trajectory optimisation onto the geodesic \acrshort{ode}
 # and recovers the control trajectory using a variational inference with latent variable inputs.
 # The second method is a direct method that obtains
 
@@ -11341,7 +11574,7 @@ See cref:sec-brl-experiment for more details on data collection and processing.
 \begin{minipage}[r]{\columnwidth}
 \centering
 \includegraphics[width=\textwidth]{./images/geometric-traj-opt-over-svgp.pdf}
-\subcaption{GP posterior mean (left) and variance (right) over the desired mode's gating function.}
+\subcaption{\acrshort{gp} posterior mean (left) and variance (right) over the desired mode's gating function.}
 \label{fig-geometric-traj-opt-over-svgp}
 \end{minipage}
 \caption[\acrfull{ig} trajectory optimisation results in real-world quadcopter experiments over gating network posterior]{\textbf{\acrfull{ig}} trajectory optimisation results after solving the nonlinear
@@ -11456,7 +11689,7 @@ metric has no benefit.
 This is because it pushes the trajectory into the turbulent dynamics mode.
 
 These results indicate that the nonlinear program in cref:eq-collocation-problem,
-i.e. solving the geodesic ODE in cref:eq-2ode via collocation, is capable of finding state
+i.e. solving the geodesic \acrshort{ode} in cref:eq-2ode via collocation, is capable of finding state
 trajectories from $\state_0$ to $\targetState$ that exhibit mode remaining behaviour.
 However, these experiments have not validated the method's ability to recover the controls from the state trajectory
 using cref:eq-control-elbo.
@@ -11677,7 +11910,7 @@ This results from Expert 1 learning much higher drift and process noise than Exp
 \caption[Environment 1 gating network posterior]{\textbf{Environment 1} Visualisation of the gating network posterior after training \acrshort{mosvgpe}
 on the state transition data set from Environment 1.
 (\subref{eq-traj-opt-gating-network-prob-post-7}) shows the probability mass function over the expert indicator
-variable and (\subref{eq-traj-opt-gating-network-gp-post-7}) shows the gating function's GP
+variable and (\subref{eq-traj-opt-gating-network-gp-post-7}) shows the gating function's \acrshort{gp}
 posterior mean (left) and posterior variance (right).
 The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line)
 and the subset of the environment which has not been observed (hashed box).}
@@ -11703,7 +11936,7 @@ and the subset of the environment which has not been observed (hashed box).}
 \caption[Environment 2 gating network posterior]{\textbf{Environment 2} Visualisation of the gating network posterior after training \acrshort{mosvgpe}
 on the state transition data set from Environment 2.
 (\subref{eq-traj-opt-gating-network-prob-post-5}) shows the probability mass function over the expert indicator
-variable and (\subref{eq-traj-opt-gating-network-gp-post-5}) shows the gating function's GP
+variable and (\subref{eq-traj-opt-gating-network-gp-post-5}) shows the gating function's \acrshort{gp}
 posterior mean (left) and posterior variance (right).
 The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line)
 and the subset of the environment which has not been observed (hashed box).}
@@ -11957,13 +12190,13 @@ along the collocation solver's state trajectory.
 This can be seen by the dynamics trajectories (right in cref:fig-collocation-traj-opt-5)
 differing from the collocation trajectories (left in cref:fig-collocation-traj-opt-5.
 
-One possible explanation is that the ELBO in cref:eq-control-elbo-svgp was not able
+One possible explanation is that the \acrshort{elbo} in cref:eq-control-elbo-svgp was not able
 to recover the controls due to a local optimum.
 The collocation state trajectories (left) in the experiments with $\lambda=0.5, 1.0, 5.0$, which were initialised
 with straight line trajectories, passed through the turbulent dynamics mode.
 As this region belongs to the turbulent dynamics mode, the desired mode's dynamics \acrshort{gp} has high /epistemic uncertainty/
 in this region.
-This high uncertainty may have resulted in the ELBO being low when trajectories pass through this region and
+This high uncertainty may have resulted in the \acrshort{elbo} being low when trajectories pass through this region and
 as a result, the gradient-based optimiser may have got stuck in this local minima.
 Further to this, the experiment that was initialised with a mid point at $[-2.0, -2.0]$ (purple)
 was not able to recover the correct controls, even though the collocation state trajectory (purple squares)
@@ -12268,7 +12501,7 @@ each trajectory.
 In all Environment 1 experiments,
 the state variance accumulated over the trajectory (from cascading single-step predictions via moment matching)
 were fairly similar.
-This is due to the dynamics of the simulator being simple enough that the desired mode's GP
+This is due to the dynamics of the simulator being simple enough that the desired mode's \acrshort{gp}
 can confidently interpolate into both the turbulent dynamics mode and the region which has not been observed.
 In the latter case, it is up to the gating network to model the /epistemic uncertainty/ arising from limited
 training data.
@@ -12416,8 +12649,8 @@ The probability of remaining in the desired dynamics mode does not capture this 
 There are two reasons for this.
 Firstly, the gating network is overconfident in this region due to learning a long lengthscale.
 This could be overcome by fixing the lengthscale a priori.
-However, there is a second issue due to the fundamental modelling approximation made by GPs.
-The GP-based gating network is not aware that the region with no observations is so large that it could fit
+However, there is a second issue due to the fundamental modelling approximation made by \acrshort{gps}.
+The \acrshort{gp}-based gating network is not aware that the region with no observations is so large that it could fit
 another turbulent dynamics mode inside it.
 This is due to the Squared Exponential kernel function relying on point-wise calculations to build the covariance
 matrix.
@@ -12472,8 +12705,8 @@ The probability of remaining in the desired dynamics mode does not capture this 
 There are two reasons for this.
 Firstly, the gating network is overconfident in this region due to learning a long lengthscale.
 This could be overcome by fixing the lengthscale a priori.
-However, there is a second issue due to the fundamental modelling approximation made by GPs.
-The GP-based gating network is not aware that the region with no observations is so large that it could fit
+However, there is a second issue due to the fundamental modelling approximation made by \acrshort{gps}.
+The \acrshort{gp}-based gating network is not aware that the region with no observations is so large that it could fit
 another turbulent dynamics mode inside it.
 This is due to the Squared Exponential kernel function relying on point-wise calculations to build the covariance
 matrix.
@@ -12758,7 +12991,7 @@ All plots show a slice of the input space with constant zero controls.}
 \subcaption{}
 \label{fig-mode-conditioning-max-entropy-traj-opt-over-svgp-7}
 \end{minipage}
-\caption{\textbf{Mode conditioning ELBO with maximum entropy control}
+\caption{\textbf{Mode conditioning \acrshort{elbo} with maximum entropy control}
 Trajectory optimisation results finding trajectories from the start state $\state_0$,
 to the target state $\targetState$, after solving \cref{eq-traj-opt-inference} with Gaussian controls
 (maximum entropy control).
@@ -12787,7 +13020,7 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \subcaption{}
 \label{fig-mode-conditioning-no-max-entropy-traj-opt-over-svgp-7}
 \end{minipage}
-\caption{\textbf{Mode conditioning ELBO without maximum entropy control}
+\caption{\textbf{Mode conditioning \acrshort{elbo} without maximum entropy control}
 Trajectory optimisation results finding trajectories from the start state $\state_0$,
 to the target state $\targetState$, after solving \cref{eq-traj-opt-inference} with deterministic controls
 (no maximum entropy control).
@@ -13094,7 +13327,7 @@ All plots show a slice of the input space with constant zero controls.}
 \subcaption{}
 \label{fig-mode-conditioning-max-entropy-traj-opt-over-svgp-5}
 \end{minipage}
-\caption{\textbf{Mode conditioning ELBO with maximum entropy control}
+\caption{\textbf{Mode conditioning \acrshort{elbo} with maximum entropy control}
 Trajectory optimisation results finding trajectories from the start state $\state_0$,
 to the target state $\targetState$, after solving \cref{eq-traj-opt-inference} with Gaussian controls
 (maximum entropy control).
@@ -13123,7 +13356,7 @@ the posterior mean (left) and posterior variance (right) associated with the des
 \subcaption{}
 \label{fig-mode-conditioning-no-max-entropy-traj-opt-over-svgp-5}
 \end{minipage}
-\caption{\textbf{Mode conditioning ELBO without maximum entropy control}
+\caption{\textbf{Mode conditioning \acrshort{elbo} without maximum entropy control}
 Trajectory optimisation results finding trajectories from the start state $\state_0$,
 to the target state $\targetState$, after solving \cref{eq-traj-opt-inference} with deterministic controls
 (no maximum entropy control).
@@ -13221,7 +13454,7 @@ Both the \acrfull{dre} and the control-as-inference with maximum entropy control
 # The indirect geodesic control via latent geodesics \acrshort{ig} method did not perform very well in the experiments.
 # Further to this, setting the bounds on it's collocation solver's constraints is awkward
 # and impacts how much mode remaining behaviour is exhibited.
-# Setting the bounds too loose results in trajectories not satisfying the geodesic ODE whilst
+# Setting the bounds too loose results in trajectories not satisfying the geodesic \acrshort{ode} whilst
 # setting them too tight leads to the constrained optimisation exiting with an error.
 # In contrast, the direct optimal control via Riemannian energy \acrshort{dre} method requires
 # little to no human input to initialise the optimisation.
@@ -13306,7 +13539,7 @@ in the desired dynamics mode.
 Although this did not have a massive impact in the simulated quadcopter experiments, it may have a
 larger impact in real-world systems with more complex dynamics modes.
 # That is, systems whose underlying dynamics result in each mode's dynamics \acrshort{gp} being more uncertain.
-# In the simulated quadcopter experiments, the GPs representing the underlying dynamics modes were fairly certain --
+# In the simulated quadcopter experiments, the \acrshort{gps} representing the underlying dynamics modes were fairly certain --
 # due to simple dynamics -- so most of the /epistemic uncertainty/ was captured by the gating network.
 
 # It models the state at each time step to be deterministic and approximates the full geodesic \acrshort{sde}
@@ -13403,7 +13636,7 @@ In contrast, the \acrshort{ig} method uses a collocation solver where the cost c
 points along the continuous-time trajectory.
 An interesting direction for future work is to extend the \acrshort{dre} and \acrshort{cai} methods
 to find trajectories in continuous time.
-For example, cite:mukadamContinuoustime2018,dongMotion2016  use \acrshort{gp}s for continuous-time trajectories
+For example, cite:mukadamContinuoustime2018,dongMotion2016  use \acrshort{gps} for continuous-time trajectories
 when solving motion planning via probabilistic inference.
 # This is because they can be used to enforce the dynamics and interpolate the cost with higher resolution.
 # Stochastic collocation methods may offer
@@ -13421,12 +13654,12 @@ flying at low speed may not.
 *Dynamics models*
 The \acrshort{cai} method can be deployed in a wider range of dynamics models than the geometry-based
 methods.
-First of all, it is not limited to differentiable mean and covariance functions for the gating function GPs.
+First of all, it is not limited to differentiable mean and covariance functions for the gating function \acrshort{gps}.
 Secondly, it can be deployed in dynamics models learned with any \acrshort{mogpe} method.
 This is because all \acrshort{mogpe} methods consist of a probability mass function over the expert indicator
 variable.
 In contrast, the geometry-based methods are limited to the \acrshort{mosvgpe} method because they depend on
-it's GP-based gating network.
+it's \acrshort{gp}-based gating network.
 Further to this, the \acrshort{cai} method is applicable in systems where the dynamics modes are not
 necessarily separated according to their state domains $\mode{\stateDomain}$.
 This is because it does not rely on the state-dependent gating functions.
@@ -13455,7 +13688,7 @@ its suitability to obtain a closed-loop controller via \acrshort{mpc} citep:edua
 However, it can be used "offline" to generate reference trajectories for a tracking controller,
 or for guided policy search in a model-based RL setting citep:levineGuided2013.
 Alternatively, future work could investigate approximate inference methods for efficient state estimation
-to aid with real-time control, e.g. iLQG/DDP.
+to aid with real-time control, e.g. \acrshort{ilqg}/\acrshort{gp}.
 
 *Infeasible trajectories*
 It is worth noting that it might not be possible to find a trajectory
@@ -13907,7 +14140,7 @@ This greedy strategy is given by,
 #+END_EXPORT
 This approach is used in \acrshort{pilco} citep:deisenrothPILCO2011 and
 \acrshort{gp}-\acrshort{mpc} citep:kamtheDataEfficient2018
-where the dynamics are represented using \acrshort{gp}s and the moment matching approximation is used to cascade
+where the dynamics are represented using \acrshort{gps} and the moment matching approximation is used to cascade
 single-step predictions.
 cite:parmasPIPPS2018 propose \acrshort{pipps},
 a similar approach to \acrshort{pilco}, except that they use Monte Carlo methods
@@ -13918,9 +14151,9 @@ This strategy initially favours exploring regions of the environment where the l
 model is not confident, i.e. has high /epistemic uncertainty/.
 Once it has gathered knowledge of the environment and the model’s
 epistemic uncertainty has been reduced, it favours maximising the objective function $J(f, \pi)$.
-See cite:curiEfficient2020 for a recap of some commonly used MBRL exploration strategies.
+See cite:curiEfficient2020 for a recap of some commonly used \acrshort{mbrl} exploration strategies.
 
-In contrast to standard MBRL, the method presented in this chapter side-steps the
+In contrast to standard \acrshort{mbrl}, the method presented in this chapter side-steps the
 challenging exploration-exploitation trade-off. That is, \acrshort{modeopt} does not require
 an objective that changes its exploration-exploitation balance as it gathers more
 knowledge of the environment. This is because it uses the $\delta-\text{mode remaining}$ chance
@@ -13933,7 +14166,7 @@ That is, the exploration should be targeted towards the target state $\targetSta
 *** MBRL Alg :ignore:noexport:
 #+BEGIN_EXPORT latex
 \begin{algorithm}[!t]
-\caption{Model-based reinforcement learning}\label{alg-mbrl}
+\caption{\acrfull{mbrl}}\label{alg-mbrl}
 \begin{algorithmic}[1]
 \Require{Policy/controller $\policy_0$, dynamics model $\dynamicsModel}$, start state $\state_0$}
 \For{$i = 0, 1,  \ldots $}
@@ -14012,7 +14245,7 @@ the output predicted by the \acrshort{gpssm}. This contrasts other approaches, w
 to study the latest mutual information $I[\hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{t+1}]$.
 
 *Myopic active learning*
-In reinforcement learning and control it is standard to
+In \acrshort{rl} and control it is standard to
 consider objectives over a (potentially infinite) horizon. Should active learning in
 dynamical systems be any different?
 This dissertation hypothesises that it must
@@ -14036,7 +14269,7 @@ strategy over a finite horizon.
 # that defines a set of constraints. However, the classifier takes the form of the latent
 # gating network of the \acrshort{mosvgpe} dynamics model. The work in this chapter further
 # differs as it leverages an exploration strategy that considers the uncertainty in the
-# gating network, as opposed to the uncertainty in the dynamics GP.
+# gating network, as opposed to the uncertainty in the dynamics \acrshort{gp}.
 
 
 
@@ -14267,7 +14500,7 @@ sparse \acrshort{gp} mean and covariance functions, given by,
 where $\desiredGatingKernel$ and
 $\gatingInducingInput$ are the kernel and inducing inputs
 associated with the desired mode's gating function respectively.
-This sparse approximation arises because the \acrshort{mosvgpe} model uses sparse \acrshort{gp}s and
+This sparse approximation arises because the \acrshort{mosvgpe} model uses sparse \acrshort{gps} and
 approximates the posterior with,
 #+BEGIN_EXPORT latex
 \begin{align}
@@ -14298,7 +14531,7 @@ $q(\desiredGatingFunction(\gatingInducingInput)) = \mathcal{N}\left( \desiredGat
 # trajectory
 # $p(\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj_{\neg\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset_{0:i})$
 # can be calculated by assuming that the unobserved gating function values $\desiredGatingFunction(\stateTraj)$
-# are from the gating function's GP.
+# are from the gating function's \acrshort{gp}.
 # Making this assumptions leads to the
 
 
@@ -14381,7 +14614,7 @@ q(\desiredGatingFunction(\state_{\timeInd}))
 where $\desiredGatingKernel$ and
 $\gatingInducingInput$ are the kernel and inducing inputs
 associated with the desired mode's gating function respectively.
-The sparse \acrshort{gp} term arises because the \acrshort{mosvgpe} model uses sparse \acrshort{gp}s and
+The sparse \acrshort{gp} term arises because the \acrshort{mosvgpe} model uses sparse \acrshort{gps} and
 approximates the posterior
 $p(\desiredGatingFunction(\state_{\timeInd}) \mid \dataset_{0:i-1}) \approx q(\desiredGatingFunction(\state_{\timeInd}))$,
 where,
@@ -14411,7 +14644,7 @@ q(\desiredGatingFunction(\gatingInducingInput)) = \mathcal{N}\left( \desiredGati
 # trajectory
 # $p(\desiredGatingFunction(\state_{\timeInd}) \mid \stateTraj_{\neg\timeInd}, \desiredGatingFunction(\stateTraj_{\neg\timeInd}), \dataset_{0:i})$
 # can be calculated by assuming that the unobserved gating function values $\desiredGatingFunction(\stateTraj)$
-# are from the gating function's GP.
+# are from the gating function's \acrshort{gp}.
 # Making this assumptions leads to the
 
 
@@ -14612,7 +14845,7 @@ It shows the iteration where the optimisation gets stuck and no longer explores.
 (\subref{fig-explorative-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
 using the joint entropy over a trajectory and the state difference term.
 The optimised controls are rolled out in the desired mode’s
-GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+\acrshort{gp} dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
 \label{fig-explorative-comparison-traj-opt-7}
 \end{figure}
 #+END_EXPORT
@@ -14629,7 +14862,7 @@ term, i.e. $J(f, \pi) = \sum_{\timeInd=1}^{\TimeInd-1}
 \E \left[ - (\state_{\timeInd} - \targetState)^T \mathbf{Q} (\state_{\timeInd} - \targetState) \right]$.
 It shows the iteration where the optimisation gets stuck and no longer explores.
 The optimised controls are rolled out in the desired mode’s
-GP dynamics (magenta) and in the environment (cyan) and are overlayed on the desired mode’s mixing probability.}
+\acrshort{gp} dynamics (magenta) and in the environment (cyan) and are overlayed on the desired mode’s mixing probability.}
 \label{fig-explorative-state-diff-traj-opt-over-prob-7}
 \end{figure}
 #+END_EXPORT
@@ -14658,7 +14891,7 @@ the sum of marginal entropies at each time step (factorised entropy) and
 the full joint entropy over a trajectory.
 The trajectory found with the factorised entropy collapses onto a single location of high entropy.
 The optimised controls are rolled out in the desired mode’s
-GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+\acrshort{gp} dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
 %Comparison of solving the constrained optimisation in \cref{eq-explorative-traj-opt} with different entropy
 %objectives.
 %(\subref{fig-entropy-mvn-diag-traj-opt-over-prob-7}) shows
@@ -14668,7 +14901,7 @@ GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mo
 %(\subref{fig-entropy-mvn-full-cov-traj-opt-over-prob-7}) shows the results when
 %considering the full joint entropy over a trajectory.
 %The optimised controls are rolled out in the desired mode’s
-%GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+%\acrshort{gp} dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
 \label{fig-entropy-comparison-traj-opt-7}
 \end{figure}
 #+END_EXPORT
@@ -14716,7 +14949,7 @@ the results when summing the entropy at each time step, instead of considering t
 joint distribution over the trajectory.
 The trajectory collapses onto a single location of high entropy.
 The optimised controls are rolled out in the desired mode’s
-GP dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
+\acrshort{gp} dynamics (magenta) and in the environment (cyan) and are overlayed on each mode’s mixing probability.}
 \label{fig-explorative-comparison-traj-opt-7}
 \end{figure}
 #+END_EXPORT
@@ -14786,7 +15019,7 @@ which corresponds to the region with the highest gating entropy.
 These results confirm that it is important to consider the information gain over the entire trajectory.
 # The factorised entropy achieves similar results to the joint entropy if each time step is conditioned on
 # all other time steps.
-# However, conditioning \acrshort{gp}s
+# However, conditioning \acrshort{gps}
 
 # when trying to relieve the myopia of active learning in dynamical systems.
 
@@ -14864,7 +15097,7 @@ Each row shows the data collection process at a given iteration $i$ which has us
 The data collection process is overlayed on the desired mode's mixing probability \textbf{after} training on the
 data set collected at the previous iteration $\Pr(\modeVar=\desiredMode \mid \state, \dataset_{0:i})$.
 The left plots show the data set collected at the previous iteration $\dataset_{0:i}$ (blue crosses).
-The middle plots show the trajectory found by the explorative controller rolled out in the desired mode's GP
+The middle plots show the trajectory found by the explorative controller rolled out in the desired mode's \acrshort{gp}
 dynamics (magenta) and in the environment (cyan).
 The right plots show the updated data set $\dataset_{0:i+1}$ (blue crosses) after collecting data with the explorative
 controller.}
@@ -14891,7 +15124,7 @@ Each row shows the data collection process at iteration $i$ which uses the dynam
 The data collection process is overlayed on the gating function's variance \textbf{after} training on the previous
 data set $\mathbb{V}[\desiredGatingFunction(\state) \mid \state, \dataset_{0:i}]$.
 The left plots show the data set collected at the previous iteration $\dataset_{0:i}$ (blue crosses).
-The middle plots show the trajectory found by the explorative controller rolled out in the desired mode's GP
+The middle plots show the trajectory found by the explorative controller rolled out in the desired mode's \acrshort{gp}
 dynamics (magenta) and in the environment (cyan).
 The right plots show the updated data set $\dataset_{0:i+1}$ (blue crosses) after collecting data with the explorative
 controller.}
@@ -15007,7 +15240,7 @@ Each row shows the data collection process at a given iteration $i$ which has us
 The data collection process is overlayed on the desired mode's mixing probability \textbf{after} training on the
 data set collected at the previous iteration $\Pr(\modeVar=\desiredMode \mid \state, \dataset_{0:i})$.
 The left plots show the data set collected at the previous iteration $\dataset_{0:i}$ (blue crosses).
-The middle plots show the trajectory found by the explorative controller rolled out in the desired mode's GP
+The middle plots show the trajectory found by the explorative controller rolled out in the desired mode's \acrshort{gp}
 dynamics (magenta) and in the environment (cyan).
 The right plots show the updated data set $\dataset_{0:i+1}$ (blue crosses) after collecting data with the explorative
 controller.}
@@ -15034,7 +15267,7 @@ Each row shows the data collection process at iteration $i$ which uses the dynam
 The data collection process is overlayed on the gating function's variance \textbf{after} training on the previous
 data set $\mathbb{V}[\desiredGatingFunction(\state) \mid \state, \dataset_{0:i}]$.
 The left plots show the data set collected at the previous iteration $\dataset_{0:i}$ (blue crosses).
-The middle plots show the trajectory found by the explorative controller rolled out in the desired mode's GP
+The middle plots show the trajectory found by the explorative controller rolled out in the desired mode's \acrshort{gp}
 dynamics (magenta) and in the environment (cyan).
 The right plots show the updated data set $\dataset_{0:i+1}$ (blue crosses) after collecting data with the explorative
 controller.}
@@ -15122,7 +15355,7 @@ For example, further experiments are required to validate the exploration strate
 than two dynamics modes and on real-world systems.
 
 *Exploration guarantees*
-\acrshort{modeopt} side-steps the exploration-exploitation trade-off which is common in MBRL.
+\acrshort{modeopt} side-steps the exploration-exploitation trade-off which is common in \acrshort{mbrl}.
 It does so by separating the exploration into the explorative controller $\explorativeController$
 and the exploitation into the mode remaining controller $\modeController$.
 The mode chance constraints are then used to see if the exploitative mode controller $\modeController$
@@ -15176,14 +15409,14 @@ Note that this figure visualises the objectives at a single state and does not c
 *Information criterion*
 The exploration strategy presented in this chapter has shown that the \acrshort{gp}-based gating network
 is useful for active learning when considering trajectories over a horizon.
-This is because the \acrshort{gp}s have been able to  model the joint distribution over the
+This is because the \acrshort{gps} have been able to  model the joint distribution over the
 gating function values along a trajectory.
 This enabled the exploration strategy to find trajectories where each time step is aware of the information gain
 of other time steps.
 This is useful for finding non-myopic trajectories as it increases the information gain over the entire trajectory.
 However, this has only been verified by visual inspection and further analysis is left for future work.
 It is also worth noting that the exploration strategy is only possible because the gating
-network is based on \acrshort{gp}s.
+network is based on \acrshort{gps}.
 As such, this method is not widely applicable in all \acrshort{mogpe} dynamics models.
 
 An alternative approach is to use the entropy of the mode indicator variable $\modeVar$.
@@ -15310,7 +15543,7 @@ In contrast, the two expert case uses the Bernoulli likelihood with a single gat
 
 *Inducing points*
 The method presented in this chapter initialised each of the sparse
-\acrshort{gp}s in the \acrshort{mosvgpe} dynamics model with a fixed number of inducing points. Although this
+\acrshort{gps} in the \acrshort{mosvgpe} dynamics model with a fixed number of inducing points. Although this
 approach worked well in the experiments, it is unlikely that this will
 always be the case. For example, consider exploring much larger environments, i.e.
 environments with larger state domains. In these environments, the
@@ -15319,13 +15552,13 @@ ability to accurately model an ever increasing data set with a fixed number of i
 This is due
 to the sparse approximation’s ability to model the true non-parametric model deteriorating as
 the number of data points increases. See cite:burtRates2019 for details
-on rates of convergence for sparse GPs. As such, an interesting direction for future
-work is to study methods for dynamically adding new inducing points to each GP.
+on rates of convergence for sparse \acrshort{gps}. As such, an interesting direction for future
+work is to study methods for dynamically adding new inducing points to each \acrshort{gp}.
 
 *Fixing model parameters during training*
 During its initial iterations,
 \acrshort{modeopt} only explores the desired dynamics mode and does not observe any state
-transitions belonging to another mode. As a result, the lengthscale of the gating network GPs increases.
+transitions belonging to another mode. As a result, the lengthscale of the gating network \acrshort{gps} increases.
 This often results in the gating network becoming overconfident,
 almost as if the gating network believes that only a single dynamics mode exists over
 the entire domain. When this happens, the $\delta-\text{mode remaining}$ chance constraints
