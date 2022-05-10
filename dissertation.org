@@ -807,11 +807,11 @@ ps2ascii thesis.pdf | wc -w
 #+BEGIN_EXPORT latex
 \setcounter{page}{1}
 \begin{singlespace}
-The main goal of the work in this dissertation is to control \textit{unknown},
-multimodal dynamical systems to a target state, whilst avoiding inoperable or undesirable dynamics modes.
-Over the last decade, learning-based control has become a popular paradigm for controlling dynamical systems.
+Over the last decade, \textit{learning-based control} has become a popular paradigm for controlling dynamical systems.
 Although recent algorithms can find high-performance controllers, they typically only consider unimodal systems and
 cannot correctly identify multimodal dynamical systems.
+The main goal of this dissertation is to control \textit{unknown},
+\textit{multimodal} dynamical systems, to a target state, whilst \textit{avoiding inoperable or undesirable dynamics modes}.
 Further to this, deploying learning algorithms in the real world requires handling the uncertainties
 inherent to the system and the uncertainties arising from learning from observations.
 To this end, we consider the model-based reinforcement learning setting, where an explicit dynamics model -- that includes uncertainties -- is used to plan trajectories to a target state.
@@ -819,10 +819,10 @@ To this end, we consider the model-based reinforcement learning setting, where a
 Motivated by synergising model learning and control, we introduce a \acrfull{mogpe} method for learning
 dynamics models, which infers latent structure regarding how systems switch between their underlying dynamics modes.
 We then present three trajectory optimisation algorithms which, given this learned dynamics model, find trajectories
-to a target state with mode remaining guarantees.
-Initially, the agent’s dynamics model will be highly uncertain — due to a lack of training observations — so these algorithms cannot guarantee mode remaining navigation with high confidence.
-When this is the case, the agent should actively explore its environment, collect data and update its dynamics model.
-Based on this intuition, we introduce an explorative trajectory optimisation algorithm that explicitly reasons about
+to a target state with \textit{mode remaining guarantees}.
+Initially, the agent’s dynamics model will be highly \textit{uncertain} — due to a lack of training observations — so these algorithms cannot guarantee mode remaining navigation with high confidence.
+When this is the case, the agent actively explores its environment, collects data and updates its dynamics model.
+We introduce an explorative trajectory optimisation algorithm that explicitly reasons about
 the uncertainties in the dynamics model.
 As a result, it can explore the environment whilst guaranteeing that the agent remains in
 the desired dynamics mode with high probability.
