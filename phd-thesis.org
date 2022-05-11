@@ -10540,7 +10540,7 @@ citep:shumwayAPPROACH1982,ghahramaniLearning1999,schonSystem2011, with input est
 
 **** Fig :ignore:
 #+BEGIN_EXPORT latex
-\begin{figure}[h!]
+\begin{figure}[t!]
 \centering
 \includegraphics[width=0.98\textwidth]{./images/mode-opt/env/scenario_7/mosvgpe/mixing_probs_no_obs.pdf}
 \caption[\acrshort{mosvgpe}'s mixing probabilities after training on simulated quadcopter data set from Environment 1]{
