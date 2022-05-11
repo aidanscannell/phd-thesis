@@ -4,7 +4,7 @@
 #+DESCRIPTION: Aidan Scannell's PhD Thesis
 #+KEYWORDS: Machine Learning, Probabilistic Modelling, Bayesian Inference, Gaussian Processes, Model-Based Reinforcement Learning, Optimal Control, Learning-based Control, Robotics, Multimodal Dynamical Systems, Riemannian Geometry
 #+latex_class: mimosis
-#+EXPORT_FILE_NAME: ./phd-dissertation.pdf
+#+EXPORT_FILE_NAME: ./phd-thesis.pdf
 ** Run this src block with C-c C-c :noexport:
 #+begin_src emacs-lisp :exports none  :results none
 (unless (boundp 'org-latex-classes)
@@ -7585,96 +7585,6 @@ the experts' noise models are mixed instead of their full \acrshort{svgp}s.
 $\furtherBound$ offers a rich \acrshort{elbo} for optimising \acrshort{mosvgpe} that achieves similar results to $\tightBound$,
 whilst having lower computational complexity per evaluation.
 For this reason, the remainder of this dissertation uses $\furtherBound$ for all experiments.
-
-**** two vs three expert y fig :ignore:noexport:
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}[r]{0.49\textwidth}
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/y_means.pdf}
-%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
-\subcaption{}
-\label{fig-y-means-mcycle-two-experts-tight}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/y_means.pdf}
-%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
-\subcaption{}
-\label{fig-y-means-mcycle-two-experts-further}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/y_samples.pdf}
-\subcaption{}
-\label{fig-y-samples-mcycle-two-experts-tight}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/y_samples.pdf}
-\subcaption{}
-\label{fig-y-samples-mcycle-two-experts-further}
-\end{minipage}
-%\begin{minipage}[r]{0.49\textwidth}
-%\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L1/y_samples_density.pdf}
-%\subcaption{}
-%\label{fig-y-samples-mcycle-two-experts}
-%\end{minipage}
-%\begin{minipage}[r]{0.49\textwidth}
-%\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/y_samples_density.pdf}
-%\subcaption{}
-%\label{fig-y-samples-mcycle-three-experts}
-%\end{minipage}
-\caption{Visualisation of the model instantiated with $\ModeInd=2$ experts, after training on the motorcycle data set \citep{Silverman1985} with $\tightBound$ (left column) and with $\furtherBound$ (right column).  \subref{fig-y-means-mcycle-two-experts-tight}-\subref{fig-y-means-mcycle-two-experts-further} show the data set (black crosses) and the posterior means associated with the \acrshort{mosvgpe} (black solid line) and a \acrshort{svgp} (red dashed line) for comparison. \subref{fig-y-samples-mcycle-two-experts-tight}-\subref{fig-y-samples-mcycle-two-experts-further} show samples from the \acrshort{mosvgpe} posterior where colour indicates the underlying expert (cyan $K=1$, magenta $\ModeInd=2$) and the red lines show the $\pm 2$ standard deviation error ($95\%$ confidence interval) of the \acrshort{svgp} posterior. All experiments were trained with $25,000$ iterations of Adam \citep{kingmaAdam2017} using a learning rate of $0.01$ and a minibatch size of $\NumData_b=16$. All \acrshort{gps} use Squared Exponential kernels and $M=32$ inducing points.}
-\label{fig-y-mcycle-two-vs-three-experts}
-\end{figure}
-#+END_EXPORT
-
-# #+caption: \textbf{Motorcycle data} The left plot shows the observations (red crosses) together with the means of our model (black solid line) and a \acrshort{svgp} with noise (blue dashed line). It also shows probabilities assocaited with the gating network for $k=1$ (green line) and $k=2$ (blue line) on the right axis. The right plot shows 100 samples (blue) from the predictive posterior at 200 evenly spaced input locations as well as the $\pm 2$ std error (95% confidence interval) of the \acrshort{svgp} (solid red line). Both models use squared exponential covariance functions for all \acrshort{gps}.
-
-**** two vs three expert latent fig :ignore:noexport:
-#+BEGIN_EXPORT latex
-\begin{figure}[t!]
-\centering
-\begin{minipage}[r]{0.49\textwidth}
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/experts_f.pdf}
-%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=2$.}
-\subcaption{}
-\label{fig-gating-gps-mcycle-two-experts}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/experts_f.pdf}
-%\subcaption{Expert's latent function posteriors $\predictiveExpertPrior$ with $\ModeInd=3$.}
-\subcaption{}
-\label{fig-gating-gps-mcycle-three-experts}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/gating_gps.pdf}
-%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=2$.}
-\subcaption{}
-\label{fig-gating-gps-mcycle-two-experts}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/gating_gps.pdf}
-%\subcaption{Gating function posteriors $\predictiveGatingPrior$ with $\ModeInd=3$.}
-\subcaption{}
-\label{fig-gating-gps-mcycle-three-experts}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=2_L2/gating_mixing_probs.pdf}
-%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=2$.}
-\subcaption{}
-\label{fig-gating-mixing-probs-mcycle-two-experts}
-\end{minipage}
-\begin{minipage}[r]{0.49\textwidth}
-\centering
-\includegraphics[width=\textwidth]{./images/model/mcycle/K=3_L2/gating_mixing_probs.pdf}
-%\subcaption{Gating network's predictive mixing probabilities $\predictiveProb$ with $\ModeInd=3$.}
-\subcaption{}
-\label{fig-gating-mixing-probs-mycle-three-experts}
-\end{minipage}
-\caption{Visualisation of the model after training on the motorcycle data set with two experts (left column) and  three experts (right column). (a-b) show the \acrshort{gp} posteriros associated with the gating funcions, $q(h_{k}(\state_*))$, where the solind lines show the means $\E[h_{k}(\state_*)]$ and the shaded regions show the 95\% confidence interval, i.e. $\pm2\simga$. (c-d) show the predictive mixing probabilities $\predictiveProb$.}
-\label{fig-gating-network-mcycle-subset}
-\end{figure}
-#+END_EXPORT
 
 **** training loss fig :ignore:noexport:
 #+BEGIN_EXPORT latex
