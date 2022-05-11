@@ -13878,10 +13878,11 @@ by consolidating all of the work in this dissertation.
 This chapter is organised as follows.
 cref:problem-statement-explore formally states the problem and the assumptions that are made in this chapter.
 cref:sec-exploration then details the exploration strategy proposed in this work and
-cref:sec-modeopt presents \acrshort{modeopt}, a \acrfull{mbrl} algorithm for
+cref:sec-modeopt presents \acrfull{modeopt}, a \acrshort{mbrl} algorithm for
 solving the mode remaining navigation problem in cref:problem-statement-main.
-Finally, cref:sec-preliminary-results presents some preliminary results in a simulated
-quadcopter environment and cref:sec-future-work-explore discusses \acrshort{modeopt} and details some directions for future work.
+Finally, cref:sec-preliminary-results presents preliminary results in a simulated
+quadcopter environment and cref:sec-future-work-explore discusses \acrshort{modeopt} and
+details directions for future work.
 # The work in this chapter is implemented in TensorFlow/GPflow
 # citep:tensorflow2015-whitepaper,GPflow2017
 # and is available on GitHub[fn:2:Code accompanying this Chapter can be found @ [[https://github.com/aidanscannell/ModeOpt][\icon{\faGithub}/aidanscannell/ModeOpt.]]].
@@ -14097,9 +14098,30 @@ not be able to find $\delta-\text{mode remaining}$ trajectories to the target st
 the model having high /epistemic uncertainty/.
 
 ** Mode Optimisation label:sec-mode-optimisation
+*** intro :ignore:
+This section details our method for solving the mode remaining navigation problem by consolidating all of
+the work in this dissertation. The method is named \acrfull{modeopt}.
+At its core, \acrshort{modeopt} learns a single-step dynamics model $\dynamicsModel$ using the \acrshort{mosvgpe}
+model from cref:chap-dynamics.
+Given this model, the mode remaining control methods in cref:chap-traj-opt-control
+can be used to find trajectories to the target state $\targetState$.
+The mode chance constraints from cref:eq-mode-chance-constraint
+can then be used to check if these trajectories are $\delta-\text{mode remaining}$ under the learned dynamics
+model $\dynamicsModel$.
+Initially, it will not be possible to find
+$\delta-\text{mode remaining}$ trajectories under the learned dynamics model, due to high
+/epistemic uncertainty/.
+In this case, the agent must explore the environment, collect  data and update its dynamics model.
+Eventually, the agent will reduce the model's /epistemic uncertainty/ such that
+it can find $\delta-\text{mode remaining}$ trajectories to the target state $\targetState$.
+Ideally, the exploration strategy will have some guarantee on remaining in the desired dynamics mode.
+cref:fig-mode-opt-loop illustrates this process in a flowchart.
+# and cref:alg-mode-opt details the algorithm presented in this chapter.
+# The algorithm presented in this chapter is detailed in cref:alg-mode-opt.
+
 *** Flowchart :ignore:
 #+BEGIN_EXPORT latex
-\begin{figure}[!t]
+\begin{figure}[t!]
 \tikzstyle{startstop} = [rectangle, rounded corners, minimum width=2cm, minimum height=1cm,text centered, draw=black, fill=violet!30]
 \tikzstyle{decision} = [diamond, rounded corners, minimum width=1cm, maximum height=1cm,text centered, draw=black, fill=violet!30]
 %\tikzstyle{decision} = [diamond, minimum width=2cm, minimum height=0.5cm, text centered, draw=black, fill=violet!30]
@@ -14128,30 +14150,10 @@ the system switches between them, are \textit{not fully known a priori}.}
 \end{figure}
 #+END_EXPORT
 *** After flowchart :ignore:
-
-This section details the method for solving the mode remaining navigation problem that combines all of
-the work in this dissertation.
-The method is named Mode Optimisation or \acrshort{modeopt} for short.
-At its core, \acrshort{modeopt} learns a single-step dynamics model $\dynamicsModel$ using the \acrshort{mosvgpe}
-model from cref:chap-dynamics.
-Given this model, the mode remaining control methods in cref:chap-traj-opt-control
-can be used to find trajectories to the target state $\targetState$.
-The mode chance constraints from cref:eq-mode-chance-constraint
-can then be used to check if these trajectories are $\delta-\text{mode remaining}$ under the learned dynamics
-model $\dynamicsModel$.
-Initially, it will not be possible to find
-$\delta-\text{mode remaining}$ trajectories under the learned dynamics model, due to high
-/epistemic uncertainty/.
-In this case, the agent must explore the environment, collect  data and update its dynamics model.
-Eventually, the agent will reduce the model's /epistemic uncertainty/ such that
-it can find $\delta-\text{mode remaining}$ trajectories to the target state $\targetState$.
-Ideally, the exploration strategy will have some guarantee on remaining in the desired dynamics mode.
-cref:fig-mode-opt-loop illustrates this process in a flowchart.
-# and cref:alg-mode-opt details the algorithm presented in this chapter.
-# The algorithm presented in this chapter is detailed in cref:alg-mode-opt.
+\newline
 
 *$\delta-\text{mode remaining}$ exploration*
-In order to implement such an algorithm, this chapter first proposes a method for exploring the environment
+In order to implement such an algorithm, we require a method for exploring the environment
 with mode remaining guarantees.
 That is, a controller that will explore the environment whilst ensuring the controlled system remains in the
 desired dynamics mode with high probability, i.e. satisfy cref:eq-mode-remaining-def-explore.
@@ -14995,7 +14997,7 @@ A simple exploration strategy is to favour trajectories whose centre of mass is 
 This corresponds to solving the constrained optimisation in cref:eq-explorative-traj-opt
 with only the state difference term.
 However, using only the state difference term with the mode chance constraints leads to the optimisation getting
-stuck in local optima and never exploring to the target state.
+stuck in a local optimum and never exploring to the target state.
 This is shown in cref:fig-explorative-state-diff-traj-opt-over-prob-7, which shows the final iteration of the
 optimisation where the trajectory is stuck at the mode boundary.
 If the strategy searched more to the left it would be able to expand
@@ -15059,7 +15061,7 @@ These results confirm that it is important to consider the information gain over
 *** Exploration in Environment 1
 # This section now evaluates the objective in cref:eq-explorative-traj-opt, which contains both the state difference
 # term and the joint gating entropy term.
-This section presents initial results of \acrshort{modeopt}'s exploration strategy.
+This section presents preliminary results of \acrshort{modeopt}'s exploration strategy.
 The results show the strategy successfully exploring the simulated Environment 1 from cref:sec-traj-opt-results-simulated.
 The results presented here show how the desired mode's mixing probability and the gating function's variance
 change during each iteration.
@@ -15367,7 +15369,7 @@ cost matrices, $\stateCostMatrix$ and $\controlCostMatrix$, resulted in \acrshor
 As mentioned previously, the performance of \acrshort{modeopt}'s exploration is dependent on the interplay between
 the entropy term, the state difference term and the mode chance constraints.
 As such, the convergence of \acrshort{modeopt} likely depends on the cost matrices,
-$\stateCostMatrix$, $\controlCostMatrix$ and the mode satisfaction probability given by $\delta$.
+$\stateCostMatrix$, $\controlCostMatrix$ and the mode satisfaction probability given by our choice of $\delta$.
 Exploration can likely be guaranteed by relaxing $\delta$, however,
 relaxing $\delta$ too far corresponds to removing the mode chance constraints.
 Nevertheless, the results shown here are an initial step showing that \acrshort{modeopt} can work in practice.
@@ -15591,7 +15593,7 @@ work is to study methods for dynamically adding new inducing points to each \acr
 *Fixing model parameters during training*
 During its initial iterations,
 \acrshort{modeopt} only explores the desired dynamics mode and does not observe any state
-transitions belonging to another mode. As a result, the lengthscale of the gating network \acrshort{gps} increases.
+transitions belonging to another mode. As a result, the lengthscale of the gating network \acrshort{gp} increases.
 This often results in the gating network becoming overconfident,
 almost as if the gating network believes that only a single dynamics mode exists over
 the entire domain. When this happens, the $\delta-\text{mode remaining}$ chance constraints
@@ -15664,7 +15666,7 @@ cite:schreiterSafe2015 use a \acrshort{gp} classifier to identify safe and unsaf
 when learning \acrshort{gp} dynamics models in an active learning setting.
 However, they assume that they can directly observe whether a particular
 data point from the environment belongs to either the safe or unsafe regions.
-In contrast, this chapter is concerned with scenarios where the mode cannot be directly observed from the
+In contrast, we considered scenarios where the mode cannot be directly observed from the
 environment, but instead, is inferred by the probabilistic dynamics model.
 
 # It should be noted that in some environments this behaviour may get the strategy stuck in local
@@ -15771,7 +15773,7 @@ Three exploitative trajectory optimisation algorithms that find trajectories
 to the target state, whilst attempting to remain in the desired dynamics mode have been presented.
 Two of the methods show how the latent geometry of the \acrshort{gp}-based gating network
 can be leveraged to encode mode remaining behaviour,
-whilst the third approach shows how this can be achieved by extending the \acrshort{cai} framework
+whilst the third approach shows how this can be achieved by extending the \acrshort{cai_unimodal} framework
 to multimodal dynamical systems.
 Their ability to remain in the desired dynamics mode was tested in two simulated environments.
 Both the \acrfull{dre} method in cref:sec-traj-opt-energy
@@ -15887,12 +15889,11 @@ A simple approach is to embed the trajectory optimisation algorithm into an \acr
 closed-loop controller.
 This would require the trajectory optimisation algorithms to be made faster
 so that they could be used for real-time \acrshort{mpc}, for example, via locally linear dynamics approximations.
-Alternatively, an explorative state-feedback controller could be learned.
-For example, the explorative trajectory optimisation algorithm in cref:eq-explorative-traj-opt could be used for
-guided policy search citep:levineGuided2013,
-or, it could be used for policy optimisation by reformulating it as a sum of discounted rewards
+Alternatively, an state-feedback controllers could be learned.
+For example, the trajectory optimisation algorithms could be used for guided policy search citep:levineGuided2013,
+or, they could be used for policy optimisation by reformulating them as a sum of discounted rewards
 with the mode chance constraints implemented via Lagrange multipliers.
-Given a learned state feedback policy, it should be straightforward to verify that it is
+It should be straightforward to verify that learned feedback controllers are
 $\delta-\text{mode remaining}$ under the dynamics using the mode chance constraints.
 # It should also be straightforward to check that trajectories under a feedback
 # policy are $\delta-\text{mode remaining}$ under the dynamics.
