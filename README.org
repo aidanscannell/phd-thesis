@@ -1,6 +1,14 @@
-#+TITLE: Probabilistic Inference for Learning and Control in Multimodal Dynamical Systems
+#+TITLE: Bayesian Learning for Control in Multimodal Dynamical Systems
+#+AUTHOR: [[https://www.aidanscannell.com/][Aidan Scannell]]
 
 This repository contains the =org= and =LaTeX= source for my PhD thesis.
+
+# TODO code accompanying this repo
+
+Run the following command to make the glossary (acronym list)
+#+begin_src shell
+makeglossaries -d ./tex phd-thesis
+#+end_src
 
 # TODO add shield with link to pdf and counter
 
@@ -8,7 +16,7 @@ This repository contains the =org= and =LaTeX= source for my PhD thesis.
 #+begin_src LaTeX
 @phdthesis{scannell22,
     author = {Aidan Scannell},
+    title = {Bayesian Learning for Control in Multimodal Dynamical Systems}
     school = {University of Bristol},
-    title = {Probabilistic Inference for Learning and Control in Multimodal Dynamical Systems}
     year = {2022}}
 #+end_src
