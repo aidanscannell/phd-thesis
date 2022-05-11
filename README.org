@@ -4,10 +4,28 @@
 This repository contains the =org= and =LaTeX= source for my PhD thesis.
 
 # TODO code accompanying this repo
+The Mixtures of Sparse Variational Gaussian Process Experts (MoSVGPE)
+https://github.com/aidanscannell/ModeOpt
+#+begin_export html
+<table>
+<tr>
+<td>
+<tr>
+<td>
+<strong>Trajectory Optimisation in Learned Multimodal Dynamical Systems via Latent-ODE Collocation</strong><br>
+Aidan Scannell, Carl Henrik Ek, Arthur Richards<br>
+ICRA 2021<br>
+<a href="https://ieeexplore.ieee.org/abstract/document/9561362"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
+<a href="https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a>
+</td>
+</tr>
+</table>
+#+end_export
 
-Run the following command to make the glossary (acronym list)
+
+The following command will build the =pdf= from the =LaTeX= source.
 #+begin_src shell
-makeglossaries -d ./tex phd-thesis
+latexmk -f -silent -output-directory=./tex phd-thesis.tex
 #+end_src
 
 # TODO add shield with link to pdf and counter
