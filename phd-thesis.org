@@ -1,6 +1,7 @@
 * Config :ignore:
 #+AUTHOR: Aidan Scannell
 #+TITLE: Bayesian Learning for Control in Multimodal Dynamical Systems
+# #+TITLE: Probabilistic Inference for Learning and Control in Multimodal Dynamical Systems
 #+DESCRIPTION: Aidan Scannell's PhD Thesis
 #+KEYWORDS: Machine Learning, Probabilistic Modelling, Bayesian Inference, Gaussian Processes, Model-Based Reinforcement Learning, Optimal Control, Learning-based Control, Robotics, Multimodal Dynamical Systems, Riemannian Geometry
 #+latex_class: mimosis
@@ -272,11 +273,12 @@ Make the equation numbers follow the chapter, not the whole thesis.
 ** Text Variables :noexport:
 # #+latex_header: \newcommand{\ThesisTitle}{{Model-based Reinforcement Learning for Mode Remaining Control in Multimodal Dynamical Systems}}
 #+latex_header: \newcommand{\ThesisTitle}{{Bayesian Learning for Control in Multimodal Dynamical Systems}}
+# #+latex_header: \newcommand{\ThesisTitle}{{Bayesian Learning for Mode Remaining Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Mode Remaining Model-Based Reinforcement Learning in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Mode Remaining Model-Based Reinforcement Learning for Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Model-Based Reinforcement Learning for Mode Remaining Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Bayesian Learning \& Control in Multimodal Dynamical Systems}}
-# #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Learning \& Control in Multimodal Dynamical Systems}}
+# #+latex_header: \newcommand{\ThesisTitle}{{Probabilistic Inference for Learning and Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisTitle}{{Data Efficient Learning for Control in Multimodal Dynamical Systems}}
 # #+latex_header: \newcommand{\ThesisSubTitle}{Synergising Bayesian Inference for  Control}
 # #+latex_header: \newcommand{\ThesisSubTitle}{Synergising Bayesian Inference and Riemannian Geometry for Control}
@@ -732,8 +734,8 @@ ps2ascii thesis.pdf | wc -w
 
 {{{acronym(ig,IG,Indirect Optimal Control via Latent Geodesics)}}}
 {{{acronym(dre,DRE,Direct Optimal Control via Riemannian Energy)}}}
-{{{acronym(cai,MRCaI,Mode Remaining Control-as-Inference)}}}
-{{{acronym(cai_unimodal,CaI,Control-as-Inference)}}}
+{{{acronym(cai,MRCaI,Mode Remaining Control as Inference)}}}
+{{{acronym(cai_unimodal,CaI,Control as Inference)}}}
 
 {{{acronym(modeopt,ModeOpt,Mode Optimisation)}}}
 
@@ -1214,17 +1216,17 @@ algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-a
 \begin{singlespace}
 %Arthur, I have learned so much under your supervision.
 \initial{I} am deeply grateful to my two supervisors, Arthur Richards and Carl Henrik Ek.
-I have learned so much under your supervision and am extremely grateful for your continued support.
-Your expertise and willingness to explore new ideas have made my PhD journey very enjoyable.
+I have learned so much under your supervision and am incredibly grateful for your continued support.
+Your expertise and willingness to explore new ideas have made my PhD journey enjoyable.
 Arthur, I have especially enjoyed the many connections you've made between concepts from machine learning and control theory.
-You have shown me how to think much deeper about why things work well and how
+You have shown me how to think deeply about why things work well and how
 to build rich intuitions for seemingly complex problems.
 Carl, thank you for the countless hours you spent teaching me machine learning theory.
-You are a talented and inspiring teacher and I wholeheartedly appreciate your advice and enthusiasm over the years.
-I have thoroughly enjoyed our meetings, especially the ones that derailed into discussions about bikes
+You are a talented and inspiring teacher, and I wholeheartedly appreciate your advice and enthusiasm over the years.
+I have thoroughly enjoyed our meetings, especially those that derailed into discussions about bikes
 and sharing Emacs lisp snippets.
-You have both inspired me as academics.
 I could not have asked for better supervisors.
+You have both inspired me.
 %Your expertise and encouragement have been invaluable and have enabled me to grow so much as a researcher.
 %Watching your transition to Emacs X Window Manager has been inspiring, I hope to join you soon.
 
@@ -1259,15 +1261,15 @@ I could not have asked for better supervisors.
 %Arthur, you have taught me how to find the right problem
 
 
-I want to thank my friends and colleagues in Bristol for their support and making my time in Bristol so much fun!
+I want to thank my friends and colleagues in Bristol for their support and for making my time in Bristol so much fun!
 I also want to thank my family: mum, dad, Ciaran and Mhairi, for being amazing;
-none of this would have been possible without your continued support.
+none of this would have been possible without your support.
 I love you all very much.
 %I am also grateful to my friends who have made my time in Bristol so much fun!
 
 %This thesis was written in Org Mode and exported to LaTeX.
 I have thoroughly enjoyed writing this thesis in Org Mode.
-I would like to thank everyone that helped me get started with Emacs and
+I would like to thank everyone that helped me get started with Emacs, and
 I would especially like to thank all of the contributors to GNU Emacs and Org Mode.
 
 Finally, I would like to thank the Reddit users that supported me through my journey with RSI.
