@@ -6,22 +6,11 @@ This repository contains the =org= and =LaTeX= source for my PhD thesis.
 # TODO code accompanying this repo
 The Mixtures of Sparse Variational Gaussian Process Experts (MoSVGPE)
 https://github.com/aidanscannell/ModeOpt
-# #+begin_src html
-# <table>
-# <tr>
-# <td>
-# <tr>
-# <td>
-# <strong>Trajectory Optimisation in Learned Multimodal Dynamical Systems via Latent-ODE Collocation</strong><br>
-# Aidan Scannell, Carl Henrik Ek, Arthur Richards<br>
-# ICRA 2021<br>
-# <a href="https://ieeexplore.ieee.org/abstract/document/9561362"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
-# <a href="https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a>
-# </td>
-# </tr>
-# </table>
-# #+end_export
 
+
+[[https://objects.githubusercontent.com/github-production-release-asset-2e65be/317293734/594f597c-5022-4b25-8821-995100df353a?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220512%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220512T125129Z&X-Amz-Expires=300&X-Amz-Signature=7aa895eed2b48335801ab57e51c93a51d0be2dad494057f8551f5345e558b878&X-Amz-SignedHeaders=host&actor_id=16071232&key_id=0&repo_id=317293734&response-content-disposition=attachment%3B%20filename%3Dphd-thesis-signed-submitted.pdf&response-content-type=application%2Foctet-stream][https://img.shields.io/github/downloads/aidanscannell/phd-thesis/total?label=Download%20pdf&style=for-the-badge]]
+
+#+ATTR_LATEX: :align l
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | *Trajectory Optimisation in Learned Multimodal Dynamical Systems via Latent-ODE Collocation*                                                                                   |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -34,17 +23,17 @@ https://github.com/aidanscannell/ModeOpt
 
 
 The following command will build the =pdf= from the =LaTeX= source.
-,#+begin_src shell
+#+begin_src shell
 latexmk -f -silent -output-directory=./tex phd-thesis.tex
 #+end_src
 
 # TODO add shield with link to pdf and counter
 
-# Citation
+* Citation
 #+begin_src LaTeX
 @phdthesis{scannell22,
+    title = {Bayesian Learning for Control in Multimodal Dynamical Systems},
     author = {Aidan Scannell},
-    title = {Bayesian Learning for Control in Multimodal Dynamical Systems}
     school = {University of Bristol},
     year = {2022}}
 #+end_src
