@@ -1,26 +1,52 @@
 #+TITLE: Bayesian Learning for Control in Multimodal Dynamical Systems
 #+AUTHOR: [[https://www.aidanscannell.com/][Aidan Scannell]]
+#+HTML: <a href="https://objects.githubusercontent.com/github-production-release-asset-2e65be/317293734/594f597c-5022-4b25-8821-995100df353a?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220512%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220512T131149Z&X-Amz-Expires=300&X-Amz-Signature=10932b642ced3a1545404071192a4399d7b2a7df694a9e073efcc226bc438518&X-Amz-SignedHeaders=host&actor_id=16071232&key_id=0&repo_id=317293734&response-content-disposition=attachment%3B%20filename%3Dphd-thesis-signed-submitted.pdf&response-content-type=application%2Foctet-stream"><img alt="Download PDF" src="https://img.shields.io/github/downloads/aidanscannell/phd-thesis/total?label=Download%20pdf&style=for-the-badge">
 
 This repository contains the =org= and =LaTeX= source for my PhD thesis.
 
-# TODO code accompanying this repo
-The Mixtures of Sparse Variational Gaussian Process Experts (MoSVGPE)
-https://github.com/aidanscannell/ModeOpt
+* Publications & Code
+A lot of the work in my thesis is yet to be published.
+Nevertheless, an initial version of the multimodal dynamics model and one of the mode remaining trajectory optimisation algorithms are published in:
+#+BEGIN_HTML
+<table>
+    <tr>
+        <td>
+            <strong>Trajectory Optimisation in Learned Multimodal Dynamical Systems via Latent-ODE Collocation</strong><br>
+            Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+            <a href="https://ieeexplore.ieee.org/abstract/document/9561362"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
+            <a href="https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+        </td>
+</table>
+#+END_HTML
+The work in each of the content chapters is roughly split into the following code bases:
+#+BEGIN_HTML
+<table>
+    <tr>
+        <td>
+            <strong>Identifiable Mixtures of Sparse Variational Gaussian Process Experts</strong><br>
+            Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+            <a href="https://github.com/aidanscannell/mogpe"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <strong>Mode Remaining Trajectory Optimisation</strong><br>
+            Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <strong>Mode Remaining Exploration for Model-Based Reinforcement Learning</strong><br>
+            Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+        </td>
+    </tr>
+</table>
+#+END_HTML
 
 
-[[https://objects.githubusercontent.com/github-production-release-asset-2e65be/317293734/594f597c-5022-4b25-8821-995100df353a?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAIWNJYAX4CSVEH53A%2F20220512%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20220512T125129Z&X-Amz-Expires=300&X-Amz-Signature=7aa895eed2b48335801ab57e51c93a51d0be2dad494057f8551f5345e558b878&X-Amz-SignedHeaders=host&actor_id=16071232&key_id=0&repo_id=317293734&response-content-disposition=attachment%3B%20filename%3Dphd-thesis-signed-submitted.pdf&response-content-type=application%2Foctet-stream][https://img.shields.io/github/downloads/aidanscannell/phd-thesis/total?label=Download%20pdf&style=for-the-badge]]
-
-#+ATTR_LATEX: :align l
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| *Trajectory Optimisation in Learned Multimodal Dynamical Systems via Latent-ODE Collocation*                                                                                   |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| /Aidan Scannell, Carl Henrik Ek, Arthur Richards/                                                                                                                              |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| <a href="https://ieeexplore.ieee.org/abstract/document/9561362"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>                                           |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| <a href="https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a> |
-|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-
+* LaTeX Build
 
 The following command will build the =pdf= from the =LaTeX= source.
 #+begin_src shell
