@@ -1203,7 +1203,7 @@ algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-a
 
 \vspace{1.5cm}
 \noindent
-\hspace{-0.75cm}\textsc{SIGNED: .................................................... DATE: ..........................................}
+\hspace{-0.75cm}\textsc{SIGNED: .................................................... DATE: 12th  May 2022}
 \end{quote}
 \end{singlespace}
 #+END_EXPORT
