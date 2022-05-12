@@ -13459,15 +13459,15 @@ cref:tab-geometry-control-comparison offers a succinct comparison of the three a
 #+LATEX: \caption[Comparison of mode remaining trajectory optimisation algorithms]{Comparison of the \acrfull{ig} method from \cref{sec-traj-opt-collocation}, the \acrfull{dre} method from \cref{sec-traj-opt-energy} and the \acrfull{cai} method from \cref{chap-traj-opt-inference}.}
 #+LATEX: \label{tab-geometry-control-comparison}
 #+ATTR_LATEX: :center t :placement [!t] :align lccc
-|                                                      | \acrshort{cai} | \acrshort{ig} | \acrshort{dre} |
-|------------------------------------------------------+----------------+---------------+----------------|
-| Dynamics constraints guaranteed?                     | \checkmark     | \times        | \checkmark     |
-| Considers /epistemic uncertainty/ in dynamics?       | \checkmark     | \times        | \checkmark     |
-| Considers /epistemic uncertainty/ in gating network? | \checkmark     | \checkmark    | \checkmark     |
-| Can remain in *multiple* modes?                      | \checkmark     | \times        | \times         |
-| Boundary conditions guaranteed?                      | \times         | \checkmark    | \times         |
-| $\delta-\text{mode remaining}$?                      | \checkmark     | \times        | \checkmark     |
-| Continuous-time trajectory?                          | \times         | \checkmark    | \times         |
+|                                                      | \acrshort{ig} | \acrshort{dre} | \acrshort{cai} |
+|------------------------------------------------------+---------------+----------------+----------------|
+| Dynamics constraints guaranteed?                     | \times        | \checkmark     | \checkmark     |
+| Considers /epistemic uncertainty/ in dynamics?       | \times        | \checkmark     | \checkmark     |
+| Considers /epistemic uncertainty/ in gating network? | \checkmark    | \checkmark     | \checkmark     |
+| Can remain in *multiple* modes?                      | \times        | \times         | \checkmark     |
+| Boundary conditions guaranteed?                      | \checkmark    | \times         | \times         |
+| $\delta-\text{mode remaining}$?                      | \times        | \checkmark     | \checkmark     |
+| Continuous-time trajectory?                          | \checkmark    | \times         | \times         |
 # | Decouples goals?                                   | \checkmark       | \checkmark     |
 #+end_table
 
