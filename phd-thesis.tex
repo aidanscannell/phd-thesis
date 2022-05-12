@@ -1,4 +1,4 @@
-% Created 2022-05-11 Wed 18:05
+% Created 2022-05-12 Thu 12:40
 % Intended LaTeX compiler: pdflatex
 \documentclass{mimosis-class/mimosis}
     \usepackage{bm}
@@ -377,7 +377,7 @@
 \end{titlepage}
 
 \addchap{Abstract}
-\label{sec:org179f778}
+\label{sec:org761e790}
 \setcounter{page}{1}
 \begin{singlespace}
 Over the last decade, \textit{learning-based control} has become a popular paradigm for controlling dynamical systems.
@@ -405,7 +405,7 @@ whilst guaranteeing that the controlled system remains in the desired dynamics m
 \end{singlespace}
 
 \addchap{Covid-19 Statement}
-\label{sec:orgf0380a7}
+\label{sec:org2dcc6f0}
 \begin{singlespace}
 To mitigate risk due to Covid-19 lab closures, many of the methods in this thesis are validated in
 simulated experiments and not in real-world experiments.
@@ -443,7 +443,7 @@ algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-a
 \end{singlespace}
 
 \addchap{Declaration}
-\label{sec:orgee556c8}
+\label{sec:orge3d7c5b}
 \begin{singlespace}
 \begin{quote}
 \initial{I} declare that the work in this thesis was carried out in accordance with the requirements of  the University's Regulations and Code of Practice for Research Degree Programmes and that it  has not been submitted for any other academic award. Except where indicated by specific  reference in the text, the work is the candidate's own work. Work done in collaboration with, or with the assistance of, others, is indicated as such. Any views expressed in the thesis are those of the author.
@@ -455,7 +455,7 @@ algorithms presented in \cref{chap-traj-opt-inference,sec-traj-opt-energy,chap-a
 \end{singlespace}
 
 \addchap{Acknowledgements}
-\label{sec:org0d13d3f}
+\label{sec:orge4cce31}
 \begin{singlespace}
 %Arthur, I have learned so much under your supervision.
 \initial{I} am deeply grateful to my two supervisors, Arthur Richards and Carl Henrik Ek.
@@ -506,7 +506,7 @@ You have both inspired me.
 
 I want to thank my friends and colleagues in Bristol for their support and for making my time in Bristol so much fun!
 I also want to thank my family: mum, dad, Ciaran and Mhairi, for being amazing;
-none of this would have been possible without your continued support.
+none of this would have been possible without your support.
 I love you all very much.
 %I am also grateful to my friends who have made my time in Bristol so much fun!
 
@@ -780,7 +780,7 @@ This work was supported by the EPSRC Centre for Doctoral Training in \acrfull{fa
 \newcommand{\gatingKL}{\ensuremath{\text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
 \newcommand{\gatingsKL}{\ensuremath{\sum_{\modeInd=1}^\ModeInd \text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
 \chapter{Introduction}
-\label{sec:org1a98c13}
+\label{sec:org5c492eb}
 \newcommand{\targetState}{\ensuremath{\state_f}}
 %\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
 %\renewcommand{\stateDomain}{\ensuremath{\mathcal{S}}}
@@ -927,7 +927,7 @@ are expensive to run (energy-intensive, subject to wear and tear) and
 must be controlled subject to \emph{constraints} (for safety, efficiency, and so on).
 In contrast to simulation, the control of physical systems also has real-world consequences:
 components may get damaged, the system may damage its environment, or the system may catastrophically fail.
-As such, any learning-based control strategy deployed in the real-world should handle both the uncertainty inherent
+As such, any learning-based control strategy deployed in the real world should handle both the uncertainty inherent
 to the environment and the uncertainty introduced by learning from observations.
 
 Many dynamical systems exhibit \emph{multimodalities}, where some of the dynamics modes
@@ -936,9 +936,9 @@ These \emph{multimodalities} may be due to spatially varying model parameters, f
 process noise terms modelling aircraft turbulence, or friction coefficients modelling
 surface-tyre interactions for ground vehicles over different terrain.
 In these systems, it is desirable to avoid entering specific dynamics modes that are believed to be \emph{inoperable}.
-Perhaps they are hard to control due to stability, or the mode switch itself is hard to control.
-Or perhaps it is desirable to avoid specific modes for \emph{efficiency} or \emph{performance} reasons.
-Given these motivations, this thesis is focused on controlling dynamical systems from an initial state,
+Perhaps they are hard to control due to stability, or the mode switch is hard to control.
+Alternatively, they may be \emph{inefficient} or low \emph{performing}.
+Given these motivations, this thesis focuses on controlling dynamical systems from an initial state,
 to a target state, whilst avoiding specific dynamics modes.
 
 Model-based control comprises a powerful set of techniques for finding controls of \emph{constrained} dynamical
@@ -949,10 +949,10 @@ One caveat is that it requires a relatively accurate mathematical model of the s
 Traditionally, these mathematical models are built using first principles based on physics.
 However, accurately modelling the underlying transition dynamics can be challenging and
 lead to the introduction of model errors.
-These model errors may be due to incorrectly specifying model parameters, or the
+These model errors may be due to incorrectly specifying model parameters or the
 models themselves.
-For example, modelling a nonlinear system to be linear, or a multimodal system to be unimodal.
-Incorrectly specifying these model parameters and their associated uncertainty,
+For example, modelling a nonlinear system to be linear or a multimodal system to be unimodal.
+Incorrectly specifying these model parameters and their associated uncertainty
 can have a detrimental impact on controller performance.
 Handling these issues is a central goal of robust and stochastic optimal
 control \citep{freemanRobust1996,stengelStochastic1986}.
@@ -960,7 +960,7 @@ control \citep{freemanRobust1996,stengelStochastic1986}.
 The difficulties associated with constructing mathematical representations of dynamical systems
 can be overcome by learning from observations \citep{ljungSystem1999}.
 Learning dynamics models has the added benefit that it
-alleviates the dependence on domain experts for specifying accurate models, in turn making it easier to
+alleviates the dependence on domain experts for specifying accurate models, making it easier to
 deploy more general techniques.
 However, learning dynamics models for control introduces other difficulties.
 For example, it is important to know
@@ -970,7 +970,7 @@ Correctly quantifying uncertainty is crucial for intelligent decision-making.
 \begin{myquote}
 \textbf{Epistemic uncertainty}
 is the uncertainty attributed to incomplete knowledge about a phenomenon that limits our ability to model it.
-It represents knowledge about a phenomenon that we could know, but that we do \textit{not know a priori}.
+It represents knowledge about a phenomenon that we could know but we do \textit{not know a priori}.
 It is reduced through the accumulation of additional information.
 %It manifests in parameters taking a range of values, there being a range of viable models,
 %the level of modelling detail, and statistical confidence.
@@ -986,34 +986,34 @@ if the trajectory will avoid the undesired dynamics mode.
 Conversely, in an \textbf{explorative setting},
 if the \emph{epistemic uncertainty} has been quantified, it can be used to guide exploration into
 regions of the dynamics that have not previously been observed.
-This experience can then be used to update the model, in turn, reducing its \emph{epistemic uncertainty}.
+This experience can then be used to update the model, in turn reducing its \emph{epistemic uncertainty}.
 
 These two settings are the main focus of this thesis.
-If the dynamics are not fully \emph{known a priori}, an agent will not be able to confidently plan a
-risk-averse trajectory to the target state.
+If the dynamics are not fully \emph{known a priori}, an agent will not be able to plan a
+risk-averse trajectory to the target state confidently.
 How can the agent explore its environment, in turn reducing the \emph{epistemic uncertainty}
 associated with its dynamics model?
 As this thesis assumes that complete knowledge of the dynamics are \emph{not fully known a priori},
-a central interest is jointly inferring the underlying dynamics modes, as well as how the system switches
+a main interest is jointly inferring the underlying dynamics modes, as well as how the system switches
 between them, through repeated interactions with the system.
 Once the agent has explored enough, how can this learned dynamics model be exploited to plan risk-averse trajectories
 that remain in the desired dynamics mode?
 \section{Illustrative Example \label{illustrative_example}}
-\label{sec:org21beb9c}
+\label{sec:orga11f737}
 The methods developed throughout this thesis are motivated by a 2D quadcopter navigation example.
 See \cref{fig-problem-statement} for a schematic of the environment and details of the problem.
 The goal is to fly the quadcopter from an initial state \(\state_0\), to a target state \(\state_{f}\).
 However, it considers a quadcopter operating in an environment subject to spatially varying wind --
-induced by a fan -- where the system can be represented by two dynamics modes,
+induced by a fan -- where two dynamics modes can represent the system,
 \begin{description}
-\item[{Mode 1}] an \emph{operable} dynamics mode away from the fan,
-\item[{Mode 2}] an \emph{inoperable}, turbulent dynamics mode in front of the fan.
+\item[{Mode 1}] is an \emph{operable} dynamics mode away from the fan,
+\item[{Mode 2}] is an \emph{inoperable}, turbulent dynamics mode in front of the fan.
 \end{description}
 The turbulent dynamics mode is subject to higher drift (in the negative \(x\) direction) and
 to higher diffusion (process noise).
 It is hard to know the exact turbulent dynamics due to complex and uncertain interactions between the
 quadcopter and the wind field.
-Further to this, it is believed that controlling the system in the turbulent dynamics mode may be infeasible.
+Further to this, controlling the system in the turbulent dynamics mode may be infeasible.
 This is because the unpredictability of the turbulence may cause catastrophic failure.
 Therefore, when flying the quadcopter from an initial state \(\state_0\), to a target state \(\state_{f}\),
 it is desirable to find trajectories that avoid entering this turbulent dynamics mode.
@@ -1031,14 +1031,14 @@ The state-space of the velocity controlled quadcopter example consists of the 2D
 and the controls consist of the speed in each direction, given by \(\control = (\velocity_x, \velocity_y)\).
 
 \section{Contributions}
-\label{sec:org46056e2}
+\label{sec:org3f9371b}
 This thesis explores methods for mode remaining control in multimodal dynamical systems that explicitly reason
 about the uncertainties arising during learning and control.
 The primary contributions of this thesis are as follows:
 \begin{itemize}
 \item \cref{chap-dynamics}: is concerned with learning representations of multimodal dynamical
 systems, where both the underlying dynamics modes and how the system switches between them, are \emph{not fully known a priori}.
-Motivated by learning dynamics models for model-based control, it formulates a probabilistic model that is
+Motivated by learning dynamics models for model-based control, it formulates a probabilistic model
 rich with latent spaces for control.
 It then derives a variational inference scheme that principally handles uncertainty whilst providing scalability
 via stochastic gradient methods.
@@ -1050,7 +1050,7 @@ assumes prior access to the environment, such that a data set of state transitio
 previously been collected and used to train the model. It presents three trajectory optimisation algorithms that
 leverage the learned dynamics model's latent structure to solve the mode remaining navigation problem.
 \item \cref{chap-active-learning}: then considers the more realistic scenario of not having prior access
-to the environment. As such, the agent does not have access to a historical data set for model learning.
+to the environment. In this scenario, the agent does not have access to a historical data set for model learning.
 Instead, it must actively explore its environment, collect data and use it to update its dynamics model,
 whilst simultaneously attempting to remain in the desired dynamics mode.
 It presents an exploration strategy for exploring multimodal dynamical systems whilst remaining in a
@@ -1060,14 +1060,14 @@ It then details how this exploration strategy can be combined with the methods f
 \end{itemize}
 
 \section{Associated Publications}
-\label{sec:orgb5e06bc}
-The first trajectory optimisation algorithm presented in \cref{sec-traj-opt-collocation}, as well as an initial
+\label{sec:org60407a1}
+The first trajectory optimisation algorithm presented in \cref{sec-traj-opt-collocation} and an initial
 version of the approach for learning multimodal dynamical systems in \cref{chap-dynamics}, are published in:
 
 {\color{BrickRed}\fullcite{scannellTrajectory2021}}
 
 \chapter{Background and Related Work}
-\label{sec:org91a9e65}
+\label{sec:orgaf64621}
 \newcommand{\gpDomain}{\ensuremath{\mathcal{X}}}
 \newcommand{\dynamicsModel}{\ensuremath{p_{\theta}}}
 \newcommand{\constraintFunc}{\ensuremath{c}}
@@ -1076,15 +1076,15 @@ The primary goal of this thesis is to control \emph{stochastic}, \emph{multimoda
 to a target state, whilst remaining in the desired dynamics mode.
 This is a \acrfull{soc} problem which can be summarised as follows:
 \begin{displayquote}
-\textit{For a given multimodal dynamical system with control inputs, determine a controller, such that
-it can navigate to a target state, whilst remaining in a desired dynamics mode.}
+\textit{For a given multimodal dynamical system with control inputs, determine a controller that
+can navigate to a target state, whilst remaining in a desired dynamics mode.}
 \end{displayquote}
-This chapter formally defines this mode remaining navigation problem and then reviews the relevant literature.
+This chapter formally defines this mode remaining navigation problem and reviews the relevant literature.
 \section{Problem Statement \label{problem-statement-main}}
-\label{sec:org2be8039}
-Dynamical systems describe the behaviour of a system over time \(t\), and
+\label{sec:orgf357eb6}
+Dynamical systems describe the behaviour of a system over time \(t\) and
 are a key component of both control theory and \acrshort{rl}.
-At any given time \(t\), a dynamical system has a state, which is
+At any given time \(t\), a dynamical system has a state,
 represented as a vector of real numbers \(\state_t \in \stateDomain \subseteq \R^{\StateDim}\).
 The system can be controlled by applying control actions \(\mathbf{u}_t \in \controlDomain \subseteq \R^{\ControlDim}\)
 at any given time.
@@ -1107,13 +1107,13 @@ governs the system at a given time step \(\timeInd\).
 The output of the mode indicator function is referred to as the mode indicator variable and is given by
 \(\alpha_{\timeInd} = \alpha(\state_{\timeInd}) \in \modeDomain = \{1,\ldots,\ModeInd\} = \mathbb{Z} \cap [1, \ModeInd]\).
 
-Throughout this thesis, it is assumed that the state \(\state\) is observed directly and is not subject to
+This thesis assumes that the state \(\state\) is observed directly and is not subject to
 observation noise.
 This is a standard assumption in the \acrfull{mdp} framework, which is commonly adopted
 in the \acrshort{rl} literature.
 In this case, the \(\mode{\bm\epsilon}\) term solely represents the process noise,
-which accounts for unwanted and, in general, unknown disturbances of the system.
-For example, it is hard to model aerodynamic effects on aircraft so these could be accounted
+which accounts for unwanted and, in general, unknown system disturbances.
+For example, it is hard to model aerodynamic effects on aircraft, so these could be accounted
 for in the process noise term.
 
 \textbf{Optimal control}
@@ -1128,7 +1128,7 @@ J_{\pi}(\state) = &\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\tim
 \mid \state_0=\state \right]
 \end{align}
 where \(\TimeInd\) is known as the horizon.
-The objective \(J_{\pi}(\state)\) quantifies the cost associated with deploying the controller \(\pi\) from
+The objective \(J_{\pi}(\state)\) quantifies the cost of deploying the controller \(\pi\) from
 an initial state \(\state\).
 The cost function typically consists of a terminal cost and a term which is integrated over the horizon (integral cost).
 In a navigation task, the terminal cost may consist of the distance to the target, whilst the integral cost
@@ -1137,7 +1137,7 @@ may encode the notion of minimum effort control, e.g. energy consumption \citep{
 \textbf{Controller space}
 The controller space \(\Pi\) defines the set of controllers over which optimisation is performed.
 Controllers can have state feedback such that they are given by \(\control_t = \policy(\state_t)\).
-These are closed-loop controllers and  in the \acrshort{rl} literature are referred to as policies.
+These are closed-loop controllers and in the \acrshort{rl} literature are referred to as policies.
 Alternatively, controllers can depend on time \(\control_t = \policy(t)\), in which case they are open-loop controllers.
 This thesis considers the general case, given by \(\control_t = \policy(\state_t, t)\),
 which encompasses both open-loop and closed-loop controllers.
@@ -1146,7 +1146,7 @@ which encompasses both open-loop and closed-loop controllers.
 This thesis considers systems where the underlying dynamics modes are defined by disjoint state domains, i.e.
 \(\mode{\stateDomain} = \{ \state \in \stateDomain \mid \modeVar(\state) = \modeInd \}\), with
 \(\stateDomain_{i} \cap \stateDomain_{j} = \emptyset\) for distinct \(i, j \in \{1, \ldots \ModeInd\}\).
-Notice that each mode's dynamics are free to leave their state space \(\mode{\stateDomain}\)
+Notice that each mode's dynamics can leave their state space \(\mode{\stateDomain}\)
 and enter another mode.
 Ideally, this work seeks to enforce the controlled system to remain in a given mode.
 Formally, a mode remaining controlled system is defined as follows.
@@ -1189,7 +1189,7 @@ Note that the objective function in \cref{eq-optimal-control-objective} is not o
 The novelty of this work arises from remaining in the desired dynamics mode \(\desiredMode\).
 
 \section{Optimal Control \label{sec-optimal-control}}
-\label{sec:orge74afd4}
+\label{sec:orgbc5934a}
 \begin{figure}[!t]
 \centering
 \begin{tikzpicture}[
@@ -1212,9 +1212,9 @@ blanknode/.style={rectangle, width=2cm}
 \end{figure}
 The discrete-time optimal control problem considered in this thesis can be modelled as a
 \acrfull{mdp}, as seen in \cref{fig-mdp}.
-In the \acrshort{mdp} framework a controller \(\pi\) is referred to as an agent, the control \(\control\)
-is referred to as an action, and the dynamical system \(f\) is referred to as the environment.
-Further to this, the goal is to maximise the cumulative reward, as opposed to minimising the cumulative cost.
+The \acrshort{mdp} framework refers to the controller \(\pi\) as the agent, the control \(\control\)
+as the action, and the dynamical system \(f\) as the environment.
+Further to this, the goal is to maximise the cumulative reward instead of minimising the cumulative cost.
 However, slight manipulation of the objective enables cost and reward functions to be interchanged.
 The key idea in \acrshort{mdp}s is that all past information is represented by the current state \(\state_t\),
 which is known as the Markov property.
@@ -1231,11 +1231,11 @@ For this reason, we restrict our discussion to Bellman's principle and the solut
 dynamic programming.
 
 \subsection{Dynamic Programming}
-\label{sec:org77a6c90}
+\label{sec:orgdc7b9cc}
 Dynamic programming \citep{bellmanDynamic1956} encompasses a large class of algorithms that can be
 used to find optimal controllers given a model of the environment as an \acrshort{mdp}.
 However, classical dynamic programming algorithms are of limited use as they rely on
-accurate dynamics models and have significant computational expense.
+accurate dynamics models and have a significant computational expense.
 Nevertheless, they are still important theoretically.
 The main idea of dynamic programming (and \acrshort{rl} in general) is to structure the search for good controllers using
 value functions \(V\).
@@ -1249,7 +1249,7 @@ V_*(\state) = \min_{\control} &\E \left[ \underbrace{\costFunc(\state_{\timeInd}
 In the finite horizon setting, directly solving the Bellman equations backwards in time is referred to
 as dynamic programming.
 
-Approximate dynamic programming encompasses a large class of methods that given a controller \(\pi\),
+Approximate dynamic programming encompasses a large class of methods that, given a controller \(\pi\),
 approximate the value function \(V_{\pi}(\state)\) for each state \(\state\) with a parameterised function.
 The approximate value function can then be used for \emph{policy improvement}, where a controller
 with superior performance is computed.
@@ -1258,7 +1258,7 @@ In general, approximate dynamic programming is a large collection of algorithms 
 However, these methods are out of the scope of this thesis.
 
 \subsection{Reinforcement Learning}
-\label{sec:orgc33e4a1}
+\label{sec:org60a27c3}
 There are multiple approaches to finding controllers \(\pi\) that minimise the expected cost
 in \cref{eq-optimal-control-objective} subject to the stochastic dynamics in \cref{eq-dynamics-main}.
 However, a central assumption of many methods is that both the system dynamics and cost function are \emph{known a priori}.
@@ -1283,7 +1283,7 @@ Typically this is in the form of a state feedback controller, known as a policy,
 with the environment closed-loop.
 In contrast to the system identification approach,
 the goal of \acrshort{rl} is to minimise costs (maximise rewards) during the learning process.
-Further to this, \acrshort{rl} only needs to learn about the states which are relevant to solving
+Further to this, \acrshort{rl} only needs to learn about the states relevant to solving
 the optimal control problem.
 
 \begin{algorithm}[!t]
@@ -1299,12 +1299,12 @@ the optimal control problem.
 \end{algorithm}
 
 \subsubsection{Model-based Reinforcement Learning}
-\label{sec:org5ea0803}
+\label{sec:org9b5fab0}
 This thesis is interested in a subset of \acrshort{rl} known as \acrfull{mbrl}.
 It solves the optimal control problem in \cref{eq-optimal-control-objective}
 by first learning a dynamics model and then using this learned model with model-based control techniques.
 As both \acrfull{mfrl} and \acrshort{mbrl} methods learn models,
-the model in the name is referring to the dynamics model \(f\), as  \acrshort{mfrl} approaches do not learn
+the model in the name refers to the dynamics model \(f\), as  \acrshort{mfrl} approaches do not learn
 representations of the dynamics \(f\).
 \cref{alg-mbrl-background} illustrates a common \acrshort{mbrl} procedure where an agent incrementally explores
 its environment, collecting data \(\mathcal{D}_i\) at each iteration \(i\) and
@@ -1316,8 +1316,8 @@ needing task-centric methods that simultaneously learn about the environment, wh
 to obtain low cumulative costs.
 The field of \acrshort{mbrl} seeks to solve many optimal control problems by incrementally learning a dynamics model
 in this way \citep{deisenrothPILCO2011,chuaDeep2018}.
-\acrshort{mbrl} shares similarities with the system identification and control process except that the dynamics learning
-and control are updated simultaneously.
+\acrshort{mbrl} shares similarities with the system identification and control process,
+except that the dynamics learning and control are updated simultaneously.
 There are two main components to a \acrshort{mbrl} algorithm: 1) a method for learning a dynamics
 model \(\dynamicsModel\) and 2) a controller (or policy) \(\pi\) that leverages the learned dynamics model \(\dynamicsModel\).
 The controller may be a parameterised state feedback controller (policy) \(\pi\), which is trained using
@@ -1325,7 +1325,7 @@ The controller may be a parameterised state feedback controller (policy) \(\pi\)
 Alternatively, the controller may take the form of a model-based control algorithm such as \acrfull{mpc}.
 
 \subsection{Model-based Control and Planning}
-\label{sec:orgbbe51b5}
+\label{sec:orgd40be61}
 This section reviews model-based control methods that leverage learned dynamics models in the \acrshort{mbrl} setting.
 In the \acrshort{rl} literature, model-based control is often referred to as planning.
 The work in this thesis is primarily focused on model-based control techniques,
@@ -1374,7 +1374,7 @@ However, in practice, it is often too computationally expensive to obtain real-t
 Many approximate solutions have been introduced in the literature, that seek to balance the computational complexity
 and accuracy trade-off differently \citep{bettsSurvey1998}.
 
-For example, \acrfull{ilqr} can be used to generate trajectories for nonlinear systems by
+For example, \acrfull{ilqr} can generate trajectories for nonlinear systems by
 iteratively approximating the dynamics to be linear around a nominal trajectory and optimising for the controls.
 \acrshort{ilqr} works well for quadratic cost functions but can be used with any cost function by approximating the cost
 function with a second-order Taylor expansion.
@@ -1398,8 +1398,8 @@ Alternatively, the trajectory optimiser can be used offline to learn a state fee
 using guided policy search \citep{levineGuided2013}.
 
 \subsection{Constrained Control}
-\label{sec:orgffb7562}
-The goal of this work is to control multimodal dynamical systems subject to the mode remaining
+\label{sec:orgdc9a9f0}
+This work aims to control multimodal dynamical systems subject to the mode remaining
 constraint in \cref{eq-main-problem}.
 However, neither the underlying dynamics modes nor how the system switches between them, are \emph{known a priori}.
 To this end, this thesis is interested in model-based control techniques which can
@@ -1437,20 +1437,20 @@ all future states remain in the set, i.e.  $f(\state_t, \pi(\state_t, t)) \in \s
 %The system is safe with respect to the set $\safeSet$ if the set is \textbf{forward invariant}.
 \end{definition}
 There are multiple approaches to enforcing state constraints via invariant sets.
-Lyapunov functions \citep{lyapunovGeneral1992a} and control barrier functions \citep{amesControl2019} are two common
-approaches.
+Two common approaches are
+Lyapunov functions \citep{lyapunovGeneral1992a} and control barrier functions \citep{amesControl2019}.
 Lyapunov functions are more restrictive than control barrier functions as they provide stability guarantees
 which are not a necessary condition to render \(\stateDomain_{\text{feasible}}\) forward invariant.
-Although these are an interesting direction for future work, they are out of the scope of this thesis.
+Although these are interesting directions for future work, they are out of the scope of this thesis.
 
 \textbf{Unknown constraints}
-This work is interested in learning constraints whilst trying to ensure that they are satisfied.
+This work is interested in learning constraints whilst ensuring that they are satisfied.
 \cite{ariafarADMMBO2019,gelbartBayesian2014} introduce algorithms to minimise an unknown objective
 (Bayesian optimisation) subject to unknown constraints.
 \cite{sadighSafe2016} propose an \acrshort{mpc} method that satisfies \emph{a priori unknown} constraints with high probability.
 However, they do not deploy a strategy to actively learn about the constraints.
-In contrast, \cite{schreiterSafe2015} consider safe exploration for active learning
-where they distinguish safe and unsafe regions with a binary \acrshort{gp} classifier, which is
+In contrast, \cite{schreiterSafe2015} consider safe exploration for active learning.
+They distinguish safe and unsafe regions with a binary \acrshort{gp} classifier, which is
 learned separately to the dynamics model. Their exploration strategy then considers
 the differential entropy of the dynamics \acrshort{gp} and they use the \acrshort{gp} classifier to define
 a set of safety constraints.
@@ -1467,10 +1467,10 @@ However, although expected performance is a reasonable objective, expected const
 For example, although the expected constraints \(\E[\constraintFunc_{\state}(\state)]\) hold, a system may
 still violate them frequently if the constraints variance \(\V[\constraintFunc_{\state}(\state)]\) is high.
 \cite{ferberGames1958} proposed risk sensitivity which uses higher-order moments as well as the expected value.
-An even stronger notion is value at risk \citep{duffieOverview1997a}, which guarantees constraint satisfaction
+Value at risk \citep{duffieOverview1997a} is an even stronger notion, which guarantees constraint satisfaction
 with high probability.
 
-The most direct method to embed constraints is in \acrshort{mpc} \citep{eduardof.Model2007}.
+\acrshort{mpc} \citep{eduardof.Model2007} is the most direct method to embed constraints.
 At each time step, \acrshort{mpc} ensures that the constraints hold over a given horizon.
 However, it is worth noting that these constraints still cannot be guaranteed in stochastic systems.
 For stochastic systems, \cite{schwarmChanceconstrained1999} proposed to satisfy constraints with high probability.
@@ -1479,17 +1479,17 @@ Chance constraints are applicable in systems where the uncertainty arises from l
 i.e. they are applicable with latent constraints.
 
 \section{Learning Dynamical Systems for Control}
-\label{sec:org2811d1e}
+\label{sec:orgbda3438}
 This section reviews methods for learning representations of dynamical systems for control.
 When learning representations of dynamical systems from observations it is important to consider the different
 forms of uncertainty.
-For example, when using a learned model for control it is important to \emph{know what we do not know}.
+For example, when using a learned model for control, it is important to \emph{know what we do not know}.
 This knowledge can be used to encode \emph{risk-sensitive} control (avoid regions where the model cannot predict confidently)
 or to guide exploration.
 \cref{sec-unc-exploration} discusses exploration strategies that leverage well-calibrated uncertainty estimates.
 
 \subsection{Sources of Uncertainty}
-\label{sec:org9a3bc08}
+\label{sec:org1b30daa}
 This section characterises the uncertainty that arises in \acrshort{rl}.
 
 \textbf{Aleatoric uncertainty}
@@ -1499,7 +1499,7 @@ These measurements are often corrupted by (observation) noise due to imperfectio
 Even when it is known that there is uncertainty in the measurement process, there still remains uncertainty about its
 form.
 Given our current understanding of the real-world, many dynamical systems also appear to be inherently stochastic.
-This is due to our inability to accurately model certain phenomena (e.g. turbulence).
+This is due to our inability to model certain phenomena accurately  (e.g. turbulence).
 Stochasticity arising from state transitions in this way is known as process noise.
 Observation and process noise are the constituent sources of \emph{aleatoric uncertainty};
 uncertainties that are inherent in a system and cannot be reduced.
@@ -1508,7 +1508,7 @@ uncertainties that are inherent in a system and cannot be reduced.
 The uncertainty arising from learning the dynamics \(f\) from observations is known as \emph{epistemic uncertainty}.
 For example, we may be uncertain about the structure of the model or the value of specific
 model parameters \(\theta\).
-This type of uncertainty accounts for those that we could know, but that we do \emph{not know a priori}.
+This type of uncertainty accounts for those we could know, but we do \emph{not know a priori}.
 As such, \emph{epistemic uncertainty} can be reduced by exploring, collecting data and updating the model with
 this new experience.
 
@@ -1524,8 +1524,8 @@ Further to this, it may be undesirable to enter regions of
 high \emph{aleatoric uncertainty} because they may result in poor performance or even catastrophic failure.
 
 \subsection{Learning Single-Step Dynamics Models}
-\label{sec:orgc7155ad}
-This work considers single-step dynamics models with the delta state formulation
+\label{sec:orgc8eff0b}
+This work considers single-step dynamics models with the delta state formulation,
 which regularises the predictive distribution, given by
 \(\state_{\timeInd+1} &= \state_\timeInd + \dynamicsFunc(\state_\timeInd, \control_\timeInd) + \bm\epsilon\).
 Although multi-step dynamics models are an interesting direction for learning-based control, they are
@@ -1543,13 +1543,13 @@ with parametric uncertainty.
 
 \textbf{Probabilistic models}
 \emph{Mathematical models} are compact representations (sets of assumptions) that attempt to capture key features of the
-phenomenon of interest, in a precise mathematical form.
+phenomenon of interest in a precise mathematical form.
 Probabilistic modelling provides the capability of constructing \emph{mathematical models}
 that can represent and manipulate uncertainty in data, models, decisions and predictions.
 As such, linking observed data to underlying phenomena through probabilistic models
 is an interesting direction for modelling, analysing and controlling dynamical systems.
 It enables the uncertainty to be represented and manipulated;
-it provides a systematic way to combine observations with existing knowledge, via a \emph{mathematical model}.
+it provides a systematic way to combine observations with existing knowledge via a \emph{mathematical model}.
 Learning representations of dynamical systems for control using probabilistic models has shown much promise.
 Moreover, learning single-step dynamics models that quantify uncertainty has been central to
 recent successes in \acrshort{mbrl} \citep{chuaDeep2018,jannerWhen2019}.
@@ -1566,7 +1566,7 @@ and for \acrshort{mpc}
 \citep{kollerLearningBased2018,hewingCautious2020,hewingLearningBased2020,kollerLearningBased2018,kamtheDataEfficient2018}.
 
 \subsection{Gaussian Processes}
-\label{sec:org0d8cb33}
+\label{sec:org320a8af}
 The mathematical machinery underpinning \acrshort{gps} is now detailed.
 
 \textbf{Multivariate Gaussian identities}
@@ -1611,7 +1611,7 @@ Conveniently, the conditional densities are also Gaussian,
 Consider the case where \(\u\) represents some observations and \(\f\) represents a new test location.
 \cref{eq-gaussian-conditional} can be used to make
 inferences in the location \(\f\) given the observations \(\u\), i.e. make
-sophisticated interpolations on the measurements, based on their closeness.
+sophisticated interpolations on the measurements based on their closeness.
 In real-world scenarios, it is desirable to consider the entire input domain, instead of simply
 pre-selecting a discrete set of locations.
 Gaussian processes provide this mathematical machinery.
@@ -1722,7 +1722,7 @@ This structured handling of uncertainty makes \acrshort{gps} extremely powerful 
 of dynamical systems.
 
 \subsection{Learning Multimodal Dynamical Systems \label{to_motivation}}
-\label{sec:orgc6979e7}
+\label{sec:orgb8817e5}
 \begin{figure}[t!]
 \centering
 \begin{minipage}{0.49\textwidth}
@@ -1755,7 +1755,7 @@ The \acrshort{gp} has not been able to learn a representation of the dynamics wh
 due to the discontinuities associated with the multimodal transition dynamics (changing lengthscales/noise variances etc).
 The trajectory optimiser was able to find a trajectory from the start state \(\state_0\),
 to the target state \(\targetState\) in the \acrshort{gp} dynamics (magenta).
-However, as the \acrshort{gp} dynamics do not represent the true underlying dynamics accurately,
+However, as the \acrshort{gp} dynamics do not accurately represent the true underlying dynamics,
 the state trajectory resulting from rolling out the optimised controls in the environment (cyan) does not match
 the \acrshort{gp} dynamics trajectory (magenta).
 This example motivates the need to correctly identify the underlying modes when learning representations of
@@ -1794,7 +1794,7 @@ to learn multimodal transition dynamics for \acrshort{mbrl}.
 \cite{kaiserBayesian2020} use the data association with \acrshort{gps} model;
 a Bayesian model that learns independent dynamics modes whilst maintaining a
 probabilistic belief over which mode is responsible for predicting at a given input location.
-\cite{mckinnonLearning2017} also use an approach based on \acrshort{gps} except that they use a
+\cite{mckinnonLearning2017} also use an approach based on \acrshort{gps}, except that they use a
 \acrfull{mogpe} method to learn the switching behaviour for robot dynamics online.
 
 \textbf{Latent spaces for control}
@@ -1809,7 +1809,7 @@ As such, this work is interested in learning \emph{latent spaces}
 that are rich with information regarding how a system switches between its underlying dynamics modes.
 
 \section{Uncertainty-based Exploration Strategies \label{sec-unc-exploration}}
-\label{sec:org0b1e646}
+\label{sec:org3f65dc7}
 \acrfull{rl} agents face a trade-off between \emph{exploration}, where they seek to explore the environment and improve
 their models, and \emph{exploitation}, where they make decisions which are optimal for the data observed so far.
 There are many approaches from the literature used to tackle the exploration-exploitation trade-off.
@@ -1888,19 +1888,19 @@ In contrast to greedy exploitation, active learning does not seek to maximise a
 black-box objective. Instead, it is only interested in exploration. There are many
 approaches to active learning in the static setting, i.e. in systems where an arbitrary
 state \(\state\) can be sampled. In contrast, dynamical systems must be steered to \(\state\)
-through the unknown dynamics \(f\) through a sequence of controls \(\controlTraj\). Thus, there is
-information gain along the trajectory which must also be considered. As highlighted
-by \cite{buisson-fenetActively2020}, information gain in dynamical systems is therefore
+through the unknown dynamics \(f\) through a sequence of controls \(\controlTraj\). Thus,
+information gain along the trajectory must also be considered. As highlighted
+by \cite{buisson-fenetActively2020}, information gain in dynamical systems is
 fundamentally different to the static problem addressed by \cite{krauseNearOptimal2008}  and
 \cite{houlsbyBayesian2011}.
-The goal here is to pick the most informative control trajectory
+The goal is to pick the most informative control trajectory
 \(\controlTraj\) whilst observing \(\stateTraj\).
 
 Recent work has addressed active learning in \acrshort{gp} dynamics models. \cite{schreiterSafe2015}
 propose a greedy entropy-based strategy that considers the entropy of the
 next state. \cite{buisson-fenetActively2020} also propose a greedy entropy-based strategy
 except that they consider the entropy accumulated over a trajectory. In contrast,
-\cite{caponeLocalized2020,yuActive2021} propose to use the mutual information.
+\cite{caponeLocalized2020,yuActive2021} propose using the mutual information.
 \begin{myquote}
 \textbf{Mutual Information}
 Given two sets of random variables, $\mathbf{X}$ and $\mathbf{F}$, with joint density $p(\mathbf{X}, \mathbf{F})$ the
@@ -1924,8 +1924,8 @@ approach that leverages their \acrfull{gpssm} inference scheme to estimate the m
 information between all the variables in time
 \(I \left[\mathbf{y}_{1:t}, \hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{1:t+1} \right]\).
 Here \(\mathbf{y}_{1:t}\) denotes the set of observed outputs and \(\hat{\mathbf{y}}_{t+1}\) denotes
-the output predicted by the \acrshort{gpssm}. This contrasts with other approaches, which tend
-to study the latest mutual information \(I[\hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{t+1}]\).
+the output predicted by the \acrshort{gpssm}. This contrasts with other approaches, which
+study the latest mutual information \(I[\hat{\mathbf{y}}_{t+1} ; \mathbf{f}_{t+1}]\).
 
 \textbf{Myopic active learning}
 In \acrshort{rl} and control it is standard to consider objectives over a potentially infinite horizon.
@@ -1937,7 +1937,7 @@ time step. In contrast, the entropy-based strategy in
 \cite{buisson-fenetActively2020} considers the entropy over a horizon.
 
 \chapter{Probabilistic Inference for Learning Multimodal Dynamical Systems \label{chap-dynamics}}
-\label{sec:orga1b69eb}
+\label{sec:org276d7d7}
 \epigraph{All models are wrong, but some are useful.}{\textit{George Box}}
 \newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
 %\renewcommand{\stateDomain}{\ensuremath{\mathcal{S}}}
@@ -2144,14 +2144,14 @@ time step. In contrast, the entropy-based strategy in
 \newcommand{\expertsKL}{\ensuremath{\sum_{\modeInd=1}^\ModeInd\text{KL}\left( \expertInducingVariational \mid\mid \expertInducingPrior \right)}}
 \newcommand{\gatingKL}{\ensuremath{\text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
 \newcommand{\gatingsKL}{\ensuremath{\sum_{\modeInd=1}^\ModeInd \text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
-This chapter is interested in \emph{learning} representations of multimodal dynamical systems,
-that can be leveraged to control robotic systems in uncertain environments, where both the underlying
-dynamics modes, and how the system switches between them, are \emph{not fully known a priori}.
-This chapter assumes access to a data set of state transitions \(\dataset\), that
-have previously been sampled from the system at a constant frequency, i.e. with a fixed time-step.
+This chapter is concerned with \emph{learning} representations of multimodal dynamical systems for model-based control.
+It is interested in systems where both the underlying
+dynamics modes and how the system switches between them, are \emph{not fully known a priori}.
+This chapter assumes access to a data set of state transitions \(\dataset\),
+previously sampled from the system at a constant frequency, i.e. with a fixed time-step.
 
 Following the motivation in \cref{to_motivation}, this chapter
-seeks to correctly identify the underlying dynamics modes, whilst inferring
+seeks to identify the underlying dynamics modes correctly whilst inferring
 latent structure that can be exploited for control.
 The main goals of this chapter can be summarised as follows,
 \begin{enumerate}
@@ -2164,7 +2164,7 @@ Following other \acrshort{mogpe} methods, it is evaluated on the motorcycle data
 It is then tested on a real-world quadcopter data set representing the illustrative
 example detailed in \cref{illustrative_example}.
 \section{Problem Statement}
-\label{sec:org4d533bf}
+\label{sec:org5e6a7f4}
 This work considers learning representations of \emph{unknown} or \emph{partially unknown}, stochastic, multimodal,
 nonlinear dynamical systems.
 That is, it seeks to learn a representation of the dynamics from the problem statement in \cref{problem-statement-main}.
@@ -2212,7 +2212,7 @@ To further ease notation, the state-control input domain is denoted
 \(\inputDomain = \stateDomain \times \controlDomain \subseteq \R^{\InputDim}\)
 and a single state-control input is denoted
 \(\singleInput = (\state_{\timeInd},\control_{\timeInd})\).
-Given this formulation, the goal of this chapter is to learn the mapping \(\unknownDynamics\),
+Given this formulation, this chapter aims to learn the mapping \(\unknownDynamics\),
 which switches between \(\ModeInd\) different functions \(\mode{\latentFunc}\).
 This can be cast as a regression problem,
 \begin{align} \label{eq-multimodal-dynamics-disc-regression}
@@ -2235,13 +2235,13 @@ With this notation, the regression problem can be written as,
 \end{align}
 
 \section{Preliminaries}
-\label{sec:org0fa6689}
+\label{sec:orgb39840c}
 \acrfull{gps} are the state-of-the-art approach for Bayesian nonparametric regression
 and they provide a powerful mechanism for encoding expert domain knowledge.
 They are flexible enough to model arbitrary smooth functions with the simplicity of only requiring
 inference over a small number of interpretable parameters, such as
 lengthscales and the contributions of signal and noise variance in the data.
-These properties are induced by the \emph{covariance function} which models the covariance between observations.
+These properties are induced by the \emph{covariance function}, which models the covariance between observations.
 As such, \acrshort{mogpe} methods are a promising direction for modelling multimodal dynamical systems.
 This section recaps the \acrshort{mogpe} concepts that this chapter builds upon.
 \newline
@@ -2288,7 +2288,7 @@ They can model multimodal distributions as they model a mixture of distributions
 over the outputs, usually a Gaussian mixture in the regression setting \citep{trespMixtures2000a,rasmussenInfinite2001}.
 They can model non-stationary functions as
 each expert learns separate hyperparameters (lengthscales, noise variances etc).
-Many \acrshort{mogpe} methods have been proposed and in general, they differ in
+Many \acrshort{mogpe} methods have been proposed, and in general, they differ in
 the formulation of their gating network and their approximate inference algorithms.
 
 \begin{figure}[t]
@@ -2401,8 +2401,7 @@ governed by these probabilities.}
 \end{figure}
 \newline
 
-As highlighted by \cite{rasmussenInfinite2001},
-the traditional \acrshort{moe} marginal likelihood does not apply when the
+\cite{rasmussenInfinite2001} highlighted that the traditional \acrshort{moe} marginal likelihood does not apply when the
 experts are nonparametric.
 This is because the model assumes that the observations are i.i.d. given the model parameters,
 which is contrary to \acrshort{gp} models, which model the dependencies in the joint distribution, given the
@@ -2466,7 +2465,7 @@ is dropped for each \acrshort{gp} prior,
 i.e. \(\expertPrior = p\left( \mode{f}(\allInputK) \mid \allInputK, \expertParamsK \right)\).
 
 \section{Identifiable Mixtures of Gaussian Process Experts}
-\label{sec:org01f194b}
+\label{sec:orgdf99f36}
 Motivated by improving identifiability and learning latent spaces for control,
 this work adopts a \acrshort{gp}-based gating network resembling a \acrshort{gp} classification model,
 similar to that used in the original \acrshort{mogpe} model \citep{trespMixtures2000a}.
@@ -2534,7 +2533,7 @@ where \(\gatingMeanFunc(\cdot)\) and \(\gatingCovFunc(\cdot,\cdot)\) are the mea
 associated with the \(\modeInd^\text{th}\) gating function.
 Similarly to the experts, dependence on the inputs and hyperparameters is dropped from the gating network's \acrshort{gp} prior,
 i.e. \(\gatingPrior = p(\GatingFunc(\allInput) \mid \allInput, \gatingParams)\).
-In contrast to the experts, partitioning of the data set is not desirable for the gating network \acrshort{gps},
+In contrast to the experts, partitioning the data set is not desirable for the gating network \acrshort{gps},
 as each gating function should depend on all of the training observations.
 
 Each mode's mixing probability \(\singleGatingPosterior\) is then obtained by marginalising
@@ -2566,7 +2565,7 @@ then the mixing probability can be calculated in closed-form,
 where \(\mu_h\) and \(\sigma^2_{h}\) represent the mean and variance of the gating \acrshort{gp} at \(\singleInput\) respectively.
 
 \section{Approximate Inference \label{sec-inference}}
-\label{sec:orgf510068}
+\label{sec:org37c1060}
 \epigraph{Nature laughs at the difficulties of integration.}{\textit{Pierre-Simon Laplace}}
 Performing Bayesian inference involves finding the posterior over the latent variables,
 \begin{align} \label{eq-}
@@ -2575,13 +2574,13 @@ p(\GatingFunc(\allInput), \LatentFunc(\allInput) \mid \allInput, \allOutput, \ga
 \prod_{\modeInd=1}^{\ModeInd} \allExpertLikelihood \expertPrior}{\evidence}
 \end{align}
 where the denominator is the marginal likelihood from \cref{eq-marginal-likelihood-assign}.
-Exact inference in our model is intractable, due to the marginalisation over the set of expert indicator variables.
+Exact inference in our model is intractable due to the marginalisation over the set of expert indicator variables.
 For this reason, we resort to a variational approximation.
 The rich structure of our model makes it hard to construct an \acrshort{elbo} that can
-be evaluated in closed-form, whilst accurately modelling the complex dependencies.
+be evaluated in closed form whilst accurately modelling the complex dependencies.
 Further to this, the marginal likelihood is extremely expensive to evaluate,
 as there are \(\ModeInd^{\NumData}\) sets of assignments \(\allModeVar\) that need to be marginalised.
-For each set of assignments, there are \(\ModeInd\) \acrshort{gp} experts that need to be evaluated, each with
+For each set of assignments, \(\ModeInd\) \acrshort{gp} experts that need to be evaluated, each with
 complexity \(\mathcal{O}(\NumData^{3})\).
 For these reasons, this work derives a variational approximation based on inducing variables, that provides scalability
 by utilising stochastic gradient-based optimisation.
@@ -2594,7 +2593,7 @@ This is because \acrshort{svi} requires a set of local variables factorised over
 marginalisation considers the sets of assignments for the entire data set.
 Following the approach by \cite{titsiasVariational2009}, we augment the probability space
 with a set of \(\NumInducing\) inducing variables for each \acrshort{gp}.
-However, instead of collapsing these inducing variables we explicitly
+However, instead of collapsing these inducing variables, we explicitly
 represent them as variational distributions and use them to lower bound
 (and then further bound) the marginal likelihood, similar to
 \cite{hensmanGaussian2013,hensmanScalable2015}.
@@ -2661,7 +2660,7 @@ represent them as variational distributions and use them to lower bound
 \end{figure}
 \textbf{Augmented experts}
 We sidestep the hard assignment of observations to experts by augmenting each expert with a set
-of separate independent inducing points,
+of separate independent inducing points
 \((\expertInducingInput, \expertInducingOutput)\).
 Each expert's inducing points are assumed to be from its \acrshort{gp} prior,
 
@@ -2731,7 +2730,7 @@ between the \(\numData^{\text{th}}\) training input and its inducing inputs.
 Similarly for the gating network.
 Figure \ref{fig-graphical-model-sparse} shows the graphical model of this augmented joint probability model.
 
-Our work follows from sparse \acrshort{gp} methodologies, that assume,
+Our work follows from sparse \acrshort{gp} methodologies that assume,
 given the inducing variables, the latent function values factorise over observations.
 Our approximation assumes that given the inducing points,
 the marginalisation over every possible assignment of data points to experts can be factorised over data.
@@ -2773,7 +2772,7 @@ factorisation for 1) constructing a \acrshort{gp}-based gating network and 2) de
 be optimised with stochastic gradient methods,
 whilst still capturing the complex dependencies between the gating network and experts.
 \subsection{Evidence Lower Bounds}
-\label{sec:orgebdf587}
+\label{sec:org886cfd0}
 Instead of collapsing the inducing variables as seen in \cite{titsiasVariational2009},
 they can be explicitly represented as variational distributions,
 \((\expertsInducingVariational, \gatingsInducingVariational)\)
@@ -2836,7 +2835,7 @@ variable is possible because the mixing probabilities are dependent on \textbf{a
 not just their associated gating function.
 In contrast, moving the marginalisation over each expert's latent function \(\mode{\latentFunc}(\singleInput)\)
 outside of the marginalisation over the expert
-indicator variable, corresponds to changing the underlying model, in particular, the likelihood
+indicator variable corresponds to changing the underlying model, in particular, the likelihood
 approximation in \cref{eq-likelihood-approximation}.
 
 \textbf{Further\textsuperscript{2} lower bound}
@@ -2889,14 +2888,14 @@ however, the integrals are now only one-dimensional.
 These integrals are approximated with Gibbs sampling and
 in practice only single samples are used because the added stochasticity helps the optimisation.
 
-The tight lower bound \(\tightBound\) is the most accurate lower bound but it is also the most
+The tight lower bound \(\tightBound\) is the most accurate lower bound, but it is also the most
 computationally expensive.
 Both the further lower bound \(\furtherBound\) and the further\textsuperscript{2} lower bound \(\furtherBoundTwo\)
 have lower computational complexity at the cost of being looser bounds.
 The performance of these bounds is evaluated in \cref{sec-mcycle-results}.
 
 \subsection{Optimisation}
-\label{sec:orgfafc40f}
+\label{sec:org15f7726}
 \renewcommand{\expertSampleInd}{\ensuremath{s}}
 \renewcommand{\ExpertSampleInd}{\ensuremath{S}}
 \renewcommand{\gatingSampleInd}{\ensuremath{\hat{s}}}
@@ -2968,7 +2967,7 @@ In addition to this sampling, calculating each expert's conditional \(\singleExp
 has complexity \(\mathcal{O}(\NumInducing^2)\).
 
 \subsection{Predictions}
-\label{sec:org8056964}
+\label{sec:orga2eaa8b}
 \renewcommand{\testInput}{\ensuremath{\mathbf{X}^*}}
 \renewcommand{\testOutput}{\ensuremath{\mathbf{y}^*}}
 \renewcommand{\NumTest}{\ensuremath{\NumData^*}}
@@ -3101,7 +3100,7 @@ where \(\mu_{h_*}\) and \(\sigma^2_{h_*}\) are the mean and variance of the vari
 \(\gatingVariationalPosteriorBernoulli\) at \(\singleTestInput\).
 
 \section{Evaluation of Model and Approximate Inference}
-\label{sec:org10f53ad}
+\label{sec:org1c5c6f2}
 As a \acrfull{moe} method, our model aims to improve on standard \acrshort{gp} regression
 with the ability to model non-stationary functions and multimodal distributions over the output variable.
 With this in mind, the model and approximate inference scheme are evaluated on two data sets.
@@ -3112,7 +3111,7 @@ making it interesting to study from the \acrshort{mogpe} perspective.
 Secondly, they are tested on the illustrative example from \cref{illustrative_example}.
 That is, a data set collected onboard a DJI Tello quadcopter flying in an environment subject to two dynamics modes.
 \subsection{Experiments}
-\label{sec:orgd39a0a3}
+\label{sec:org10c6d3b}
 \newcommand{\numTest}{\ensuremath{n}}
 \newcommand{\NumTest}{\ensuremath{N}}
 %\newcommand{\testSingleInput}{\ensuremath{\x_{\numTest}}}
@@ -3144,7 +3143,7 @@ where \(\predictedSingleOutput\) is the model's prediction at \(\singleTestInput
 Note that all figures in this section show models that were trained on the full data set, i.e. no test/train split.
 
 \subsection{Evaluation on Motorcycle Data Set \label{sec-mcycle-results}}
-\label{sec:org06b967f}
+\label{sec:org1797997}
 The Motorcycle data set
 (discussed in \cite{Silverman1985}) contains 133 data points
 (\(\allInput \in \R^{133 \times 1}\) and \(\allOutput \in \R^{133 \times 1}\))
@@ -3158,7 +3157,7 @@ instantiated with \(\ModeInd=2\) and \(\ModeInd=3\) experts.
 All experiments on the Motorcycle data set use \(\NumInducing=32\) inducing points for
 all \acrshort{gps} and are trained for \(25,000\) iterations
 with Adam \citep{kingmaAdam2017}, with a learning rate of \(0.01\) and a batch size of \(\NumData_b=16\).
-The results are compared against a \acrshort{gp} and a \acrshort{svgp},
+The results are compared against a \acrshort{gp} and a \acrfull{svgp},
 which use Squared Exponential kernels with \acrfull{ard} and a Gaussian likelihood.
 
 \cref{tab-mcycle-metrics} summarises the results for the three \acrshort{elbo}s
@@ -3208,7 +3207,7 @@ This was expected as this bound corresponds to a further likelihood approximatio
 which mixes the experts' noise models as opposed to their full \acrshort{svgp} models.
 
 
-With regards to the accuracy of the predictive means,
+Regarding the accuracy of the predictive means,
 the standard \acrshort{gp} regression model achieved the best \acrshort{rmse}, followed by the \acrshort{svgp} models and then the
 \acrshort{mosvgpe} models.
 It is worth noting that all of the \acrshort{rmse} and \acrshort{mae} scores are very similar.
@@ -3300,7 +3299,7 @@ Gating function & Num inducing points & \(\NumInducing\) & \(32\)\\
 \end{figure}
 
 \subsubsection{Two Experts}
-\label{sec:org66a5a49}
+\label{sec:org5de02c3}
 The two further lower bounds (\(\furtherBound\) and \(\furtherBoundTwo\)),
 derived in \cref{sec-inference}, are compared by training each instantiation of
 the model using the same model and training parameters.
@@ -3510,7 +3509,7 @@ Gating functions (1-3) & Num inducing points & \(\NumInducing\) & \(32\)\\
 \end{figure}
 
 \subsubsection{Three Experts}
-\label{sec:orga31a9c9}
+\label{sec:orgb136f65}
 The model was then instantiated with three experts \(\ModeInd=3\) and trained
 following the same procedure as the two experts' experiments.
 \cref{tab-params-motorcycle-three} shows the initial values for all of the trainable parameters in the model.
@@ -3598,7 +3597,7 @@ their associated mixing probabilities $\approxPredictiveProb$ in
 \clearpage
 
 \subsubsection{Summary}
-\label{sec:org4c44836}
+\label{sec:org51db5f2}
 The tight lower bound \(\tightBound\) and further lower bound \(\furtherBound\) recovered similar results in
 all experiments.
 This indicates that \(\furtherBound\) does not loosen the bound to a point where it loses valuable information.
@@ -3612,7 +3611,7 @@ For this reason, the remainder of this thesis uses \(\furtherBound\) for all exp
 \newpage
 
 \subsection{Evaluation on Velocity Controlled Quadcopter \label{sec-brl-experiment}}
-\label{sec:orga8f2065}
+\label{sec:orga6d01c8}
 As this work is motivated by learning representations of real-world dynamical systems, it was
 tested on a real-world quadcopter data set following the illustrative example detailed
 in \cref{illustrative_example}.
@@ -3705,7 +3704,7 @@ Gating function & Num inducing points & \(\NumInducing\) & \(100\)\\
 \end{table}
 
 \subsubsection{Results}
-\label{sec:org9d10295}
+\label{sec:orga81cefc}
 The model was instantiated with two experts, with the goal of each expert learning a separate dynamics mode and the
 gating network learning a representation of how the underlying dynamics modes vary over the state space.
 The model was trained using the model and training parameters in \cref{tab-params-quadcopter}.
@@ -3818,7 +3817,7 @@ These results demonstrate that the likelihood approximation in \cref{eq-likeliho
 combined with our gating network and variational inference scheme, is capable of modelling the
 assignment of observations to experts via the inducing points.
 \section{Discussion and Future Work}
-\label{sec:org2a844b9}
+\label{sec:org3632bd1}
 
 \textbf{Implicit data assignment}
 It is worth noting that in contrast to other \acrshort{mogpe} methods, this model does not directly assign observations to experts.
@@ -3888,7 +3887,7 @@ when its latent \emph{geometry} is leveraged for control in \cref{chap-traj-opt-
 its \acrshort{gps} are used to develop an information-based exploration strategy in \cref{chap-active-learning}.
 
 \section{Conclusion}
-\label{sec:orga0ed929}
+\label{sec:org73c2ca0}
 This chapter has presented a method for learning representations of multimodal dynamical systems using
 a \acrshort{mogpe} method.
 Motivated by correctly identifying the underlying dynamics modes and inferring latent structure that can
@@ -3927,7 +3926,7 @@ The method is further evaluated on a real-world quadcopter example demonstrating
 it can successfully learn a factorised representation of a real-world, multimodal, robotic system.
 
 \chapter{Mode Remaining Trajectory Optimisation \label{chap-traj-opt-control}}
-\label{sec:org34a4dbe}
+\label{sec:org5054240}
 \newcommand{\nominalStateTraj}{\ensuremath{\stateTraj_*}}
 \newcommand{\nominalControlTraj}{\ensuremath{\controlTraj_*}}
 \newcommand{\fixedControl}{\ensuremath{\control_{*}}}
@@ -4069,7 +4068,7 @@ example from \cref{illustrative_example}.
 An initial version of the \acrfull{ig} method presented in \cref{sec-traj-opt-collocation}
 is published in \cite{scannellTrajectory2021}.
 \section{Problem Statement \label{sec-problem-statement}}
-\label{sec:orgc2eb76a}
+\label{sec:org3bf49d7}
 The goal of this chapter is to solve the mode remaining navigation problem in \cref{problem-statement-main}.
 Due to the novelty of this problem, the work in this chapter considers trajectory optimisation algorithms rather
 than state feedback (closed-loop) controllers.
@@ -4163,7 +4162,7 @@ This is due to a lack of training observations and is known as \emph{epistemic u
 It is desirable to avoid entering these regions as it may result in the system leaving the desired dynamics mode.
 
 \section{Mode Remaining Control via Latent Geometry \label{chap-traj-opt-geometry}}
-\label{sec:orgf921969}
+\label{sec:org0e8fa97}
 This section introduces two different approaches to performing mode remaining trajectory optimisation.
 They both exploit concepts from Riemannian geometry -- extended to probabilistic manifolds -- to
 encode mode remaining behaviour.
@@ -4176,7 +4175,7 @@ resembles standard Gaussian process control methods
 with the mode remaining behaviour encoded via a geometric objective function.
 We name this approach \acrfull{dre}.
 \subsection{Concepts from Riemannian Geometry \label{sec-geometry-recap}}
-\label{sec:org229e493}
+\label{sec:org1befc8a}
 \begin{figure}[h!]
 \centering
 \begin{minipage}[r]{\columnwidth}
@@ -4326,7 +4325,7 @@ Goal 3 can be encoded by observing that the metric tensor is actually a random v
 of length minimising trajectories to probabilistic manifolds.
 
 \subsubsection{Probabilistic Geometries \label{sec-prob-geo}}
-\label{sec:orgb165092}
+\label{sec:org97a904b}
 \newline
 
 Following \cite{tosiMetrics2014} we formulate a metric tensor that captures the variance in the manifold
@@ -4422,7 +4421,7 @@ whereas selecting a large \(\lambda\) should find trajectories that prioritise a
 of the dynamics with high \emph{epistemic uncertainty}.
 
 \subsubsection{Extension to Sparse Variational Gaussian Processes}
-\label{sec:org1dc39d0}
+\label{sec:org3716fb4}
 The model in Chapter \ref{chap-dynamics} is built upon sparse \acrshort{gp} approximations,
 so the Jacobian in \cref{eq-predictive-jacobian-dist} must be extended for such approximations.
 \begin{myquote}
@@ -4486,7 +4485,7 @@ The distribution over the Jacobian is then obtained via a Gaussian convolution,
 \end{myquote}
 
 \subsection{\acrfull{ig} \label{sec-traj-opt-collocation}}
-\label{sec:orgfc696dc}
+\label{sec:org8bb5cff}
 This section presents a trajectory optimisation algorithm that exploits the fact that
 length minimising trajectories on the manifold endowed with the expected metric from \cref{eq-expected-metric},
 encodes all of the goals.
@@ -4533,7 +4532,7 @@ with \(\manifoldInput(t_0) = \manifoldInput_0\) and \(\manifoldInput(t_f) = \man
 This is a boundary value problem (BVP) with a smooth solution so it can be solved using
 any BVP solver, e.g. (multiple) shooting or collocation methods.
 \subsubsection{Implicit Trajectory Optimisation}
-\label{sec:org4593739}
+\label{sec:orged23a6d}
 Solving the 2\textsuperscript{nd} order \acrshort{ode} in \cref{eq-2ode} with the expected metric from \cref{eq-expected-metric-weighting},
 is equivalent to solving our trajectory optimisation problem subject to the same boundary conditions.
 This resembles an indirect optimal control method as it is based on an observation that the
@@ -4655,7 +4654,7 @@ This is because the geodesic \acrshort{ode} will become a \acrfull{sde}.
 Ignores much of the stochasticity inherent in the problem.
 \end{remark}
 \subsection{\acrfull{dre} \label{sec-traj-opt-energy}}
-\label{sec:orgdba8a89}
+\label{sec:org296a275}
 This section details a direct optimal control approach which embeds the mode remaining behaviour directly into the
 \acrfull{soc} problem, via a geometric objective function.
 In contrast to the previous approach, this method:
@@ -4725,7 +4724,7 @@ However, the expected Riemannian energy in \cref{eq-mode-soc-problem-geometry-co
 due to the dependence of metric \(\metricTensor\) on the state.
 The second stage approximates the calculation of the expected Riemannian energy under normally distributed states.
 \subsubsection{Approximate Inference for Dynamics Predictions \label{sec-dynamics-predictions}}
-\label{sec:org15852c9}
+\label{sec:org018b054}
 \renewcommand{\singleInput}{\ensuremath{\state_\timeInd, \control_\timeInd}}
 \renewcommand{\singleInput}{\ensuremath{\hat{\state}_\timeInd}}
 \renewcommand{\singleOutput}{\ensuremath{\Delta\state_{\timeInd+1}}}
@@ -4817,7 +4816,7 @@ where \(q(\GatingFunc(\state_{\timeInd}) \mid \state_{\timeInd})\) is the approx
 gating functions from \cref{eq-predictive-gating}.
 
 \subsubsection{Approximate Riemannian Energy}
-\label{sec:orgc421606}
+\label{sec:orgdfc4a69}
 Given this approach for simulating the \acrshort{mosvgpe} dynamics model, the state at each time step is normally distributed.
 Unlike the terminal and control cost terms in \cref{eq-mode-soc-problem-geometry-cost}, the expected Riemannian
 energy,
@@ -4889,16 +4888,16 @@ This work then approximately solves the problem in \cref{eq-mode-soc-problem} by
 %\geq 1-\delta \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd],
 \end{align}
 \end{subequations}
-using \acrhort{slsqp} in SciPy \citep{2020SciPy-NMeth}.
+using \acrshort{slsqp} in SciPy \citep{2020SciPy-NMeth}.
 This method obtains closed-form expressions for the expected cost in \cref{eq-mode-soc-problem-geometry}
 by constraining the system to be \(\delta-\text{mode remaining}\) (\cref{def-delta-mode-remaining}).
 
 \subsubsection{Practical Implementation}
-\label{sec:orga9cbf3d}
+\label{sec:org8b08376}
 An alternative approach to obtain mode remaining behaviour is to optimise subject to the chance constraints
 in \cref{eq-mode-chance-constraint} alone, i.e. without the Riemannian energy cost term.
 However, this constrained optimisation is often not able to converge in practice.
-Experiments and intuition indicate that the geometry of the gating functions provide a much
+Experiments and intuition indicate that the geometry of the gating functions provides a much
 better optimisation landscape.
 This is because the gating functions vary gradually over the state domain, whilst the mixing probability changes
 abruptly at the boundaries between dynamics modes.
@@ -4910,7 +4909,7 @@ optimiser, before deploying them in the environment.
 In most experiments, this strategy was far superior than constraining the optimisation at every iteration.
 
 \section{Mode Remaining Control as Probabilistic Inference \label{chap-traj-opt-inference}}
-\label{sec:orgd8f63e1}
+\label{sec:orge157493}
 \newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
 \newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVar_{\timeInd}=\desiredMode)}}
 %\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
@@ -4956,7 +4955,7 @@ the method presented in this chapter is applicable in a wider range of \acrshort
 \cref{sec-inference-background} recaps the necessary background and related work and
 \cref{sec-traj-opt-inference} then details the trajectory optimisation algorithm.
 \subsection{Background and Related Work \label{sec-inference-background}}
-\label{sec:org9be7c23}
+\label{sec:orgaf62643}
 This section first recaps the \acrfull{cai_unimodal} framework.
 To formulate optimal control as probabilistic inference
 it is first embedded into a graphical model (see Figure \ref{fig-basic-control-graphical-model}).
@@ -5075,7 +5074,7 @@ trajectory coincides with classical optimal control \citep{toussaintRobot2009}.
 \end{figure}
 
 \subsubsection{Inference of Sequential Latent Variables}
-\label{sec:orgd8f32d6}
+\label{sec:orgd843025}
 \newline
 
 The joint probability for an optimal trajectory (i.e.
@@ -5093,7 +5092,7 @@ can be factorised using its Markovian structure,
 \end{align}
 \normalsize
 where \(\controlDist\) denotes the controller or policy.
-\cite{toussaintRobot2009} highlight that although the maximum liklihood trajectory coincides with the classical
+\cite{toussaintRobot2009} highlights that although the maximum likelihood trajectory coincides with the classical
 optimal trajectory, taking expectations over trajectories
 i.e. calculating \(\log p(\optimalVarTraj \mid \state_0)\),
 is not equivalent to expected cost minimisation.
@@ -5187,7 +5186,7 @@ expectation maximisation algorithm for dynamical system estimation
 \citep{shumwayAPPROACH1982,ghahramaniLearning1999,schonSystem2011}, with input estimation \citep{watsonStochastic2021}.
 
 \subsection{Mode Remaining Control as Inference \label{sec-traj-opt-inference}}
-\label{sec:orgd7b5df2}
+\label{sec:orgd7dccb2}
 %\renewcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1, \modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd)}}
 %\renewcommand{\modeProb}{\ensuremath{\Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd)}}
 %\renewcommand{\optimalVarTraj}{\ensuremath{\optimalVar_{0:\TimeInd}=1}}
@@ -5220,7 +5219,7 @@ used to encode mode remaining behaviour.
 \cref{eq-traj-opt-gating-network-prob-post-inf} shows the probability mass function over the expert indicator variable
 after training \acrshort{mosvgpe} on the historical data set of state transitions from the
 quadcopter navigation problem in \cref{illustrative_example}.
-Intuitively, the goal is to find trajectories that remain in regions of the dynamics with high probability of
+Intuitively, the goal is to find trajectories that remain in regions of the dynamics with a high probability of
 remaining in the desired dynamics mode.
 
 \begin{figure}[t!]
@@ -5346,7 +5345,7 @@ requires simulating the trajectory in the learned,
 single-step dynamics model, i.e. making long-term predictions.
 
 \subsubsection{Approximate Inference for Dynamics Predictions}
-\label{sec:org71721b0}
+\label{sec:orgd5580f4}
 
 As this method is using a learned representation of the transition dynamics,
 it suffices to assume that the dynamics are given by the desired mode's learned dynamics.
@@ -5384,7 +5383,7 @@ with \(q(\state_0) = \delta(\state_0)\).
 Note that the state and control at each time step are normally distributed.
 
 \subsubsection{Variational Inference for Sequential Latent Variables}
-\label{sec:org990b813}
+\label{sec:orgba22b54}
 Variational inference seeks to optimise \(q(\controlTraj)\)
 w.r.t. the \acrfull{elbo}.
 In this setup, the evidence is that \(\optimalVar_{\timeInd}=1\) and \(\modeVar_{\timeInd}=\desiredMode\) for
@@ -5476,7 +5475,7 @@ calculated in closed-form with,
 \end{align}
 
 \section{Conclusion}
-\label{sec:orgbfe1267}
+\label{sec:org18c96c8}
 This chapter has presented three \emph{mode remaining} trajectory optimisation algorithms.
 The first two have shown how the geometry of the \acrshort{mosvgpe} gating network
 infers valuable information regarding how a multimodal dynamical system switches between its underlying dynamics modes.
@@ -5499,7 +5498,7 @@ and the \acrfull{cai} method from \cref{chap-traj-opt-inference},
 perform significantly better than the \acrfull{ig} method.
 
 \chapter{Quadcopter Experiments - Mode Remaining Trajectory Optimisation \label{chap-traj-opt-results}}
-\label{sec:org4793960}
+\label{sec:org4d8d361}
 %\newcommand{\ig}{IG\xspace}
 %\newcommand{\dre}{DRE\xspace}
 %\newcommand{\cai}{CaI\xspace}
@@ -5526,9 +5525,9 @@ The methods are further evaluated on a second simulated velocity controlled quad
 See \cref{fig-environments} for schematics of the two environments.
 The turbulent dynamics modes (green) are subject to higher drift due to the wind field created by the fan.
 They are also subject to higher diffusion (process noise) resulting from the turbulence induced by the fan.
-Although the exact turbulent dynamics are not known, they are believed to be difficult to control.
+Although the exact turbulent dynamics are \emph{unknown}, they are believed to be difficult to control.
 This is due to the high process noise which may lead to catastrophic failure.
-It is therefore desirable to find trajectories that avoid entering this turbulent dynamics mode.
+Therefore, it is desirable to find trajectories that avoid entering this turbulent dynamics mode.
 
 \begin{figure}[h!]
     \centering
@@ -5564,7 +5563,7 @@ All three control methods are tested in the two simulated environments so that t
 To aid comparison with the real-world experiments, the layout of the first simulated environment  (Environment 1)
 was kept consistent with the real-world experiments.
 \section{Real-World Quadcopter Experiments \label{sec-traj-opt-results-brl}}
-\label{sec:orgb727972}
+\label{sec:orgcd5b079}
 The \acrfull{ig} method presented in \cref{sec-traj-opt-collocation} was evaluated
 using data from the real-world quadcopter navigation problem detailed in \cref{sec-brl-experiment}.
 However, a different subset of the environment was not observed
@@ -5599,14 +5598,14 @@ overlayed on the desired mode's (\subref{fig-geometric-traj-opt-over-prob}) mixi
 \end{figure}
 
 \subsection{Model Learning}
-\label{sec:orgac5b53b}
+\label{sec:orgbdbd61c}
 The model from \cref{chap-dynamics} was instantiated with \(\ModeInd=2\) experts and trained on
 the data collected from the velocity controlled quadcopter experiment.
 Each mode's dynamics \acrshort{gp} used a Squared Exponential kernel with \acrfull{ard} and a constant mean function.
 The gating network used a single gating function with a Bernoulli likelihood.
 Its \acrshort{gp} prior utilised a Squared Exponential kernel with \acrshort{ard} and a zero mean function.
 
-\cref{fig-geometric-traj-opt} shows the gating network posterior where the model has clearly learned
+\cref{fig-geometric-traj-opt} shows the gating network posterior where the model has learned
 two dynamics modes, characterised by the drift and process noise induced by the fan.
 Mode 1 (red) represents the operable dynamics mode whilst Mode 2 (blue)
 represents the inoperable turbulent dynamics mode.
@@ -5620,7 +5619,7 @@ The variance (right) has also clearly captured information regarding the \emph{e
 i.e. where the model is uncertain which mode governs the dynamics.
 
 \subsection{Trajectory Optimisation using Indirect Optimal Control via Latent Geodesics}
-\label{sec:orga1f8838}
+\label{sec:org7fd02ee}
 The initial (cyan) trajectory in \cref{fig-geometric-traj-opt} was initialised as a straight line with
 \(10\) collocation points, indicated by the crosses.
 The collocation solver guarantees that trajectories end at the target state.
@@ -5671,7 +5670,7 @@ remains in regions of the model with high probability.
 The right-hand plot in \cref{fig-geometric-traj-opt-over-svgp}
 shows that this trajectory favours remaining in the desired mode at the cost of entering the region
 of the gating network with high \emph{epistemic uncertainty}.
-This is quantified in \cref{tab-results} which shows it accumulates more gating function variance than both the
+This is quantified in \cref{tab-results}, which shows it accumulates more gating function variance than both the
 initial trajectory and the trajectory found with \(\lambda=20.0\).
 
 In contrast, the trajectory found with \(\lambda=20.0\) initially remains in the desired mode
@@ -5684,7 +5683,7 @@ However, in this experiment, increasing the relevance of the covariance term in 
 metric has no benefit.
 This is because it pushes the trajectory into the turbulent dynamics mode.
 
-These results indicate that the nonlinear program in \cref{eq-collocation-problem},
+These results indicate the nonlinear program in \cref{eq-collocation-problem},
 i.e. solving the geodesic \acrshort{ode} in \cref{eq-2ode} via collocation, is capable of finding state
 trajectories from \(\state_0\) to \(\targetState\) that exhibit mode remaining behaviour.
 However, these experiments have not validated the method's ability to recover the controls from the state trajectory
@@ -5699,12 +5698,12 @@ Setting the tolerance too small often resulted in the solver failing to converge
 large omitted any mode remaining behaviour.
 
 \section{Simulated Quadcopter Experiments \label{sec-traj-opt-results-simulated}}
-\label{sec:org8eebaeb}
+\label{sec:orgaba5562}
 All of the control methods are now tested in two simulated environments so that they can be compared.
 This section first details the two simulation environments.
 
 \subsection{Simulator Setup}
-\label{sec:org049ea26}
+\label{sec:org1c18fa4}
 The simulated environments have two dynamics modes, \(\modeVar \in \{1, 2\}\), whose
 transition dynamics are given by a single integrator discretised using the forward Euler method
 (velocity times time).
@@ -5721,8 +5720,9 @@ The state domain is constrained to \(x, y \in [-3, 3]\) and min/max controls are
 control domain to \(\velocity_x, \velocity_y \in [-5, 5]\).
 
 
-\textbf{Data set} \(4000\) state transitions were sampled from each environment with \(\Delta \timeInd = 0.25s\).
-A subset of the state transitions were then removed to induce a region of high \emph{epistemic uncertainty} in the
+\textbf{Data set}
+We sampled \(4000\) state transitions from each environment with \(\Delta \timeInd = 0.25s\).
+We then removed a subset of the state transitions to induce a region of high \emph{epistemic uncertainty} in the
 learned dynamics model.
 This enabled the methods' ability to avoid regions of high \emph{epistemic uncertainty} to be tested.
 \cref{fig-dataset-scenario-both} shows the two environments as well as the state transition data sets that were
@@ -5758,7 +5758,7 @@ The initial $\state_0$ and target states $\targetState$ for the trajectory optim
 \label{fig-dataset-scenario-both}
 \end{figure}
 \subsection{Model Learning}
-\label{sec:org36a3e68}
+\label{sec:org791d654}
 Following the experiments in \cref{sec-traj-opt-results-brl},
 the model from \cref{chap-dynamics} was instantiated with \(\ModeInd=2\) experts, one to
 represent the desired dynamics mode and one to represent the turbulent dynamics mode.
@@ -5820,7 +5820,7 @@ and the subset of the environment which has not been observed (hashed box).}
 \label{fig-traj-opt-gating-network-5}
 \end{figure}
 \subsection{Performance Indicators}
-\label{sec:org67fb5c0}
+\label{sec:orga9fe470}
 Before evaluating the three trajectory optimisation algorithms in the simulated environments,
 let us restate the goals from \cref{chap-traj-opt-control}:
 \begin{description}
@@ -5908,7 +5908,7 @@ Env & Method & \(\lambda\) & Mode prob & Mode prob with unc. & State unc. & Gati
 \end{table}
 
 \subsection{Results}
-\label{sec:org319eafe}
+\label{sec:orge79d680}
 Three settings of the tunable \(\lambda\) parameter were tested for
 both of the geometry-based methods in each environment.
 The \acrfull{cai} method from \cref{sec-traj-opt-inference} was tested with
@@ -5977,7 +5977,7 @@ They are overlayed on the desired mode's mixing probability for Environmnet 1 (t
 \end{figure}
 
 \subsubsection{Goal 1 - Navigate to the Target State}
-\label{sec:orgd8e47f1}
+\label{sec:org621452c}
 The methods are first evaluated at their ability to navigate to the target state, that is, achieve Goal 1.
 
 \textbf{\acrfull{ig}}
@@ -5987,7 +5987,7 @@ This is indicated by the collocation state trajectories \(\bar{\mathbf{z}}\) (le
 \cref{fig-collocation-traj-opt}) reaching the target state  \(\targetState\) in both environments.
 This is because the collocation solver \(\text{IG}_{\text{collocation}}\) is guaranteed to
 satisfy the boundary conditions.
-However, the inference strategy is not always able to recover controls that
+However, the inference strategy cannot always recover controls that
 drive the system along the collocation solver's state trajectory and thus to the target state \(\targetState\).
 
 In Environment 1, the inference strategy successfully recovered controls that
@@ -5995,13 +5995,13 @@ drive the system along the collocation solver's state trajectory.
 This is indicated by the dynamics trajectory \(\bar{\mathbf{x}}\) (right in \cref{fig-collocation-traj-opt-7}),
 following the state trajectory \(\bar{\mathbf{z}}\) found by the collocation solver
 \(\text{IG}_{\text{collocation}}\) (left in \cref{fig-collocation-traj-opt-7}).
-However, in Environment 2, the inference strategy was not able to recover the controls that could drive the system
+However, in Environment 2, the inference strategy could not recover the controls that could drive the system
 along the collocation solver's state trajectory.
 This can be seen by the dynamics trajectories (right in \cref{fig-collocation-traj-opt-5})
 differing from the collocation trajectories (left in \cref{fig-collocation-traj-opt-5}.
 
-One possible explanation is that the \acrshort{elbo} in \cref{eq-control-elbo-svgp} was not able
-to recover the controls due to a local optimum.
+One possible explanation is that the \acrshort{elbo} in \cref{eq-control-elbo-svgp} could not
+recover the controls due to a local optimum.
 The collocation state trajectories (left) in the experiments with \(\lambda=0.5, 1.0, 5.0\), which were initialised
 with straight line trajectories, passed through the turbulent dynamics mode.
 As this region belongs to the turbulent dynamics mode, the desired mode's dynamics \acrshort{gp} has high \emph{epistemic uncertainty}
@@ -6023,7 +6023,7 @@ All of the \acrshort{dre} experiments, (middle row of
 were able to find trajectories
 that navigate to the target state \(\targetState\) under the desired mode's \acrshort{gp} dynamics.
 It is worth noting that this method does not guarantee that trajectories will satisfy the boundary conditions.
-However, in practice, setting the terminal state cost matrix \(\terminalStateCostMatrix\) to be very high,
+However, setting the terminal state cost matrix \(\terminalStateCostMatrix\) to be very high,
 appears to work well.
 
 \textbf{\acrfull{cai}}
@@ -6033,7 +6033,7 @@ the bottom row of \cref{fig-all-traj-opt-prob,fig-all-traj-opt-mean,fig-all-traj
 successfully navigating to the target state \(\targetState\).
 Similarly to the \acrshort{dre} method, this approach is not guaranteed
 to find trajectories that will end at the target state.
-However, in practice, setting a high terminal state cost matrix \(\terminalStateCostMatrix\) worked well.
+However, setting a high terminal state cost matrix \(\terminalStateCostMatrix\) worked well.
 
 \begin{figure}
 \centering
@@ -6066,13 +6066,13 @@ posterior mean associated with the desired mode's gating function.}
 \end{figure}
 
 \subsubsection{Goal 2 - Remain in the Desired Mode}
-\label{sec:org1701e83}
+\label{sec:org4f98cc4}
 The experiments are now evaluated at their ability to remain in the desired dynamics mode,
 that is, their ability to achieve Goal 2.
 \newline
 
 \textbf{\acrfull{ig}}
-None of the \acrshort{ig} experiments were able to successfully remain in the desired dynamics mode.
+None of the \acrshort{ig} experiments were able to remain in the desired dynamics mode successfully.
 In all but one of the experiments, this was due to the collocation solver
 \(\text{IG}_{\text{collocation}}\) finding trajectories that pass over the mode boundary into
 the turbulent dynamics mode.
@@ -6083,13 +6083,12 @@ induced by the initial trajectory.
 The IG\textsubscript{collocation} \(\lambda=1.0\) (mid point) experiment
 (purple squares in \cref{fig-collocation-traj-opt-5}) was initialised as two straight lines with a
 mid point at \([-2.0, -2.0]\) to see if
-setting the initial trajectory to not pass over the mode boundary could enable it to find a mode remaining
+setting the initial trajectory not to pass over the mode boundary could enable it to find a mode remaining
 trajectory.
-\cref{fig-collocation-traj-opt-5} indicates that with this initialisation the collocation solver was able to
+\cref{fig-collocation-traj-opt-5} indicates that with this initialisation, the collocation solver was able to
 find a mode remaining trajectory.
 This result indicates that the collocation solver is susceptible to local optima induced by the initial trajectory.
-It should be noted that the need to initialise the collocation solver in this way
-limits the method's applicability.
+Note that the need to initialise the collocation solver in this way limits the method's applicability.
 For example, how should the initial solution be set in environments where the state-space cannot
 be visualised as easily?
 
@@ -6097,29 +6096,29 @@ In Environment 1, although none of the \acrshort{ig}
 experiments successfully remained in the desired dynamics mode, they did exhibit some mode remaining behaviour.
 That is, the trajectories with \(\lambda=0.5\) (blue) and with \(\lambda=1.0\) (green) in \cref{fig-collocation-traj-opt-7}
 navigate to the left and almost reach the mode boundary.
-However, they were not able to find solutions that remained in the desired mode for the entire trajectory.
+However, they could not find solutions that remained in the desired mode for the entire trajectory.
 
 
 
 \newline
 \textbf{\acrfull{dre}}
-All but one of the \acrshort{dre} experiments were able to successfully remain in the desired dynamics mode.
+All but one of the \acrshort{dre} experiments were able to remain in the desired dynamics mode successfully.
 This is indicated by the dynamics trajectories in the middle row of
 \cref{fig-all-traj-opt-prob,fig-all-traj-opt-mean,fig-all-traj-opt-variance}
 not passing over the mode boundary into the turbulent dynamics mode.
 From visual inspection of the middle rows in
 \cref{fig-all-traj-opt-prob,fig-all-traj-opt-mean,fig-all-traj-opt-variance}
 the trajectories found with \acrshort{dre} \(\lambda=1.0\) (green stars) have the most clearance from the turbulent dynamics
-in both Environments, compared to other \acrshort{dre} \(\lambda\) experiments.
+in both environments, compared to other \acrshort{dre} \(\lambda\) experiments.
 The trajectories in the middle row of \cref{fig-all-traj-opt-mean}
 show the contour following that achieves the mode remaining behaviour.
 In particular, the second half of the Environment 2 trajectories in the right-hand plot.
-\cref{tab-results-sim-envs} confirms that in both environments the trajectory found with \acrshort{dre} \(\lambda=1.0\) obtained
+\cref{tab-results-sim-envs} confirms that in both environments, the trajectory found with \acrshort{dre} \(\lambda=1.0\) obtained
 the highest probability of remaining in the desired dynamics mode when not considering the model's
 epistemic uncertainty.
 
 
-Although the trajectories found with \acrshort{dre} \(\lambda=0.5, 1.0\) in Environment 1,
+Although the trajectories found with \acrshort{dre} \(\lambda=0.5, 1.0\) in Environment 1
 obtained the highest probability when not considering the \emph{epistemic uncertainty},
 they did not obtain the highest probabilities when considering it.
 This is because they both accumulate high gating function variance when they pass over the region of high \emph{epistemic
@@ -6141,7 +6140,7 @@ This indicates that setting the relevance of the covariance term too high can ha
 These results suggest that care should be taken when adjusting the value of \(\lambda\).
 
 It is worth noting that in practice the mode chance constraints would inform us that the trajectory
-is not \(\delta-\text{mode remaining}\) so the trajectory would not be executed in the environment.
+is not \(\delta-\text{mode remaining}\), so the trajectory would not be executed in the environment.
 
 
 \newline
@@ -6149,7 +6148,7 @@ is not \(\delta-\text{mode remaining}\) so the trajectory would not be executed 
 \textbf{\acrfull{cai}}
 It is clear from the bottom rows of
 \cref{fig-all-traj-opt-prob,fig-all-traj-opt-mean,fig-all-traj-opt-variance}
-that all of the \acrshort{cai} experiments found trajectories that remained in the desired dynamics mode.
+that all \acrshort{cai} experiments found trajectories that remained in the desired dynamics mode.
 Further to this,
 the maximum entropy control term resulted in more clearance from the mode boundary.
 This is shown by the experiments with Gaussian controls \acrshort{cai} (gauss), indicated by black circles,
@@ -6169,10 +6168,10 @@ maximum entropy control (pink circles), shown in the bottom right plots in
 the trajectory crosses the mode boundary.
 This is an undesirable behaviour because in non-simulated environments this would correspond to the trajectory
 entering the turbulent dynamics mode.
-In contrast, the clearance resulting from the maximum entropy control term appears to alleviate this issue.
+In contrast, the clearance resulting from the maximum entropy control term alleviates this issue.
 
 \subsubsection{Goal 3 - Avoid Regions of High Epistemic Uncertainty}
-\label{sec:orgfcab288}
+\label{sec:orgd6bd7ae}
 Finally, the methods are evaluated at their ability to avoid regions of the dynamics with high \emph{epistemic uncertainty}.
 \cref{tab-results-sim-envs} shows the state variance and the gating function variance accumulated over
 each trajectory.
@@ -6186,10 +6185,10 @@ training data.
 
 In contrast to the experiments in Environment 1, the state variance accumulated over each trajectory does vary
 between experiments in Environment 2.
-However, the results in  \cref{tab-results-sim-envs} suggest that the state variance does not have a large impact
-on the mode remaining behaviour.
+However, the results in  \cref{tab-results-sim-envs} suggest that the state variance does not significantly impact
+the mode remaining behaviour.
 This is indicated by no correlation between the mode probability and the state variance,
-which is likely due to the state variance being extremely low.
+which is likely due to extremely low state variance.
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./images/mode-opt/trajectory_optimisation/all_trajectories_over_gating_variance_both_scenarios.pdf}
@@ -6238,11 +6237,12 @@ In Environment 2 the trajectory found with \acrshort{dre} \(\lambda=1.0\) accumu
 least state and gating function variance.
 Interestingly, \cref{tab-results-sim-envs} indicates that the experiment with \acrshort{dre} \(\lambda=5.0\)
 resulted in less uncertainty avoiding behaviour.
-Further to this, the \acrshort{dre} \(\lambda=1.0\) experiment which accumulated the least amount of state and gating
+Further to this, the \acrshort{dre} \(\lambda=1.0\) experiment, which accumulated the least amount of state and gating
 function variance obtained the second highest probability of remaining in the desired dynamics mode
 when considering the model's \emph{epistemic uncertainty}.
 This result suggests that avoiding regions of high \emph{epistemic uncertainty} is favourable for
-remaining in the desired dynamics mode, however, when combined with the result in Environment 1 it is not possible
+remaining in the desired dynamics mode.
+However, when combined with the result in Environment 1 it is not possible
 to draw this conclusion.
 Not only did increasing the value of \(\lambda\) not always lead to an increase in the uncertainty avoiding
 behaviour, but increasing the uncertainty avoiding behaviour was also not always beneficial,
@@ -6304,22 +6304,22 @@ This further confirms that the maximum entropy control behaviour improves the pe
 method.
 
 \section{Conclusion}
-\label{sec:org67bd19c}
+\label{sec:org9495c4d}
 This section details the main findings from the experiments, compares the methods
 and discusses directions for future work.
 
 \textbf{Geometry-based methods}
 The \acrshort{ig} method's collocation solver is susceptible to local optima around
 its initial state trajectory.
-Although this can be overcome by engineering the initial solution, in practice, it makes it difficult to
-get the method working.
+Although this can be overcome by engineering the initial solution, it makes it difficult to
+get the method working in practice.
 On top of this, the variational inference strategy used to recover the controls does not always recover the correct controls.
-This may be due to the collocation solver's state trajectory not satisfying the dynamics constraints, or,
-due to the variational inference getting stuck in local optima.
+This may be due to the collocation solver's state trajectory not satisfying the dynamics constraints or
+the variational inference getting stuck in local optima.
 Regardless, this is a big limitation that made the \acrshort{ig} method fail in some environments.
 
 Overall, the \acrshort{dre} method performed significantly better than the \acrshort{ig} method in the experiments.
-Firstly, two of the \acrshort{dre} experiments in Environment 1 were able to remain in the desired dynamics mode,
+Firstly, two of the \acrshort{dre} experiments in Environment 1 remained in the desired dynamics mode,
 whilst the \acrshort{ig} experiments could not.
 Further to this, the \acrshort{dre} approach worked in Environment 2, where it was not possible to get the
 \acrshort{ig} method working, without engineering the initial solution.
@@ -6351,7 +6351,7 @@ That is, \(\lambda\) should remain at \(1.0\) unless it is immediately clear how
 
 
 \textbf{\acrfull{cai}}
-The \acrshort{cai} method performed well in all of the experiments.
+The \acrshort{cai} method performed well in all experiments.
 The experiments showed that the maximum entropy control behaviour obtained from using normally distributed controls
 improves the mode remaining behaviour and works well in practice.
 
@@ -6369,7 +6369,7 @@ Both the \acrfull{dre} and the \acrfull{cai} with maximum entropy control
 \acrshort{cai} (gauss) methods are competitive approaches for finding mode remaining trajectories.
 
 \subsection{Discussion \& Future Work}
-\label{sec:orga423bd6}
+\label{sec:org571053e}
 This section compares the three control methods presented in
 \cref{sec-traj-opt-collocation,sec-traj-opt-energy,chap-traj-opt-inference}
 and suggests future work to address their limitations.
@@ -6398,7 +6398,7 @@ Continuous-time trajectory? & \texttimes{} & \(\checkmark\) & \texttimes{}\\
 Both the \acrshort{cai} method presented in \cref{chap-traj-opt-inference}
 and the \acrshort{dre} approach presented in
 \cref{sec-traj-opt-energy} find trajectories that satisfy the dynamics constraints, i.e. the learned dynamics.
-They achieve this by enforcing the distribution over state trajectories,
+They achieve this by enforcing the distribution over state trajectories
 to match the distribution from cascading single-step predictions through the desired mode's dynamics \acrshort{gp}.
 This can be seen as a method for approximating the integration of the controlled dynamics with respect to time, whilst
 considering the \emph{epistemic uncertainty} associated with learning from observations.
@@ -6440,8 +6440,8 @@ gating network.
 The geometry-based approaches provide a mechanism to set the relevance of the covariance term, i.e. decouple the goals.
 This was achieved by augmenting the expected Riemannian metric tensor with the user-tunable weight
 parameter \(\lambda\), which can be adjusted to determine the relevance of the covariance term.
-The experiments show that although adjusting \(\lambda\) can be beneficial in some scenarios, it is not necessarily straight
-forward to set.
+The experiments show that although adjusting \(\lambda\) can be beneficial in some scenarios, it is not necessarily
+straightforward to set.
 In particular, when regions of high \emph{epistemic uncertainty} intersect with mode boundaries.
 Therefore, care should be taken when setting \(\lambda\).
 The \acrshort{cai} method does not provide a mechanism for adjusting the relevance of each behaviour.
@@ -6508,10 +6508,10 @@ Whilst real-time control requires efficient algorithms,
 ``offline'' trajectory optimisation can trade in computational cost for greater accuracy.
 This work is primarily interested in finding trajectories that attempt to remain in the
 desired dynamics mode.
-For the sake of simplicity, it has considered the ``offline'' trajectory optimisation setting.
+For simplicity, it has considered the ``offline'' trajectory optimisation setting.
 The increased computational time may hinder
 its suitability to obtain a closed-loop controller via \acrshort{mpc} \citep{eduardof.Model2007}.
-However, it can be used ``offline'' to generate reference trajectories for a tracking controller,
+However, it can be used ``offline'' to generate reference trajectories for a tracking controller
 or for guided policy search in a \acrshort{mbrl} setting \citep{levineGuided2013}.
 Alternatively, future work could investigate approximate inference methods for efficient state estimation
 to aid with real-time control, e.g. \acrshort{ilqg}/\acrshort{gp}.
@@ -6527,7 +6527,7 @@ This motivates the work in \cref{chap-active-learning}, which addresses explorat
 multimodal dynamical systems, whilst attempting to remain in the desired dynamics mode.
 
 \subsection{Summary}
-\label{sec:org602432f}
+\label{sec:orga1ec848}
 This chapter has evaluated and compared the \acrfull{ig} method from \cref{sec-traj-opt-collocation},
 the \acrfull{dre} method from \cref{sec-traj-opt-energy} and the
 \acrfull{cai} method from \cref{chap-traj-opt-inference}.
@@ -6552,7 +6552,7 @@ Further to this, it is easy to verify that they are \(\delta-\text{mode remainin
 the mode chance constraints.
 
 \chapter{Mode Remaining Exploration for Model-Based Reinforcement Learning \label{chap-active-learning}}
-\label{sec:orgaf1160a}
+\label{sec:orga09905f}
 \epigraph{Real knowledge is to know the extent of one’s ignorance.”}{\textit{Confucius (Philosopher, 551–479BC).}}
 %\renewcommand{\acrshort{modeopt}}{ModeOpt\xspace}
 \renewcommand{\explorativeController}{\ensuremath{\pi_{\text{explore}}}}
@@ -6613,7 +6613,7 @@ Finally, \cref{sec-preliminary-results} presents preliminary results in a simula
 quadcopter environment and \cref{sec-future-work-explore} discusses \acrshort{modeopt} and
 details directions for future work.
 \section{Problem Statement \label{problem-statement-explore}}
-\label{sec:org27b59eb}
+\label{sec:orgee446e5}
 Similarly to \cref{chap-traj-opt-control}, the goal of this chapter is to solve the mode
 remaining navigation problem in \cref{problem-statement-main}.
 That is, to navigate from an initial state \(\state_0\) -- in the desired dynamics mode \(\desiredMode\)
@@ -6621,7 +6621,7 @@ That is, to navigate from an initial state \(\state_0\) -- in the desired dynami
 system remains in the desired dynamics mode.
 However, this chapter does not assume \emph{a priori} access to the environment, such that a data set of state transitions
 can be collected and used to learn a dynamics model.
-Instead, the agent must incrementally explore the environment, without violating the mode remaining constraints
+Instead, the agent must incrementally explore the environment without violating the mode remaining constraints
 in \cref{def-mode-remaining-main}.
 
 Given that this work leverages a learned dynamics model, it is not
@@ -6707,7 +6707,7 @@ initial data set \(\dataset_0\) for the quadcopter navigation problem in the ill
 \cref{fig-explorative-data-over-prob-7-initial} illustrates that the desired dynamics mode is \(\desiredMode=2\)
 and \cref{fig-explorative-data-over-svgp-7-initial} shows that the \acrshort{gp} posterior over the gating function
 is uncertain away from the initial data set \(\dataset_0\), indicated by high posterior variance (red).
-This is further demonstrated by the probability mass function over the mode indicator variable,
+This is further demonstrated by the probability mass function over the mode indicator variable
 in \cref{fig-explorative-data-over-prob-7-initial},
 tending to a uniform distribution, i.e. maximum entropy.
 Although this model can be used to learn an
@@ -6716,7 +6716,7 @@ not be able to find \(\delta-\text{mode remaining}\) trajectories to the target 
 the model having high \emph{epistemic uncertainty}.
 
 \section{Mode Optimisation \label{sec-mode-optimisation}}
-\label{sec:orga9629b5}
+\label{sec:org392f14c}
 This section details our method for solving the mode remaining navigation problem by consolidating all of
 the work in this thesis. The method is named \acrfull{modeopt}.
 At its core, \acrshort{modeopt} learns a single-step dynamics model \(\dynamicsModel\) using the \acrshort{mosvgpe}
@@ -6732,7 +6732,7 @@ Initially, it will not be possible to find
 In this case, the agent must explore the environment, collect  data and update its dynamics model.
 Eventually, the agent will reduce the model's \emph{epistemic uncertainty} such that
 it can find \(\delta-\text{mode remaining}\) trajectories to the target state \(\targetState\).
-Ideally, the exploration strategy will have some guarantee on remaining in the desired dynamics mode.
+Ideally, the exploration strategy will have some guarantee of remaining in the desired dynamics mode.
 \cref{fig-mode-opt-loop} illustrates this process in a flowchart.
 
 \begin{figure}[t!]
@@ -6771,7 +6771,7 @@ That is, a controller that will explore the environment whilst ensuring the cont
 desired dynamics mode with high probability, i.e. satisfy \cref{eq-mode-remaining-def-explore}.
 
 \subsection{Mode Remaining Exploration \label{sec-exploration}}
-\label{sec:orgc10769b}
+\label{sec:orgf2ece76}
 The performance of \acrshort{modeopt} depends on its ability to explore the environment.
 The exploration strategy is primarily interested
 in exploring a single desired dynamics mode whilst avoiding entering any of the other modes.
@@ -6892,7 +6892,7 @@ where
 \(q(\desiredGatingFunction(\gatingInducingInput)) = \mathcal{N}\left( \desiredGatingFunction(\gatingInducingInput \mid \hat{\mathbf{m}}_{\desiredMode}, \hat{\mathbf{S}}_{\desiredMode} \right)\).
 
 \subsection{Mode Remaining Model-based Reinforcement Learning \label{sec-modeopt}}
-\label{sec:org3e8c50a}
+\label{sec:org7d13da3}
 This section details how this exploration strategy is embedded into a \acrshort{mbrl} loop
 to solve the mode remaining navigation problem in \cref{eq-mode-explore-problem}.
 The algorithm is named \acrshort{modeopt} and is detailed in \cref{alg-mode-opt}.
@@ -6953,7 +6953,7 @@ It is worth noting that this is an open-loop trajectory optimisation algorithm.
 Extending the method in \cref{sec-exploration} to feedback controllers is left for future work.
 
 \section{Preliminary Results \label{sec-preliminary-results}}
-\label{sec:org27537ff}
+\label{sec:org3679335}
 This section presents initial results solving
 the illustrative quadcopter navigation problem in \cref{illustrative_example}
 using the exploration strategy from \cref{sec-exploration}.
@@ -6971,7 +6971,7 @@ To further aid visualisation, the mode chance constraints contour is marked on a
 Intuitively, \acrshort{modeopt} seeks to expand the \(1-\delta\) contour until the target state \(\targetState\) lies within the contour.
 
 \subsection{Experiment Configuration}
-\label{sec:orgb92ed13}
+\label{sec:orgd1ce4ea}
 This section details how the experiments were configured.
 
 \textbf{Initial data set \(\dataset_0\)}
@@ -7001,7 +7001,7 @@ with a satisfaction probability of 0.8. That is, the mode chance constraints wer
 \end{align}
 
 \subsection{Comparison of Exploration Terms}
-\label{sec:org89e2cf1}
+\label{sec:org6818c9b}
 This section evaluates the different terms in the explorative controller's objective from \cref{eq-explorative-traj-opt}.
 In particular, it motivates why the entropy-based term was combined with the state difference term.
 It then shows why the joint gating entropy over a trajectory was used,
@@ -7100,7 +7100,7 @@ which corresponds to the region with the highest gating entropy.
 These results confirm that it is important to consider the information gain over the entire trajectory.
 
 \subsection{Exploration in Environment 1}
-\label{sec:org07d988e}
+\label{sec:org847fd22}
 This section presents preliminary results of \acrshort{modeopt}'s exploration strategy.
 The results show the strategy successfully exploring the simulated Environment 1 from \cref{sec-traj-opt-results-simulated}.
 The results presented here show how the desired mode's mixing probability and the gating function's variance
@@ -7344,7 +7344,7 @@ Nevertheless, the results shown here are an initial step showing that \acrshort{
 However, further analysis is left for future work.
 
 \section{Discussion \& Future Work \label{sec-future-work-explore}}
-\label{sec:org92f53e4}
+\label{sec:orgb4d33fd}
 This section discusses \acrshort{modeopt} and proposes some directions for future work.
 \newline
 
@@ -7525,7 +7525,7 @@ In contrast, we considered scenarios where the mode cannot be directly observed 
 environment, but instead, is inferred by the probabilistic dynamics model.
 
 \section{Conclusion}
-\label{sec:orga4b5776}
+\label{sec:orgb48c065}
 This chapter has presented a novel strategy for exploring multimodal dynamical systems whilst remaining
 in the desired dynamics mode with high probability.
 Moreover, it has proposed how this exploration strategy can be combined with the dynamics model from \cref{chap-dynamics},
@@ -7544,7 +7544,7 @@ on a real-world system.
 Further testing and analysis of \acrshort{modeopt} is left for future work.
 
 \chapter{Conclusion}
-\label{sec:org7aa435d}
+\label{sec:org8bfa310}
 The main objective of this thesis was to solve the mode remaining navigation problem in \cref{eq-main-problem}.
 That is, to control a multimodal dynamical system -- where neither the underlying dynamics
 modes, nor how the system switches between them, are \emph{known a priori} --
@@ -7596,7 +7596,7 @@ however, this was only in simulation.
 Evaluating its performance on real-world problems is left for future work.
 
 \section{Future Work}
-\label{sec:org2fb39db}
+\label{sec:org3968e50}
 There are many promising directions for future work.
 Some are extensions of the work in this thesis, whilst others are alternative approaches to solving the mode
 remaining navigation problem in \cref{eq-main-problem}.
