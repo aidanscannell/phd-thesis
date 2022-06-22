@@ -1,0 +1,1583 @@
+#+TITLE:     Bayesian Learning for Control in Multimodal Dynamical Systems
+#+AUTHOR:    Aidan Scannell | Carl Henrik Ek | Arthur Richards
+#+DATE:      23^{rd} June 2022
+* Title Page :noexport:
+:PROPERTIES:
+:BEAMER_env: fullframe
+:BEAMER_OPT: rightcolor=DarkPink,div=0.8\paperwidth
+:END:
+# :BEAMER_OPT: leftcolor=BrightPurple,rightcolor=DarkPink,div=0.8\paperwidth
+# All standard University of Bristol colours are available:
+#   UniversityRed, CoolGrey, BrightAqua, BrightBlue, BrightOrange, BrightPurple,
+#   BrightPink, BrightLime, DarkAqua, DarkBlue, DarkOrange, DarkPurple,
+#   DarkPink, DarkLime
+#+begin_export latex
+ \titlepage
+#+end_export
+* Config :ignore:
+** Bibliography :ignore:
+#+LATEX_HEADER: \usepackage[citestyle=numeric-comp, maxcitenames=1, maxbibnames=4, doi=false, isbn=false, eprint=true, backend=bibtex, hyperref=true, url=false, natbib=true]{biblatex}
+# #+LATEX_HEADER: \addbibresource{library.bib}
+#+LATEX_HEADER: \addbibresource{~/Dropbox/org/ref/zotero-library.bib}
+
+** LaTeX Export Headers and Options :noexport:
+*** Packages :ignore:
+#+LATEX_HEADER: \usepackage{bm}
+#+LATEX_HEADER: \usepackage{amsmath,amssymb,amsfonts}
+#+LATEX_HEADER: \usepackage{graphicx}
+#+LATEX_HEADER: \usepackage{todonotes}
+*** Footnotes
+#+LATEX_HEADER: \usepackage{footnote}
+*** Grey box for block quotes
+#+LATEX_HEADER: \usepackage[most]{tcolorbox}
+#+LATEX_HEADER: \definecolor{block-gray}{gray}{0.85}
+#+LATEX_HEADER: \newtcolorbox{myquote}{colback=block-gray,boxrule=0pt,boxsep=0pt,breakable}
+# #+LATEX_HEADER: \newtcolorbox{myquote}{colback=block-gray,grow to right by=-10mm,grow to left by=-10mm, boxrule=0pt,boxsep=0pt,breakable}
+*** Equation Definitions
+#+LATEX_HEADER: \usepackage{mathtools}
+#+LATEX_HEADER: \newcommand{\defeq}{\vcentcolon=}
+
+*** Floating images configuration
+
+By default,  if a figure consumes 60% of the page it will get its own float-page. To change that we have to adjust the value of the floatpagefraction derivative.
+#+latex_header: \renewcommand{\floatpagefraction}{.8}%
+
+See more information [[https://tex.stackexchange.com/questions/68516/avoid-that-figure-gets-its-own-page][here]].
+
+*** Hyperref
+Self-explanatory.
+#+latex_header: \usepackage[colorlinks=true, citecolor=BrickRed, linkcolor=BrickRed, urlcolor=BrickRed]{hyperref}
+
+*** Cleverref
+#+latex_header: \usepackage[capitalise,noabbrev]{cleveref}
+*** TikZ and bayesnet for graphical models
+#+LATEX_HEADER: \usepackage{tikz}
+#+LATEX_HEADER: \usetikzlibrary{bayesnet}
+
+** Math Variables :noexport:
+#+LATEX_HEADER: \DeclareMathOperator{\R}{\mathbb{R}}
+#+LATEX_HEADER: \DeclareMathOperator{\E}{\mathbb{E}}
+#+LATEX_HEADER: \DeclareMathOperator{\V}{\mathbb{V}}
+#+LATEX_HEADER: \DeclareMathOperator{\K}{\mathbf{K}}
+
+*** Num Data / Mode / State Dimension / Control Dimension (k, d, t/n)
+#+LATEX_HEADER: \newcommand{\numData}{\ensuremath{t}}
+# #+LATEX_HEADER: \newcommand{\numData}{\ensuremath{n}}
+#+LATEX_HEADER: \newcommand{\numEpisodes}{\ensuremath{e}}
+#+LATEX_HEADER: \newcommand{\numTimesteps}{\ensuremath{t}}
+#+LATEX_HEADER: \newcommand{\numInd}{\ensuremath{m}}
+#+LATEX_HEADER: \newcommand{\stateDim}{\ensuremath{d}}
+#+LATEX_HEADER: \newcommand{\controlDim}{\ensuremath{f}}
+#+LATEX_HEADER: \newcommand{\modeInd}{\ensuremath{k}}
+#+LATEX_HEADER: \newcommand{\modeDesInd}{\ensuremath{\text{des}}}
+#+LATEX_HEADER: \newcommand{\testInd}{\ensuremath{*}}
+#+LATEX_HEADER: \newcommand{\NumData}{\ensuremath{\MakeUppercase{\numData}}}
+#+LATEX_HEADER: \newcommand{\NumInd}{\ensuremath{\MakeUppercase{\numInd}}}
+# #+LATEX_HEADER: \newcommand{\StateDim}{\ensuremath{\MakeUppercase{\stateDim}}}
+# #+LATEX_HEADER: \newcommand{\ControlDim}{\ensuremath{\MakeUppercase{\controlDim}}}
+#+LATEX_HEADER: \newcommand{\StateDim}{\ensuremath{{D_x}}}
+#+LATEX_HEADER: \newcommand{\ControlDim}{\ensuremath{{D_u}}}
+#+LATEX_HEADER: \newcommand{\ModeInd}{\ensuremath{\MakeUppercase{\modeInd}}}
+#+LATEX_HEADER: \newcommand{\NumEpisodes}{\MakeUppercase{\numEpisodes}}
+#+LATEX_HEADER: \newcommand{\NumTimesteps}{\MakeUppercase{\numTimesteps}}
+
+# Macros for single/all data notation
+#+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\numData}}}
+#+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{\MakeUppercase{#1}}}
+# #+LATEX_HEADER: \newcommand{\singleData}[1]{\ensuremath{#1_{\numData}}}
+# #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1}}
+# #+LATEX_HEADER: \newcommand{\allData}[1]{\ensuremath{#1_{1:\NumData}}}
+
+# Macros for data dimensions
+# #+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{#1_{\stateDim, \numData}}}
+#+LATEX_HEADER: \newcommand{\singleDataDim}[1]{\ensuremath{_{\stateDim}#1_{\numData}}}
+#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{#1_{\stateDim}}}
+# #+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{_{\stateDim}#1}}
+# #+LATEX_HEADER: \newcommand{\singleDimi}[2]{\ensuremath{\tensor*[_{#2}]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\singleDim}[1]{\ensuremath{\singleDimi{#1}{\stateDim}}}
+
+# Macros for mode k notation
+# #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{(\modeInd)}}}
+# #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1^{\modeInd}}}
+# #+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{\tensor*[^{\modeInd}]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\mode}[1]{\ensuremath{#1_{\modeInd}}}
+#+LATEX_HEADER: \newcommand{\modeDes}[1]{\ensuremath{#1^{\modeDesInd}}}
+
+#+LATEX_HEADER: \newcommand{\singleDimiMode}[2]{\ensuremath{\tensor*[_#2^\modeInd]{#1}{}}}
+#+LATEX_HEADER: \newcommand{\singleDimMode}[1]{\ensuremath{\singleDimiMode{#1}{\stateDim}}}
+#+LATEX_HEADER: \newcommand{\singleDimModeData}[1]{\ensuremath{\tensor*[_\stateDim^\modeInd]{#1}{_\numData}}}
+
+*** Data set
+# Dataset/inputs/outputs
+#+LATEX_HEADER: \newcommand{\state}{\ensuremath{\mathbf{x}}}
+#+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{u}}}
+# #+LATEX_HEADER: \newcommand{\control}{\ensuremath{\mathbf{a}}}
+
+#+LATEX_HEADER: \newcommand{\x}{\ensuremath{\mathbf{x}}}
+# #+LATEX_HEADER: \newcommand{\y}{\ensuremath{\mathbf{y}}}
+#+LATEX_HEADER: \newcommand{\y}{\ensuremath{y}}
+# #+LATEX_HEADER: \newcommand{\x}{\ensuremath{\hat{\state}}}
+# #+LATEX_HEADER: \newcommand{\y}{\ensuremath{\Delta\state}}
+#+LATEX_HEADER: \newcommand{\dataset}{\ensuremath{\mathcal{D}}}
+
+# Single/all input/output notation
+# #+LATEX_HEADER: \newcommand{\singleInput}{\ensuremath{\singleData{\x}}}
+#+LATEX_HEADER: \newcommand{\singleInput}{\ensuremath{\x_{\numData-1}}}
+#+LATEX_HEADER: \newcommand{\singleOutput}{\ensuremath{\singleData{\y}}}
+#+LATEX_HEADER: \newcommand{\allInput}{\ensuremath{\allData{\x}}}
+#+LATEX_HEADER: \newcommand{\allOutput}{\ensuremath{\allData{\y}}}
+
+# Single/all state/control notation
+#+LATEX_HEADER: \newcommand{\singleState}{\ensuremath{\state_{\numData-1}}}
+#+LATEX_HEADER: \newcommand{\singleControl}{\ensuremath{\control_{\numData-1}}}
+#+LATEX_HEADER: \newcommand{\allState}{\ensuremath{\allData{\state}}}
+#+LATEX_HEADER: \newcommand{\allControl}{\ensuremath{\allData{\control}}}
+
+*** Noise Vars
+#+LATEX_HEADER: \newcommand{\noiseVar}{\ensuremath{\sigma}}
+#+LATEX_HEADER: \newcommand{\noiseVarK}{\ensuremath{\mode{\noiseVar}}}
+#+LATEX_HEADER: \newcommand{\noiseVarOneK}{\ensuremath{\singleDimiMode{\noiseVar}{1}}}
+#+LATEX_HEADER: \newcommand{\noiseVarDK}{\ensuremath{\singleDimiMode{\noiseVar}{\StateDim}}}
+#+LATEX_HEADER: \newcommand{\noiseVardK}{\ensuremath{\singleDimMode{\noiseVar}}}
+# #+LATEX_HEADER: \newcommand{\noiseVarOneK}{\ensuremath{\noiseVarK_{1}}}
+# #+LATEX_HEADER: \newcommand{\noiseVarDK}{\ensuremath{\noiseVarK_{\StateDim}}}
+# #+LATEX_HEADER: \newcommand{\noiseVardK}{\ensuremath{\noiseVarK_{\stateDim}}}
+# #+LATEX_HEADER: \newcommand{\noiseVardK2}{\ensuremath{\left(\noiseVardK\right)^2}}
+
+*** Mode Indicator Variable
+#+LATEX_HEADER: \newcommand{\modeVar}{\ensuremath{\alpha}}
+#+LATEX_HEADER: \newcommand{\modeVarn}{\ensuremath{\singleData{\modeVar}}}
+#+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\bm{\modeVar}}}
+# #+LATEX_HEADER: \newcommand{\ModeVar}{\ensuremath{\allData{\bm{\modeVar}}}}
+#+LATEX_HEADER: \newcommand{\modeVarK}{\ensuremath{\modeVarn=\modeInd}}
+# #+LATEX_HEADER: \newcommand{\ModeVarK}{\ensuremath{\mode{\bm{\modeVar}}}}
+#+LATEX_HEADER: \newcommand{\ModeVarK}{\ensuremath{\ModeVar_{\modeInd}}}
+
+*** Tensor Indexing
+# Experts indexing
+#+LATEX_HEADER: \newcommand{\nkd}[1]{\ensuremath{#1_{\numData,\modeInd,\stateDim}}}
+#+LATEX_HEADER: \newcommand{\nkD}[1]{\ensuremath{#1_{\numData,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\NkD}[1]{\ensuremath{#1_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\nKD}[1]{\ensuremath{#1_{\numData}}}
+#+LATEX_HEADER: \newcommand{\Nkd}[1]{\ensuremath{#1_{:,\modeInd,\stateDim}}}
+
+# Gating function indexing
+#+LATEX_HEADER: \newcommand{\nk}[1]{\ensuremath{#1_{\numData,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\Nk}[1]{\ensuremath{#1_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\nK}[1]{\ensuremath{#1_{\numData}}}
+
+# Experts Inducing indexing
+#+LATEX_HEADER: \newcommand{\mkd}[1]{\ensuremath{#1_{\numData,\modeInd,\stateDim}}}
+#+LATEX_HEADER: \newcommand{\mkD}[1]{\ensuremath{#1_{\numData,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\MkD}[1]{\ensuremath{#1_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\mKD}[1]{\ensuremath{#1_{\numData}}}
+#+LATEX_HEADER: \newcommand{\Mkd}[1]{\ensuremath{#1_{:,\modeInd,\stateDim}}}
+
+# Gating Inducing indexing
+#+LATEX_HEADER: \newcommand{\mk}[1]{\ensuremath{#1_{\numData,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\Mk}[1]{\ensuremath{#1_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\mK}[1]{\ensuremath{#1_{\numData}}}
+
+# Desired Mode Gating indexing
+#+LATEX_HEADER: \newcommand{\MDes}[1]{\ensuremath{#1_{:, k^*}}}
+
+*** Gating Network New
+# Function notation
+#+LATEX_HEADER: \newcommand{\gatingFunc}{\ensuremath{h}}
+#+LATEX_HEADER: \newcommand{\hk}{\ensuremath{\mode{\gatingFunc}}}
+
+# Single data notation
+#+LATEX_HEADER: \newcommand{\hkn}{\ensuremath{\nk{\gatingFunc}}}
+#+LATEX_HEADER: \newcommand{\hn}{\ensuremath{\nK{\mathbf{\gatingFunc}}}}
+
+# All inputs set/vector/tensor notation
+#+LATEX_HEADER: \newcommand{\GatingFunc}{\ensuremath{\mathbf{\gatingFunc}}}
+#+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\MakeUppercase\GatingFunc}}
+#+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\Nk{\GatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\allData{\GatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\allData{\mode{\GatingFunc}}}}
+
+*** Experts New
+# Function notation
+#+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
+#+LATEX_HEADER: \newcommand{\LatentFunc}{\ensuremath{\mathbf{\latentFunc}}}
+#+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\latentFunc_{\modeInd,\stateDim}}}
+#+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mathbf{\latentFunc}_{\modeInd}}}
+# #+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\latentFunc_{:,\modeInd}}}
+#+LATEX_HEADER: \newcommand{\f}{\ensuremath{\mathbf{f}}}
+
+# Vector/Matrix/Tensor notation
+#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\MakeUppercase{\mathbf{\latentFunc}}}}
+# #+LATEX_HEADER: \newcommand{\Fnkd}{\ensuremath{\latentFunc_{\numData, \modeInd, \stateDim}}}
+# #+LATEX_HEADER: \newcommand{\Fnk}{\ensuremath{\mathbf{\latentFunc}_{\numData, \modeInd}}}
+# #+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\F_{:,\modeInd}}}
+# #+LATEX_HEADER: \newcommand{\Fn}{\ensuremath{\F_{\numData}}}
+#+LATEX_HEADER: \newcommand{\Fnkd}{\ensuremath{\nkd{\latentFunc}}}
+#+LATEX_HEADER: \newcommand{\Fnk}{\ensuremath{\nkD{\mathbf{\latentFunc}}}}
+#+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\NkD{\F}}}
+#+LATEX_HEADER: \newcommand{\Fn}{\ensuremath{\nKD{\F}}}
+#+LATEX_HEADER: \newcommand{\F}{\ensuremath{\F}}
+
+# #+LATEX_HEADER: \newcommand{\Fdk}{\ensuremath{\mathbf{\latentFunc}_{:,\modeInd,\stateDim}}}
+#+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\Nkd{\mathbf{\latentFunc}}}}
+
+# Single input notation
+#+LATEX_HEADER: \newcommand{\fn}{\ensuremath{\Fn}}
+#+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\Fnk}}
+#+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\Fnkd}}
+
+# All inputs set/vector/tensor notation
+# #+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\Fdk}}
+
+*** Params
+#+LATEX_HEADER: \newcommand{\gatingParams}{\ensuremath{\bm\phi}}
+#+LATEX_HEADER: \newcommand{\expertParams}{\ensuremath{\bm\theta}}
+#+LATEX_HEADER: \newcommand{\gatingParamsK}{\ensuremath{\mode{\bm\phi}}}
+#+LATEX_HEADER: \newcommand{\expertParamsK}{\ensuremath{\mode{\bm\theta}}}
+*** Sparse GPs
+**** Experts
+***** Variables
+#+LATEX_HEADER: \newcommand{\uf}{\ensuremath{u}}
+#+LATEX_HEADER: \newcommand{\uFkd}{\ensuremath{\Mkd{\mathbf{\uf}}}}
+#+LATEX_HEADER: \newcommand{\uFk}{\ensuremath{\MkD{\MakeUppercase{\mathbf{\uf}}}}}
+#+LATEX_HEADER: \newcommand{\uF}{\ensuremath{\MakeUppercase{\mathbf{\uf}}}}
+
+***** Inputs
+# #+LATEX_HEADER: \newcommand{\zf}{\ensuremath{\bm{\zeta}}}
+# #+LATEX_HEADER: \newcommand{\zFkd}{\ensuremath{\Mkd{\zf}}}
+# #+LATEX_HEADER: \newcommand{\zFk}{\ensuremath{\MkD{\zf}}}
+# #+LATEX_HEADER: \newcommand{\zF}{\ensuremath{\MKD{\zf}}}
+#+LATEX_HEADER: \newcommand{\zf}{\ensuremath{\mathbf{Z}}}
+#+LATEX_HEADER: \newcommand{\zFkd}{\ensuremath{\Mkd{\zf}}}
+#+LATEX_HEADER: \newcommand{\zFk}{\ensuremath{\MkD{\zf}}}
+#+LATEX_HEADER: \newcommand{\zF}{\ensuremath{\MKD{\zf}}}
+
+**** Gating
+***** Variables
+#+LATEX_HEADER: \newcommand{\uh}{\ensuremath{U}}
+#+LATEX_HEADER: \newcommand{\uHk}{\ensuremath{\Mk{\hat{\mathbf{\uh}}}}}
+#+LATEX_HEADER: \newcommand{\uH}{\ensuremath{\hat{\MakeUppercase{\mathbf{\uh}}}}}
+
+#+LATEX_HEADER: \newcommand{\hu}{\ensuremath{\uh}}
+#+LATEX_HEADER: \newcommand{\Hku}{\ensuremath{\uHk}}
+#+LATEX_HEADER: \newcommand{\Hu}{\ensuremath{\uH}}
+
+***** Inputs
+# #+LATEX_HEADER: \newcommand{\zh}{\ensuremath{\bm{\xi}}}
+# #+LATEX_HEADER: \newcommand{\zHk}{\ensuremath{\Mk{\zh}}}
+# #+LATEX_HEADER: \newcommand{\zH}{\ensuremath{\MK{\zh}}}
+#+LATEX_HEADER: \newcommand{\zh}{\ensuremath{\hat{\mathbf{Z}}}}
+#+LATEX_HEADER: \newcommand{\zHk}{\ensuremath{\Mk{\zh}}}
+#+LATEX_HEADER: \newcommand{\zH}{\ensuremath{\MK{\zh}}}
+
+# #+LATEX_HEADER: \newcommand{\zHDes}{\ensuremath{\zH_{:, k^*}}}
+#+LATEX_HEADER: \newcommand{\zHDes}{\ensuremath{\MDes{\zH}}}
+
+**** Misc
+#+LATEX_HEADER: \newcommand{\Z}{\ensuremath{\mathbf{Z}}}
+**** Old
+# Sparse GP macro
+# #+LATEX_HEADER: \newcommand{\inducing}[1]{\ensuremath{\hat{#1}}}
+
+# #+LATEX_HEADER: \newcommand{\fu}{\ensuremath{\inducing{\latentFunc}}}
+# #+LATEX_HEADER: \newcommand{\Fu}{\ensuremath{\inducing{\mathbf{\latentFunc}}}}
+# #+LATEX_HEADER: \newcommand{\Fku}{\ensuremath{\mode{\inducing{\mathbf{\latentFunc}}}}}
+# #+LATEX_HEADER: \newcommand{\Fkdu}{\ensuremath{\singleDim{\Fku}}}
+# #+LATEX_HEADER: \newcommand{\hu}{\ensuremath{\inducing{\gatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Hu}{\ensuremath{\inducing{\mathbf{\gatingFunc}}}}
+# #+LATEX_HEADER: \newcommand{\Hku}{\ensuremath{\mode{\inducing{\mathbf{\gatingFunc}}}}}
+
+# #+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\mathbf{Z}}_{\latentFunc}}}
+# #+LATEX_HEADER: \newcommand{\Zfk}{\ensuremath{\mode{\bm{\zeta}}}}
+# #+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}}}
+# #+LATEX_HEADER: \newcommand{\Zf}{\ensuremath{\mathbf{Z}_{\latentFunc}}}
+
+# #+LATEX_HEADER: \newcommand{\Zhk}{\ensuremath{\mode{\mathbf{Z}}_{\gatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Zh}{\ensuremath{\bm{\xi}}}
+# #+LATEX_HEADER: \newcommand{\Zhk}{\ensuremath{\mode{\Zh}}}
+
+# #+LATEX_HEADER: \newcommand{\ZhDes}{\ensuremath{\modeDes{\zH}}}
+
+*** Continuous
+#+LATEX_HEADER: \newcommand{\derivative}[1]{\ensuremath{\dot{#1}}}
+#+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\derivative{\state}}}
+# #+LATEX_HEADER: \newcommand{\stateDerivative}{\ensuremath{\dot{\mathbf{x}}}}
+
+*** Prob Dists New
+#+LATEX_HEADER: \newcommand{\pFkd}{\ensuremath{p\left(\Fkd \right)}}
+*** Prob Dists
+#+LATEX_HEADER: \newcommand{\pFkd}{\ensuremath{p\left(\Fkd \mid \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\pFk}{\ensuremath{p\left(\Fk \mid \allInput, \expertParams\right)}}
+
+#+LATEX_HEADER: \newcommand{\pF}{\ensuremath{p\left(\F \mid \allInput, \expertParams\right)}}
+#+LATEX_HEADER: \newcommand{\pfk}{\ensuremath{p\left(\fk \mid \allInput, \expertParamsK \right)}}
+#+LATEX_HEADER: \newcommand{\pfknd}{\ensuremath{p\left(\fknd \mid \allInput\right)}}
+
+#+LATEX_HEADER: \newcommand{\pFkGivenUk}{\ensuremath{p\left(\Fk \mid \uFk \right)}}
+# #+LATEX_HEADER: \newcommand{\pYkGivenUk}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pYkGivenFku}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \uFk \right)}}
+
+#+LATEX_HEADER: \newcommand{\qF}{\ensuremath{q\left(\F \right)}}
+#+LATEX_HEADER: \newcommand{\qFu}{\ensuremath{q\left(\uF \right)}}
+#+LATEX_HEADER: \newcommand{\qFku}{\ensuremath{q\left(\uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pFku}{\ensuremath{p\left(\uFk \mid \zFk \right)}}
+#+LATEX_HEADER: \newcommand{\pFkuGivenX}{\ensuremath{p\left(\uFk \mid \zFk \right)}}
+#+LATEX_HEADER: \newcommand{\pFuGivenX}{\ensuremath{p\left(\uF \mid \zF \right)}}
+#+LATEX_HEADER: \newcommand{\qFk}{\ensuremath{q\left(\Fk \right)}}
+#+LATEX_HEADER: \newcommand{\qfk}{\ensuremath{q\left(\fk \right)}}
+#+LATEX_HEADER: \newcommand{\qfkn}{\ensuremath{q\left(\fkn \right)}}
+#+LATEX_HEADER: \newcommand{\qfn}{\ensuremath{q\left(\fn \right)}}
+#+LATEX_HEADER: \newcommand{\pFkGivenFku}{\ensuremath{p\left(\Fk \mid \uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pfkGivenFku}{\ensuremath{p\left(\fkn \mid \uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenFku}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \uFk \right)}}
+#+LATEX_HEADER: \newcommand{\pYGivenUX}{\ensuremath{p\left(\allOutput \mid \uF, \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\pYGivenU}{\ensuremath{p\left(\allOutput \mid \uF \right)}}
+
+
+#+LATEX_HEADER: \newcommand{\pY}{\ensuremath{p\left(\allOutput \right)}}
+# #+LATEX_HEADER: \newcommand{\pykGivenfk}{\ensuremath{p\left(\singleOutputK \mid \fkn \right)}}
+# #+LATEX_HEADER: \newcommand{\pYkGivenFk}{\ensuremath{p\left(\allOutputK \mid \Fk \right)}}
+# #+LATEX_HEADER: \newcommand{\pYkGivenX}{\ensuremath{p(\allOutputK \mid \allInput)}}
+#+LATEX_HEADER: \newcommand{\pykGivenx}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \singleInput \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenxNegF}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \singleInput, \neg\Fk \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenfk}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \fkn \right)}}
+#+LATEX_HEADER: \newcommand{\pykGivenfkd}{\ensuremath{p\left(\singleOutput \mid \modeVarK, \fknd \right)}}
+#+LATEX_HEADER: \newcommand{\pYkGivenFk}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \Fk \right)}}
+#+LATEX_HEADER: \newcommand{\pYkGivenX}{\ensuremath{p\left(\allOutput \mid \ModeVarK, \allInput \right)}}
+#+LATEX_HEADER: \newcommand{\pYGivenX}{\ensuremath{p\left(\allOutput \mid \allInput \right)}}
+
+**** Gating network
+#+LATEX_HEADER: \newcommand{\PrA}{\ensuremath{\Pr\left(\ModeVarK \right)}}
+#+LATEX_HEADER: \newcommand{\Pra}{\ensuremath{\Pr\left(\modeVarK \right)}}
+#+LATEX_HEADER: \newcommand{\PaGivenhx}{\ensuremath{P\left(\modeVarn \mid \hn, \singleInput \right)}}
+#+LATEX_HEADER: \newcommand{\PraGivenx}{\ensuremath{\Pr\left(\modeVarn \mid \singleInput \right)}}
+#+LATEX_HEADER: \newcommand{\PraGivenhx}{\ensuremath{\Pr\left(\modeVarK \mid \hn, \singleInput \right)}}
+#+LATEX_HEADER: \newcommand{\PraGivenxNegH}{\ensuremath{\Pr\left(\modeVarK \mid \singleInput, \neg\Hall \right)}}
+#+LATEX_HEADER: \newcommand{\PrAGivenX}{\ensuremath{\Pr\left(\ModeVarK \mid \allInput \right)}}
+
+#+LATEX_HEADER: \newcommand{\pHGivenX}{\ensuremath{p\left(\Hall \mid \allInput\right)}}
+#+LATEX_HEADER: \newcommand{\pHkGivenX}{\ensuremath{p\left(\Hk \mid \allInput\right)}}
+
+*** Kernels
+# #+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{\allInput\allInput}}
+#+LATEX_HEADER: \newcommand{\Kkxx}{\mode{\mathbf{K}}_{d, \allInput\allInput}}
+
+# TO derivative kernels
+#+LATEX_HEADER: \newcommand{\ddK}{\ensuremath{\partial^2\K_{**}}}
+#+LATEX_HEADER: \newcommand{\dK}{\ensuremath{\partial\K_{*}}}
+#+LATEX_HEADER: \newcommand{\Kxx}{\ensuremath{\K_{}}}
+#+LATEX_HEADER: \newcommand{\iKxx}{\ensuremath{\Kxx^{-1}}}
+
+#+LATEX_HEADER: \newcommand{\dKz}{\ensuremath{\partial\K_{*\zH}}}
+#+LATEX_HEADER: \newcommand{\Kzz}{\ensuremath{\K_{\zH\zH}}}
+#+LATEX_HEADER: \newcommand{\iKzz}{\ensuremath{\Kzz^{-1}}}
+*** Desired Mode
+# Function notation
+#+LATEX_HEADER: \newcommand{\HDes}{\ensuremath{\MDes{\GatingFunc}}}
+#+LATEX_HEADER: \newcommand{\uHDes}{\ensuremath{\MDes{\uH}}}
+
+# Inducing points
+#+LATEX_HEADER: \newcommand{\pDes}{\ensuremath{p\left( \uHDes \mid \zHDes \right)}}
+#+LATEX_HEADER: \newcommand{\qDes}{\ensuremath{q\left( \uHDes \right)}}
+#+LATEX_HEADER: \newcommand{\mDes}{\ensuremath{\MDes{\mathbf{m}}}}
+#+LATEX_HEADER: \newcommand{\SDes}{\ensuremath{\MDes{\mathbf{S}}}}
+
+*** Jacobian
+# Single data notation
+#+LATEX_HEADER: \newcommand{\singleTest}[1]{\ensuremath{#1_{\testInd}}}
+#+LATEX_HEADER: \newcommand{\testInput}{\ensuremath{\singleTest{\state}}}
+
+# Jacobian notation
+#+LATEX_HEADER: \newcommand{\Jac}{\ensuremath{\mathbf{J}}}
+#+LATEX_HEADER: \newcommand{\testJac}{\ensuremath{\singleTest{\Jac}}}
+#+LATEX_HEADER: \newcommand{\muJac}{\ensuremath{\mu_{\Jac}}}
+#+LATEX_HEADER: \newcommand{\covJac}{\ensuremath{\Sigma_{\Jac}}}
+
+*** Old
+**** Gating Network Old
+# # Function notation
+# #+LATEX_HEADER: \newcommand{\gatingFunc}{\ensuremath{h}}
+# #+LATEX_HEADER: \newcommand{\hk}{\ensuremath{\mode{\gatingFunc}}}
+
+# # Single data notation
+# #+LATEX_HEADER: \newcommand{\hkn}{\ensuremath{\singleData{\hk}}}
+# #+LATEX_HEADER: \newcommand{\hn}{\ensuremath{\singleData{\mathbf{\gatingFunc}}}}
+
+# # All inputs set/vector/tensor notation
+# #+LATEX_HEADER: \newcommand{\GatingFunc}{\ensuremath{\mathbf{\gatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\GatingFunc}}
+# #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\mode{\GatingFunc}}}
+# # #+LATEX_HEADER: \newcommand{\Hall}{\ensuremath{\allData{\GatingFunc}}}
+# # #+LATEX_HEADER: \newcommand{\Hk}{\ensuremath{\allData{\mode{\GatingFunc}}}}
+**** Desired Mode Old
+# #+LATEX_HEADER: \newcommand{\HDes}{\ensuremath{\modeDes{\GatingFunc}}}
+# #+LATEX_HEADER: \newcommand{\HuDes}{\ensuremath{\modeDes{\Hu}}}
+# #+LATEX_HEADER: \newcommand{\mDes}{\ensuremath{\modeDes{\mathbf{m}}}}
+# #+LATEX_HEADER: \newcommand{\SDes}{\ensuremath{\modeDes{\mathbf{S}}}}
+
+**** Experts Old
+# # Function notation
+# #+LATEX_HEADER: \newcommand{\latentFunc}{\ensuremath{f}}
+# #+LATEX_HEADER: \newcommand{\f}{\ensuremath{f}}
+# #+LATEX_HEADER: \newcommand{\fk}{\ensuremath{\mode{\latentFunc}}}
+# # #+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\singleDim{\fk}}}
+# #+LATEX_HEADER: \newcommand{\fkd}{\ensuremath{\singleDimMode{\f}}}
+
+# # Single input notation
+# #+LATEX_HEADER: \newcommand{\fn}{\ensuremath{\singleData{\mathbf{\latentFunc}}}}
+# #+LATEX_HEADER: \newcommand{\fkn}{\ensuremath{\singleData{\mode{\mathbf{\latentFunc}}}}}
+# # #+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDim{\singleData{\fk}}}}
+# # #+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDimMode{\singleData{\f}}}}
+# #+LATEX_HEADER: \newcommand{\fknd}{\ensuremath{\singleDimModeData{\f}}}
+
+# # All inputs set/vector/tensor notation
+# # #+LATEX_HEADER: \newcommand{\F}{\ensuremath{\allData{\mathbf{\f}}}}
+# #+LATEX_HEADER: \newcommand{\F}{\ensuremath{\mathbf{\f}}}
+# #+LATEX_HEADER: \newcommand{\Fk}{\ensuremath{\mode{\F}}}
+# # #+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDim{\Fk}}}
+# #+LATEX_HEADER: \newcommand{\Fkd}{\ensuremath{\singleDimMode{\F}}}
+
+#+LATEX_HEADER: \newcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
+#+LATEX_HEADER: \newcommand{\singleOutputK}{\ensuremath{\mode{\singleOutput}}}
+
+** Beamer Config :noexport:
+General configuration for UoB presentation, which shouldn't need changing.
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+startup: beamer
+*** Class :noexport:
+#+LaTeX_CLASS: beamer
+Possible aspect ratios are 16:9, 16:10, 14:9, 5:4, 4:3 (default) and 3:2
+(Remember to remove the colon, i.e., 16:9 becomes the option 169)
+#+LaTeX_CLASS_OPTIONS: [aspectratio=169]
+*** Frame Level :noexport:
+#+BEAMER_FRAME_LEVEL: 2
+*** Options :noexport:
+#+OPTIONS:   H:1 num:t toc:nil \n:nil ::t |:t ^:t -:t f:t *:t <:t t:nil
+#+OPTIONS:   TeX:t LaTeX:t
+# #+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+# #+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:https://orgmode.org/org-info.js
+*** Theme :noexport:
+#+BEAMER_THEME: UoB
+
+# ** LaTeX Config :noexport:
+# *** Packages :ignore:
+# #+LATEX_HEADER: \usepackage{bm}
+# #+LATEX_HEADER: \usepackage{amsmath,amssymb,amsfonts}
+# #+LATEX_HEADER: \usepackage{graphicx}
+# #+LATEX_HEADER: \usepackage{todonotes}
+# *** TikZ and bayesnet for graphical models
+# #+LATEX_HEADER: \usepackage{tikz}
+# #+LATEX_HEADER: \usetikzlibrary{bayesnet}
+# * Maths :noexport:
+
+** Maths :ignore:
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\targetState}{\ensuremath{\state_f}}
+#+END_EXPORT
+*** maths :ignore:
+#+begin_export latex
+\newcommand{\gpDomain}{\ensuremath{\hat{\stateDomain}}}
+\newcommand{\inputDomain}{\ensuremath{\hat{\stateDomain}}}
+\newcommand{\outputDomain}{\ensuremath{\stateDomain}}
+#+end_export
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
+
+\newcommand{\stateDomain}{\ensuremath{{\mathcal{X}}}}
+\newcommand{\controlDomain}{\ensuremath{{\mathcal{U}}}}
+
+\newcommand{\dynamicsFunc}{\ensuremath{f}}
+
+\renewcommand{\u}{\ensuremath{\mathbf{u}}}
+
+\renewcommand{\allInput}{\ensuremath{\hat{\state}_{1:\TimeInd}}}
+\renewcommand{\allOutput}{\ensuremath{{\Delta\state}_{1:\TimeInd}}}
+#+END_EXPORT
+
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\terminalCostFunc}{\ensuremath{C_T}}
+\newcommand{\integralCostFunc}{\ensuremath{C}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+
+\newcommand{\policySpace}{\ensuremath{\Pi}}
+\newcommand{\policy}{\ensuremath{\pi}}
+#+END_EXPORT
+
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{\MakeUppercase{\timeInd}}}
+
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+
+\newcommand{\dynamicsFunc}{\ensuremath{f}}
+\newcommand{\costFunc}{\ensuremath{c}}
+\newcommand{\constraintsFunc}{\ensuremath{g}}
+
+\newcommand{\stateTraj}{\ensuremath{\bar{\state}}}
+\newcommand{\controlTraj}{\ensuremath{\bar{\control}}}
+#+END_EXPORT
+
+*** Maths Symbols :ignore:
+**** Domains :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\stateDomain}{\ensuremath{\mathcal{X}}}
+%\renewcommand{\stateDomain}{\ensuremath{\mathcal{S}}}
+\renewcommand{\controlDomain}{\ensuremath{\mathcal{U}}}
+\renewcommand{\modeDomain}{\ensuremath{\mathcal{A}}}
+%\renewcommand{\inputDomain}{\ensuremath{\mathcal{X}}}
+\renewcommand{\inputDomain}{\ensuremath{\mathcal{Z}}}
+
+%\renewcommand{\state}{\ensuremath{\mathbf{s}}}
+\renewcommand{\state}{\ensuremath{\mathbf{x}}}
+
+\renewcommand{\nominalDynamics}{\ensuremath{\mathbf{n}}}
+\renewcommand{\unknownDynamics}{\ensuremath{\mathbf{f}}}
+\renewcommand{\nominalDynamicsK}{\ensuremath{\mode{\mathbf{n}}}}
+\renewcommand{\unknownDynamicsK}{\ensuremath{\mode{\mathbf{f}}}}
+
+\newcommand{\timeInd}{\ensuremath{t}}
+\newcommand{\TimeInd}{\ensuremath{T}}
+\newcommand{\inputDim}{\ensuremath{d}}
+\newcommand{\InputDim}{\ensuremath{D}}
+#+END_EXPORT
+
+**** Bounds :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\tightBound}{\ensuremath{\mathcal{L}_{\text{tight}}}}
+\newcommand{\furtherBound}{\ensuremath{\mathcal{L}_{\text{further}}}}
+\newcommand{\furtherBoundTwo}{\ensuremath{\mathcal{L}_{\text{further}^2}}}
+#+END_EXPORT
+**** maths :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\mode}[1]{\ensuremath{#1_{\modeInd}}}
+\renewcommand{\modei}[2]{\ensuremath{#1_{#2}}}
+%\renewcommand{\singleOutput}{\ensuremath{\Delta x_{\numData}}}
+%\renewcommand{\allOutput}{\ensuremath{\Delta\mathbf{\state}}}
+\newcommand{\singleModeVar}{\ensuremath{\singleData{\modeVar}}}
+\newcommand{\allModeVar}{\ensuremath{\bm{\modeVar}}}
+\newcommand{\singleModeVarK}{\ensuremath{\singleModeVar = \modeInd}}
+\newcommand{\allModeVarK}{\ensuremath{\bm{\modeVar}_{\modeInd}}}
+%\newcommand{\allModeVarK}{\ensuremath{\{\singleModeVarK\}_{\numData=1}^\NumData}}
+\newcommand{\modeVarnk}{\ensuremath{\modeVar_{\numData,\modeInd}}}
+
+% new
+\renewcommand{\numData}{\ensuremath{n}}
+\renewcommand{\NumData}{\ensuremath{N}}
+\renewcommand{\singleOutput}{\ensuremath{y_{\numData}}}
+\renewcommand{\singleInput}{\ensuremath{\mathbf{x}_{\numData}}}
+\renewcommand{\allInput}{\ensuremath{\mathbf{X}}}
+\renewcommand{\allOutput}{\ensuremath{\mathbf{y}}}
+\renewcommand{\allOutput}{\ensuremath{\mathbf{y}}}
+%\renewcommand{\allInputK}{\ensuremath{\{\singleInput : \singleModeVarK \}}}
+%\renewcommand{\allOutputK}{\ensuremath{\{\singleOutput : \singleModeVarK\}}}
+%\renewcommand{\allInputK}{\ensuremath{\allInput^{\modeInd}}}
+%\renewcommand{\allOutputK}{\ensuremath{\allOutput^{\modeInd}}}
+\renewcommand{\singleInputK}{\ensuremath{\mathbf{x}_{\numData, \modeInd}}}
+\renewcommand{\allInputK}{\ensuremath{\mode{\allInput}}}
+\renewcommand{\allOutputK}{\ensuremath{\mode{\allOutput}}}
+
+%\renewcommand{\x}{\ensuremath{\mathbf{z}}}
+%\renewcommand{\y}{\ensuremath{y}}
+%\renewcommand{\singleInput}{\ensuremath{\mathbf{z}_{\numData}}}
+%\renewcommand{\allInput}{\ensuremath{\mathbf{Z}}}
+%\renewcommand{\singleInputK}{\ensuremath{\mathbf{z}_{\numData, \modeInd}}}
+%\renewcommand{\allInputK}{\ensuremath{\mode{\allInput}}}
+
+%\newcommand{\expertPrior}{\ensuremath{p\left(\mode{f}(\allInput) \right)}}
+\newcommand{\expertPrior}{\ensuremath{p\left(\mode{f}(\allInputK) \right)}}
+\newcommand{\expertsPrior}{\ensuremath{p\left(\LatentFunc(\allInput) \right)}}
+\newcommand{\expertMeanFunc}{\ensuremath{\mode{\mu}}}
+\newcommand{\expertCovFunc}{\ensuremath{\mode{k}}}
+\newcommand{\expertLikelihood}{\ensuremath{p\left(\allOutput \mid \mode{f}(\allInput)\right)}}
+\newcommand{\singleExpertLikelihood}{\ensuremath{p(\singleOutput \mid \mode{f}(\singleInput))}}
+%\newcommand{\allExpertLikelihood}{\ensuremath{p(\allOutput \mid \mode{f}(\allInput))}}
+%\newcommand{\allExpertLikelihood}{\ensuremath{p(\allOutputK \mid \mode{f}(\allInputK))}}
+\newcommand{\allExpertLikelihood}{\ensuremath{p(\allOutputK \mid \mode{f}(\allInputK))}}
+\newcommand{\expertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVarK, \allInput \right)}}
+\newcommand{\singleExpertPosterior}{\ensuremath{p\left(\singleOutput \mid \singleModeVarK, \allInput \right)}}
+% \newcommand{\expertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVarK \right)}}
+
+\newcommand{\gatingPrior}{\ensuremath{p\left(\GatingFunc(\allInput ) \right)}}
+\newcommand{\gatingMeanFunc}{\ensuremath{\mode{\hat{\mu}}}}
+\newcommand{\gatingCovFunc}{\ensuremath{\mode{\hat{k}}}}
+\newcommand{\singleGatingLikelihood}{\ensuremath{\Pr\left(\singleModeVarK \mid \GatingFunc(\singleInput) \right)}}
+%\newcommand{\allGatingLikelihood}{\ensuremath{\Pr\left(\allModeVarK \mid \GatingFunc(\allInput) \right)}}
+\newcommand{\allGatingLikelihood}{\ensuremath{p\left(\allModeVar \mid \GatingFunc(\allInput) \right)}}
+\newcommand{\gatingLikelihood}{\ensuremath{P\left(\singleModeVar \mid \GatingFunc(\singleInput) \right)}}
+%\newcommand{\gatingPosterior}{\ensuremath{\Pr\left( \singleModeVar \mid \singleInput \right)}}
+\newcommand{\gatingPosterior}{\ensuremath{\Pr\left( \allModeVarK \mid \allInput \right)}}
+\newcommand{\singleGatingPosterior}{\ensuremath{\Pr\left( \singleModeVarK \mid \singleInput, \gatingParams \right)}}
+\newcommand{\evidence}{\ensuremath{p\left(\allOutput \mid \allInput \right)}}
+
+\newcommand{\moeExpertPosterior}{\ensuremath{p\left(\singleOutput \mid \singleModeVarK, \singleInput, \expertParamsK \right)}}
+\newcommand{\moeGatingPosterior}{\ensuremath{\Pr\left(\singleModeVarK \mid \singleInput, \gatingParams \right)}}
+\newcommand{\moeEvidence}{\ensuremath{p\left(\allOutput \mid \allInput, \expertParams, \gatingParams \right)}}
+\newcommand{\singleMoeEvidence}{\ensuremath{p\left(\singleOutput \mid \singleInput, \expertParams, \gatingParams \right)}}
+
+\newcommand{\npmoeExpertPosterior}{\ensuremath{p\left(\allOutput \mid \allModeVar, \allInput, \expertParams \right)}}
+\newcommand{\npmoeGatingPosterior}{\ensuremath{p\left(\allModeVar \mid \allInput, \gatingParams \right)}}
+
+\newcommand{\moeLikelihood}{\ensuremath{p\left(\allOutput \mid \LatentFunc(\allInput), \GatingFunc (\allInput) \right)}}
+\newcommand{\singleMoeLikelihood}{\ensuremath{p\left(\singleOutput \mid \mode{\latentFunc}(\allInput), \GatingFunc (\allInput) \right)}}
+
+#+END_EXPORT
+**** kernels :ignore:
+#+BEGIN_EXPORT latex
+%\renewcommand{\expertKernelnn}{\ensuremath{k_{\singleInput\singleInput}}}
+%\renewcommand{\expertKernelnM}{\ensuremath{\mathbf{k}_{\singleInput \expertInducingInput}}}
+%\renewcommand{\expertKernelMM}{\ensuremath{\mathbf{K}_{\expertInducingInput\expertInducingInput}}}
+%\renewcommand{\expertKernelMn}{\ensuremath{\mathbf{k}_{\expertInducingInput \singleInput}}}
+\renewcommand{\expertKernelnn}{\ensuremath{k_{\modeInd \numData \numData}}}
+\renewcommand{\expertKernelNN}{\ensuremath{\mathbf{K}_{\modeInd \NumData \NumData}}}
+\renewcommand{\expertKernelnM}{\ensuremath{\mathbf{k}_{\modeInd \numData \NumInducing}}}}
+\renewcommand{\expertKernelNM}{\ensuremath{\mathbf{K}_{\modeInd \NumData \NumInducing}}}}
+\renewcommand{\expertKernelMM}{\ensuremath{\mathbf{K}_{\modeInd \NumInducing \NumInducing}}}
+\renewcommand{\expertKernelMn}{\ensuremath{\mathbf{k}_{\modeInd \NumInducing \numData}}}
+\renewcommand{\expertKernelMN}{\ensuremath{\mathbf{K}_{\modeInd \NumInducing \NumData}}}
+\renewcommand{\expertKernelsM}{\ensuremath{\mathbf{k}_{\modeInd * \NumInducing}}}}
+\renewcommand{\expertKernelss}{\ensuremath{k_{\modeInd **}}}
+\renewcommand{\expertKernelSM}{\ensuremath{\mathbf{K}_{\modeInd * \NumInducing}}}}
+\renewcommand{\expertKernelSS}{\ensuremath{\mathbf{K}_{\modeInd **}}}
+
+%\renewcommand{\gatingKernelnn}{\ensuremath{\hat{k}_{\singleInput\singleInput}}}
+%\renewcommand{\gatingKernelnM}{\ensuremath{\hat{\mathbf{k}}_{\singleInput \gatingInducingInput}}}
+%\renewcommand{\gatingKernelMM}{\ensuremath{\hat{\mathbf{K}}_{\gatingInducingInput\gatingInducingInput}}}
+%\renewcommand{\gatingKernelMn}{\ensuremath{\hat{\mathbf{k}}_{\gatingInducingInput \singleInput}}}
+\renewcommand{\gatingKernelnn}{\ensuremath{\hat{k}_{\modeInd \numData \numData}}}
+\renewcommand{\gatingKernelNN}{\ensuremath{\hat{\mathbf{K}}_{\modeInd \NumData \NumData}}}
+\renewcommand{\gatingKernelnM}{\ensuremath{\hat{\mathbf{k}}_{\modeInd \numData \NumInducing}}}
+\renewcommand{\gatingKernelNM}{\ensuremath{\hat{\mathbf{K}}_{\modeInd \NumData \NumInducing}}}
+\renewcommand{\gatingKernelMM}{\ensuremath{\hat{\mathbf{K}}_{\modeInd \NumInducing \NumInducing}}}
+\renewcommand{\gatingKernelMn}{\ensuremath{\hat{\mathbf{k}}_{\modeInd \NumInducing \numData}}}
+\renewcommand{\gatingKernelss}{\ensuremath{\hat{k}_{\modeInd **}}}
+\renewcommand{\gatingKernelsM}{\ensuremath{\hat{\mathbf{k}}_{\modeInd * \NumInducing}}}
+\renewcommand{\gatingKernelMs}{\ensuremath{\hat{\mathbf{k}}_{\modeInd \NumInducing *}}}
+\renewcommand{\gatingKernelSM}{\ensuremath{\hat{\mathbf{K}}_{\modeInd * \NumInducing}}}
+\renewcommand{\gatingKernelMS}{\ensuremath{\hat{\mathbf{K}}_{\modeInd \NumInducing *}}}
+\renewcommand{\gatingKernelSS}{\ensuremath{\hat{\mathbf{K}}_{\modeInd **}}}
+
+\renewcommand{\expertA}{\ensuremath{\mode{\mathbf{A}}}}
+\renewcommand{\gatingA}{\ensuremath{\mode{\hat{\mathbf{A}}}}}
+#+END_EXPORT
+
+**** inference :ignore:
+#+BEGIN_EXPORT latex
+\renewcommand{\input}{\ensuremath{\hat{\state}}}
+\renewcommand{\output}{\ensuremath{\Delta \state}}
+
+\newcommand{\kernel}{\ensuremath{k}}
+\newcommand{\expertKernel}{\ensuremath{\mode{\kernel}}}
+\newcommand{\gatingKernel}{\ensuremath{\mode{\hat{\kernel}}}}
+
+\newcommand{\numInducing}{\ensuremath{m}}
+\newcommand{\NumInducing}{\ensuremath{\MakeUppercase{\numInducing}}}
+%\newcommand{\inducingInput}{\ensuremath{\mathbf{Z}}}
+\newcommand{\inducingInput}{\ensuremath{\bm{\zeta}}}
+\newcommand{\inducingOutput}{\ensuremath{\mathbf{u}}}
+
+%\newcommand{\expertInducingInput}{\ensuremath{\mode{\inducingInput}}}
+%\newcommand{\expertsInducingInput}{\ensuremath{\inducingInput}}}
+\newcommand{\expertInducingInput}{\ensuremath{\mode{\bm{\zeta}}}}
+\newcommand{\expertsInducingInput}{\ensuremath{\bm{\zeta}}}
+%\newcommand{\expertInducingOutput}{\ensuremath{\mode{\inducingOutput}}}
+%\newcommand{\expertsInducingOutput}{\ensuremath{\MakeUppercase{\inducingOutput}}}
+%\newcommand{\expertInducingOutput}{\ensuremath{\mode{\hat{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertInducingOutput}{\ensuremath{\mode{\tilde{\mathbf{\latentFunc}}}}}
+%\newcommand{\expertsInducingOutput}{\ensuremath{\tilde{\MakeUppercase{\mathbf{\latentFunc}}}}}
+\newcommand{\expertInducingOutput}{\ensuremath{\mode{\latentFunc}(\expertInducingInput)}}
+\newcommand{\expertsInducingOutput}{\ensuremath{\mathbf{\latentFunc}(\expertsInducingInput)}}
+
+%\newcommand{\gatingInducingInput}{\ensuremath{\hat{\inducingInput}}}
+\newcommand{\gatingInducingInput}{\ensuremath{\bm{\xi}}}
+%\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\hat{\inducingOutput}}}}
+%\newcommand{\gatingsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\inducingOutput}}}}
+%\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\hat{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingsInducingOutput}{\ensuremath{\hat{\MakeUppercase{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\tilde{\mathbf{\gatingFunc}}}}}
+%\newcommand{\gatingsInducingOutput}{\ensuremath{\tilde{\MakeUppercase{\mathbf{\gatingFunc}}}}}
+\newcommand{\gatingInducingOutput}{\ensuremath{\mode{\gatingFunc}(\gatingInducingInput)}}
+\newcommand{\gatingsInducingOutput}{\ensuremath{\mathbf{\gatingFunc}(\gatingInducingInput)}}
+
+%\newcommand{\expertInducingPrior}{\ensuremath{p(\mode{\latentFunc}(\expertInducingInput))}}
+%\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput \mid \expertInducingInput)}}
+%\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput \mid \expertsInducingInput)}}
+\newcommand{\expertInducingPrior}{\ensuremath{p(\expertInducingOutput)}}
+\newcommand{\expertsInducingPrior}{\ensuremath{p(\expertsInducingOutput)}}
+%\newcommand{\expertInducingVariational}{\ensuremath{q(\mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\expertInducingVariational}{\ensuremath{q(\expertInducingOutput)}}
+\newcommand{\expertsInducingVariational}{\ensuremath{q(\expertsInducingOutput)}}
+\newcommand{\expertVariational}{\ensuremath{q(\mode{\latentFunc}(\singleInput))}}
+\newcommand{\expertsVariational}{\ensuremath{q(\LatentFunc_\numData)}}
+%\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\singleExpertGivenInducing}{\ensuremath{p(\singleOutput \mid \expertInducingOutput)}}
+\newcommand{\allExpertGivenInducing}{\ensuremath{p(\allOutput \mid \expertInducingOutput)}}
+%\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \mode{\latentFunc}(\expertInducingInput))}}
+\newcommand{\singleLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\singleInput) \mid \expertInducingOutput)}}
+\newcommand{\allLatentExpertGivenInducing}{\ensuremath{p(\mode{\latentFunc}(\allInput) \mid \expertInducingOutput)}}
+
+
+%\newcommand{\gatingInducingPrior}{\ensuremath{p(\GatingFunc(\gatingInducingInput))}}
+%\newcommand{\gatingInducingPrior}{\ensuremath{p(\gatingInducingOutput \mid \gatingInducingInput)}}
+%\newcommand{\gatingsInducingPrior}{\ensuremath{p(\gatingsInducingOutput \mid \gatingInducingInput)}}
+\newcommand{\gatingInducingPrior}{\ensuremath{p(\gatingInducingOutput)}}
+\newcommand{\gatingsInducingPrior}{\ensuremath{p(\gatingsInducingOutput)}}
+%\newcommand{\gatingInducingVariational}{\ensuremath{q(\GatingFunc(\gatingInducingInput))}}
+\newcommand{\gatingInducingVariational}{\ensuremath{q(\gatingInducingOutput)}}
+\newcommand{\gatingsInducingVariational}{\ensuremath{q(\gatingsInducingOutput)}}
+\newcommand{\gatingsVariational}{\ensuremath{q(\GatingFunc_\numData)}}
+\newcommand{\singleGatingGivenInducing}{\ensuremath{\Pr(\singleModeVarK \mid \gatingsInducingOutput)}}
+\newcommand{\allGatingGivenInducing}{\ensuremath{\Pr(\allModeVarK \mid \gatingInducingOutput)}}
+\newcommand{\allGatingsGivenInducing}{\ensuremath{\Pr(\allModeVarK \mid \gatingsInducingOutput)}}
+\newcommand{\singleLatentGatingsGivenInducing}{\ensuremath{p(\GatingFunc(\singleInput) \mid \gatingsInducingOutput)}}
+\newcommand{\allLatentGatingsGivenInducing}{\ensuremath{p(\GatingFunc(\allInput) \mid \gatingsInducingOutput)}}
+\newcommand{\singleLatentGatingGivenInducing}{\ensuremath{p(\mode{\gatingFunc}(\singleInput) \mid \gatingInducingOutput)}}
+
+\newcommand{\expertKL}{\ensuremath{\text{KL}\left( \expertInducingVariational \mid\mid \expertInducingPrior \right)}}
+\newcommand{\expertsKL}{\ensuremath{\sum_{\modeInd=1}^\ModeInd\text{KL}\left( \expertInducingVariational \mid\mid \expertInducingPrior \right)}}
+\newcommand{\gatingKL}{\ensuremath{\text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
+\newcommand{\gatingsKL}{\ensuremath{\sum_{\modeInd=1}^\ModeInd \text{KL}\left( \gatingInducingVariational \mid\mid \gatingInducingPrior \right)}}
+#+END_EXPORT
+
+*** Maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\nominalStateTraj}{\ensuremath{\stateTraj_*}}
+\newcommand{\nominalControlTraj}{\ensuremath{\controlTraj_*}}
+\newcommand{\fixedControl}{\ensuremath{\control_{*}}}
+\newcommand{\velocity}{\ensuremath{v}}
+
+\newcommand{\trajectory}{\ensuremath{\bar{\state}}}
+\newcommand{\stateControlTraj}{\ensuremath{\bm\tau}}
+\newcommand{\jacTraj}{\ensuremath{\bar{\mathbf{J}}}}
+\renewcommand{\modeVarTraj}{\ensuremath{\modeVar_{0:\TimeInd}=\desiredMode}}
+
+%\renewcommand{\modeInd}{\ensuremath{\modeVar}}
+
+\newcommand{\desiredMode}{\ensuremath{\modeInd^{*}}}
+\renewcommand{\modeDes}[1]{\ensuremath{#1_{\desiredMode}}}
+\newcommand{\desiredGatingFunction}{\ensuremath{\modeDes{\gatingFunc}}}
+%\newcommand{\desiredDynamicsFunc}{\ensuremath{\mode{\latentFunc}}}
+\newcommand{\desiredDynamicsFunc}{\ensuremath{\modeDes{\latentFunc}}}
+%\newcommand{\desiredDynamicsFunc}{\ensuremath{\latentFunc_{\modeVar_{\timeInd}}}}
+\newcommand{\desiredStateDomain}{\ensuremath{\modeDes{\stateDomain}}}
+%\newcommand{\desiredStateDomain}{\ensuremath{\mode{\stateDomain}}}
+
+%\newcommand{\controlledDynamicsFunc}{\ensuremath{\modeDes{\latentFunc}}}
+\newcommand{\controlledDynamicsFunc}{\ensuremath{\latentFunc_{\controlTraj}}}
+
+\newcommand{\valueFunc}{\ensuremath{V}}
+
+\renewcommand{\controlledPolicyDist}{\ensuremath{q_\policy}}
+
+\renewcommand{\satisfactionProb}{\ensuremath{p_{\modeVar}}}
+#+END_EXPORT
+# *** Geometry Maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\manifold}{\ensuremath{\mathcal{M}}}
+\newcommand{\manifoldFunction}{\ensuremath{h}}
+\newcommand{\manifoldDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\manifoldCodomain}{\ensuremath{\mathcal{Z}}}
+\newcommand{\ManifoldDim}{\ensuremath{D}}
+\newcommand{\manifoldDim}{\ensuremath{d}}
+\newcommand{\manifoldDomainDim}{\ensuremath{d_{\manifoldDomain}}}
+\newcommand{\manifoldCodomainDim}{\ensuremath{d_{\manifoldCodomain}}}
+\newcommand{\manifoldInput}{\ensuremath{\mathbf{x}}}
+
+% \newcommand{\jacobian}{\ensuremath{\mathbf{J}_{\mathbf{x}_t}}}
+\newcommand{\jacobian}{\ensuremath{\mathbf{J}(\state(t))}}
+\newcommand{\metricTensor}{\ensuremath{\mathbf{G}}}
+\newcommand{\metricTensorTraj}{\ensuremath{\bar{\mathbf{G}}}}
+
+\newcommand{\geodesicFunction}{\ensuremath{f_G}}
+
+%\newcommand{\gatingDomain}{\ensuremath{\hat{\mathcal{X}}}}
+%\newcommand{\gatingCodomain}{\ensuremath{\mathcal{A}}}
+\newcommand{\gatingDomain}{\ensuremath{\mathcal{X}}}
+\newcommand{\gatingCodomain}{\ensuremath{\mathcal{Z}}}
+
+\newcommand{\desiredManifold}{\ensuremath{\mathcal{M}_{k^*}}}
+%\newcommand{\desiredMetricTensor}{\ensuremath{\mathbf{G}_{k^*}}}
+\newcommand{\desiredMetricTensor}{\ensuremath{\mathbf{G}}}
+%\newcommand{\desiredJacobian}{\ensuremath{\mathbf{J}_{k^*}(\state(t))}}
+\newcommand{\desiredJacobian}{\ensuremath{\mathbf{J}}}
+%\newcommand{\GatingDim}{\ensuremath{D_{x+u}}}
+\newcommand{\GatingDim}{\ensuremath{D}}
+\newcommand{\gatingDim}{\ensuremath{d}}
+
+% Manfiold kernels
+\renewcommand{\manifoldKernelMM}{\ensuremath{\mathbf{K}_{\NumInducing \NumInducing}}}
+\newcommand{\jacManifoldKernelsM}{\ensuremath{\partial \mathbf{K}_{* \NumInducing}}}
+\newcommand{\jacManifoldKernelMs}{\ensuremath{\partial \mathbf{K}_{\NumInducing *}}}
+\newcommand{\hessManifoldKernel}{\ensuremath{\partial^2 \mathbf{K}_{**}}}
+\renewcommand{\manifoldKernelNN}{\ensuremath{\mathbf{K}_{\NumData \NumData}}}
+\newcommand{\jacManifoldKernelsN}{\ensuremath{\partial \mathbf{K}_{* \NumData}}}
+\newcommand{\jacManifoldKernelNs}{\ensuremath{\partial \mathbf{K}_{\NumData *}}}
+\newcommand{\hessManifoldKerneldd}{\ensuremath{\partial^2 k(\cdot, \cdot')}}
+\newcommand{\jacManifoldKerneldN}{\ensuremath{\partial \mathbf{K}_{\cdot \NumData}}}
+\newcommand{\jacManifoldKernelNd}{\ensuremath{\partial \mathbf{K}_{\NumData \cdot}}}
+
+\newcommand{\manifoldInducingInput}{\ensuremath{\bm\xi}}
+%\newcommand{\manifoldInducingOutput}{\ensuremath{\mathbf{u}}}
+\newcommand{\manifoldInducingOutput}{\ensuremath{\manifoldFunction(\manifoldInducingInput)}}
+\newcommand{\manifoldInducingVariational}{\ensuremath{q(\mathbf{u})}}
+\newcommand{\manifoldInducingOutputMean}{\ensuremath{\mathbf{m}}}
+\newcommand{\manifoldInducingOutputCov}{\ensuremath{\mathbf{S}}}
+\newcommand{\manifoldMeanFunc}{\ensuremath{\mu}}
+
+
+%\newcommand{\manifoldFunc}{\ensuremath{\mathbf{h}}}
+%\newcommand{\desiredMeanFunc}{\ensuremath{\mu}}
+\renewcommand{\muJac}{\ensuremath{\bm\mu_{\mathbf{J}}}}
+\renewcommand{\covJac}{\ensuremath{\bm\Sigma_{\mathbf{J}}}}
+\renewcommand{\testInput}{\ensuremath{\mathbf{x}_*}}
+
+\newcommand{\stateDiff}{\ensuremath{\Delta \state}}
+
+\renewcommand{\stateCostMatrix}{\ensuremath{\mathbf{Q}}}
+\renewcommand{\controlCostMatrix}{\ensuremath{\mathbf{R}}}
+\renewcommand{\terminalStateCostMatrix}{\ensuremath{\mathbf{H}}}
+\renewcommand{\approxExpectedCost}{\ensuremath{J(\stateTraj, \controlTraj)}}
+
+\renewcommand{\terminalState}{\ensuremath{\state_{\TimeInd}}}
+
+\newcommand{\stateMean}{\ensuremath{\bm\mu_{\state_\timeInd}}}
+\newcommand{\stateCov}{\ensuremath{\bm\Sigma_{\state_\timeInd}}}
+\newcommand{\terminalStateMean}{\ensuremath{\bm\mu_{\state_\TimeInd}}}
+\newcommand{\terminalStateCov}{\ensuremath{\bm\Sigma_{\state_\TimeInd}}}
+\newcommand{\controlMean}{\ensuremath{\bm\mu_{\control_\timeInd}}}
+\newcommand{\controlCov}{\ensuremath{\bm\Sigma_{\control_\timeInd}}}
+\newcommand{\stateDiff}{\ensuremath{\Delta \state}}
+\newcommand{\stateDiffMean}{\ensuremath{\bm\mu_{\stateDiff_\timeInd}}}
+\newcommand{\stateDiffCov}{\ensuremath{\bm\Sigma_{\stateDiff_\timeInd}}}
+
+\renewcommand{\transitionDistK}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVar_{\timeInd}=\modeInd)}}
+#+END_EXPORT
+*** Maths :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\startStateDist}{\ensuremath{p(\state_{1})}}
+\newcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVarK)}}
+%\newcommand{\trajectoryDist}{\ensuremath{p(\stateControlTraj)}}
+\renewcommand{\controlDist}{\ensuremath{\policy(\control_\timeInd \mid \state_\timeInd)}}
+
+
+\renewcommand{\trajectoryVarDist}{\ensuremath{q(\stateTraj, \controlTraj)}}
+\newcommand{\controlTrajVarDist}{\ensuremath{q(\control_{0:\TimeInd} \mid \state_{0:\TimeInd})}}
+\newcommand{\controlVarDist}{\ensuremath{q(\control_{\timeInd})}}
+
+\newcommand{\optimalVar}{\ensuremath{\mathcal{O}}}
+\newcommand{\monotonicFunc}{\ensuremath{g}}
+\newcommand{\temperature}{\ensuremath{\gamma}}
+
+\newcommand{\modeProb}{\ensuremath{\Pr(\modeVar_\timeInd = \modeInd \mid \state_\timeInd, \control_\timeInd)}}
+\renewcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1 \mid \state_\timeInd, \control_\timeInd)}}
+\newcommand{\optimalDist}{\ensuremath{P(\optimalVar_\timeInd \mid \state_\timeInd, \control_\timeInd)}}
+
+\newcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1 \mid \state_\TimeInd)}}
+
+\renewcommand{\marginalLikelihood}{\ensuremath{p(\optimalVar_{0:\TimeInd} = 1, \modeVar_{0:\TimeInd}=\desiredMode \mid \state_0)}}
+%\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}=1, \modeVar_{1:\TimeInd}=\modeDes{\modeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+%\newcommand{\jointDist}{\ensuremath{p(\optimalVar_{1:\TimeInd}, \modeVar_{1:\TimeInd}, \state_{1:\TimeInd}, \control_{1:\TimeInd})}}
+\renewcommand{\jointDist}{\ensuremath{p(\optimalVar_{0:\TimeInd}=1, \stateTraj, \controlTraj \mid \state_0})}}
+
+\renewcommand{\trajectoryDist}{\ensuremath{p(\state_{1:\TimeInd}, \control_{0:\TimeInd} \mid \state_0)}}
+
+
+\newcommand{\objective}{\ensuremath{J_{\text{quadratic}}}}
+
+\renewcommand{\priorPolicy}{\ensuremath{\policy_0}}
+\renewcommand{\priorPolicyDist}{\ensuremath{p_{\policy_0}}}
+#+END_EXPORT
+*** maths :ignore:
+#+BEGIN_EXPORT latex
+%\renewcommand{\optimalProb}{\ensuremath{\Pr(\optimalVar_\timeInd = 1, \modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd)}}
+%\renewcommand{\modeProb}{\ensuremath{\Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd)}}
+\renewcommand{\optimalVarTraj}{\ensuremath{\optimalVar_{0:\TimeInd}=1}}
+\renewcommand{\modeVarTraj}{\ensuremath{\modeVar_{0:\TimeInd}=\desiredMode}}
+
+\renewcommand{\modeVarK}{\ensuremath{\modeVar_{\timeInd} = \modeInd}}
+\renewcommand{\modeProb}{\ensuremath{\Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd)}}
+\renewcommand{\terminalCostDist}{\ensuremath{\Pr(\optimalVar_\TimeInd=1, \modeVar_\TimeInd=\desiredMode \mid \state_\TimeInd)}}
+\renewcommand{\terminalModeProbDist}{\ensuremath{\Pr(\modeVar_\TimeInd=\desiredMode \mid \state_\TimeInd)}}
+\renewcommand{\jointDist}{\ensuremath{p(\optimalVar_{0:\TimeInd}=1, \modeVar_{0:\TimeInd}=\desiredMode, \stateTraj, \controlTraj \mid \state_0})}}
+
+\renewcommand{\transitionDistOptimal}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \optimalVarTraj, \modeVarTraj)}}
+\renewcommand{\transitionDist}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}}
+\renewcommand{\transitionDistK}{\ensuremath{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd, \modeVarK)}}
+#+END_EXPORT
+
+* Motivation
+:PROPERTIES:
+:BEAMER_env: fullframe
+:END:
+#+ATTR_LATEX: :width 0.85\textwidth :placement [h] :center t
+[[file:../images/scenario-7-domain.pdf]]
+# [[file:./images/quadcopter_initial_traj_0.png]]
+* Goals :noexport:
+#+ATTR_BEAMER: :overlay +-
+- Goal 1 :: Navigate to the target state $\targetState$
+
+* Navigation problem :noexport:
+# #+begin_export latex
+# \begin{align}
+# \state_\timeInd \in \stateDomain \subseteq \R^{\stateDim} \\
+# \control_\timeInd \in \controlDomain \subseteq \R^{\controlDim} \\
+# \pi(\state_{\timeInd}, \timeInd) : \stateDomain \times \R \rightarrow \controlDomain \\
+# \dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain \\
+# \end{align}
+# #+end_export
+#+ATTR_BEAMER: :overlay +-
+- State $\state_\timeInd \in \stateDomain \subseteq \R^{D_{\state}}$
+- Control $\control_\timeInd \in \controlDomain \subseteq \R^{D_{\control}}$
+- Time $\timeInd$
+- Dynamics function $\dynamicsFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$
+- Controller $\pi(\state_{\timeInd}, \timeInd) : \stateDomain \times \R \rightarrow \controlDomain$
+- Cost function $\costFun : \stateDomain \times \controlDomain \rightarrow \R$
+
+* Motivation
+:PROPERTIES:
+:BEAMER_env: fullframe
+:END:
+#+ATTR_LATEX: :width 0.85\textwidth :placement [h] :center t
+[[file:../images/scenario-7-domain-crash-1.pdf]]
+* Motivation
+:PROPERTIES:
+:BEAMER_env: fullframe
+:END:
+#+ATTR_LATEX: :width 0.85\textwidth :placement [h] :center t
+[[file:../images/scenario-7-domain-crash-2.pdf]]
+* Motivation
+:PROPERTIES:
+:BEAMER_env: fullframe
+:END:
+#+ATTR_LATEX: :width 0.85\textwidth :placement [h] :center t
+[[file:../images/scenario-7-domain-success.pdf]]
+* Goals
+#+ATTR_BEAMER: :overlay +-
+- Goal 1 :: Navigate to the target state $\targetState$
+- Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$
+
+* Navigation problem :noexport:
+#+begin_export latex
+\begin{myquote}
+\begin{subequations}
+\begin{align}
+\min_{\policy \in \Pi} \quad
+%&J_{\pi}(\state_0) \\
+&\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd)) \mid \state_0=\state_0 \right] \\
+%&\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+%\mid \state_0=\state \right] \\
+\text{s.t.} \quad
+&\state_{\timeInd+1} = \dynamicsFunc(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \bm\epsilon  \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\}\\
+&\state_{0} = \state_0 \\
+&\state_\TimeInd = \targetState
+\end{align}
+\end{subequations}
+\end{myquote}
+#+end_export
+# - State $\state$
+# - Control $\control$
+# - Time $\timeInd$
+# - Dynamics $\latentFunc : \stateDomain \times \controlDomain \rightarrow \stateDomain$
+# - Controller $\pi : \stateDomain \rightarrow \controlDomain$
+
+* Mode remaining navigation problem
+#+begin_export latex
+\begin{myquote}
+\begin{subequations}
+\begin{align}
+\min_{\policy \in \Pi} \quad
+%&J_{\pi}(\state_0) \\
+&\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd)) \mid \state_0=\state_0 \right] \\
+%&\E \left[ \sum_{\timeInd=0}^{\TimeInd} \costFunc(\state_{\timeInd}, \pi(\state_{\timeInd}, \timeInd))
+%\mid \state_0=\state \right] \\
+\text{s.t.} \quad
+&\onslide<4->{\state_{\timeInd+1} = \mode{\dynamicsFunc}(\state_\timeInd, \policy(\state_\timeInd, \timeInd)) + \mode{\bm\epsilon},
+\quad \text{if } \modeVar(\state_{\timeInd}) = \modeInd \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\}} \\
+%&\text{\cref{eq-mode-remaining-def-explore}} \\
+%&\onslide<2->{\dynamicsFunc(\state_{\timeInd}, \policy(\state_{\timeInd}, \timeInd)) \in \desiredStateDomain \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\}} \\
+&\onslide<5->{\modeVar(\state_{\timeInd}) = \desiredMode \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\}} \\
+&\onslide<2->{\state_{0} = \state_0} \\
+&\onslide<3->{\state_\TimeInd = \targetState}
+%\modeVar_{\timeInd} = \desiredMode \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+%&\state_{\timeInd} \in \desiredStateDomain \quad \forall \timeInd \in \mathbb{Z} \cap [0,\TimeInd] \\
+\end{align}
+\end{subequations}
+\end{myquote}
+#+end_export
+
+* Mode remaining navigation problem
+#+ATTR_BEAMER: :overlay +-
+- Dynamics and mode switching are /unknown a priori/
+- So we cannot guarantee mode remaining behaviour...
+    #+begin_export latex
+    \begin{align}
+    &\modeVar(\state_{\timeInd}) = \desiredMode \quad &\forall \timeInd \in \{0, \ldots, \TimeInd-1\}
+    \end{align}
+    #+end_export
+- Solve using model-based reinforcement learning
+  + jointly learn dynamics modes and switching mechanism
+  + relax mode remaining requirement
+        #+BEGIN_EXPORT latex
+        \begin{align}
+        \Pr( \forall \timeInd \in \{0,\ldots,\TimeInd \} : \modeVar(\state_{\timeInd}) &= \desiredMode,
+        \control_{\timeInd} \in \controlDomain) \geq 1 - \delta
+        \end{align}
+        #+END_EXPORT
+    # (to remaining in desired mode with high probability)
+
+* Mode remaining model-based RL?
+#+BEGIN_EXPORT latex
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=2cm, minimum height=1cm,text centered, draw=black, fill=violet!30]
+\tikzstyle{decision} = [diamond, rounded corners, minimum width=1cm, maximum height=1cm,text centered, draw=black, fill=violet!30]
+%\tikzstyle{decision} = [diamond, minimum width=2cm, minimum height=0.5cm, text centered, draw=black, fill=violet!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+% \begin{tikzpicture}[node distance=1.8cm, style={align=center}]]
+\centering
+\resizebox{0.7\textwidth}{!}{
+\begin{tikzpicture}[every text node part/.style={align=center}, node distance=1.5cm]
+\node (start) [startstop] {Learn dynamics model};
+\node (trajopt) [startstop, below of=start, left of=start, xshift=-2cm] {Find trajectory to $\state_f$};
+\node (constraints) [decision, below of=trajopt, yshift=-1cm] {$\delta-\text{mode}$\\ remaining?};
+%# \node (constraints) [startstop, below of=trajopt] {$\delta-\text{mode remaining}$?};
+\node (execute) [startstop, below of=constraints, yshift=-1cm] {Execute trajectory};
+\node (explore) [startstop, right of=constraints, xshift=6cm] {$\delta-\text{mode exploration}$};
+
+\draw [arrow] (start) -| (trajopt);
+\draw [arrow] (trajopt) -- (constraints);
+\draw [arrow] (constraints) -- node[anchor=east] {yes} (execute);
+\draw [arrow] (constraints) -- node[anchor=south] {no} (explore);
+\draw [arrow] (explore) |- node[anchor=west] {Experience} (start);
+\end{tikzpicture}
+}
+#+END_EXPORT
+
+
+* Contributions - Chapter 3
+#+BEGIN_EXPORT latex
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=2cm, minimum height=1cm,text centered, draw=black, fill=violet!30]
+\tikzstyle{decision} = [diamond, rounded corners, minimum width=1cm, maximum height=1cm,text centered, draw=black, fill=violet!30]
+%\tikzstyle{decision} = [diamond, minimum width=2cm, minimum height=0.5cm, text centered, draw=black, fill=violet!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+% \begin{tikzpicture}[node distance=1.8cm, style={align=center}]]
+\centering
+\resizebox{0.7\textwidth}{!}{
+\begin{tikzpicture}[every text node part/.style={align=center}, node distance=1.5cm]
+\node (start) [startstop, fill=cyan!40] {Learn dynamics model};
+\node (trajopt) [startstop, below of=start, left of=start, xshift=-2cm] {Find trajectory to $\state_f$};
+\node (constraints) [decision, below of=trajopt, yshift=-1cm] {$\delta-\text{mode}$\\ remaining?};
+%# \node (constraints) [startstop, below of=trajopt] {$\delta-\text{mode remaining}$?};
+\node (execute) [startstop, below of=constraints, yshift=-1cm] {Execute trajectory};
+\node (explore) [startstop, right of=constraints, xshift=6cm] {$\delta-\text{mode exploration}$};
+
+\draw [arrow] (start) -| (trajopt);
+\draw [arrow] (trajopt) -- (constraints);
+\draw [arrow] (constraints) -- node[anchor=east] {yes} (execute);
+\draw [arrow] (constraints) -- node[anchor=south] {no} (explore);
+\draw [arrow] (explore) |- node[anchor=west] {Experience} (start);
+\end{tikzpicture}
+}
+#+END_EXPORT
+
+* Contributions - Chapter 4
+#+BEGIN_EXPORT latex
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=2cm, minimum height=1cm,text centered, draw=black, fill=violet!30]
+\tikzstyle{decision} = [diamond, rounded corners, minimum width=1cm, maximum height=1cm,text centered, draw=black, fill=violet!30]
+%\tikzstyle{decision} = [diamond, minimum width=2cm, minimum height=0.5cm, text centered, draw=black, fill=violet!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+% \begin{tikzpicture}[node distance=1.8cm, style={align=center}]]
+\centering
+\resizebox{0.7\textwidth}{!}{
+\begin{tikzpicture}[every text node part/.style={align=center}, node distance=1.5cm]
+\node (start) [startstop] {Learn dynamics model};
+\node (trajopt) [startstop, below of=start, left of=start, xshift=-2cm, fill=cyan!40] {Find trajectory to $\state_f$};
+\node (constraints) [decision, below of=trajopt, yshift=-1cm, fill=cyan!40] {$\delta-\text{mode}$\\ remaining?};
+%# \node (constraints) [startstop, below of=trajopt] {$\delta-\text{mode remaining}$?};
+\node (execute) [startstop, below of=constraints, yshift=-1cm] {Execute trajectory};
+\node (explore) [startstop, right of=constraints, xshift=6cm] {$\delta-\text{mode exploration}$};
+
+\draw [arrow] (start) -| (trajopt);
+\draw [arrow] (trajopt) -- (constraints);
+\draw [arrow] (constraints) -- node[anchor=east] {yes} (execute);
+\draw [arrow] (constraints) -- node[anchor=south] {no} (explore);
+\draw [arrow] (explore) |- node[anchor=west] {Experience} (start);
+\end{tikzpicture}
+}
+#+END_EXPORT
+
+* Contributions - Chapter 6
+#+BEGIN_EXPORT latex
+\tikzstyle{startstop} = [rectangle, rounded corners, minimum width=2cm, minimum height=1cm,text centered, draw=black, fill=violet!30]
+\tikzstyle{decision} = [diamond, rounded corners, minimum width=1cm, maximum height=1cm,text centered, draw=black, fill=violet!30]
+%\tikzstyle{decision} = [diamond, minimum width=2cm, minimum height=0.5cm, text centered, draw=black, fill=violet!30]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+% \begin{tikzpicture}[node distance=1.8cm, style={align=center}]]
+\centering
+\resizebox{0.7\textwidth}{!}{
+\begin{tikzpicture}[every text node part/.style={align=center}, node distance=1.5cm]
+\node (start) [startstop] {Learn dynamics model};
+\node (trajopt) [startstop, below of=start, left of=start, xshift=-2cm] {Find trajectory to $\state_f$};
+\node (constraints) [decision, below of=trajopt, yshift=-1cm] {$\delta-\text{mode}$\\ remaining?};
+%# \node (constraints) [startstop, below of=trajopt] {$\delta-\text{mode remaining}$?};
+\node (execute) [startstop, below of=constraints, yshift=-1cm] {Execute trajectory};
+\node (explore) [startstop, right of=constraints, xshift=6cm, fill=cyan!40] {$\delta-\text{mode exploration}$};
+
+\draw [arrow] (start) -| (trajopt);
+\draw [arrow] (trajopt) -- (constraints);
+\draw [arrow] (constraints) -- node[anchor=east] {yes} (execute);
+\draw [arrow] (constraints) -- node[anchor=south] {no} (explore);
+\draw [arrow] (explore) |- node[anchor=west] {Experience} (start);
+\end{tikzpicture}
+}
+#+END_EXPORT
+
+
+* ModeOpt iteration 0
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_0_epoch_0.pdf]]
+* ModeOpt iteration 0
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_1.pdf]]
+* ModeOpt iteration 0
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_1_epoch_0.pdf]]
+* ModeOpt iteration 1
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_1_epoch_last.pdf]]
+* ModeOpt iteration 1
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_2.pdf]]
+* ModeOpt iteration 1
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_2_epoch_0.pdf]]
+* ModeOpt iteration 2
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_2_epoch_last.pdf]]
+* ModeOpt iteration 2
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_3.pdf]]
+* ModeOpt iteration 2
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_3_epoch_0.pdf]]
+* ModeOpt iteration 3
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_3_epoch_last.pdf]]
+
+* ModeOpt iteration 3
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_4.pdf]]
+* ModeOpt iteration 3
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_4_epoch_0.pdf]]
+* ModeOpt iteration 4
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_4_epoch_last.pdf]]
+* ModeOpt iteration 4
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/trajectories_over_mixing_probs_step_5.pdf]]
+* ModeOpt iteration 4
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_5_epoch_0.pdf]]
+* And so on, until
+* And so on, until
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:../images/mode-opt/exploration/mvn-full-cov/data_over_mixing_probs_step_11_epoch_last.pdf]]
+
+
+* Goals (revisited) :noexport:
+#+ATTR_BEAMER: :overlay +-
+- Goal 1 :: Navigate to the target state $\targetState$
+- Goal 2 :: Remain in the operable, desired dynamics mode $\desiredMode$
+- Goal 3 :: Avoid regions of the learned dynamics with high epistemic uncertainty
+  - Goal 3.1 :: in the desired dynamics mode $\mode{\latentFunc}$
+  - Goal 3.2 :: in the gating network $\alpha$
+
+# , i.e. where the underlying dynamics are not known
+# , i.e. where it is not known which mode governs the dynamics
+* Contributions :noexport:
+- Chapter 3 - Model learning
+- Chapter 4 - Three mode remaining trajectory optimisation algorithms
+- Chapter 6 - Uncertainty-based explorative trajectory optimisation algorithm with mode remaining guarantees
+
+
+* Chapter 3 - Probabilistic inference for learning multimodal dynamical systems :noexport:
+#+ATTR_BEAMER: :overlay +-
+- Goals
+  + Correctly identify the true underlying dynamics modes
+  + Learn latent spaces for mode remaining planning/control
+  + Uncertainty quantification for guided exploration
+- Method
+  1. Likelihood approximation based on sparse GPs (Eq. 3.20)
+  2. Stochastic variational inference (ELBO in  Eq. 3.29)
+
+
+* Chapter 4 - Mode remaining trajectory optimisation :noexport:
+#+ATTR_BEAMER: :overlay +-
+- Goals
+  + Navigate to the target state $\targetState$
+  + Remain in the operable, desired dynamics mode $\desiredMode$
+  + Avoid regions of the learned dynamics with high epistemic uncertainty
+    # + in the desired dynamics mode $\mode{\latentFunc}$
+    # + in the gating network $\alpha$
+- Assumptions
+  + State transition data set collected and used to train dynamics model
+  + Desired dynamics mode is /known a priori/
+- (Three) Methods
+  + Two exploit geometry of the GP-based gating network
+  + One casts the optimal control problem as probabilistic inference
+  + Mode remaining chance constraints
+
+* Mode remaining control via latent geometry :noexport:
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:./images/env/scenario_7/mosvgpe/desired_gating_gp_no_obs.pdf]]
+
+* Mode remaining control via latent geometry :noexport:
+#+ATTR_BEAMER: :overlay +-
+- Exploits geometry of the GP-based gating network
+  + Extended to stochastic manifolds parameterised by SVGPs
+
+* Mode remaining control as probabilistic inference :noexport:
+#+ATTR_LATEX: :width 0.8\textwidth :placement [h] :center nil
+[[file:./images/env/scenario_7/mosvgpe/mixing_probs_no_obs.pdf]]
+
+* Mode remaining control as probabilistic inference :noexport:
+#+ATTR_BEAMER: :overlay +-
+- Exploits pmf over the mode indicator variable
+- Casts the optimal control problem as probabilistic inference
+- Mode remaining chance constraints
+
+
+* Chapter 6 - Mode remaining exploration for model-based reinforcement learning :noexport:
+#+ATTR_BEAMER: :overlay +-
+- Assumptions
+  + No access to environment a priori
+    - Only a local state transition data set around start state
+  + Desired dynamics mode is /known a priori/
+- Goals
+  + Explore environment
+    - Target exploration towards target state
+    - Remain in desired dynamics mode
+  # + Navigate to target state
+# - Method
+#   + Explore environment without leaving the desired dynamics mode
+
+
+* Thanks for listening
+:PROPERTIES:
+:BEAMER_OPT: rightcolor=DarkPink,div=0.8\paperwidth
+:END:
+Questions?
+
+
+* Model learning - Mixture models?
+#+ATTR_BEAMER: :overlay +-
+** MoE marginal likelihood
+#+BEGIN_EXPORT latex
+\small
+\begin{align} \label{eq-mixture-marginal-likelihood}
+\moeEvidence = \prod_{\numData=1}^\NumData \sum_{\modeInd=1}^{\ModeInd}
+\underbrace{\moeGatingPosterior}_{\text{gating network}}
+\underbrace{\moeExpertPosterior}_{\text{expert } k},
+\end{align}
+\normalsize
+#+END_EXPORT
+
+** Nonparametric MoE marginal likelihood :noexport:
+#+BEGIN_EXPORT latex
+\small
+\begin{align}  \label{eq-np-moe-marginal-likelihood-assign}
+\moeEvidence  &= \sum_{\allModeVar} \npmoeGatingPosterior
+\left[ \prod_{\modeInd=1}^\ModeInd p\left(\{\singleOutput : \modeVarK \} \mid \{\singleInput : \modeVarK \}, \expertParamsK \right) \right]
+\end{align}
+\normalsize
+#+END_EXPORT
+
+- Sum over exponentially many ($\ModeInd^{\NumData}$) sets of assignments,
+    - $\allModeVar = \{\modeVar_1, \ldots, \modeVar_\NumData \}$
+* Model learning - Mixtures of Nonparametric Experts
+** npmoe graphical model
+:PROPERTIES:
+:BEAMER_col: 0.3
+:END:
+#+BEGIN_EXPORT latex
+\newcommand{\gatingColor}{violet}
+\newcommand{\expertColor}{orange}
+\begin{figure}[t]
+  \centering
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[const] (x) {$\singleInputK$};
+
+      \node[latent, left=of x, yshift=-1.4cm] (f) {$\textcolor{\expertColor}{\mode{\latentFunc}(\allInputK)}$};
+
+      \node[const, left=of f, xshift=0.4cm, \expertColor] (thetak) {$\textcolor{\expertColor}{\expertParamsK}$};
+
+      \node[latent, below=of x, xshift=0.0cm] (a) {$\textcolor{\gatingColor}{\modeVarnk}$};
+
+      \node[const, right=of a, xshift=-0.4cm, \gatingColor] (phik) {$\textcolor{\gatingColor}{\gatingParams}$};
+
+      \node[obs, below=of f, yshift=0.4cm] (y) {$\allOutputK$};
+
+      \node[const, left=of y, \expertColor] (sigmak) {$\textcolor{\expertColor}{\noiseVarK}$};
+
+      \draw[post, \gatingColor] (a)--(y);
+      \draw[post, \expertColor] (x)-|(f);
+      \draw[post, \gatingColor] (x)--(a);
+      \draw[post, \expertColor] (thetak)--(f);
+      \draw[post, \gatingColor] (phik)--(a);
+      \draw[post, \expertColor] (sigmak)|-(y);
+      \draw[post, \expertColor] (f)--(y);
+
+      \plate[color=\gatingColor] {} {(x) (yk) (a)} {$\textcolor{\gatingColor}{\NumData_{\modeInd}}$};
+      \plate[color=\expertColor] {} {(x) (y) (f) (sigmak) (thetak) (a)} {$\ModeInd$};
+    \end{tikzpicture}
+    %}
+\end{figure}
+#+END_EXPORT
+
+** Nonparametric MoE marginal likelihood
+:PROPERTIES:
+:BEAMER_col: 0.65
+:END:
+#+BEGIN_EXPORT latex
+\newcommand{\gatingColor}{violet}
+\newcommand{\expertColor}{orange}
+%\small
+\footnotesize
+\begin{align*}  \label{eq-np-moe-marginal-likelihood-assign}
+\moeEvidence  &= \sum_{\allModeVar} \textcolor{\gatingColor}{\npmoeGatingPosterior}
+\left[ \prod_{\modeInd=1}^\ModeInd
+\textcolor{\expertColor}{
+\underbrace{
+p\left(\{\singleOutput : \modeVarn=\modeInd \} \mid \{\singleInput : \modeVarn=\modeInd \}, \expertParamsK \right)}_{\text{expert } \modeInd}} \right]
+\end{align*}
+\normalsize
+#+END_EXPORT
+- Sum over exponentially many ($\ModeInd^{\NumData}$) sets of assignments
+  - $\allModeVar = \{\modeVar_1, \ldots, \modeVar_\NumData \}$
+* Model learning - Identifiability
+** Two experts :BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.45
+:END:
+#+ATTR_LATEX: :width \textwidth :placement [h] :center nil
+[[file:../images/quadcopter_domain_two_experts.png]]
+** Three experts
+:PROPERTIES:
+:BEAMER_col: 0.45
+:END:
+#+ATTR_LATEX: :width \textwidth :placement [h] :center nil
+[[file:../images/quadcopter_domain_three_experts.png]]
+
+* Model learning - Mixtures of Nonparametric Experts
+** npmoe graphical model :ignore:
+#+BEGIN_EXPORT latex
+\newcommand{\gatingColor}{violet}
+\newcommand{\expertColor}{orange}
+\begin{figure}[t]
+  \centering
+    \begin{minipage}[r]{0.49\textwidth}
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[const] (x) {$\singleInputK$};
+
+      \node[latent, left=of x, yshift=-1.4cm] (f) {$\textcolor{\expertColor}{\mode{\latentFunc}(\allInputK)}$};
+
+      \node[const, left=of f, xshift=0.4cm, \expertColor] (thetak) {$\textcolor{\expertColor}{\expertParamsK}$};
+
+      \node[latent, below=of x, xshift=0.0cm] (a) {$\textcolor{\gatingColor}{\modeVarnk}$};
+
+      \node[const, right=of a, xshift=-0.4cm, \gatingColor] (phik) {$\textcolor{\gatingColor}{\gatingParams}$};
+
+      \node[obs, below=of f, yshift=0.4cm] (y) {$\allOutputK$};
+
+      \node[const, left=of y, \expertColor] (sigmak) {$\textcolor{\expertColor}{\noiseVarK}$};
+
+      \draw[post, \gatingColor] (a)--(y);
+      \draw[post, \expertColor] (x)-|(f);
+      \draw[post, \gatingColor] (x)--(a);
+      \draw[post, \expertColor] (thetak)--(f);
+      \draw[post, \gatingColor] (phik)--(a);
+      \draw[post, \expertColor] (sigmak)|-(y);
+      \draw[post, \expertColor] (f)--(y);
+
+      \plate[color=\gatingColor] {} {(x) (yk) (a)} {$\textcolor{\gatingColor}{\NumData_{\modeInd}}$};
+      \plate[color=\expertColor] {} {(x) (y) (f) (sigmak) (thetak) (a)} {$\ModeInd$};
+    \end{tikzpicture}
+    %}
+    \subcaption{}
+\label{fig-graphical-model-npmoe}
+\end{minipage}
+    \begin{minipage}[r]{0.49\textwidth}
+%   \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[const] (x) {$\singleInputK$};
+
+      \node[latent, left=of x, yshift=-1.4cm] (f) {$\textcolor{\expertColor}{\mode{\latentFunc}(\allInputK)}$};
+      \node[const, left=of f, xshift=0.4cm] (thetak) {$\textcolor{\expertColor}{\expertParamsK}$};
+
+      \node[latent, below=of x, xshift=0.0cm] (a) {$\textcolor{\gatingColor}{\modeVarnk}$};
+      \node[latent, right=of a, yshift=0.0cm] (h) {$\textcolor{\gatingColor}{\mode{\gatingFunc}(\allInput)}$};
+      \node[const, right=of h, xshift=-0.4cm] (phik) {$\textcolor{\gatingColor}{\gatingParamsK}$};
+
+      \node[obs, below=of f, yshift=0.4cm] (y) {$\allOutputK$};
+      \node[const, left=of y] (sigmak) {$\textcolor{\expertColor}{\noiseVarK}$};
+
+      \draw[post, \gatingColor] (a)--(y);
+      \draw[post, \expertColor] (x)-|(f);
+      \draw[post, \gatingColor] (x)-|(h);
+      \draw[post, \gatingColor] (h)--(a);
+      \draw[post, \expertColor] (thetak)--(f);
+      \draw[post, \gatingColor] (phik)--(h);
+      %\draw[post] (sigmak)|-(yk);
+      \draw[post, \expertColor] (sigmak)|-(y);
+      \draw[post, \expertColor] (f)--(y);
+
+      \plate {} {(x) (yk) (a)} {$\textcolor{\gatingColor}{\NumData_{\modeInd}}$};
+      %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
+      %\plate {} {(f) (sigmak) (thetak)} {$\ModeInd$};
+      \plate[color=\gatingColor] {} {(h) (phik)} {$\textcolor{\gatingColor}{\ModeInd}$};
+      \plate[color=\expertColor] {} {(x) (y) (f) (sigmak) (thetak)  (a)} {$\ModeInd$};
+    \end{tikzpicture}
+    %}
+    \subcaption{}
+\label{fig-graphical-model-gp-gating-network}
+\end{minipage}
+  %\caption{Graphical model where the output $\singleOutput$}
+\label{fig-graphical-model-comparison}
+\end{figure}
+#+END_EXPORT
+
+** marginal likelihood :ignore:noexport:
+#+BEGIN_EXPORT latex
+\small
+\begin{align}  \label{eq-np-moe-marginal-likelihood-assign}
+\moeEvidence  &= \sum_{\allModeVar} \textcolor{\gatingColor}{\npmoeGatingPosterior}
+\left[ \prod_{\modeInd=1}^\ModeInd
+\textcolor{\expertColor}{p\left(\{\singleOutput : \modeVarn=\modeInd \} \mid \{\singleInput : \modeVarn=\modeInd \}, \expertParamsK \right)} \right]
+\end{align}
+\normalsize
+#+END_EXPORT
+
+* Model learning - Identifiable Mixtures of Sparse Variational Gaussian Process Experts
+#+BEGIN_EXPORT latex
+\newcommand{\gatingColor}{violet}
+\newcommand{\expertColor}{orange}
+\small
+\begin{align}  \label{eq-np-moe-marginal-likelihood-assign}
+\moeEvidence  &=
+\sum_{\allModeVar}
+\textcolor{\gatingColor}{\underbrace{\E_{\gatingPrior} \left[
+\prod_{\numData=1}^{\NumData} \gatingLikelihood  \right]}_{\text{GP gating network}}}
+\left[ \prod_{\modeInd=1}^\ModeInd
+\textcolor{\expertColor}{
+\underbrace{p\left(\{\singleOutput : \modeVarn=\modeInd \} \mid \{\singleInput : \modeVarn=\modeInd \}, \expertParamsK \right)}_{\text{expert } \modeInd}} \right]
+\end{align}
+\normalsize
+#+END_EXPORT
+
+* Model learning - Parameterise the nonparametric model?
+#+ATTR_BEAMER: :overlay +-
+- Like a sparse GP parameterises a GP...
+- GP prior where $\allInputK = \{\singleInput : \modeVarK\}$
+    #+BEGIN_EXPORT latex
+    \newcommand{\allInputKFull}{\ensuremath{\{\singleInput : \modeVarK\}}}
+    \begin{align} \label{eq-experts-inducing-prior}
+    \mode{\latentFunc}(\allInputK) &\sim \mathcal{N}\left( \expertMeanFunc(\allInputK), \expertCovFunc(\allInputK, \allInputK) \right)
+    \end{align}
+    #+END_EXPORT
+- Augment with inducing points
+    #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-experts-inducing-prior}
+    \mode{\latentFunc}(\expertInducingInput)  &\sim  \mathcal{N}\left( \expertMeanFunc(\expertInducingInput),
+    \expertCovFunc(\expertInducingInput, \expertInducingInput) \right)
+    \end{align}
+    #+END_EXPORT
+- Approximate marginal likelihood
+    #+BEGIN_EXPORT latex
+    \begin{align} \label{eq-augmented-marginal-likelihood}
+    \evidence &\approx
+    \E_{\gatingsInducingPrior \expertsInducingPrior} \left[
+    \prod_{\numData=1}^{\NumData} \sum_{\modeInd=1}^{\ModeInd}
+    \singleGatingGivenInducing \singleExpertGivenInducing \right]
+    \end{align}
+    #+END_EXPORT
+
+* Model learning - Parameterise the nonparametric model?
+#+BEGIN_EXPORT latex
+\begin{figure}[t]
+  \centering
+  \resizebox{0.8\columnwidth}{!}{
+    \begin{tikzpicture}[
+      pre/.style={<-,shorten <=0.4pt,>=stealth',semithick},
+      post/.style={->,shorten >=0.4pt,>=stealth',semithick}
+      ]
+      \node[const] (x) {$\singleInput$};
+      \node[latent, left=of x, yshift=-1.4cm] (f) {$\mode{\latentFunc}(\singleInput)$};
+      %\node[latent, right=of x, yshift=-1.7cm] (h) {${h}^{(k)}_n$};
+      \node[latent, right=of x, yshift=-1.4cm, xshift=0.5cm] (h) {$\mode{\gatingFunc}(\singleInput)$};
+
+      \node[latent, left=of f, xshift=0.4cm, yshift=0.6cm] (uk) {$\expertInducingOutput$};
+      \node[latent, right=of h, xshift=-0.4cm, yshift=0.6cm] (uh) {$\gatingInducingOutput$};
+      \node[const, left=of uk, xshift=0.4cm] (zk) {$\expertInducingInput$};
+      \node[const, right=of uh, xshift=-0.4cm] (zh) {$\gatingInducingInput$};
+
+      \node[const, left=of f, xshift=0.4cm, yshift=-0.4cm] (thetak) {$\expertParamsK$};
+      \node[const, right=of h, xshift=-0.4cm, yshift=-0.4cm] (phik) {$\gatingParamsK$};
+
+      \node[const, below=of thetak, yshift=0.4cm] (sigmak) {$\noiseVarK$};
+
+      \node[obs, right=of sigmak, yshift=0.cm, xshift=1.4cm] (y) {$\singleOutput$};
+      %\node[latent, right=of y, below=of h] (a) {$\alpha_t$};
+      \node[latent, right=of y, xshift=-0.4cm] (a) {$\modeVarn$};
+
+      %\node[obs, right=of sigmak] (y) {$\Delta\mathbf{x}_{t}$};
+
+      \factor[above=of a] {h-a} {left:Cat} {h} {a};
+
+      \draw[post] (a)--(y);
+      \draw[post] (x)-|(f);
+      %\draw[post] (f)--(yk);
+      \draw[post] (f)--(y);
+      %\draw[post] (yk)--(y);
+      %\draw[post] (h)--(a);
+      \draw[post] (x)-|(h);
+      \draw[post] (uk)--(f);
+      \draw[post] (uh)--(h);
+      \draw[post] (zk)--(uk);
+      \draw[post] (zh)--(uh);
+      \draw[post] (thetak)--(f);
+      \draw[post] (phik)--(h);
+      \draw[post] (sigmak)|-(y);
+
+      \plate {} {(x) (y) (a) (f) (h)} {$\NumData$};
+      %\plate {} {(zk) (uk) (f) (sigmak) (thetak) (yk)} {$K$};
+      \plate {} {(zk) (uk) (f) (sigmak) (thetak)} {$\ModeInd$};
+      \plate {} {(uh) (h) (phik)} {$\ModeInd$};
+    \end{tikzpicture}
+    }
+\label{fig-graphical-model-sparse}
+\end{figure}
+#+END_EXPORT
+
+# #+ATTR_BEAMER: :overlay +-
+# + Sparse approximations
+# + Stochastic variational inference
