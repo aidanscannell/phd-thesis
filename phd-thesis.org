@@ -777,7 +777,7 @@ ps2ascii phd-thesis.pdf | wc -w
     \includegraphics[scale=0.6]{./logos/bristolcrest_colour}
     \hspace{5mm}
     \includegraphics[scale=0.35]{./logos/UWE_insignia.png}\\
-    \vspace{10mm}
+    \vspace{6mm}
     {\large Department of Aerospace Engineering\\
      \textsc{University of Bristol}}
      \\
@@ -790,7 +790,7 @@ ps2ascii phd-thesis.pdf | wc -w
     %\textsc{University of Bristol}}\\
     %\vspace{6mm}
     \vspace{\baselineskip}
-    \vspace{\baselineskip}
+    %\vspace{\baselineskip}
     \begin{minipage}{10cm}
       A dissertation submitted to the University of Bristol and the University of the West of England in accordance with the requirements of the degree of \textsc{Doctor of Philosophy} in the Faculty of Engineering.
     \end{minipage}\\
@@ -799,6 +799,8 @@ ps2ascii phd-thesis.pdf | wc -w
     \vspace{\baselineskip}
     \vspace{\stretch{1}}
     \noindent
+    %\vspace{2mm}
+    \vspace{\baselineskip}
     \begin{tabular}{@{}l@{\hspace{22pt}}ll}
       \textbf{Supervisors}:          & Professor\ Arthur Richards\\
                                      & Dr\ Carl Henrik Ek\\
@@ -806,8 +808,14 @@ ps2ascii phd-thesis.pdf | wc -w
     %\vspace{\stretch{1}}
     %\vspace{\baselineskip}
     %\vspace{\baselineskip}
-    \vspace{9mm}
-    {\large\textsc{May 2022}}
+    \vspace{2mm}
+    {\large\textsc{May 2022}}\\
+    \vspace{6mm}
+    \begin{minipage}{10cm}
+    \begin{flushright}
+    Word count: 56,879
+    \end{flushright}
+    \end{minipage}\\
     \vspace{12mm}
     \vfill
   \end{center}
