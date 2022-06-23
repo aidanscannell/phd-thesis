@@ -8697,24 +8697,6 @@ and the subset of the environment which has not been observed (hashed box).}
 \label{fig-traj-opt-gating-network-gp}
 \end{figure}
 #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{figure}[t!]
-# \centering
-# %\includegraphics[width=\textwidth]{./images/traj-opt/mode-remaining/mosvgpe/desired_gating_gp_no_traj.pdf}
-# \includegraphics[width=\textwidth]{./images/mode-opt/env/scenario_7/mosvgpe/desired_gating_gp_no_obs.pdf}
-# \caption{
-# Visualisation of the \acrshort{gp} posterior mean (left) and posterior variance (right), associated with the
-# desired mode's gating function after training \acrshort{mosvgpe}
-# on the historical data set of state transitions from the 2D quadcopter environment
-# in the illustrative example from \cref{illustrative_example}.
-# The start state $\state_0$ and target state $\targetState$ are overlayed along with the mode boundary (purple line)
-# and a subset of the environment which has not been observed (hashed box).}
-# \label{fig-traj-opt-gating-network-gp}
-# \end{figure}
-# #+END_EXPORT
-# cref:fig-traj-opt-gating-network-gp shows the \acrshort{gp} posterior associated with the desired mode's gating function
-# after training
-# \acrshort{mosvgpe} on the historical data set of state transitions from the quadcopter experiment in cref:illustrative_example.
 The \acrshort{mosvgpe} model correctly identifies the underlying dynamics modes and infers informative
 latent spaces that can be used to encode mode remaining behaviour.
 cref:fig-traj-opt-gating-network-gp shows the gating network posterior after training
@@ -9190,36 +9172,6 @@ The collocation constraints then enforce
 the second derivative of the collocation states interpolated by the polynomials $\{\ddot{\stateCol}_{i+\frac{1}{2}} \}_{i=0}^{I-1}$,
 to equal the geodesic \acrshort{ode} $f_G$ at the collocation points.
 This is achieved through the collocation defects,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-defect}
-# \state(t) = \coeff_{i,0} + \coeff_{i,1} t + \coeff_{i,2} t^2 + \coeff_{i,3} t^3
-# \dot{\state}(t) = \coeff_{i,1}  + \coeff_{i,2} t + \coeff_{i,3} t^2
-# \end{align}
-# #+END_EXPORT
-# where $\coeff_{i,0}, \coeff_{i,1}, \coeff_{i,2}, \coeff_{i,3}$ are the polynomial coefficients
-
-# where $\ddot{\stateCol}_{i+\frac{1}{2}}, \dot{\stateCol}_{i+\frac{1}{2}}, \stateCol_{i+\frac{1}{2}}$
-
-# no integrals need to be computed, all the functions are algebraic operations.
-
-
-# uses Simpson's rule for integrating
-# The polynomial is
-# at the midpoints between a set of I
-
-# enforces the state
-# derivative interpolated by the polynomials to equal the geodesic \acrshort{ode} $f_G$
-# at the midpoints between a set of I
-
-# This work implements a Hermite-Simpson collocation
-
-# at the midpoints between a set of I
-# $\{\stateCol_i\}_{i=1}^I$ collocation points
-# defined by their time index
-
-# $I = \{0,\ldots, I\}$ collocation points,
-# $\{\stateCol_i\}_{i=1}^I$.
-# This is achieved through the collocation defects,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-defect}
 \Delta\ddot{\stateCol}_{i+\frac{1}{2}} &= \ddot{\stateCol}_{i+\frac{1}{2}} - f_G(t_{i+\frac{1}{2}}, \stateCol_{i+\frac{1}{2}}, \dot{\stateCol}_{i+\frac{1}{2}}) = 0 \quad \forall i \in  \{ 0, \ldots, I-1\},
@@ -9520,17 +9472,6 @@ associated with the desired mode's gating function $\desiredGatingFunction$, enc
 Further to this, this method exploits the fact that length minimising trajectories on a Riemannian manifold $\manifold$,
 are also energy minimising trajectories citep:carmoRiemannian1992.
 As such, mode remaining behaviour can be encoded by solving,
-# Riemannian energy. Formally, this is given by,
-# #+BEGIN_EXPORT latex
-# \begin{subequations} \label{eq-mode-soc-problem-geometry}
-# \begin{align}
-# \min_{\controlTraj} \E\big[ c&(\stateTraj, \controlTraj)) \big] \label{eq-mode-soc-problem-geometry-cost} \\
-# %\text{s.t.} \quad \state_{\timeInd+1} &= \dynamicsFunc(\state_\timeInd, \control_\timeInd) + {\epsilon},
-# %\quad {\epsilon} \sim \mathcal{N}(\mathbf{0}, \Sigma_{\epsilon})
-# \text{s.t.} \quad \state_{\timeInd+1} &\sim p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
-# \end{align}
-# \end{subequations}
-# #+END_EXPORT
 #+BEGIN_EXPORT latex
 \begin{subequations} \label{eq-mode-soc-problem-geometry}
 \begin{align}
@@ -9554,50 +9495,9 @@ J_{\pi}(\state) = \E \Bigg[
 \mid \state_0 = \state\Bigg],
 \end{align}
 #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{subequations} \label{eq-mode-soc-problem-geometry}
-# \begin{align}
-# %\min_{\controlTraj} \E_{\state_{\timeInd+1} \sim p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}
-# \min_{\controlTraj} \E \Bigg[
-# \underbrace{\text{Energy}(\manifoldFunction(\stateTraj))}_{\text{Riemannian energy}} &+
-# \underbrace{(\terminalState - \targetState)^T \terminalStateCostMatrix (\terminalState - \targetState)}_{\text{terminal cost}}
-# + \sum_{\timeInd=0}^{\TimeInd-1}
-# \underbrace{\control_{\timeInd}^T \controlCostMatrix \control_{\timeInd}}_{\text{control cost}}
-# \Bigg] \label{eq-mode-soc-problem-geometry-cost} \\
-# \text{s.t. } \state_{\timeInd+1} &\sim p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd) \quad &&\forall \timeInd \in \{0, \ldots, \TimeInd-1\}  \\
-# \control_{\timeInd} &\in \controlDomain \quad &&\forall \timeInd \in \{0, \ldots, \TimeInd-1\} \\
-# \state_0 &=\state_0
-# \end{align}
-# \end{subequations}
-# #+END_EXPORT
 where $\terminalStateCostMatrix$ and $\controlCostMatrix$ are user-defined,
 real, symmetric, positive semi-definite and positive definite matrices respectively.
 The energy of a trajectory on a Riemannian manifold, endowed with the metric $\metricTensor$, is given by,
-# where the expectation is taken w.r.t. the distribution over state trajectories,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-trajectory-dist}
-# %\controlledPolicyDist(\stateTraj \mid \state_0, \controlTraj) =
-# p(\stateTraj \mid \state_0, \controlTraj) =
-# \prod_{\timeInd=0}^{\TimeInd-1}
-# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd),
-# \end{align}
-# #+END_EXPORT
-# and the mode remaining behaviour and the terminal state boundary condition are encoded via the
-# cost function,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-quadratic-cost-with-energy}
-# \costFunc(\stateTraj, \controlTraj) &=
-# \underbrace{\text{Energy}(\manifoldFunction(\stateTraj))}_{\text{Riemannian energy}} +
-# \underbrace{(\terminalState - \targetState)^T \terminalStateCostMatrix (\terminalState - \targetState)}_{\text{terminal cost}}
-# + \sum_{\timeInd=0}^{\TimeInd-1}
-# \underbrace{\control_{\timeInd}^T \controlCostMatrix \control_{\timeInd}}_{\text{control cost}},
-# %\underbrace{\| \terminalState - \targetState \|_\terminalStateCostMatrix}_{\text{terminal state cost}} +
-# %\underbrace{\sum_{\timeInd=1}^{\TimeInd}
-# %\| \stateDiff_\timeInd \|_{\metricTensor_{\state_{\timeInd}}}}_{\text{Riemannian energy}} +
-# %+ \underbrace{\sum_{\timeInd=0}^{\TimeInd-1}
-# %\| \control_\timeInd \|_\controlCostMatrix}_{\text{control cost}}
-# \end{align}
-# #+END_EXPORT
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-trajectory-energy}
 \text{Energy}(\manifoldFunction(\trajectory)) = \sum_{\timeInd=1}^{\TimeInd}
@@ -9830,17 +9730,6 @@ $\stateDiff_{\timeInd} \sim \mathcal{N}(\stateDiffMean, \stateDiffCov)$ can be c
 \stateDiffCov \right)
 \end{align}
 #+END_EXPORT
-# It's a bit hacky but we could assumed the Jacobian distribution is given by marginalising the state
-# and moment matching,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-}
-# p(\mathbf{J}_{\state_{\timeInd}}) =
-# \int p(\mathbf{J}_{\state_{\timeInd}} \mid \state_\timeInd)
-# \mathcal{N}(\state_{\timeInd} \mid \stateMean, \stateCov)
-# \text{d}\state_{\timeInd}
-# \approx \mathcal{N}(\mathbf{J}_{\state_{\timeInd}} \mid \muJac, \covJac)
-# \end{align}
-# #+END_EXPORT
 #+BEGIN_EXPORT latex
 \begin{myquote} \label{}
 The expected metric tensor encourages trajectories to 1) follow contours on the desired mode's gating function,
@@ -10013,25 +9902,6 @@ giving the likelihood,
 \optimalProb &\coloneqq \monotonicFunc( -\costFunc(\state_\timeInd, \control_\timeInd)).
 \end{align}
 #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \todo[inline]{add detials on Cross Entropy Method (CEM) cite:chuaDeep2018 and other methods}
-# \begin{myquote}
-# As shown in \cite{okadaVariational2020}, the choice of monotonic function,
-# $\monotonicFunc$,
-# leads to the inference algorithm resembling different well-known algorithms.
-# For example, selecting $\monotonicFunc$ to be the exponential function,
-# \begin{align} \label{eq-}
-# \optimalProb &\propto \text{exp}( -\costFunc(\state_\timeInd, \control_\timeInd))
-# \end{align}
-# leads to the algorithm resembling Model Predictive Path Integral (MPPI)
-# \cite{williamsModel2017,williamsInformation2017}, whilst
-# selecting $\monotonicFunc$ to as,
-# \begin{align} \label{eq-}
-# \optimalProb &\propto \mathbb{I}\left[( \costFunc(\state_\timeInd, \control_\timeInd)) \leq \costFunc_{\text{thd}} \right]
-# \end{align}
-# recovers an algorithm resembling the Cross Entropy Method (CEM).
-# \end{myquote}
-# #+END_EXPORT
 A common (and convenient) approach is to formulate
 the likelihood using an exponential transform of
 the cost. This results in a Boltzmann distribution where the
@@ -10383,18 +10253,6 @@ can be obtained with a Taylor expansion.
 The joint probability for an optimal trajectory (i.e.
 for $\optimalVar_\timeInd=1$ for all $\timeInd \in \{0,\ldots,\TimeInd\}$),
 can be factorised using its Markovian structure,
-# #+BEGIN_EXPORT latex
-# \small
-# \begin{align} \label{eq-traj-opt-joint-dist}
-# \jointDist =
-# \underbrace{\terminalCostDist}_{\text{terminal cost}}
-# \prod_{\timeInd=0}^{\TimeInd-1}
-# \underbrace{\optimalProb}_{\text{integral cost}}
-# \underbrace{p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)}_{\text{dynamics}}
-# \underbrace{\controlDist}_{\text{controller}}
-# \end{align}
-# \normalsize
-# #+END_EXPORT
 #+BEGIN_EXPORT latex
 \small
 \begin{align} \label{eq-traj-opt-joint-dist}
@@ -10415,8 +10273,6 @@ is not equivalent to expected cost minimisation.
 cite:rawlikStochastic2013 extend the concepts from  cite:toussaintRobot2009 to show the general relation
 to classical \acrshort{soc}.
 For a given policy $\policy$, they introduce the posterior distribution over state-control trajectories as,
-# They introduce a prior policy, $\priorPolicy$, and the distribution over state-control trajectories
-# under this policy is given by,
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-prior-trajectory-dist}
 %\priorPolicyDist(\stateTraj, \controlTraj) =
@@ -10429,16 +10285,6 @@ p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
 \policy(\control_\timeInd \mid \state_\timeInd) \right],
 \end{align}
 #+END_EXPORT
-# where the distribution over state-control trajectories under policy $\policy$, is given by,
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-trajectory-dist}
-# %p(\stateTraj, \controlTraj \mid \state_0) =
-# \controlledPolicyDist(\stateTraj, \controlTraj) =
-# \prod_{\timeInd=0}^{\TimeInd-1}
-# p(\state_{\timeInd+1} \mid \state_\timeInd, \control_\timeInd)
-# \policy(\control_\timeInd \mid \state_\timeInd).
-# \end{align}
-# #+END_EXPORT
 where $Z=p(\optimalVarTraj \mid \state_0)$.
 This distribution
 $\policyDist(\stateTraj, \controlTraj \mid \optimalVarTraj, \state_0)$ is conditioned on the
@@ -10488,7 +10334,6 @@ is equivalent to the \acrshort{soc} problem, with a modified integral cost,
 - \frac{1}{\temperature} \log \priorPolicy(\control_\timeInd \mid \state_\timeInd).
 \end{align}
 #+END_EXPORT
-# and no mode remaining constraint.
 The problem in cref:eq-kl-control finds trajectories that balance
 minimising expected costs
 $\E_{\controlledPolicyDist(\stateTraj, \controlTraj)} \left[ \costFunc(\stateTraj, \controlTraj) \right]$
@@ -10659,31 +10504,6 @@ The joint probability model is then given by,
 \underbrace{\controlDist}_{\text{controller}} \bigg],
 \end{align}
 #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-traj-opt-joint-dist-mode}
-# \jointDist =
-# &\underbrace{\terminalCostDist}_{\text{terminal cost}} \nonumber \\
-# &\bigg[ \prod_{\timeInd=0}^{\TimeInd-1}
-# \underbrace{\optimalProb}_{\text{integral cost}}
-# \underbrace{\modeProb}_{\text{mode remaining term}} \bigg] \nonumber \\
-# &\bigg[ \prod_{\timeInd=0}^{\TimeInd-1}
-# \underbrace{\transitionDistK}_{\text{dynamics}}
-# \underbrace{\controlDist}_{\text{controller}} \bigg],
-# \end{align}
-# #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \small
-# \begin{align} \label{eq-traj-opt-joint-dist-mode}
-# \jointDist =
-# &\underbrace{\terminalCostDist}_{\text{Terminal Cost}} \nonumber \\
-# &\prod_{\timeInd=0}^{\TimeInd-1} \bigg[
-# \underbrace{\optimalProb}_{\text{Integral Cost}}
-# \underbrace{\modeProb}_{\text{Mode Remaining Term}} \nonumber \\
-# &\underbrace{\transitionDist}_{\text{Dynamics}}
-# \underbrace{\controlDist}_{\text{Controller}} \bigg].
-# \end{align}
-# \normalsize
-# #+END_EXPORT
 where $\modeVarTraj = \{\modeVar_{\timeInd}=\desiredMode \}_{\timeInd=0}^{\TimeInd}$
 denotes every time step of a trajectory belonging to the desired dynamics mode $\desiredMode$.
 cref:eq-traj-opt-joint-dist-mode says
@@ -10768,49 +10588,6 @@ p(\stateTraj, \controlTraj \mid \state_0, \optimalVarTraj, \modeVarTraj)
 \Bigg]
 \end{align}
 #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-}
-# p(\stateTraj, \controlTraj \mid \state_0, \optimalVarTraj, \modeVarTraj)
-# = Z^{-1}
-# \Bigg[ \prod_{\timeInd=0}^{\TimeInd-1}
-# &\underbrace{ \transitionDistOptimal}_{\text{optimal dynamics}}
-# \underbrace{ p(\control_\timeInd \mid \state_\timeInd, \optimalVarTraj_{0:\timeInd}, \modeVarTraj_{0:\timeInd}) }_{\text{optimal policy}}
-# \Bigg] \nonumber \\
-# \Bigg[ \prod_{\timeInd=0}^{\TimeInd}
-# &\underbrace{\modeProb}_{\text{mode remaining}}
-# \underbrace{\exp \left( - \gamma  \costFunc(\state_\timeInd, \control_\timeInd) \right)}_{\text{cost}} \Bigg],
-# \end{align}
-# #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-}
-# p(\stateTraj, \controlTraj \mid \state_0, \optimalVarTraj, \modeVarTraj)
-# = Z^{-1}
-# &\underbrace{\terminalModeProbDist}_{\text{Mode Remaining}}
-# \underbrace{\exp \left( - \gamma  \terminalCostFunc(\state_\TimeInd, \control_\TimeInd) \right)}_{\text{Terminal Cost}}
-# \nonumber \\
-# \prod_{\timeInd=0}^{\TimeInd-1} \Bigg[
-# &\underbrace{ \transitionDistOptimal}_{\text{Optimal Dynamics}} \nonumber \\
-# &\underbrace{p(\control_\timeInd \mid \state_\timeInd, \optimalVarTraj, \modeVarTraj) }_{\text{Optimal Policy}} \nonumber \\
-# &\underbrace{\modeProb}_{\text{Mode Remaining}}
-# \underbrace{\exp \left( - \gamma  \costFunc(\state_\timeInd, \control_\timeInd) \right)}_{\text{Cost}} \Bigg],
-# \end{align}
-# #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-}
-# p(\stateTraj, \controlTraj \mid \state_0, \optimalVar_{0:\TimeInd}=1, \modeVar_{0:\TimeInd}=\desiredMode)
-# = \underbrace{\left[ \prod_{\timeInd=0}^{\TimeInd-1} \transitionDist \policy(\control_\timeInd \mid \state_\timeInd) \right]}_{\text{controlled dynamics}}
-# \exp \left( \sum_{\timeInd=0}^\TimeInd \costFunc(\state_\timeInd, \control_\timeInd) \right),
-# \end{align}
-# #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-}
-# q(\stateTraj, \controlTraj \mid \state_0)
-# = \prod_{\timeInd=0}^{\TimeInd-1} q(\state_{\timeInd+1} \mid \state_{0})
-# %= \prod_{\timeInd=0}^{\TimeInd-1} q(\state_{\timeInd+1} \mid \state_{\timeInd}, \control_\timeInd)
-# \controlVarDist.
-# \end{align}
-# #+END_EXPORT
-# where $Z=p(\optimalVarTraj, \modeVarTraj \mid \state_0)$.
 with the variational distribution $\trajectoryVarDist$.
 Note that $Z=p(\optimalVarTraj, \modeVarTraj \mid \state_0)$.
 In this work the variational distribution over the controller is assumed independent of the state.
@@ -10881,26 +10658,6 @@ w.r.t. the \acrfull{elbo}.
 In this setup, the evidence is that $\optimalVar_{\timeInd}=1$ and $\modeVar_{\timeInd}=\desiredMode$ for
 all $\timeInd \in \{0,\ldots,\TimeInd\}$.
 Given this, the \acrshort{elbo} is given by,
-# but we drop the dependence from here on out for notational conciseness.
-# #+BEGIN_EXPORT latex
-# \small
-# \begin{align} \label{eq-}
-# \text{log} \marginalLikelihood
-# &= \text{log} \E_{\trajectoryVarDist} \left[ \frac{\jointDist}{\trajectoryVarDist} \right] \nonumber \\
-# &= \text{log} \E_{\trajectoryVarDist} \left[
-# \frac{\prod_{\timeInd=0}^{\TimeInd-1} \optimalProb
-# \Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd)
-# \controlDist}{\prod_{\timeInd=0}^{\TimeInd-1}  \controlVarDist}
-# \right] \nonumber \\
-# &\geq \E_{\trajectoryVarDist} \left[ \sum_{\timeInd=0}^{\TimeInd} - \temperature \costFunc(\state_\timeInd, \control_\timeInd) \right]
-# + \E_{\trajectoryVarDist} \left[
-# \sum_{\timeInd=0}^{\TimeInd}
-# \log \Pr(\modeVar_\timeInd=\desiredMode \mid \state_\timeInd, \control_\timeInd) \right] \nonumber \\
-# &\quad - \sum_{\timeInd=0}^{\TimeInd}
-# \text{KL}\left(\controlVarDist \mid\mid \policy(\control_\timeInd \mid \state_\timeInd) \right)  \coloneqq \mathcal{L},
-# \end{align}
-# \normalsize
-# #+END_EXPORT
 #+BEGIN_EXPORT latex
 \begin{align} \label{eq-}
 \text{log} \marginalLikelihood
