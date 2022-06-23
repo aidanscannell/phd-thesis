@@ -3709,7 +3709,7 @@ This results in an $N-\text{dimensional}$ multivariate Gaussian random variable 
 A common kernel that is used throughout this thesis is the Squared Exponential
 kernel with \acrfull{ard}, given by,
 \begin{equation} \label{eq-se-kernel}
-k(x, x') = \sigma_f^2 \exp\left(-\frac{1}{2} \sum_{d=1}^{D_f} \left( \frac{x_{d}- x'_{i}}{l_d} \right) \right),
+k(x, x') = \sigma_f^2 \exp\left(-\frac{1}{2} \sum_{d=1}^{D_f} \left( \frac{x_{d}- x'_{d}}{l_d} \right)^2 \right),
 \end{equation}
 where $\sigma_f^2$ represent the signal variance and $l_d$ is a lengthscale parameter associated with
 input dimension $d$.
