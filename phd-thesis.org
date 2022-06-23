@@ -5810,7 +5810,7 @@ The rich structure of our model makes it hard to construct an \acrshort{elbo} th
 be evaluated in closed form whilst accurately modelling the complex dependencies.
 Further to this, the marginal likelihood is extremely expensive to evaluate,
 as there are $\ModeInd^{\NumData}$ sets of assignments $\allModeVar$ that need to be marginalised.
-For each set of assignments, $\ModeInd$ \acrshort{gp} experts that need to be evaluated, each with
+For each set of assignments, $\ModeInd$ \acrshort{gp} experts need to be evaluated, each with
 complexity $\mathcal{O}(\NumData^{3})$.
 For these reasons, this work derives a variational approximation based on inducing variables, that provides scalability
 by utilising stochastic gradient-based optimisation.
