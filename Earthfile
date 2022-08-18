@@ -12,10 +12,9 @@ export-org-to-tex:
 export-org-to-pdf:
     FROM blang/latex:ubuntu
     # COPY +export-org-to-tex/build/phd-thesis.tex .
-    COPY +export-org-to-tex/build/phd-thesis.tex ./phd-thesis.tex
+    COPY +export-org-to-tex/build/phd-thesis.tex .
     COPY zotero-library.bib .
-    COPY mimosis-class .
-    COPY images .
+    COPY --dir mimosis-class images ./
     RUN pwd
     RUN ls
     RUN latexmk -f -silent phd-thesis.tex
@@ -28,7 +27,7 @@ export-org-to-pdf:
 #     COPY docker-compose.yml ./
 #     COPY zotero-library.bib .
 #     COPY mimosis-class .
-#     COPY images .
+#     COPY images images
 #     WITH DOCKER --compose docker-compose.yml
 #         RUN	emacs --batch -l init.el phd-thesis.org -f org-latex-export-to-latex --kill && \
 #             latexmk -f -silent phd-thesis.tex
