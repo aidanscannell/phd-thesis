@@ -1,33 +1,18 @@
 VERSION 0.6
-# WORKDIR /code
+FROM silex/emacs
+WORKDIR /code
 
-emacs-docker:
-    FROM silex/emacs
+export-org-to-pdf:
+    FROM blang/latex:ubuntu
     COPY init.el ./.config/emacs/init.el
     RUN	emacs --batch -l .config/emacs/init.el --kill
-    SAVE IMAGE emacs-image:latest
-
-latex-docker:
-    FROM blang/latex:ubuntu
-    SAVE IMAGE latex-image:latest
-
-export-org-to-latex:
-    # Export phd-thesis.org to phd-thesis.tex
-    FROM +emacs-docker
     COPY phd-thesis.org .
     RUN	emacs --batch -l .config/emacs/init.el phd-thesis.org -f org-latex-export-to-latex --kill
-    # RUN	emacs --batch phd-thesis.org -f org-latex-export-to-latex --kill
-    SAVE ARTIFACT phd-thesis.tex build/phd-thesis.tex AS LOCAL build/phd-thesis.tex
-
-export-tex-to-pdf:
-    # Build pdf from tex file
-    FROM +latex-docker
-    COPY +export-org-to-latex/build/phd-thesis.tex ./phd-thesis.tex
+    # RUN	emacs --batch -l .config/emacs/init.el phd-thesis.org -f org-latex-export-to-latex --kill
     COPY zotero-library.bib .
     COPY mimosis-class .
     COPY images .
     RUN pwd
     RUN latexmk -f -silent build/phd-thesis.tex
     SAVE ARTIFACT phd-thesis.pdf build/phd-thesis.pdf AS LOCAL build/phd-thesis.pdf
-
-# export-org-to-pdf:
+    SAVE ARTIFACT phd-thesis.tex build/phd-thesis.tex AS LOCAL build/phd-thesis.tex
