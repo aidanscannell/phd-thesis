@@ -5,7 +5,7 @@ WORKDIR /code
 export-org-to-pdf:
     FROM blang/latex:ubuntu
     COPY init.el ./.config/emacs/init.el
-    RUN	emacs --batch -l .config/emacs/init.el --kill
+    # RUN	emacs --batch -l .config/emacs/init.el --kill
     COPY phd-thesis.org .
     RUN	emacs --batch -l .config/emacs/init.el phd-thesis.org -f org-latex-export-to-latex --kill
     # RUN	emacs --batch -l .config/emacs/init.el phd-thesis.org -f org-latex-export-to-latex --kill
