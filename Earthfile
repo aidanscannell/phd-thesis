@@ -1,6 +1,6 @@
 VERSION 0.6
 FROM silex/emacs
-WORKDIR /code
+# WORKDIR /code
 
 export-org-to-tex:
     COPY init.el .
