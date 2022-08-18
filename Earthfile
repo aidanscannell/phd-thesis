@@ -6,7 +6,8 @@ export-org-to-tex:
     COPY init.el .
     RUN	emacs --batch -l init.el --kill
     COPY phd-thesis.org .
-    RUN	emacs --batch -l init.el phd-thesis.org -f org-latex-export-to-latex --kill
+    RUN	emacs --batch phd-thesis.org -f org-latex-export-to-latex --kill
+    # RUN	emacs --batch -l init.el phd-thesis.org -f org-latex-export-to-latex --kill
     SAVE ARTIFACT phd-thesis.tex build/phd-thesis.tex AS LOCAL build/phd-thesis.tex
 
 export-org-to-pdf:
