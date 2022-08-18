@@ -1,4 +1,4 @@
-#+TITLE: Bayesian Learning for Control in Multimodal Dynamical Systems
+#+TITLE: PhD Thesis: Bayesian Learning for Control in Multimodal Dynamical Systems
 #+AUTHOR: [[https://www.aidanscannell.com/][Aidan Scannell]]
 #+HTML: <a href="https://github.com/aidanscannell/phd-thesis/releases/download/initial-submission/phd-thesis-signed-submitted.pdf"><img alt="Download PDF" src="https://img.shields.io/github/downloads/aidanscannell/phd-thesis/total?label=Download%20pdf&style=for-the-badge"></a>
 
@@ -45,21 +45,50 @@ The work in each of the content chapters is roughly split into the following cod
 </table>
 #+END_HTML
 
+* Instructions to Build PDF
+Motivated by reproducibility, i.e. being able to generate a PDF on any machine, I am using [[https://earthly.dev/get-earthly][Earthly]].
+[[https://earthly.dev/get-earthly][Earthly]] combines the best ideas from =Dockerfile= and =Makefile= into the =Earthfile=, which enables me
+to execute my build in portable containers, i.e. I can run [[https://earthly.dev/get-earthly][Earthly]] locally or on popular CI systems like Github Actions.
+My reproducible workflow is as follows:
+1. Edit my thesis in =org-mode=, i.e. edit [[phd-thesis.org]],
+2. Export the =org-mode= file [[phd-thesis.org]] to a =TeX= file [[phd-thesis.tex]],
+   - This is done using the Emacs LaTeX exporter,
+   - My heavily customised =Emacs= installation makes this step hard to reproduce on other machines
+   - As such, I provide a minimal =Emacs= configuration in [[init.el]], which [[https://earthly.dev/get-earthly][Earthly]] uses to configure an =Emacs=
+     installation in a =Docker= container.
+3. Build a =pdf= file [[phd-thesis.pdf]] from the =TeX= file [[phd-thesis.tex]], my =BibTeX= file [[zotero-library.bib]], the images in [[images/]] and the =LaTeX= template files in [[mimosis-class]] using =latexmk=,
+   - This is done using =latexmk=.
 
-* LaTeX Build
-
-The following command will build the =pdf= from the =LaTeX= source.
+** Installing Earthly
+Installing [[https://earthly.dev/get-earthly][Earthly]] requires [[https://docs.docker.com/][docker]] and [[https://git-scm.com/][git]] to be installed, see [[https://earthly.dev/get-earthly][Earthly]] for more instructions.
+On Mac OSX, Earthly can be installed with Homebrew:
 #+begin_src shell
-latexmk -f -silent -output-directory=./tex phd-thesis.tex
+brew install earthly/earthly/earthly && earthly bootstrap
 #+end_src
 
-# TODO add shield with link to pdf and counter
+** Build PDF using Earthly
+Once [[https://earthly.dev/get-earthly][Earthly]] is installed =phd-thesis.pdf= can be generated with:
+#+begin_src shell
+earthly -P +export-tex-to-pdf
+#+end_src
+If only =phd-thesis.tex= is required then this can be generated with:
+#+begin_src shell
+earthly -P +export-org-to-tex
+#+end_src
+
+
+** Build PDF from TeX file
+A pdf can also be generated using the =phd-thesis.tex= file output by the Emacs LaTeX exporter.
+For example, with the following command:
+#+begin_src shell
+latexmk -f -silent phd-thesis.tex
+#+end_src
 
 * Citation
 #+begin_src LaTeX
 @phdthesis{scannell22,
     title = {Bayesian Learning for Control in Multimodal Dynamical Systems},
     author = {Aidan Scannell},
-    school = {University of Bristol},
+    school = {University of Bristol, University of the West of England},
     year = {2022}}
 #+end_src
