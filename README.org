@@ -53,10 +53,10 @@ My reproducible workflow is as follows:
 1. Edit my thesis in =org-mode=, i.e. edit [[phd-thesis.org]],
 2. Export the =org-mode= file [[phd-thesis.org]] to a =TeX= file [[phd-thesis.tex]],
    - This is done using the Emacs LaTeX exporter,
-   - My heavily customised =Emacs= installation makes this step hard to reproduce on other machines
+   - My heavily customised =Emacs= installation makes this step hard to reproduce on other machines,
    - As such, I provide a minimal =Emacs= configuration in [[init.el]], which [[https://earthly.dev/get-earthly][Earthly]] uses to configure an =Emacs=
      installation in a =Docker= container.
-3. Build a =pdf= file [[phd-thesis.pdf]] from the =TeX= file [[phd-thesis.tex]], my =BibTeX= file [[zotero-library.bib]], the images in [[images/]] and the =LaTeX= template files in [[mimosis-class]] using =latexmk=,
+3. Build a =pdf= file [[phd-thesis.pdf]] from the =TeX= file [[phd-thesis.tex]], my =BibTeX= file [[zotero-library.bib]], the images in [[images/]] and the =LaTeX= template files in [[mimosis-class,]]
    - This is done using =latexmk=.
 
 ** Installing Earthly
