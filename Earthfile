@@ -26,11 +26,8 @@ export-tex-to-pdf:
     COPY zotero-library.bib .
     COPY mimosis-class .
     COPY images .
-    RUN latexmk -f -silent phd-thesis.tex
+    RUN pwd
+    RUN latexmk -f -silent build/phd-thesis.tex
     SAVE ARTIFACT phd-thesis.pdf build/phd-thesis.pdf AS LOCAL build/phd-thesis.pdf
-    # WITH DOCKER --load test:latest=+latex-docker
-    #     # RUN docker run test:latest
-    #     RUN latexmk -f -silent phd-thesis.tex
-    # END
 
 # export-org-to-pdf:
