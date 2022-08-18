@@ -1,7 +1,6 @@
 VERSION 0.6
 # WORKDIR /code
 
-
 emacs-docker:
     FROM silex/emacs
     COPY init.el ./.config/emacs/init.el
@@ -23,7 +22,7 @@ export-org-to-latex:
 export-tex-to-pdf:
     # Build pdf from tex file
     FROM +latex-docker
-    COPY +export-org-to-latex/phd-thesis.tex .
+    COPY +export-org-to-latex/build/phd-thesis.tex .
     COPY zotero-library.bib .
     COPY mimosis-class .
     COPY images .
