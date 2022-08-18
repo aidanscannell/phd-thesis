@@ -33,7 +33,7 @@ jobs:
       run: earthly --version
 
     - name: Build .pdf from .org
-      run: earthly -P +export-org-to-pdf
+      run: earthly -ci -P +export-org-to-pdf
       # run: earthly -P +export-tex-to-pdf
 
     - name: Upload pdf and TeX files
