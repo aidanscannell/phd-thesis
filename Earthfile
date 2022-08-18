@@ -18,8 +18,7 @@ export-org-to-pdf:
     RUN pwd
     RUN ls
     RUN mkdir compile && \
-        latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=nonstopmode -pdf ./phd-thesis.tex
-        # latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=batchmode -pdf ./phd-thesis.tex
+        latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=batchmode -pdf ./phd-thesis.tex
     # RUN latexmk -f -silent phd-thesis.tex
     SAVE ARTIFACT phd-thesis.pdf build/phd-thesis.pdf AS LOCAL build/phd-thesis.pdf
 
