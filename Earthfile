@@ -11,13 +11,16 @@ export-org-to-tex:
 
 export-org-to-pdf:
     FROM blang/latex:ubuntu
-    # COPY +export-org-to-tex/build/phd-thesis.tex .
+    # FROM koppor/texlive
     COPY +export-org-to-tex/build/phd-thesis.tex .
     COPY zotero-library.bib .
     COPY --dir mimosis-class images ./
     RUN pwd
     RUN ls
-    RUN latexmk -f -silent phd-thesis.tex
+    RUN mkdir compile && \
+        latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=nonstopmode -pdf ./phd-thesis.tex
+        # latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=batchmode -pdf ./phd-thesis.tex
+    # RUN latexmk -f -silent phd-thesis.tex
     SAVE ARTIFACT phd-thesis.pdf build/phd-thesis.pdf AS LOCAL build/phd-thesis.pdf
 
 # export-org-to-pdf:
