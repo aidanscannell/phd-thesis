@@ -22,7 +22,7 @@ export-org-to-latex:
 export-tex-to-pdf:
     # Build pdf from tex file
     FROM +latex-docker
-    COPY +export-org-to-latex/build/phd-thesis.tex .
+    COPY +export-org-to-latex/build/phd-thesis.tex ./phd-thesis.tex
     COPY zotero-library.bib .
     COPY mimosis-class .
     COPY images .
