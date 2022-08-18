@@ -7,3 +7,6 @@ tmp/
 tex
 .auctex-auto
 .envrc
+build/
+superseded
+*~
