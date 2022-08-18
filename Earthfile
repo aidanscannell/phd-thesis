@@ -6,17 +6,18 @@ export-org-to-tex:
     COPY init.el .
     RUN	emacs --batch -l init.el --kill
     COPY phd-thesis.org .
-    RUN	emacs --batch phd-thesis.org -f org-latex-export-to-latex --kill
-    # RUN	emacs --batch -l init.el phd-thesis.org -f org-latex-export-to-latex --kill
+    RUN	emacs --batch -l init.el phd-thesis.org -f org-latex-export-to-latex --kill
     SAVE ARTIFACT phd-thesis.tex build/phd-thesis.tex AS LOCAL build/phd-thesis.tex
 
 export-org-to-pdf:
     FROM blang/latex:ubuntu
+    # COPY +export-org-to-tex/build/phd-thesis.tex .
+    COPY +export-org-to-tex/build/phd-thesis.tex ./phd-thesis.tex
     COPY zotero-library.bib .
     COPY mimosis-class .
     COPY images .
-    COPY +export-org-to-tex/build/phd-thesis.tex .
     RUN pwd
+    RUN ls
     RUN latexmk -f -silent phd-thesis.tex
     SAVE ARTIFACT phd-thesis.pdf build/phd-thesis.pdf AS LOCAL build/phd-thesis.pdf
 
