@@ -11,22 +11,6 @@
 (unless (boundp 'org-latex-classes)
   (setq org-latex-classes nil))
 (add-to-list 'org-latex-classes
-             '("memoir"
-               "\\documentclass{memoir}
-    [NO-DEFAULT-PACKAGES]
-    [PACKAGES]
-    [EXTRA]
-    \\newcommand{\\mboxparagraph}[1]{\\paragraph{#1}\\mbox{}\\\\}
-    \\newcommand{\\mboxsubparagraph}[1]{\\subparagraph{#1}\\mbox{}\\\\}"
-               ("\\chapter{%s}" . "\\chapter*{%s}")
-               ("\\section{%s}" . "\\section*{%s}")
-               ("\\subsection{%s}" . "\\subsection*{%s}")
-               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-               ("\\paragraph{%s}" . "\\paragraph*{%s}")
-               ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-;; ("\\mboxparagraph{%s}" . "\\mboxparagraph*{%s}")
-;; ("\\mboxsubparagraph{%s}" . "\\mboxsubparagraph*{%s}")))
-(add-to-list 'org-latex-classes
              '("mimosis"
                "\\documentclass{mimosis-class/mimosis}
   [NO-DEFAULT-PACKAGES]
