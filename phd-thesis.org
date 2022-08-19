@@ -774,10 +774,9 @@ ps2ascii phd-thesis.pdf | wc -w
     %\vspace{\baselineskip}
     %\vspace{\baselineskip}
     \vspace{\baselineskip}
-    \includegraphics[scale=0.6]{./logos/bristolcrest_colour}
+    \includegraphics[scale=0.6]{./images/logos/bristolcrest_colour}
     \hspace{5mm}
-    \includegraphics[scale=0.35]{./logos/UWE_insignia.png}\\
-    \vspace{6mm}
+    \includegraphics[scale=0.35]{./images/logos/UWE_insignia.png}\\
     {\large Department of Aerospace Engineering\\
      \textsc{University of Bristol}}
      \\
