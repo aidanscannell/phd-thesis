@@ -1,0 +1,6 @@
+#+title: Todo
+
+* Inbox
+** TODO Delete this source block when init.el is working
+
+[[file:~/tmp/phd-thesis/phd-thesis.org::*Run this src block with C-c C-c][Run this src block with C-c C-c]]
