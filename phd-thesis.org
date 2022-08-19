@@ -163,7 +163,7 @@ General configuration.
 #+LATEX_HEADER: \usepackage[citestyle=authoryear-comp, maxcitenames=2, maxbibnames=99, doi=false, isbn=false, eprint=false, backend=bibtex, hyperref=true, url=false, natbib=true, style=authoryear-comp]{biblatex}
 # #+LATEX_HEADER: \addbibresource{~/Dropbox/org/ref/mendeley/library.bib}
 # #+LATEX_HEADER: \addbibresource{~/Dropbox/org/ref/zotero-library.bib}
-#+LATEX_HEADER: \addbibresource{./zotero-library.bib}
+#+LATEX_HEADER: \addbibresource{zotero-library.bib}
 
 Improvements provided with the Mimosis class.
 # #+latex_header: \input{bibliography-mimosis}
