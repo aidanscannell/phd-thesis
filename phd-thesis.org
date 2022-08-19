@@ -9515,13 +9515,6 @@ In contrast to the collocation solver in \cref{sec-traj-opt-collocation},
 the terminal state boundary condition is encoded via the cost function, instead of being enforced by the solver.
 \end{remark}
 #+END_EXPORT
-# #+BEGIN_EXPORT latex
-# \begin{align} \label{eq-trajectory-energy}
-# \text{Energy}(\manifoldFunction(\trajectory))
-# = \int \dot{\state}(\timeInd) \metricTensor(\state(\timeInd)) \dot{\state}(\timeInd) \text{d} \timeInd.
-# \end{align}
-# #+END_EXPORT
-
 This may seem like an easy optimisation problem,
 however, calculating the expected cost in cref:eq-mode-soc-problem-geometry-cost is not straightforward.
 Given a starting state $\state_0$ and a control trajectory $\controlTraj$,
