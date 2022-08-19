@@ -15793,39 +15793,4 @@ Table ref:tab-params-quadcopter contains the initial values for all of the train
 % items in the bookmark structure of your PDF reader.
 \bookmarksetup{startatroot}
 \backmatter
- %\begingroup
- %    \let\clearpage\relax
- %    \glsaddall
- %    \printglossary[type=\acronymtype]
- %    \newpage
- %    %\printglossary
- %\endgroup
- %\printindex
-#+END_EXPORT
-
-#+BEGIN_EXPORT latex
-%\bookmarksetup{startatroot}
-%\backmatter
-%\printglossary[type=\acronymtype]
-
-%\printglossary
-%\printunsrtglossaries
-
-% This ensures that the subsequent sections are being included as root
-% items in the bookmark structure of your PDF reader.
-%\begingroup
-%    \let\clearpage\relax
-%    \glsaddall
-%    \printglossary[type=\acronymtype]
-%    \newpage
-%    \printglossary
-%\endgroup
-%\printindex
-
-%\printglossary
-% \begingroup
-% \sloppy
-% \setstretch{1}
-% \setlength\bibitemsep{3pt}
-% \endgroup
 #+END_EXPORT
