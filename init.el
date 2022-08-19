@@ -50,6 +50,12 @@
     (require 'ox-extra)
     (ox-extras-activate '(latex-header-blocks ignore-headlines)))
 
+<<<<<<< HEAD
+=======
+  (setq org-latex-pdf-process
+        '("latexmk -interaction=nonstopmode -output-directory=./tex -output-format=pdf %f"))
+
+>>>>>>> corrections
   (unless (boundp 'org-latex-classes)
     (setq org-latex-classes nil))
 
