@@ -14,12 +14,13 @@ export-org-to-pdf:
     # FROM koppor/texlive
     COPY +export-org-to-tex/build/phd-thesis.tex .
     COPY zotero-library.bib .
+    COPY latexmkrc .
+    COPY .latexmkrc .
     COPY --dir mimosis-class images ./
     RUN pwd
     RUN ls
     RUN mkdir compile && \
-        latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=batchmode -pdf ./phd-thesis.tex
-    # RUN latexmk -f -silent phd-thesis.tex
+        latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=batchmode -pdf phd-thesis.tex
     SAVE ARTIFACT phd-thesis.pdf build/phd-thesis.pdf AS LOCAL build/phd-thesis.pdf
 
 # export-org-to-pdf:
