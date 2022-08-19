@@ -214,9 +214,9 @@ Make the equation numbers follow the chapter, not the whole thesis.
 *** Captions
 # #+LATEX_HEADER: \usepackage{caption}
 # #+LATEX_HEADER: \usepackage{subcaption}
-#+LATEX_HEADER: \ifCLASSOPTIONcompsoc \usepackage[caption=false,font=footnotesize,labelfont=it,textfont=it]{subfig} \else
+# #+LATEX_HEADER: \ifCLASSOPTIONcompsoc \usepackage[caption=false,font=footnotesize,labelfont=it,textfont=it]{subfig} \else
 #+LATEX_HEADER: \usepackage[caption=false,font=footnotesize]{subfig}
-#+LATEX_HEADER: \fi
+# #+LATEX_HEADER: \fi
 #+LATEX_HEADER: \usepackage[format=plain,labelfont={bf},textfont=it]{caption} % make captions italic
 *** Maths diag
 #+LATEX_HEADER: \newcommand{\diag}{\mathop{\mathrm{diag}}}
