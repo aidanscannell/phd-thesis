@@ -761,10 +761,7 @@ ps2ascii phd-thesis.pdf | wc -w
     \includegraphics[scale=0.6]{./images/logos/bristolcrest_colour}
     \hspace{5mm}
     \includegraphics[scale=0.35]{./images/logos/UWE_insignia.png}\\
-<<<<<<< HEAD
     \vspace{10mm}
-=======
->>>>>>> corrections
     {\large Department of Aerospace Engineering\\
      \textsc{University of Bristol}}
      \\
@@ -1216,18 +1213,11 @@ Your expertise and willingness to explore new ideas have made my PhD journey enj
 Arthur, I have especially enjoyed the many connections you've made between concepts from machine learning and control theory.
 You have shown me how to think deeply about why things work well and how
 to build rich intuitions for seemingly complex problems.
-<<<<<<< HEAD
-Carl, your ability to simplify novel ideas and relate them to existing literature is impressive and something
-that I aspire to.
-I also want to thank you for the countless hours you spent teaching me machine learning theory.
-You are a talented and inspiring teacher, and I wholeheartedly appreciate your advice and enthusiasm over the years.
-=======
 Carl, I want to thank you for the countless hours you spent teaching me machine learning theory.
 You are a talented and inspiring teacher, and I wholeheartedly appreciate your advice and enthusiasm over the years.
 Further to this, your ability to simplify novel ideas and relate them to existing literature has helped my
 expand my knowledge base and grow as an academic.
 It's an impressive skill and is something that I aspire to.
->>>>>>> corrections
 I could not have asked for better supervisors.
 You have both inspired me.
 %Carl, thank you for the countless hours you spent teaching me machine learning theory.
