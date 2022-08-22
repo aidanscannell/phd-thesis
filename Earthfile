@@ -14,7 +14,7 @@ export-org-to-pdf:
     # FROM koppor/texlive
     COPY +export-org-to-tex/build/phd-thesis.tex .
     COPY zotero-library.bib .
-    COPY latexmkrc .
+    # COPY latexmkrc .
     COPY .latexmkrc .
     COPY --dir mimosis-class images ./
     RUN pwd
