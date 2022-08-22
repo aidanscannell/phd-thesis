@@ -1,12 +1,11 @@
-add_cus_dep('glo', 'gls', 0, 'run_makeglossaries');
-add_cus_dep('acn', 'acr', 0, 'run_makeglossaries');
+add_cus_dep( 'acn', 'acr', 0, 'makeglossaries' );
+add_cus_dep( 'glo', 'gls', 0, 'makeglossaries' );
+$clean_ext .= " acr acn alg glo gls glg ist";
 
-sub run_makeglossaries {
-  if ( $silent ) {
-    system "makeglossaries -s ./'$_[0]'.ist -q '$_[0]'";
-  }
-  else {
-    system "makeglossaries -s ./'$_[0]'.ist '$_[0]'";
-  };
-  system "cd ..";
+sub makeglossaries {
+    my ($base_name, $path) = fileparse( $_[0] );
+    pushd $path;
+    my $return = system "makeglossaries", $base_name;
+    popd;
+    return $return;
 }
