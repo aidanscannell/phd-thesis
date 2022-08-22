@@ -794,9 +794,10 @@ ps2ascii phd-thesis.pdf | wc -w
     %\vspace{\baselineskip}
     \vspace{2mm}
     {\large\textsc{May 2022}}\\
-    \vspace{6mm}
+    \vspace{2mm}
     \begin{minipage}{10cm}
     \begin{flushright}
+    % TODO update wordcount before submitting
     Word count: 56,879
     \end{flushright}
     \end{minipage}\\
@@ -2093,8 +2094,6 @@ $\modeInd$ & Mode indicator \\
 
 # (coming from both the reinforcement learning
 # cite:sutton2018reinforcement and control theory \todo{cite control theory book?} communities),
-
-
 
 The modern world is pervaded with dynamical systems that we seek to control to achieve a desired behaviour.
 Examples include autonomous vehicles, aircraft, robotic manipulators, financial markets and energy management systems.
