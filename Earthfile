@@ -20,7 +20,7 @@ export-org-to-pdf:
     RUN pwd
     RUN ls
     RUN mkdir compile && \
-        latexmk -cd -f -interaction=nonstopmode -outdir=./compile -auxdir=./compile -output-format=pdf phd-thesis.tex
+        latexmk -f -interaction=nonstopmode -output-format=pdf phd-thesis.tex
 
         # latexmk -interaction=nonstopmode -output-directory=./compile -output-format=pdf -f phd-thesis.tex
         # latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=batchmode -pdf phd-thesis.tex
