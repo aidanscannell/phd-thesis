@@ -19,9 +19,9 @@ export-org-to-pdf:
     COPY --dir mimosis-class images ./
     RUN pwd
     RUN ls
-    RUN mkdir compile && \
-        latexmk -f -interaction=nonstopmode -output-format=pdf phd-thesis.tex
+    RUN latexmk -f -silent -interaction=nonstopmode -output-format=pdf phd-thesis.tex
 
+        # mkdir compile && \
         # latexmk -interaction=nonstopmode -output-directory=./compile -output-format=pdf -f phd-thesis.tex
         # latexmk -cd -f -jobname=output -outdir=./compile -auxdir=./compile -interaction=batchmode -pdf phd-thesis.tex
     SAVE ARTIFACT phd-thesis.pdf build/phd-thesis.pdf AS LOCAL build/phd-thesis.pdf
