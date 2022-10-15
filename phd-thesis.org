@@ -798,7 +798,7 @@ ps2ascii phd-thesis.pdf | wc -w
     \begin{minipage}{10cm}
     \begin{flushright}
     % TODO update wordcount before submitting
-    Word count: 56,879
+    Word count: 56,976
     \end{flushright}
     \end{minipage}\\
     \vspace{12mm}
@@ -843,6 +843,7 @@ remaining navigation problem,
 whilst guaranteeing that the controlled system remains in the desired dynamics mode with a high probability.
 \end{singlespace}
 #+END_EXPORT
+
 # %\initial{R}einforcement learning and data-driven control have seen significant advances over the last decade,
 # %especially in simulated environments.
 # %real-world systems are often highly nonlinear, exhibit stochasticity and multimodalities,
