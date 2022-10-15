@@ -51,7 +51,7 @@
     (ox-extras-activate '(latex-header-blocks ignore-headlines)))
 
   (setq org-latex-pdf-process
-        '("latexmk -interaction=nonstopmode -output-directory=./tex -output-format=pdf %f"))
+        '("latexmk -pdf -f -interaction=nonstopmode -output-format=pdf %f"))
 
   (unless (boundp 'org-latex-classes)
     (setq org-latex-classes nil))
