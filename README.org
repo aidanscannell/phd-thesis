@@ -59,11 +59,11 @@ The [[https://docs.docker.com/][Dockerfile]] creates a working environment which
 docker build -t emacs-image .
 #+end_src
 
-* Citation
+* Cite
 #+begin_src LaTeX
 @phdthesis{scannell22,
     title = {Bayesian Learning for Control in Multimodal Dynamical Systems},
     author = {Aidan Scannell},
-    school = {University of Bristol, University of the West of England},
+    school = {University of Bristol},
     year = {2022}}
 #+end_src
