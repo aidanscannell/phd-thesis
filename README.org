@@ -1,6 +1,8 @@
 #+TITLE: PhD Thesis: Bayesian Learning for Control in Multimodal Dynamical Systems
 #+AUTHOR: [[https://www.aidanscannell.com/][Aidan Scannell]]
-#+HTML: <a href="https://github.com/aidanscannell/phd-thesis/releases/download/initial-submission/phd-thesis-signed-submitted.pdf"><img alt="Download PDF" src="https://img.shields.io/github/downloads/aidanscannell/phd-thesis/total?label=Download%20pdf&style=for-the-badge"></a>
+#+HTML: <a href="https://github.com/aidanscannell/phd-thesis/releases/download/final-submission/phd-thesis-signed-final-submission.pdf"><img alt="Download PDF" src="https://img.shields.io/github/downloads/aidanscannell/phd-thesis/total?label=Download%20pdf&style=for-the-badge"></a>
+
+
 
 This repository contains the =org= and =LaTeX= source for my PhD thesis.
 
