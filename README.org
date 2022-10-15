@@ -46,42 +46,15 @@ The work in each of the content chapters is roughly split into the following cod
 #+END_HTML
 
 * Instructions to Build PDF
-Motivated by reproducibility, i.e. being able to generate a PDF on any machine, I am using [[https://earthly.dev/get-earthly][Earthly]].
-[[https://earthly.dev/get-earthly][Earthly]] combines the best ideas from =Dockerfile= and =Makefile= into the =Earthfile=, which enables me
-to execute my build in portable containers, i.e. I can run [[https://earthly.dev/get-earthly][Earthly]] locally or on popular CI systems like Github Actions.
-My reproducible workflow is as follows:
-1. Edit my thesis in =org-mode=, i.e. edit [[phd-thesis.org]],
-2. Export the =org-mode= file [[phd-thesis.org]] to a =TeX= file [[phd-thesis.tex]],
-   - This is done using the Emacs LaTeX exporter,
-   - My heavily customised =Emacs= installation makes this step hard to reproduce on other machines,
-   - As such, I provide a minimal =Emacs= configuration in [[init.el]], which [[https://earthly.dev/get-earthly][Earthly]] uses to configure an =Emacs=
-     installation in a =Docker= container.
-3. Build a =pdf= file [[phd-thesis.pdf]] from the =TeX= file [[phd-thesis.tex]], my =BibTeX= file [[zotero-library.bib]], the images in [[images/]] and the =LaTeX= template files in [[mimosis-class,]]
-   - This is done using =latexmk=.
+1. Generate =pdf= file [[phd-thesis.pdf]] from my =org-mode= file [[phd-thesis.org]]
+    #+begin_src shell
+    emacs --batch -l init.el phd-thesis.org -f org-latex-export-to-pdf --kill
+    #+end_src
+   - This uses the Emacs LaTeX exporter so I provide a minimal =Emacs= configuration in [[init.el]] and export to pdf in batch mode.
 
-** Installing Earthly
-Installing [[https://earthly.dev/get-earthly][Earthly]] requires [[https://docs.docker.com/][docker]] and [[https://git-scm.com/][git]] to be installed, see [[https://earthly.dev/get-earthly][Earthly]] for more instructions.
-On Mac OSX, Earthly can be installed with Homebrew:
+The [[https://docs.docker.com/][Dockerfile]] creates a working environment. The docker container can be built with,
 #+begin_src shell
-brew install earthly/earthly/earthly && earthly bootstrap
-#+end_src
-
-** Build PDF using Earthly
-Once [[https://earthly.dev/get-earthly][Earthly]] is installed =phd-thesis.pdf= can be generated with:
-#+begin_src shell
-earthly -P +export-tex-to-pdf
-#+end_src
-If only =phd-thesis.tex= is required then this can be generated with:
-#+begin_src shell
-earthly -P +export-org-to-tex
-#+end_src
-
-
-** Build PDF from TeX file
-A pdf can also be generated using the =phd-thesis.tex= file output by the Emacs LaTeX exporter.
-For example, with the following command:
-#+begin_src shell
-latexmk -f -silent phd-thesis.tex
+docker build -t emacs-image .
 #+end_src
 
 * Citation
