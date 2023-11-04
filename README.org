@@ -18,6 +18,16 @@ Nevertheless, an initial version of the multimodal dynamics model and one of the
             <a href="https://ieeexplore.ieee.org/abstract/document/9561362"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
             <a href="https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
         </td>
+    </tr>
+    <tr>
+        <td>
+            <strong>Mode-constrained Model-based Reinforcement Learning via Gaussian Processes</strong><br>
+            Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+            <a href="https://proceedings.mlr.press/v206/scannell23a.html"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
+            <a href="https://github.com/aidanscannell/ModeRL"><img alt="Code" src="https://img.shields.io/badge/-Code%20(AISTATS)-gray" ></a>
+            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code%20(thesis)-gray" ></a></br>
+        </td>
+    </tr>
 </table>
 #+END_HTML
 The work in each of the content chapters is roughly split into the following code bases:
@@ -33,8 +43,26 @@ The work in each of the content chapters is roughly split into the following cod
     <tr>
         <td>
             <strong>Mode Remaining Trajectory Optimisation</strong><br>
-            Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
-            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+            # Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+            # <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+
+            <tr>
+                <td>
+                    <strong>Trajectory Optimisation in Learned Multimodal Dynamical Systems via Latent-ODE Collocation</strong><br>
+                    Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+                    <a href="https://ieeexplore.ieee.org/abstract/document/9561362"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
+                    <a href="https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>Trajectory Optimisation in Learned Multimodal Dynamical Systems via Latent-ODE Collocation</strong><br>
+                    Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+                    <a href="https://ieeexplore.ieee.org/abstract/document/9561362"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
+                    <a href="https://github.com/aidanscannell/trajectory-optimisation-in-learned-multimodal-dynamical-systems"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+                </td>
+            </tr>
+
         </td>
     </tr>
     <tr>
@@ -42,8 +70,8 @@ The work in each of the content chapters is roughly split into the following cod
             <strong>Mode-constrained Model-based Reinforcement Learning via Gaussian Processes</strong><br>
             Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
             <a href="https://proceedings.mlr.press/v206/scannell23a.html"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
-            <a href="https://github.com/aidanscannell/ModeRL"><img alt="Code" src="https://img.shields.io/badge/-Code%20paper-gray" ></a></br>
-            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code%20thesis-gray" ></a></br>
+            <a href="https://github.com/aidanscannell/ModeRL"><img alt="Code" src="https://img.shields.io/badge/-Code%20(AISTATS)-gray" ></a>
+            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code%20(thesis)-gray" ></a></br>
         </td>
     </tr>
 </table>
