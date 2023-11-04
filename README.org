@@ -39,9 +39,11 @@ The work in each of the content chapters is roughly split into the following cod
     </tr>
     <tr>
         <td>
-            <strong>Mode Remaining Exploration for Model-Based Reinforcement Learning</strong><br>
+            <strong>Mode-constrained Model-based Reinforcement Learning via Gaussian Processes</strong><br>
             Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
-            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+            <a href="https://proceedings.mlr.press/v206/scannell23a.html"><img alt="Paper" src="https://img.shields.io/badge/-Paper-gray"></a>
+            <a href="https://github.com/aidanscannell/ModeRL"><img alt="Code" src="https://img.shields.io/badge/-Code%20paper-gray" ></a></br>
+            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code%20thesis-gray" ></a></br>
         </td>
     </tr>
 </table>
