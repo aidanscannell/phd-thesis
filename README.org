@@ -7,8 +7,7 @@
 This repository contains the =org= and =LaTeX= source for my PhD thesis.
 
 * Publications & Code
-A lot of the work in my thesis is yet to be published.
-Nevertheless, an initial version of the multimodal dynamics model and one of the mode remaining trajectory optimisation algorithms are published in:
+Some of the work in my thesis is published in:
 #+BEGIN_HTML
 <table>
     <tr>
@@ -45,8 +44,9 @@ The work in each of the content chapters is roughly split into the following cod
     <tr>
         <td>
             <strong>Mode Remaining Trajectory Optimisation</strong><br>
-            # Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
-            # <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
+            Aidan Scannell, Carl Henrik Ek, Arthur Richards <br>
+            <a href="https://ieeexplore.ieee.org/abstract/document/9561362"><img alt="Paper" src="https://img.shields.io/badge/-Paper%20(ICRA)-gray"></a>
+            <a href="https://github.com/aidanscannell/ModeOpt"><img alt="Code" src="https://img.shields.io/badge/-Code-gray" ></a></br>
         </td>
     </tr>
     <tr>
